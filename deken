@@ -4,6 +4,8 @@
 # somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
 # on first run into the ~/.deken/ directory.
 
+# Much of this code is pilfered from Clojure's Leiningen tool
+
 export DEKEN_VERSION="0.1"
 
 if [ `id -u` -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
@@ -46,7 +48,10 @@ if $cygwin; then
 fi
 
 function install_deken {
-    echo "First time run, installing deken dependencies."
+    echo "This is your first time running deken on this machine."
+    echo "I'm going to install myself and my dependencies into ~/.deken now."
+    echo "Feel free to ctrl-C now if you don't want to do this."
+    sleep 3
     [ "" == "`which python`" ] && \
         echo "Oops, no Python found! You need Python to run Deken." && exit 1
     [ "" == "`which make`" ] && \
