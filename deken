@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+# Ensure this file is executable via `chmod a+x deken`, then place it
+# somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
+# on first run into the ~/.deken/ directory.
+
+export DEKEN_VERSION="0.1"
+
+if [ `id -u` -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
+    echo "WARNING: You're currently running as root; probably by accident."
+    echo "Press control-C to abort or Enter to continue as root."
+    echo "Set DEKEN_ROOT to disable this warning."
+    read _
+fi
+
+if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    delimiter=";"
+else
+    delimiter=":"
+fi
+
+if [[ "$OSTYPE" == "cygwin" ]]; then
+  cygwin=true
+else
+  cygwin=false
+fi
+
+# This needs to be defined before we call HTTP_CLIENT below
+if [ "$HTTP_CLIENT" = "" ]; then
+    if type -p curl >/dev/null 2>&1; then
+        if [ "$https_proxy" != "" ]; then
+            CURL_PROXY="-x $https_proxy"
+        fi
+        HTTP_CLIENT="curl $CURL_PROXY -f -L -o"
+    else
+        HTTP_CLIENT="wget -O"
+    fi
+fi
+
+export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
+DEKEN_BASE_URL="https://github.com/chr15m/deken/raw/master"
+PIP_SOURCE="https://bootstrap.pypa.io/get-pip.py"
+
+if $cygwin; then
+    export DEKEN_HOME=`cygpath -w "$DEKEN_HOME"`
+fi
+
+function install_deken {
+    echo "First time run, installing deken dependencies."
+    [ "" == "`which python`" ] && \
+        echo "Oops, no Python found! You need Python to run Deken." && exit 1
+    [ "" == "`which make`" ] && \
+        echo "Oops, no Make found! You need Make to run Deken." && exit 1
+    [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME
+    [ "" == "`which pip`" ] && \
+        ( echo "Installing pip." && \
+        $HTTP_CLIENT $DEKEN_HOME/get-pip.py $PIP_SOURCE && \
+        python $DEKEN_HOME/get-pip.py --user ) || exit 1
+    [ -e "$DEKEN_HOME/requirements.txt" ] || \
+        ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
+        $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || exit 1
+    [ -e "$DEKEN_HOME/requirements.txt" ] || exit 1
+    [ -e "$DEKEN_HOME/deken.hy" ] || \
+        ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
+        $HTTP_CLIENT $DEKEN_HOME/deken.hy $DEKEN_BASE_URL/deken.hy ) || exit 1
+    [ -e "$DEKEN_HOME/deken.hy" ] || exit 1
+    [ -d "$DEKEN_HOME/virtualenv" ] || \
+        echo "Setting up the virtual environment." && \
+        pip install virtualenv && \
+        virtualenv "$DEKEN_HOME/virtualenv"
+    [ -x "$DEKEN_HOME/virtualenv/bin/hy" ] || \
+        $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt
+}
+
+# make sure we are deployed
+[ -d "$DEKEN_HOME" ] || install_deken
+
+# run the real deken command with args passed through
+$DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
