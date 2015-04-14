@@ -5,25 +5,32 @@
 (import os)
 (import argparse)
 
-; uses git or svn to check out 
-(defn checkout [repo-path destination]
-  (if (or (repo-path.endswith ".git") (repo-path.startswith "git:"))
-    (try (import [sh [git]])
-      (catch [ImportError] (print "Git binary not found. Please install git."))
-      (finally (git "clone" repo-path destination)))
-    (try (import [sh [svn]])
-      (catch [ImportError] (print "SVN binary not found. Please install Subversion."))
-      (finally (svn "checkout" repo-path destination)))))
+
+(defn git [&rest args]
+  (try (import [sh [git]])
+    (catch [ImportError] (print "Git binary not found. Please install git.") (sys.exit 1))
+    (finally (git args))))
+
+(defn svn [&rest args]
+  (try (import [sh [svn]])
+    (catch [ImportError] (print "SVN binary not found. Please install Subversion.") (sys.exit 1))
+    (finally (svn args))))
 
 ; uses the 'make' command do do the actual building
 (defn make [&rest args]
   (try (import [sh [make]])
-    (catch [ImportError] (print "Make binary not found. Please install make."))
+    (catch [ImportError] (print "Make binary not found. Please install make.") (sys.exit 1))
     (finally (apply make args))))
+
+; uses git or svn to check out 
+(defn checkout [repo-path destination]
+  (if (or (repo-path.endswith ".git") (repo-path.startswith "git:"))
+    (git "clone" repo-path destination)
+    (svn "checkout" repo-path destination)))
 
 ; uses make to install an external
 (defn install-one [location]
-  (make "-C" location "STRIP='strip --strip-unneeded -R .note -R .comment'" "DESTDIR='./externals/'" "objectsdir='./externals/" "install"))
+  (make "-C" location "STRIP=strip --strip-unneeded -R .note -R .comment" "DESTDIR='../../../pd-externals/'" "objectsdir=''" "install"))
 
 ; uses make to build an external
 (defn build-one [location]
@@ -31,15 +38,24 @@
     (catch [ImportError] (print "Make binary not found. Please install make."))
     (finally (make "-C" location "PD_PATH=../pd" "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I../../pd/src -Wall -W"))))
 
+; check for the existence of m_pd.h
+(defn check-for-m-pd []
+  (os.path.exists (os.path.join "workspace" "pd" "src" "m_pd.h")))
+
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
+  ; download and build a particular external from a repository
   :build (fn [args]
     (let [[destination (os.path.join "." "workspace" "externals" (os.path.basename (.rstrip args.repository "/")))]]
       (print "Checking out" args.repository "into" destination)
       (checkout args.repository destination)
       (print "Building" destination)
-      (build-one destination)))
-  :pd (fn [])})
+      (build-one destination)
+      (print "Installing" destination)
+      (install-one destination)))
+  ; manipulate the version of Pd
+  :pd (fn [])
+  :update (fn [])})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
 (let [
