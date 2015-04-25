@@ -49,7 +49,10 @@ fi
 
 function find_binary {
     [ "" == "`which $1`" ] || echo "`which $1`" && (\
-        [ -x "$HOME/.local/bin/$1" ] && echo "$HOME/.local/bin/$1"
+    	for p in "$HOME/.local/bin/$1" "$HOME/Library/Python/2.7/bin/$1";
+	do
+		[ -x "$p" ] && ( echo "$p"; break; )
+	done
     )
 }
 
