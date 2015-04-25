@@ -56,31 +56,39 @@ function find_binary {
     )
 }
 
+function bail_install {
+	echo "Self-installation of Deken failed. Please paste any errors in an issue at https://github.com/pure-data/deken/issues"
+	# remove all trace of our attempts to install.
+	rm -rf $DEKEN_HOME;
+	# bail from this script.
+	exit 1;
+}
+
 function install_deken {
     echo "This is your first time running deken on this machine."
     echo "I'm going to install myself and my dependencies into ~/.deken now."
     echo "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
     [ "" == "`which python`" ] && \
-        echo "Oops, no Python found! You need Python to run Deken." && exit 1;
+        echo "Oops, no Python found! You need Python to run Deken." && bail_install;
     [ "" == "`which make`" ] && \
-        echo "Oops, no Make found! You need Make to run Deken." && exit 1;
+        echo "Oops, no Make found! You need Make to run Deken." && bail_install;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ "" == "`find_binary pip`" ] && (\
         ( echo "Installing pip." && \
         $HTTP_CLIENT $DEKEN_HOME/get-pip.py $PIP_SOURCE && \
-        python $DEKEN_HOME/get-pip.py --user ) || exit 1);
+        python $DEKEN_HOME/get-pip.py --user ) || bail_install);
     [ "" == "`find_binary virtualenv`" ] && (\
         ( echo "Installing virtualenv." && \
-        `find_binary pip` install --user virtualenv) || exit 1);
+        `find_binary pip` install --user virtualenv) || bail_install);
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
-        $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || exit 1)
-    [ -e "$DEKEN_HOME/requirements.txt" ] || exit 1
+        $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || bail_install)
+    [ -e "$DEKEN_HOME/requirements.txt" ] || bail_install
     [ -e "$DEKEN_HOME/deken.hy" ] || (\
         ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
-        $HTTP_CLIENT $DEKEN_HOME/deken.hy $DEKEN_BASE_URL/deken.hy ) || exit 1)
-    [ -e "$DEKEN_HOME/deken.hy" ] || exit 1
+        $HTTP_CLIENT $DEKEN_HOME/deken.hy $DEKEN_BASE_URL/deken.hy ) || bail_install)
+    [ -e "$DEKEN_HOME/deken.hy" ] || bail_install
     [ -d "$DEKEN_HOME/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
         `find_binary virtualenv` "$DEKEN_HOME/virtualenv" || exit 1)
@@ -93,4 +101,4 @@ function install_deken {
 [ -d "$DEKEN_HOME" ] || install_deken
 
 # run the real deken command with args passed through
-$DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
+cd $DEKEN_HOME || echo "Sorry, Deken was not set up correctly." && ./virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
