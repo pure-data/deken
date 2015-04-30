@@ -97,17 +97,18 @@
   :update (fn [])})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
-(let [
-  [version (.get os.environ "DEKEN_VERSION" "?")]
-  [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
-  [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
-  [arg-build (apply arg-subparsers.add_parser ["build"])]
-  [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
-    (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version})
-    (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
-    (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
-    (let [
-      [arguments (.parse_args arg-parser)]
-      [command (.get commands (keyword arguments.command))]]
-        (print "Deken" version)
-        (command arguments)))
+(if (= __name__ "__main__")
+  (let [
+    [version (.get os.environ "DEKEN_VERSION" "?")]
+    [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
+    [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
+    [arg-build (apply arg-subparsers.add_parser ["build"])]
+    [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
+      (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version})
+      (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
+      (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
+      (let [
+        [arguments (.parse_args arg-parser)]
+        [command (.get commands (keyword arguments.command))]]
+          (print "Deken" version)
+          (command arguments))))
