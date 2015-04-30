@@ -38,11 +38,28 @@
       (print e.stderr)
       (sys.exit 1))))
 
+; execute a command inside a directory
+(defn in-dir [destination f &rest args]
+  (let [[last-dir (os.getcwd)]]
+      (os.chdir destination)
+      (apply f args)
+      (os.chdir last-dir)))
+
+; test if a repository is a git repository
+(defn is-git? [repo-path]
+  (or (repo-path.endswith ".git") (repo-path.startswith "git:")))
+
 ; uses git or svn to check out 
 (defn checkout [repo-path destination]
-  (if (or (repo-path.endswith ".git") (repo-path.startswith "git:"))
+  (if (is-git? repo-path)
     (git "clone" repo-path destination)
     (svn "checkout" repo-path destination)))
+
+; uses git or svn to update the repository
+(defn update [repo-path destination]
+  (if (is-git? repo-path)
+    (in-dir destination git "pull")
+    (in-dir destination svn "update")))
 
 ; uses make to install an external
 (defn install-one [location]
@@ -75,8 +92,13 @@
       [external-name (os.path.basename (.rstrip args.repository "/"))]
       [destination (os.path.join "." "workspace" "externals" external-name)]
       [pd-dir (ensure-pd)]]
-        (print "Checking out" args.repository "into" destination)
-        (checkout args.repository destination)
+        (if (os.path.isdir destination)
+          (do
+            (print "Updating" destination)
+            (update args.repository destination))
+          (do
+            (print "Checking out" args.repository "into" destination)
+            (checkout args.repository destination)))
         (print "Building" destination)
         (build-one destination)
         (print "Installing" destination)
