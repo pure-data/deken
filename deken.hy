@@ -34,7 +34,7 @@
     (catch [ImportError] (print "Make binary not found. Please install make.") (sys.exit 1)))
   (try
     (apply make args)
-    (catch [sh.ErrorReturnCode e]
+    (catch [e sh.ErrorReturnCode]
       (print e.stderr)
       (sys.exit 1))))
 
@@ -84,26 +84,45 @@
         (checkout pd-repo destination)))
     destination))
 
+; make sure we have an up-to-date checked out copy of a particular repository
+(defn ensure-checked-out [repo-path destination]
+  (if (os.path.isdir destination)
+    (do
+      (print "Updating" destination)
+      (update repo-path destination))
+    (do
+      (print "Checking out" repo-path "into" destination)
+      (checkout repo-path destination))))
+
+; get the name of the external from the repository path
+(defn get-external-name [repo-path]
+  (os.path.basename (.rstrip repo-path "/")))
+
+; get the destination the external should go into
+(defn get-external-destination [external-name]
+  (os.path.join "." "workspace" "externals" external-name))
+
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
   ; download and build a particular external from a repository
   :build (fn [args]
     (let [
-      [external-name (os.path.basename (.rstrip args.repository "/"))]
-      [destination (os.path.join "." "workspace" "externals" external-name)]
+      [external-name (get-external-name args.repository)]
+      [destination (get-external-destination external-name)]
       [pd-dir (ensure-pd)]]
-        (if (os.path.isdir destination)
-          (do
-            (print "Updating" destination)
-            (update args.repository destination))
-          (do
-            (print "Checking out" args.repository "into" destination)
-            (checkout args.repository destination)))
+        (ensure-checked-out args.repository destination)
         (print "Building" destination)
-        (build-one destination)
-        (print "Installing" destination)
-        (install-one destination)
-        (print (% "Installed into ./pd-externals/%s" external-name))))
+        (build-one destination)))
+  ; install a particular external into the local pd-externals directory
+  :install (fn [args]
+    (let [
+      [external-name (get-external-name args.repository)]
+      [destination (get-external-destination external-name)]]
+        ; make sure the repository is built
+        ((:build commands) args)
+        ; then install it
+        (print (% "Installing %s into ./pd-externals/%s" (tuple [destination external-name])))
+        (install-one destination)))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
@@ -125,9 +144,11 @@
     [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
     [arg-build (apply arg-subparsers.add_parser ["build"])]
+    [arg-install (apply arg-subparsers.add_parser ["install"])]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version})
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
+      (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
