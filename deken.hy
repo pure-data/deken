@@ -4,6 +4,7 @@
 (import sys)
 (import os)
 (import argparse)
+(import sh)
 
 (def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
 
@@ -11,19 +12,31 @@
 (defn git [&rest args]
   (try (import [sh [git]])
     (except [ImportError] (print "Git binary not found. Please install git.") (sys.exit 1)))
-  (git args))
+  (try
+    (git args)
+    (catch [e sh.ErrorReturnCode]
+           (print e.stderr)
+           (sys.exit 1))))
 
 ; invoke the svn binary, ensuring it exists
 (defn svn [&rest args]
   (try (import [sh [svn]])
-    (except [ImportError] (print "SVN binary not found. Please install Subversion.") (sys.exit 1)))
-  (svn args))
+    (catch [ImportError] (print "SVN binary not found. Please install subversion.") (sys.exit 1)))
+  (try
+    (svn args)
+    (catch [e sh.ErrorReturnCode] 
+            (print e.stderr)
+            (sys.exit 1))))
 
 ; uses the 'make' command do do the actual building
 (defn make [&rest args]
   (try (import [sh [make]])
-    (except [ImportError] (print "Make binary not found. Please install make.") (sys.exit 1)))
-  (apply make args))
+    (catch [ImportError] (print "Make binary not found. Please install make.") (sys.exit 1)))
+  (try
+    (apply make args)
+    (catch [sh.ErrorReturnCode e]
+      (print e.stderr)
+      (sys.exit 1))))
 
 ; uses git or svn to check out 
 (defn checkout [repo-path destination]
