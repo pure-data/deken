@@ -62,6 +62,11 @@ Change Pd version:
 	Deken 0.1
 	Pd version master checked out
 
+## Upgrade ##
+
+	$ deken upgrade
+	... self upgrades the scripts ...
+
 ### How to make your externals compatible ###
 
 <http://puredata.info/docs/developer/MakefileTemplate>
