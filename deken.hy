@@ -157,8 +157,10 @@
         (os.chdir deken-home)))
   ; deletes the workspace directory
   :clean (fn [args]
-    (shutil.rmtree "workspace")
-    (print "Deleted all files in the workspace folder."))
+    (if (os.path.isdir "workspace")
+      (do
+        (print "Deleting all files in the workspace folder.")
+        (shutil.rmtree "workspace"))))
   ; update pd binary and list of externals repositories
   :update (fn [])})
 
