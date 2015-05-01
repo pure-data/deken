@@ -7,37 +7,26 @@
 (import sh)
 
 (def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
+(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
 
-; invoke the git binary, ensuring it exists
-(defn git [&rest args]
-  (try (import [sh [git]])
-    (except [ImportError] (print "Git binary not found. Please install git.") (sys.exit 1)))
+; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
+(defn get-binary [binary-name]
   (try
-    (apply git args)
-    (catch [e sh.ErrorReturnCode]
-           (print e.stderr)
-           (sys.exit 1))))
-
-; invoke the svn binary, ensuring it exists
-(defn svn [&rest args]
-  (try (import [sh [svn]])
-    (catch [ImportError] (print "SVN binary not found. Please install subversion.") (sys.exit 1)))
-  (try
-    (apply svn args)
-    (catch [e sh.ErrorReturnCode] 
+    (let [[binary-fn (getattr sh binary-name)]]
+      (fn [&rest args]
+        (try
+          (apply binary-fn args)
+          (catch [e sh.ErrorReturnCode]
             (print e.stderr)
-            (sys.exit 1))))
-
-; uses the 'make' command do do the actual building
-(defn make [&rest args]
-  (try (import [sh [make]])
-    (catch [ImportError] (print "Make binary not found. Please install make.") (sys.exit 1)))
-  (try
-    (apply make args)
-    (catch [e sh.ErrorReturnCode]
-      (print e.stderr)
+            (sys.exit 1)))))
+    (catch [e sh.CommandNotFound]
+      (print binary-name (% "binary not found. Please install %s." (get binary-names (keyword binary-name))))
       (sys.exit 1))))
 
+; error-handling wrappers for the command line binaries
+(def git (get-binary "git"))
+(def svn (get-binary "svn"))
+(def make (get-binary "make"))
 
 ; execute a command inside a directory
 (defn in-dir [destination f &rest args]
