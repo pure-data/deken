@@ -164,7 +164,7 @@
         (shutil.rmtree "workspace"))))
   ; self-update deken
   :upgrade (fn [args]
-    (print "The upgrade script isn't here, it's in the Bash wrapper.")
+    (print "The upgrade script isn't here, it's in the Bash wrapper."))
   ; update pd binary and list of externals repositories
   :update (fn [])})
 
