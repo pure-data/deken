@@ -7,9 +7,13 @@
 (import sh)
 (import shutil)
 (import platform)
+(import string)
 
 (def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
 (def binary-names {:git "Git" :make "Make" :svn "Subversion"})
+
+(def pd-binary-path (os.path.join "workspace" "pd" "bin" "pd"))
+(def pd-m-pd-h-path (os.path.join "workspace" "pd" "src" "m_pd.h"))
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -17,6 +21,20 @@
     (cond [(= system-name "Linux") (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
     [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
     [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
+
+; create an architecture string
+(defn arch-string [&rest args]
+  (let [[arch (list-comp a [a (apply platform.architecture args)] a)]]
+    (.join "-" arch)))
+
+; get a string we can use to specify/determine the build architecture of externals on this platform
+(defn get-architecture-prefix []
+  (.join "-" [
+     (platform.system)
+     (platform.machine)
+     (if (os.path.isfile pd-binary-path)
+       (arch-string pd-binary-path)
+       (arch-string))]))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
@@ -153,6 +171,7 @@
     [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
+      (apply arg-parser.add_argument ["--platform"] {"action" "version" "version" (get-architecture-prefix) "help" "Outputs the current build platform identifier string."})
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
       (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
