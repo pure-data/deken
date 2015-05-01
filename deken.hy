@@ -13,7 +13,7 @@
   (try (import [sh [git]])
     (except [ImportError] (print "Git binary not found. Please install git.") (sys.exit 1)))
   (try
-    (git args)
+    (apply git args)
     (catch [e sh.ErrorReturnCode]
            (print e.stderr)
            (sys.exit 1))))
@@ -23,7 +23,7 @@
   (try (import [sh [svn]])
     (catch [ImportError] (print "SVN binary not found. Please install subversion.") (sys.exit 1)))
   (try
-    (svn args)
+    (apply svn args)
     (catch [e sh.ErrorReturnCode] 
             (print e.stderr)
             (sys.exit 1))))
@@ -37,6 +37,7 @@
     (catch [e sh.ErrorReturnCode]
       (print e.stderr)
       (sys.exit 1))))
+
 
 ; execute a command inside a directory
 (defn in-dir [destination f &rest args]
