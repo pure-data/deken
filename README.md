@@ -16,6 +16,23 @@
 
 	$ deken build -h
 
+## Platform ##
+
+OSX Example
+
+	$ deken --platform
+	Darwin-i386-64bit
+
+Linux example
+
+	$ deken --platform
+	Linux-x86_64-64bit-ELF
+
+Raspbian
+
+	$ deken --platform
+	Linux-armv6l-32bit-ELF
+
 ## Build an external from a repository ##
 
 	$ deken build svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
