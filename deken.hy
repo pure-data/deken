@@ -162,6 +162,9 @@
       (do
         (print "Deleting all files in the workspace folder.")
         (shutil.rmtree "workspace"))))
+  ; self-update deken
+  :upgrade (fn [args]
+    (print "The upgrade script isn't here, it's in the Bash wrapper.")
   ; update pd binary and list of externals repositories
   :update (fn [])})
 
@@ -173,6 +176,7 @@
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
     [arg-build (apply arg-subparsers.add_parser ["build"])]
     [arg-install (apply arg-subparsers.add_parser ["install"])]
+    [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]
     [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})

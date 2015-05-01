@@ -49,19 +49,19 @@ fi
 
 function find_binary {
     [ "" == "`which $1`" ] || echo "`which $1`" && (\
-    	for p in "$HOME/.local/bin/$1" "$HOME/Library/Python/2.7/bin/$1";
-	do
-		[ -x "$p" ] && ( echo "$p"; break; )
-	done
+        for p in "$HOME/.local/bin/$1" "$HOME/Library/Python/2.7/bin/$1";
+        do
+            [ -x "$p" ] && ( echo "$p"; break; )
+        done
     )
 }
 
 function bail_install {
-	echo "Self-installation of Deken failed. Please paste any errors in an issue at https://github.com/pure-data/deken/issues"
-	# remove all trace of our attempts to install.
-	rm -rf $DEKEN_HOME;
-	# bail from this script.
-	exit 1;
+    echo "Self-installation of Deken failed. Please paste any errors in an issue at https://github.com/pure-data/deken/issues"
+    # remove all trace of our attempts to install.
+    rm -rf $DEKEN_HOME;
+    # bail from this script.
+    exit 1;
 }
 
 function install_deken {
@@ -97,8 +97,26 @@ function install_deken {
         $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || exit 1)
 }
 
+function upgrade_deken {
+    for f in requirements.txt deken.hy;
+    do
+        echo "Fetching $f file: $DEKEN_BASE_URL/$f";
+        $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( echo "Error upgrading $f"; exit 1; );
+        mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
+    done
+    ./virtualenv/bin/pip install -r requirements.txt
+    echo "Successfully upgraded."
+}
+
 # make sure we are deployed
 [ -d "$DEKEN_HOME" ] || install_deken
 
-# run the real deken command with args passed through
-cd $DEKEN_HOME || echo "Sorry, Deken was not set up correctly." && ./virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
+# last check to make sure we can bootstrap
+cd $DEKEN_HOME || bail_install;
+
+# catch the special "upgrade" command
+[ "$1" == "upgrade" ] && \
+    # run he upgrade command instead
+    upgrade_deken || \
+    # run the real deken command with args passed through
+    ./virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
