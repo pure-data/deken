@@ -5,6 +5,7 @@
 (import os)
 (import argparse)
 (import sh)
+(import shutil)
 
 (def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
 (def binary-names {:git "Git" :make "Make" :svn "Subversion"})
@@ -126,6 +127,10 @@
         ; tell the user what version is currently checked out
         (print (% "Pd version %s checked out" (.rstrip (git "rev-parse" "--abbrev-ref" "HEAD"))))
         (os.chdir deken-home)))
+  ; deletes the workspace directory
+  :clean (fn [args]
+    (shutil.rmtree "workspace")
+    (print "Deleted all files in the workspace folder."))
   ; update pd binary and list of externals repositories
   :update (fn [])})
 
@@ -137,8 +142,9 @@
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
     [arg-build (apply arg-subparsers.add_parser ["build"])]
     [arg-install (apply arg-subparsers.add_parser ["install"])]
+    [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
-      (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version})
+      (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
       (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
