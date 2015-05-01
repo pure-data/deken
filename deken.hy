@@ -30,10 +30,12 @@
 
 ; execute a command inside a directory
 (defn in-dir [destination f &rest args]
-  (let [[last-dir (os.getcwd)]]
-      (os.chdir destination)
-      (apply f args)
-      (os.chdir last-dir)))
+  (let [
+    [last-dir (os.getcwd)]
+    [new-dir (os.chdir destination)]
+    [result (apply f args)]]
+      (os.chdir last-dir)
+      result))
 
 ; test if a repository is a git repository
 (defn is-git? [repo-path]
