@@ -9,11 +9,14 @@
 (import platform)
 (import string)
 
-(def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
-(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
+(def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 
-(def pd-binary-path (os.path.join "workspace" "pd" "bin" "pd"))
-(def pd-m-pd-h-path (os.path.join "workspace" "pd" "src" "m_pd.h"))
+(def pd-path (os.path.abspath (os.path.join "workspace" "pd")))
+(def pd-binary-path (os.path.join pd-path "bin" "pd"))
+(def pd-source-path (os.path.join pd-path "src"))
+(def externals-build-path (os.path.abspath (os.path.join "workspace" "externals")))
+
+(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -65,18 +68,18 @@
       result))
 
 ; test if a repository is a git repository
-(defn is-git? [repo-path]
-  (or (repo-path.endswith ".git") (repo-path.startswith "git:")))
+(defn is-git? [repo-uri]
+  (or (repo-uri.endswith ".git") (repo-uri.startswith "git:")))
 
 ; uses git or svn to check out 
-(defn checkout [repo-path destination]
-  (if (is-git? repo-path)
-    (git "clone" repo-path destination)
-    (svn "checkout" repo-path destination)))
+(defn checkout [repo-uri destination]
+  (if (is-git? repo-uri)
+    (git "clone" repo-uri destination)
+    (svn "checkout" repo-uri destination)))
 
 ; uses git or svn to update the repository
-(defn update [repo-path destination]
-  (if (is-git? repo-path)
+(defn update [repo-uri destination]
+  (if (is-git? repo-uri)
     (in-dir destination git "pull")
     (in-dir destination svn "update")))
 
@@ -88,38 +91,37 @@
 (defn build-one [location]
   (try (import [sh [make]])
     (catch [ImportError] (print "Make binary not found. Please install make."))
-    (finally (make "-C" location "PD_PATH=../pd" "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I../../pd/src -Wall -W"))))
+    (finally (make "-C" location (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))))
 
 ; check for the existence of m_pd.h
 (defn m-pd? []
-  (os.path.exists (os.path.join "workspace" "pd" "src" "m_pd.h")))
+  (os.path.exists (os.path.join pd-source-path "m_pd.h")))
 
 ; make sure there is a checkout of pd
 (defn ensure-pd []
-  (let [[destination (os.path.join "." "workspace" "pd")]]
-    (if (not (m-pd?))
-      (do
-        (print "Checking out Pure Data")
-        (checkout pd-repo destination)))
-    destination))
+  (if (not (m-pd?))
+    (do
+      (print "Checking out Pure Data")
+      (checkout pd-repo-uri pd-path)))
+  pd-path)
 
 ; make sure we have an up-to-date checked out copy of a particular repository
-(defn ensure-checked-out [repo-path destination]
+(defn ensure-checked-out [repo-uri destination]
   (if (os.path.isdir destination)
     (do
       (print "Updating" destination)
-      (update repo-path destination))
+      (update repo-uri destination))
     (do
-      (print "Checking out" repo-path "into" destination)
-      (checkout repo-path destination))))
+      (print "Checking out" repo-uri "into" destination)
+      (checkout repo-uri destination))))
 
 ; get the name of the external from the repository path
-(defn get-external-name [repo-path]
-  (os.path.basename (.rstrip repo-path "/")))
+(defn get-external-name [repo-uri]
+  (os.path.basename (.rstrip repo-uri "/")))
 
 ; get the destination the external should go into
 (defn get-external-destination [external-name]
-  (os.path.join "." "workspace" "externals" external-name))
+  (os.path.join externals-build-path external-name))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
