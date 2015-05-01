@@ -6,9 +6,17 @@
 (import argparse)
 (import sh)
 (import shutil)
+(import platform)
 
 (def pd-repo "git://git.code.sf.net/p/pure-data/pure-data")
 (def binary-names {:git "Git" :make "Make" :svn "Subversion"})
+
+; get the externals' homedir install location for this platform - from s_path.c
+(def externals-folder
+  (let [[system-name (platform.system)]]
+    (cond [(= system-name "Linux") (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
+    [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
+    [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
@@ -56,7 +64,7 @@
 
 ; uses make to install an external
 (defn install-one [location]
-  (make "-C" location "STRIP=strip --strip-unneeded -R .note -R .comment" "DESTDIR='../../../pd-externals/'" "objectsdir=''" "install"))
+  (make "-C" location "STRIP=strip --strip-unneeded -R .note -R .comment" (% "DESTDIR='%s'" externals-folder) "objectsdir=''" "install"))
 
 ; uses make to build an external
 (defn build-one [location]
@@ -106,7 +114,7 @@
         (ensure-checked-out args.repository destination)
         (print "Building" destination)
         (build-one destination)))
-  ; install a particular external into the local pd-externals directory
+  ; install a particular external into the user's pd-externals directory
   :install (fn [args]
     (let [
       [external-name (get-external-name args.repository)]
@@ -114,7 +122,7 @@
         ; make sure the repository is built
         ((:build commands) args)
         ; then install it
-        (print (% "Installing %s into ./pd-externals/%s" (tuple [destination external-name])))
+        (print (% "Installing %s into %s" (tuple [destination (os.path.join externals-folder external-name)])))
         (install-one destination)))
   ; manipulate the version of Pd
   :pd (fn [args]
