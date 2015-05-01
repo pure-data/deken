@@ -18,6 +18,10 @@
 
 (def binary-names {:git "Git" :make "Make" :svn "Subversion"})
 
+(def strip-flag {
+  :Darwin "STRIP=strip -x"
+  :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
+
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
   (let [[system-name (platform.system)]]
@@ -86,7 +90,7 @@
 
 ; uses make to install an external
 (defn install-one [location]
-  (make "-C" location "STRIP=strip --strip-unneeded -R .note -R .comment" (% "DESTDIR='%s'" externals-folder) "objectsdir=''" "install"))
+  (make "-C" location (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" externals-folder) "objectsdir=''" "install"))
 
 ; uses make to build an external
 (defn build-one [location]
