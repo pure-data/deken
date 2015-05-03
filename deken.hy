@@ -7,6 +7,7 @@
 (import sh)
 (import shutil)
 (import platform)
+(import zipfile)
 (import string)
 
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
@@ -119,6 +120,19 @@
     (do
       (print "Checking out" repo-uri "into" destination)
       (checkout repo-uri destination))))
+
+; zip up a single directory
+; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
+(defn zip-dir [directory-to-zip zip-file]
+  (let [
+    [zipf (zipfile.ZipFile zip-file "w")]
+    [root-basename (os.path.basename directory-to-zip)]
+    [root-path (os.path.join directory-to-zip "..")]]
+      (for [[root dirs files] (os.walk directory-to-zip)]
+        (for [file files]
+             (let [[file-path (os.path.join root file)]]
+               (zipf.write file-path (os.path.relpath file-path root-path)))))
+      (zipf.close)))
 
 ; get the name of the external from the repository path
 (defn get-external-name [repo-uri]
