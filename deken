@@ -47,21 +47,24 @@ if $cygwin; then
     export DEKEN_HOME=`cygpath -w "$DEKEN_HOME"`
 fi
 
-function find_binary {
-    [ "" == "`which $1`" ] || echo "`which $1`" && (\
-        for p in "$HOME/.local/bin/$1" "$HOME/Library/Python/2.7/bin/$1";
-        do
-            [ -x "$p" ] && ( echo "$p"; break; )
-        done
-    )
-}
-
 function bail_install {
-    echo "Self-installation of Deken failed. Please paste any errors in an issue at https://github.com/pure-data/deken/issues"
+    echo "Self-installation of Deken failed. Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
     # remove all trace of our attempts to install.
     rm -rf $DEKEN_HOME;
     # bail from this script.
     exit 1;
+}
+
+function install_virtualenv {
+	echo "Downloading & installing Virtualenv."
+	rm -rf $DEKEN_HOME/virtualenv-source
+	mkdir -p $DEKEN_HOME/virtualenv-source
+	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.1.1.tar.gz
+	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/
+	mv $DEKEN_HOME/virtualenv-source/virtualenv-*/* $DEKEN_HOME/virtualenv-source
+	pushd $DEKEN_HOME/virtualenv-source
+	/usr/bin/env python setup.py build
+	popd
 }
 
 function install_deken {
@@ -74,13 +77,6 @@ function install_deken {
     [ "" == "`which make`" ] && \
         echo "Oops, no Make found! You need Make to run Deken." && bail_install;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
-    [ "" == "`find_binary pip`" ] && (\
-        ( echo "Installing pip." && \
-        $HTTP_CLIENT $DEKEN_HOME/get-pip.py $PIP_SOURCE && \
-        python $DEKEN_HOME/get-pip.py --user ) || bail_install);
-    [ "" == "`find_binary virtualenv`" ] && (\
-        ( echo "Installing virtualenv." && \
-        `find_binary pip` install --user virtualenv) || bail_install);
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
         $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || bail_install)
@@ -89,16 +85,17 @@ function install_deken {
         ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
         $HTTP_CLIENT $DEKEN_HOME/deken.hy $DEKEN_BASE_URL/deken.hy ) || bail_install)
     [ -e "$DEKEN_HOME/deken.hy" ] || bail_install
+    [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv;
     [ -d "$DEKEN_HOME/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
-        `find_binary virtualenv` "$DEKEN_HOME/virtualenv" || exit 1)
+        $DEKEN_HOME/virtualenv-source/virtualenv.py "$DEKEN_HOME/virtualenv" || exit 1)
     [ -x "$DEKEN_HOME/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
         $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || exit 1)
 }
 
 function upgrade_deken {
-    for f in requirements.txt deken.hy;
+    for f in deken requirements.txt deken.hy;
     do
         echo "Fetching $f file: $DEKEN_BASE_URL/$f";
         $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( echo "Error upgrading $f"; exit 1; );
