@@ -164,6 +164,22 @@
         ; then install it
         (print (% "Installing %s into %s" (tuple [external-name externals-folder])))
         (install-one build-folder externals-folder)))
+  ; zip up a set of built externals
+  :package (fn [args]
+    ; are they asking the package a directory or an existing repository?
+    (if (os.path.isdir args.repository)
+      ; if asking for a directory just package it up
+      (zip-dir args.repository (+ args.repository (get-architecture-prefix) "-deken.zip"))
+      ; otherwise build and then package
+      (let [
+        [external-name (get-external-name args.repository)]
+        [build-folder (get-external-build-folder external-name)]
+        [package-folder (os.path.join externals-packaging-path external-name)]
+        [package-filename (+ package-folder "-for-" (get-architecture-prefix) "-deken.zip")]]
+          ((:build commands) args)
+          (install-one build-folder package-folder)
+          (print "Packaging into" package-filename)
+          (zip-dir package-folder package-filename))))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
@@ -195,6 +211,7 @@
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
     [arg-build (apply arg-subparsers.add_parser ["build"])]
     [arg-install (apply arg-subparsers.add_parser ["install"])]
+    [arg-package (apply arg-subparsers.add_parser ["package"])]
     [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]
     [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
@@ -202,6 +219,7 @@
       (apply arg-parser.add_argument ["--platform"] {"action" "version" "version" (get-architecture-prefix) "help" "Outputs the current build platform identifier string."})
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
       (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
+      (apply arg-package.add_argument ["repository"] {"help" "Either the path to a directory of externals to be packaged, or the SVN or git repository of an external to package."})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
