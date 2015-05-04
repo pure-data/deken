@@ -17,12 +17,6 @@
 (def pd-source-path (os.path.join pd-path "src"))
 (def externals-build-path (os.path.abspath (os.path.join "workspace" "externals")))
 
-(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
-
-(def strip-flag {
-  :Darwin "STRIP=strip -x"
-  :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
-
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
   (let [[system-name (platform.system)]]
@@ -30,6 +24,12 @@
       [(= system-name "Linux") (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
       [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
       [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
+
+(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
+
+(def strip-flag {
+  :Darwin "STRIP=strip -x"
+  :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
 
 ; create an architecture string
 (defn arch-string [&rest args]
