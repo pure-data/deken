@@ -16,6 +16,7 @@
 (def pd-binary-path (os.path.join pd-path "bin" "pd"))
 (def pd-source-path (os.path.join pd-path "src"))
 (def externals-build-path (os.path.abspath (os.path.join "workspace" "externals")))
+(def externals-packaging-path (os.path.abspath (os.path.join "workspace" "pd-externals")))
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -90,14 +91,14 @@
     (in-dir destination svn "update")))
 
 ; uses make to install an external
-(defn install-one [location]
-  (make "-C" location (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" externals-folder) "objectsdir=''" "install"))
+(defn install-one [build-folder destination-folder]
+  (make "-C" build-folder (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" destination-folder) "objectsdir=''" "install"))
 
 ; uses make to build an external
-(defn build-one [location]
+(defn build-one [build-folder]
   (try (import [sh [make]])
     (catch [ImportError] (print "Make binary not found. Please install make."))
-    (finally (make "-C" location (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))))
+    (finally (make "-C" build-folder (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))))
 
 ; check for the existence of m_pd.h
 (defn m-pd? []
@@ -139,7 +140,7 @@
   (os.path.basename (.rstrip repo-uri "/")))
 
 ; get the destination the external should go into
-(defn get-external-destination [external-name]
+(defn get-external-build-folder [external-name]
   (os.path.join externals-build-path external-name))
 
 ; the executable portion of the different sub-commands that make up the deken tool
@@ -148,21 +149,21 @@
   :build (fn [args]
     (let [
       [external-name (get-external-name args.repository)]
-      [destination (get-external-destination external-name)]
+      [build-folder (get-external-build-folder external-name)]
       [pd-dir (ensure-pd)]]
-        (ensure-checked-out args.repository destination)
-        (print "Building" destination)
-        (build-one destination)))
+        (ensure-checked-out args.repository build-folder)
+        (print "Building" build-folder)
+        (build-one build-folder)))
   ; install a particular external into the user's pd-externals directory
   :install (fn [args]
     (let [
       [external-name (get-external-name args.repository)]
-      [destination (get-external-destination external-name)]]
+      [build-folder (get-external-build-folder external-name)]]
         ; make sure the repository is built
         ((:build commands) args)
         ; then install it
-        (print (% "Installing %s into %s" (tuple [destination (os.path.join externals-folder external-name)])))
-        (install-one destination)))
+        (print (% "Installing %s into %s" (tuple [external-name externals-folder])))
+        (install-one build-folder externals-folder)))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
