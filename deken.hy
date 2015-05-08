@@ -143,6 +143,10 @@
 (defn get-external-build-folder [external-name]
   (os.path.join externals-build-path external-name))
 
+; compute the zipfile name for a particular external on this platform
+(defn make-zipfile-name [folder]
+  (+ folder "-xtrnl-" (get-architecture-prefix) ".zip"))
+
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
   ; download and build a particular external from a repository
@@ -169,17 +173,20 @@
     ; are they asking the package a directory or an existing repository?
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
-      (zip-dir args.repository (+ args.repository (get-architecture-prefix) "-deken.zip"))
+      (let [[package-filename (make-zipfile-name args.repository)]]
+        (zip-dir args.repository package-filename)
+        package-filename)
       ; otherwise build and then package
       (let [
         [external-name (get-external-name args.repository)]
         [build-folder (get-external-build-folder external-name)]
         [package-folder (os.path.join externals-packaging-path external-name)]
-        [package-filename (+ package-folder "-for-" (get-architecture-prefix) "-deken.zip")]]
+        [package-filename (make-zipfile-name package-folder)]]
           ((:build commands) args)
           (install-one build-folder package-folder)
           (print "Packaging into" package-filename)
-          (zip-dir package-folder package-filename))))
+          (zip-dir package-folder package-filename)
+          package-filename)))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
