@@ -158,7 +158,7 @@
 
 ; get the name of the external from the repository path
 (defn get-external-name [repo-uri]
-  (os.path.basename (.rstrip repo-uri "/")))
+  (os.path.basename (.rstrip (.rstrip repo-uri "/") ".git")))
 
 ; get the destination the external should go into
 (defn get-external-build-folder [external-name]
