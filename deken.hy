@@ -204,7 +204,7 @@
         [package-folder (os.path.join externals-packaging-path external-name)]
         [package-filename (make-zipfile-name package-folder)]]
           ((:build commands) args)
-          (install-one build-folder package-folder)
+          (install-one build-folder externals-packaging-path)
           (print "Packaging into" package-filename)
           (zip-dir package-folder package-filename)
           package-filename)))
