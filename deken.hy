@@ -9,6 +9,8 @@
 (import platform)
 (import zipfile)
 (import string)
+(import ConfigParser)
+(import StringIO)
 
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 
@@ -32,6 +34,14 @@
   :Darwin "STRIP=strip -x"
   :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
 
+; read in the config file if present
+(def config
+  (let [
+    [config-file (ConfigParser.SafeConfigParser)]
+    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open "config" "r")) (catch [e Exception] ""))))]]
+      (config-file.readfp file-buffer)
+      (dict (config-file.items "default"))))
+
 ; create an architecture string
 (defn arch-string [&rest args]
   (let [[arch (list-comp a [a (apply platform.architecture args)] a)]]
@@ -45,6 +55,13 @@
      (if (os.path.isfile pd-binary-path)
        (arch-string pd-binary-path)
        (arch-string))]))
+
+; try to obtain a value from environment, then config file, then prompt user
+(defn get-config-value [name]
+  (or
+    (os.environ.get (+ "DEKEN_" (name.upper)))
+    (config.get name)
+    (raw_input (% "Environment variable $DEKEN_%s not set and the config file $HOME/.deken/config does not contain a '%s = ...' entry.\nPlease enter %s for pure-data.info upload: " (tuple [(name.upper) name name])))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
