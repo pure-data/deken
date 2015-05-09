@@ -61,7 +61,11 @@
   (or
     (os.environ.get (+ "DEKEN_" (name.upper)))
     (config.get name)
-    (raw_input (% "Environment variable $DEKEN_%s not set and the config file $HOME/.deken/config does not contain a '%s = ...' entry.\nPlease enter %s for pure-data.info upload: " (tuple [(name.upper) name name])))))
+    (raw_input (% (+
+      "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
+      "To avoid this prompt in future please add a setting to the config or environment.\n"
+      "Please enter %s for pure-data.info upload: ")
+        (tuple [(name.upper) (os.path.abspath (os.path.join "config")) name name])))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
