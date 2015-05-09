@@ -13,7 +13,7 @@
 (import StringIO)
 
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
-
+(def externals-host "puredata.info")
 (def pd-path (os.path.abspath (os.path.join "workspace" "pd")))
 (def pd-binary-path (os.path.join pd-path "bin" "pd"))
 (def pd-source-path (os.path.join pd-path "src"))
@@ -64,8 +64,8 @@
     (raw_input (% (+
       "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
       "To avoid this prompt in future please add a setting to the config or environment.\n"
-      "Please enter %s for pure-data.info upload: ")
-        (tuple [(name.upper) (os.path.abspath (os.path.join "config")) name name])))))
+      "Please enter %s for http://%s/: ")
+        (tuple [(name.upper) (os.path.abspath (os.path.join "config")) name name externals-host])))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
