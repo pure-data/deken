@@ -11,6 +11,7 @@
 (import string)
 (import ConfigParser)
 (import StringIO)
+(import easywebdav)
 
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 (def externals-host "puredata.info")
@@ -156,6 +157,23 @@
                (zipf.write file-path (os.path.relpath file-path root-path)))))
       (zipf.close)))
 
+; upload a zipped up package to pure-data.info
+(defn upload-package [filepath]
+  (let [
+    ; get username and password from the environment, config, or user input
+    [username (get-config-value "username")]
+    [password (get-config-value "password")]
+    [filename (os.path.basename filepath)]
+    [destination (+ "/Members/" username "/" filename)]
+    [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
+      (print (+ "Uploading to http://" externals-host destination))
+      (try
+        (dav.upload filepath destination)
+        (catch [e easywebdav.client.OperationFailed]
+          (print (+ "Couldn't upload to http://" externals-host destination))
+          (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
+          (sys.exit 1)))))
+
 ; get the name of the external from the repository path
 (defn get-external-name [repo-uri]
   (os.path.basename (.rstrip (.rstrip repo-uri "/") ".git")))
@@ -208,6 +226,17 @@
           (print "Packaging into" package-filename)
           (zip-dir package-folder package-filename)
           package-filename)))
+  ; upload packaged external to pure-data.info
+  :upload (fn [args]
+    (if (os.path.isfile args.repository)
+      ; user has asked to upload a zipfile
+      (if (args.repository.endswith ".zip")
+        (upload-package args.repository)
+        (do
+          (print "Not an externals zipfile.")
+          (sys.exit 1)))
+      ; otherwise we need to make the zipfile first
+      (upload-package ((:package commands) args))))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
@@ -240,6 +269,7 @@
     [arg-build (apply arg-subparsers.add_parser ["build"])]
     [arg-install (apply arg-subparsers.add_parser ["install"])]
     [arg-package (apply arg-subparsers.add_parser ["package"])]
+    [arg-upload (apply arg-subparsers.add_parser ["upload"])]
     [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]
     [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
     [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
@@ -248,6 +278,7 @@
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
       (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
       (apply arg-package.add_argument ["repository"] {"help" "Either the path to a directory of externals to be packaged, or the SVN or git repository of an external to package."})
+      (apply arg-upload.add_argument ["repository"] {"help" "Either the path to an external zipfile to be uploaded, or the SVN or git repository of an external to package."})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
