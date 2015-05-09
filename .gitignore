@@ -2,3 +2,4 @@
 virtualenv*
 build
 workspace
+deken.cfg

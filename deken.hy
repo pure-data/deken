@@ -38,7 +38,7 @@
 (def config
   (let [
     [config-file (ConfigParser.SafeConfigParser)]
-    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open "config" "r")) (catch [e Exception] ""))))]]
+    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open "deken.cfg" "r")) (catch [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
