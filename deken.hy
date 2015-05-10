@@ -13,13 +13,15 @@
 (import StringIO)
 (import easywebdav)
 
+(def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 (def externals-host "puredata.info")
-(def pd-path (os.path.abspath (os.path.join "workspace" "pd")))
+(def workspace-path (os.path.abspath (os.path.join deken-home "workspace")))
+(def pd-path (os.path.join workspace-path "pd"))
 (def pd-binary-path (os.path.join pd-path "bin" "pd"))
 (def pd-source-path (os.path.join pd-path "src"))
-(def externals-build-path (os.path.abspath (os.path.join "workspace" "externals")))
-(def externals-packaging-path (os.path.abspath (os.path.join "workspace" "pd-externals")))
+(def externals-build-path (os.path.join workspace-path "externals"))
+(def externals-packaging-path (os.path.join workspace-path "pd-externals"))
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -66,7 +68,7 @@
       "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
       "To avoid this prompt in future please add a setting to the config or environment.\n"
       "Please enter %s for http://%s/: ")
-        (tuple [(name.upper) (os.path.abspath (os.path.join "config")) name name externals-host])))))
+        (tuple [(name.upper) (os.path.abspath (os.path.join deken-home "config")) name name externals-host])))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
