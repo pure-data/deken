@@ -1,5 +1,5 @@
 #!/usr/bin/env hy
-; ./deken build svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
+; deken build svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
 
 (import sys)
 (import os)
@@ -213,6 +213,7 @@
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
       (let [[package-filename (make-zipfile-name args.repository)]]
+        (print "Packaging into" package-filename)
         (zip-dir args.repository package-filename)
         package-filename)
       ; otherwise build and then package
@@ -231,7 +232,9 @@
     (if (os.path.isfile args.repository)
       ; user has asked to upload a zipfile
       (if (args.repository.endswith ".zip")
-        (upload-package args.repository)
+        (do
+          (print (+ "Uploading " args.repository))
+          (upload-package args.repository))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
