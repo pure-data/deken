@@ -96,13 +96,18 @@ function install_deken {
 }
 
 function upgrade_deken {
-    for f in deken requirements.txt deken.hy;
+    # first upgrade this script itself
+    echo "Upgrading $BASH_SOURCE."
+    $HTTP_CLIENT $BASH_SOURCE $DEKEN_BASE_URL/deken
+    # next upgrade our dependencies
+    for f in requirements.txt deken.hy;
     do
         echo "Fetching $f file: $DEKEN_BASE_URL/$f";
         $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( echo "Error upgrading $f"; exit 1; );
         mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
     done
-    ./virtualenv/bin/pip install -r requirements.txt
+    # finally update the python dependencies
+    $DEKEN_HOME/virtualenv/bin/pip install -r requirements.txt
     echo "Successfully upgraded."
 }
 
