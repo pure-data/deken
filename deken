@@ -114,11 +114,11 @@ function upgrade_deken {
 [ -d "$DEKEN_HOME" ] || install_deken
 
 # last check to make sure we can bootstrap
-cd $DEKEN_HOME || bail_install;
+[ -d "$DEKEN_HOME" ] || bail_install;
 
 # catch the special "upgrade" command
 [ "$1" == "upgrade" ] && \
     # run he upgrade command instead
     upgrade_deken || \
     # run the real deken command with args passed through
-    ./virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
+    $DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
