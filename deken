@@ -58,13 +58,14 @@ function bail_install {
 function install_virtualenv {
 	echo "Downloading & installing Virtualenv."
 	rm -rf $DEKEN_HOME/virtualenv-source
-	mkdir -p $DEKEN_HOME/virtualenv-source
-	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.1.1.tar.gz
-	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/
+	mkdir -p $DEKEN_HOME/virtualenv-source && \
+	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.1.1.tar.gz && \
+	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/ && \
 	mv $DEKEN_HOME/virtualenv-source/virtualenv-*/* $DEKEN_HOME/virtualenv-source
-	pushd $DEKEN_HOME/virtualenv-source
-	/usr/bin/env python setup.py build
-	popd
+	[ -d "$DEKEN_HOME/virtualenv-source" ] && (\
+		pushd $DEKEN_HOME/virtualenv-source && \
+		/usr/bin/env python setup.py build && \
+		popd ) || bail_install;
 }
 
 function install_deken {
