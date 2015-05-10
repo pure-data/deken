@@ -41,7 +41,6 @@ fi
 
 export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
 DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/master"
-PIP_SOURCE="https://bootstrap.pypa.io/get-pip.py"
 
 if $cygwin; then
     export DEKEN_HOME=`cygpath -w "$DEKEN_HOME"`
