@@ -178,7 +178,9 @@
 
 ; get the name of the external from the repository path
 (defn get-external-name [repo-uri]
-  (os.path.basename (.rstrip (.rstrip repo-uri "/") ".git")))
+  (if (os.path.isdir repo-uri)
+    (os.path.basename (os.path.abspath repo-uri))
+    (os.path.basename (.rstrip (.rstrip repo-uri "/") ".git"))))
 
 ; get the destination the external should go into
 (defn get-external-build-folder [external-name]
@@ -196,9 +198,14 @@
       [external-name (get-external-name args.repository)]
       [build-folder (get-external-build-folder external-name)]
       [pd-dir (ensure-pd)]]
-        (ensure-checked-out args.repository build-folder)
-        (print "Building" build-folder)
-        (build-one build-folder)))
+        (if (os.path.isdir args.repository)
+          (do
+            (print "Building" external-name)
+            (build-one args.repository))
+          (do
+            (ensure-checked-out args.repository build-folder)
+            (print "Building" build-folder)
+            (build-one build-folder)))))
   ; install a particular external into the user's pd-externals directory
   :install (fn [args]
     (let [
@@ -206,9 +213,12 @@
       [build-folder (get-external-build-folder external-name)]]
         ; make sure the repository is built
         ((:build commands) args)
-        ; then install it
+        ; go ahead and perform the install
         (print (% "Installing %s into %s" (tuple [external-name externals-folder])))
-        (install-one build-folder externals-folder)))
+        ; if they asked for a specific directory to be installed, do that
+        (if (os.path.isdir args.repository)
+          (install-one args.repository externals-folder)
+          (install-one build-folder externals-folder))))
   ; zip up a set of built externals
   :package (fn [args]
     ; are they asking the package a directory or an existing repository?
