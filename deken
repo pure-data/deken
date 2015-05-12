@@ -106,7 +106,7 @@ function upgrade_deken {
         mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
     done
     # finally update the python dependencies
-    $DEKEN_HOME/virtualenv/bin/pip install -r requirements.txt
+    $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt
     echo "Successfully upgraded."
 }
 
