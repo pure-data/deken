@@ -4,7 +4,6 @@
 (import sys)
 (import os)
 (import argparse)
-(import sh)
 (import shutil)
 (import platform)
 (import zipfile)
@@ -72,6 +71,7 @@
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
+  (import sh)
   (try
     (let [[binary-fn (getattr sh binary-name)]]
       (fn [&rest args]
@@ -83,11 +83,6 @@
     (catch [e sh.CommandNotFound]
       (print binary-name (% "binary not found. Please install %s." (get binary-names (keyword binary-name))))
       (sys.exit 1))))
-
-; error-handling wrappers for the command line binaries
-(def git (get-binary "git"))
-(def svn (get-binary "svn"))
-(def make (get-binary "make"))
 
 ; execute a command inside a directory
 (defn in-dir [destination f &rest args]
@@ -105,14 +100,14 @@
 ; uses git or svn to check out 
 (defn checkout [repo-uri destination]
   (if (is-git? repo-uri)
-    (git "clone" repo-uri destination)
-    (svn "checkout" repo-uri destination)))
+    ((get-binary "git") "clone" repo-uri destination)
+    ((get-binary "svn") "checkout" repo-uri destination)))
 
 ; uses git or svn to update the repository
 (defn update [repo-uri destination]
   (if (is-git? repo-uri)
-    (in-dir destination git "pull")
-    (in-dir destination svn "update")))
+    (in-dir destination (get-binary "git") "pull")
+    (in-dir destination (get-binary "svn") "update")))
 
 ; uses make to install an external
 (defn install-one [build-folder destination-folder]
@@ -259,9 +254,9 @@
       [deken-home (os.getcwd)]]
         (os.chdir destination)
         (if args.version
-          (git "checkout" args.version))
+          ((get-binary "git") "checkout" args.version))
         ; tell the user what version is currently checked out
-        (print (% "Pd version %s checked out" (.rstrip (git "rev-parse" "--abbrev-ref" "HEAD"))))
+        (print (% "Pd version %s checked out" (.rstrip ((get-binary "git") "rev-parse" "--abbrev-ref" "HEAD"))))
         (os.chdir deken-home)))
   ; deletes the workspace directory
   :clean (fn [args]
