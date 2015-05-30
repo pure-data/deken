@@ -58,6 +58,28 @@
        (arch-string pd-binary-path)
        (arch-string))]))
 
+; get architecture strings from a windows DLL
+; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
+(defn check-dll [filename]
+  (let [[win-types {
+                   "0x014c" ["i386" 32]
+                   "0x0200" ["IA64" 64]
+                   "0x8664" ["AMD64" 64]}]
+        [f (file filename)]
+        [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
+    ;(print magic offset)
+    (if (= magic "MZ")
+      ; has correct magic bytes
+      (do
+        (f.seek offset)
+        (let [[[sig skip machine] (struct.unpack (str "<2s2sH") (f.read 6))]]
+          ;(print sig (% "0x%04x" machine))
+          (if (= sig "PE")
+            ; has correct signature
+            (win-types.get (% "0x%04x" machine) ["unknown" "unknown"])
+            (raise (Exception "Not a PE Executable.")))))
+      (raise (Exception "Not a valid Windows dll.")))))
+
 ; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name]
   (or
