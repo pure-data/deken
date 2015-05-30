@@ -271,7 +271,7 @@
   :update (fn [])})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
-(if (= __name__ "__main__")
+(defn main []
   (let [
     [version (.get os.environ "DEKEN_VERSION" "?")]
     [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
@@ -295,3 +295,6 @@
         [command (.get commands (keyword arguments.command))]]
           (print "Deken" version)
           (command arguments))))
+
+(if (= __name__ "__main__")
+  (main))
