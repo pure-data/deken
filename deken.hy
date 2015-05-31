@@ -8,6 +8,7 @@
 (import platform)
 (import zipfile)
 (import string)
+(import struct)
 (import ConfigParser)
 (import StringIO)
 (import easywebdav)
@@ -21,6 +22,11 @@
 (def pd-source-path (os.path.join pd-path "src"))
 (def externals-build-path (os.path.join workspace-path "externals"))
 (def externals-packaging-path (os.path.join workspace-path "pd-externals"))
+
+(def win-types {
+  "0x014c" ["i386" 32]
+  "0x0200" ["x86_64" 64]
+  "0x8664" ["amd64" 64]})
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -60,12 +66,8 @@
 
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn check-dll [filename]
-  (let [[win-types {
-                   "0x014c" ["i386" 32]
-                   "0x0200" ["IA64" 64]
-                   "0x8664" ["AMD64" 64]}]
-        [f (file filename)]
+(defn get-windows-arch [filename]
+  (let [[f (file filename)]
         [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
     ;(print magic offset)
     (if (= magic "MZ")
@@ -76,7 +78,7 @@
           ;(print sig (% "0x%04x" machine))
           (if (= sig "PE")
             ; has correct signature
-            (win-types.get (% "0x%04x" machine) ["unknown" "unknown"])
+            [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
             (raise (Exception "Not a PE Executable.")))))
       (raise (Exception "Not a valid Windows dll.")))))
 
