@@ -83,6 +83,25 @@
        (arch-string pd-binary-path)
        (arch-string))]))
 
+; takes the externals architectures and turns them into a string
+(defn get-architecture-strings [folder]
+  (let [[archs (get-externals-architectures folder)]
+        [sep-1 ")("]
+        [sep-2 "-"]
+        ]
+    (if archs
+      (+ "(" (sep-1.join (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])) ")")
+      "")))
+
+; examine a folder for externals and return the architectures of those found
+(defn get-externals-architectures [folder]
+  (sum (list-comp (cond
+      [(x.endswith ".pd_linux") (get-elf-arch (os.path.join folder x))]
+      [(x.endswith ".pd_darwin") (get-mach-arch (os.path.join folder x))]
+      [(x.endswith ".dll") (get-windows-arch (os.path.join folder x))]
+      [true []])
+    [x (os.listdir folder)]) []))
+
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
 (defn get-windows-arch [filename]
@@ -241,7 +260,7 @@
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-zipfile-name [folder]
-  (+ folder "-xtrnl-" (get-architecture-prefix) ".zip"))
+  (+ folder (get-architecture-strings folder) "-externals.zip"))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
