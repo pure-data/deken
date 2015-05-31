@@ -1,3 +1,5 @@
 hy==0.10.1
 sh==1.11
 easywebdav==1.2.0
+pyelftools==0.23
+macholib==1.7

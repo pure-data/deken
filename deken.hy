@@ -23,6 +23,25 @@
 (def externals-build-path (os.path.join workspace-path "externals"))
 (def externals-packaging-path (os.path.join workspace-path "pd-externals"))
 
+(def elf-arch-types {
+  "EM_NONE" nil
+  "EM_386" "i386"
+  "EM_68K" "m68k"
+  "EM_IA_64" "x86_64"
+  "EM_X86_64" "amd64"
+  "EM_ARM" "arm"
+  "EM_M32" "WE32100"
+  "EM_SPARC" "Sparc"
+  "EM_88K" "m88k"
+  "EM_860" "Intel 80860"
+  "EM_MIPS" "MIPS R3000"
+  "EM_S370" "IBM System/370"
+  "EM_MIPS_RS4_BE" "MIPS 4000 big-endian"
+  "EM_AVR" "Atmel AVR 8-bit microcontroller"
+  "EM_AARCH64" "AArch64"
+  "EM_BLAFKIN" "Analog Devices Blackfin"
+  "RESERVED" "RESERVED"})
+
 (def win-types {
   "0x014c" ["i386" 32]
   "0x0200" ["x86_64" 64]
@@ -81,6 +100,21 @@
             [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
             (raise (Exception "Not a PE Executable.")))))
       (raise (Exception "Not a valid Windows dll.")))))
+
+; get architecture from an ELF (e.g. Linux)
+(defn get-elf-arch [filename]
+  (import [elftools.elf.elffile [ELFFile]])
+  (let [[elf (ELFFile (file filename))]]
+    ; TODO: check section .ARM.attributes for v number
+    ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
+    [["Linux" (elf-arch-types.get (elf.header.get "e_machine") nil) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
+
+; get architecture from a Darwin Mach-O file (OSX)
+(defn get-mach-arch [filename]
+  (import [macholib.MachO [MachO]])
+  (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
+  (let [[macho (MachO filename)]]
+    (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers])))
 
 ; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name]
