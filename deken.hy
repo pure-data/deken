@@ -277,8 +277,8 @@
   (os.path.join externals-build-path external-name))
 
 ; compute the zipfile name for a particular external on this platform
-(defn make-zipfile-name [folder]
-  (+ (.rstrip folder "/\\") (get-architecture-strings folder) "-externals.zip"))
+(defn make-zipfile-name [folder version]
+  (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals.zip"))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
@@ -314,7 +314,7 @@
     ; are they asking the package a directory or an existing repository?
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-zipfile-name args.repository)]]
+      (let [[package-filename (make-zipfile-name args.repository args.version)]]
         (print "Packaging into" package-filename)
         (zip-dir args.repository package-filename)
         package-filename)
@@ -323,7 +323,7 @@
         [external-name (get-external-name args.repository)]
         [build-folder (get-external-build-folder external-name)]
         [package-folder (os.path.join externals-packaging-path external-name)]
-        [package-filename (make-zipfile-name package-folder)]]
+        [package-filename (make-zipfile-name package-folder args.version)]]
           ((:build commands) args)
           (install-one build-folder externals-packaging-path)
           (print "Packaging into" package-filename)
@@ -382,7 +382,9 @@
       (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
       (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
       (apply arg-package.add_argument ["repository"] {"help" "Either the path to a directory of externals to be packaged, or the SVN or git repository of an external to package."})
+      (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["repository"] {"help" "Either the path to an external zipfile to be uploaded, or the SVN or git repository of an external to package."})
+      (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
