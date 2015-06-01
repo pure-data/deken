@@ -259,7 +259,7 @@
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-zipfile-name [folder]
-  (+ folder (get-architecture-strings folder) "-externals.zip"))
+  (+ (.rstrip folder "/\\") (get-architecture-strings folder) "-externals.zip"))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
