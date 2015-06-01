@@ -87,8 +87,7 @@
 (defn get-architecture-strings [folder]
   (let [[archs (get-externals-architectures folder)]
         [sep-1 ")("]
-        [sep-2 "-"]
-        ]
+        [sep-2 "-"]]
     (if archs
       (+ "(" (sep-1.join (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])) ")")
       "")))
