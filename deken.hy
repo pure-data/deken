@@ -14,6 +14,7 @@
 (import easywebdav)
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
+(def version (try (.rstrip (.read (file (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 (def externals-host "puredata.info")
 (def workspace-path (os.path.abspath (os.path.join deken-home "workspace")))
@@ -361,7 +362,6 @@
 ; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
   (let [
-    [version (.get os.environ "DEKEN_VERSION" "?")]
     [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
     [arg-build (apply arg-subparsers.add_parser ["build"])]
