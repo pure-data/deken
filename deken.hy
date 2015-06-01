@@ -54,7 +54,7 @@
 (def externals-folder
   (let [[system-name (platform.system)]]
     (cond
-      [(= system-name "Linux") (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
+      [(in system-name ["Linux" "FreeBSD"]) (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
       [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
       [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
 
@@ -77,7 +77,8 @@
   (let [[arch (list-comp a [a (apply platform.architecture args)] a)]]
     (.join "-" arch)))
 
-; get a string we can use to specify/determine the build architecture of externals on this platform
+; obsolete: get a string we can use to specify/determine the build architecture of the current platform
+; (we now inspect binaries directly)
 (defn get-architecture-prefix []
   (.join "-" [
      (platform.system)
@@ -95,14 +96,19 @@
       (+ "(" (sep-1.join (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])) ")")
       "")))
 
+; check if a particular file has an extension in a set
+(defn test-extensions [filename extensions]
+  (len (list-comp e [e extensions] (filename.endswith e))))
+
 ; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
   (sum (list-comp (cond
-      [(x.endswith ".pd_linux") (get-elf-arch (os.path.join folder x))]
-      [(x.endswith ".pd_darwin") (get-mach-arch (os.path.join folder x))]
-      [(x.endswith ".dll") (get-windows-arch (os.path.join folder x))]
+      [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
+      [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
+      [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
+      [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
       [true []])
-    [x (os.listdir folder)]) []))
+    [f (os.listdir folder)]) []))
 
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
@@ -123,12 +129,12 @@
       (raise (Exception "Not a valid Windows dll.")))))
 
 ; get architecture from an ELF (e.g. Linux)
-(defn get-elf-arch [filename]
+(defn get-elf-arch [filename oshint]
   (import [elftools.elf.elffile [ELFFile]])
   (let [[elf (ELFFile (file filename))]]
     ; TODO: check section .ARM.attributes for v number
     ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-    [["Linux" (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
+    [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
 
 ; get architecture from a Darwin Mach-O file (OSX)
 (defn get-mach-arch [filename]
