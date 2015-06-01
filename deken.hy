@@ -42,6 +42,8 @@
   "EM_BLAFKIN" "Analog Devices Blackfin"
   "RESERVED" "RESERVED"})
 
+(def arm-cpu-arch ["Pre-v4" "v4" "v4T" "v5T" "v5TE" "v5TEJ" "v6" "v6KZ" "v6T2" "v6K" "v7"])
+
 (def win-types {
   "0x014c" ["i386" 32]
   "0x0200" ["x86_64" 64]
@@ -125,7 +127,7 @@
   (let [[elf (ELFFile (file filename))]]
     ; TODO: check section .ARM.attributes for v number
     ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-    [["Linux" (elf-arch-types.get (elf.header.get "e_machine") nil) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
+    [["Linux" (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
 
 ; get architecture from a Darwin Mach-O file (OSX)
 (defn get-mach-arch [filename]
@@ -133,6 +135,16 @@
   (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
   (let [[macho (MachO filename)]]
     (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers])))
+
+; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
+(defn parse-arm-elf-arch [arm-elf]
+  (let [[arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes")))]
+        [data (and arm-section (.startswith (arm-section.data) "A") (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi")))]]
+        (if data (do
+            ; (print (struct.unpack (str "<s") (slice data 7)))
+            (let [[[name bins] (.split (slice data 7) "\x00")]
+                  [arch (get arm-cpu-arch (ord (slice bins 1 2)))]]
+              arch)))))
 
 ; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name]
