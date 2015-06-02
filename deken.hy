@@ -207,13 +207,11 @@
 
 ; uses make to install an external
 (defn install-one [build-folder destination-folder]
-  (make "-C" build-folder (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" destination-folder) "objectsdir=''" "install"))
+  ((get-binary "make") "-C" build-folder (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" destination-folder) "objectsdir=''" "install"))
 
 ; uses make to build an external
 (defn build-one [build-folder]
-  (try (import [sh [make]])
-    (catch [ImportError] (print "Make binary not found. Please install make."))
-    (finally (make "-C" build-folder (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))))
+  ((get-binary "make") "-C" build-folder (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))
 
 ; check for the existence of m_pd.h
 (defn m-pd? []
