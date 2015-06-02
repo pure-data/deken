@@ -14,6 +14,7 @@
 (import easywebdav)
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
+(def config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (def version (try (.rstrip (.read (file (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
 (def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 (def externals-host "puredata.info")
@@ -68,7 +69,7 @@
 (def config
   (let [
     [config-file (ConfigParser.SafeConfigParser)]
-    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open "deken.cfg" "r")) (catch [e Exception] ""))))]]
+    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
@@ -162,7 +163,7 @@
       "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
       "To avoid this prompt in future please add a setting to the config or environment.\n"
       "Please enter %s for http://%s/: ")
-        (tuple [(name.upper) (os.path.abspath (os.path.join deken-home "config")) name name externals-host])))))
+        (tuple [(name.upper) config-file-path name name externals-host])))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
