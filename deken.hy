@@ -93,7 +93,7 @@
         [sep-1 ")("]
         [sep-2 "-"]]
     (if archs
-      (+ "(" (sep-1.join (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])) ")")
+      (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")")
       "")))
 
 ; check if a particular file has an extension in a set
