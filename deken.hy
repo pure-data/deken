@@ -72,7 +72,7 @@
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
-; create an architecture string
+; create an architecture string - deprecated for get-architecture-strings
 (defn arch-string [&rest args]
   (let [[arch (list-comp a [a (apply platform.architecture args)] a)]]
     (.join "-" arch)))
