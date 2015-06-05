@@ -1,3 +1,23 @@
+A minimal package management system for Pure Data externals.
+
+![Animated GIF demonstration of the Deken plugin user interface](https://raw.githubusercontent.com/pure-data/deken/master/deken.gif)
+
+Packages are stored on <http://puredata.info/> and can be installed using the `Help -> Find Packages` menu after installing the [TCL plugin](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl).
+
+## TCL Plugin ##
+
+Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
+
+ * Linux = `~/pd-externals/`
+ * OSX = `~/Library/Pd/`
+ * Windows = `%AppData%\Pd`
+
+ Then select `Help -> Find Packages` and type the name of the external you would like to search for.
+
+# Developers #
+
+You can use the command line tool to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~(Linux-amd64-64)-externals.zip`.
+
 ## Get started ##
 
 	$ curl https://raw.githubusercontent.com/pure-data/deken/master/deken > ~/bin/deken
@@ -7,6 +27,24 @@
 	I'm going to install myself and my dependencies into ~/.deken now.
 	Feel free to ctrl-C now if you don't want to do this.
 	...
+
+## Create and Upload a package ##
+
+You have a directory containing your compiled externals object files called `my-external`.
+
+This command will create a file like `my-external-v0.1-(Linux-amd64-64)-externals.zip` and upload it to your account on <http://puredata.info/> where the search plugin can find it:
+
+	$ deken package -v 0.1 my-external
+	$ deken upload my-external
+
+You can also just call the 'upload' directly and it will call the package command for you in one step:
+
+	$ deken upload -v 0.1 my-external
+
+## Upgrade ##
+
+	$ deken upgrade
+	... self upgrades the scripts ...
 
 ## Show help ##
 
@@ -61,11 +99,6 @@ Change Pd version:
 	$ deken pd master
 	Deken 0.1
 	Pd version master checked out
-
-## Upgrade ##
-
-	$ deken upgrade
-	... self upgrades the scripts ...
 
 ### How to make your externals compatible ###
 
