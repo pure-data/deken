@@ -54,7 +54,9 @@
   "0x0200" ["x86_64" 64]
   "0x8664" ["amd64" 64]})
 
+; algorithm to use to hash files
 (def hasher hashlib.sha256)
+(def hash-extension (.pop (hasher.__name__.split "_")))
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -173,7 +175,6 @@
 ; caculate the sha256 hash of a file
 (defn hash-sum-file [filename]
   (let [[hashfn (hasher)]
-        [extension (.pop (hasher.__name__.split "_"))]
         [blocksize 65536]
         [f (file filename)]
         [read-chunk (fn [] (f.read blocksize))]]
@@ -182,7 +183,7 @@
             (hashfn.update buf)
             (recur (read-chunk)))))
     (let [[digest (hashfn.hexdigest)]]
-      (.write (file (+ filename (% ".%s" extension)) "wb") digest)
+      (.write (file (+ filename (% ".%s" hash-extension)) "wb") digest)
       digest)))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
@@ -279,7 +280,11 @@
     [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
       (print (+ "Uploading to http://" externals-host destination))
       (try
-        (dav.upload filepath destination)
+        (do
+          ; upload the package file
+          (dav.upload filepath destination)
+          ; upload the hash
+          (dav.upload (+ filepath "." hash-extension) (+ destination "." hash-extension)))
         (catch [e easywebdav.client.OperationFailed]
           (print (+ "Couldn't upload to http://" externals-host destination))
           (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
@@ -355,12 +360,15 @@
       (if (args.repository.endswith ".zip")
         (do
           (print (+ "Uploading " args.repository))
+          (hash-sum-file args.repository)
           (upload-package args.repository))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
       ; otherwise we need to make the zipfile first
-      (upload-package ((:package commands) args))))
+      (let [[package-filename ((:package commands) args)]]
+        (hash-sum-file package-filename)
+        (upload-package package-filename))))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
