@@ -4,7 +4,7 @@ A minimal package management system for Pure Data externals.
 
 Packages are stored on <http://puredata.info/> and can be installed using the `Help -> Find Packages` menu after installing the [TCL plugin](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl).
 
-## TCL Plugin ##
+## Download ##
 
 Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
 
@@ -17,6 +17,8 @@ Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data
 # Developers #
 
 You can use the command line tool to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~(Linux-amd64-64)-externals.zip`.
+
+If you don't want to use the `deken` packaging tool you can zip and upload the files yourself. See the "Filename format" section below.
 
 ## Get started ##
 
@@ -40,6 +42,27 @@ This command will create a file like `my-external-v0.1-(Linux-amd64-64)-external
 You can also just call the 'upload' directly and it will call the package command for you in one step:
 
 	$ deken upload -v 0.1 my-external
+
+## Filename format ##
+
+The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable:
+
+	NAME[-VERSION-](ARCH1)(ARCH2)(ARCHX...)-externals.zip
+
+ * NAME is the name of the externals package ("zexy", "cyclone", "freeverb~").
+ * -VERSION- is an optimal section which can contain version information for the end user.
+ * (ARCH1)(ARCH2) etc. are architecture specifiers for each type of architecture the externals are compiled for within this zipfile.
+
+Note that the zipfile should contain a single directory at the top level with NAME the same as the externals package itself. For example a freeverb~ externals package would contain a directory "freeverb~" at the top level of the zipfile in which the externals live.
+
+The square brackets around the "-VERSION-" section are to indicate it is optional, don't include them. The round braces "(" around architectures are included to separate the architectures visibly from eachother.
+
+Some examples:
+
+	freeverb~(Windows-i386-32)-externals.zip
+	freeverb~(Linux-armv6-32)-externals.zip
+	cyclone-0.1_alpha57(Linux-x86_64-64)-externals.zip
+	freeverb~(Darwin-i386-32)(Darwin-x86_64-32)(Linux-armv6-32)-externals.zip
 
 ## Upgrade ##
 
