@@ -16,7 +16,7 @@ Then select `Help -> Find Packages` and type the name of the external you would 
 
 # Developers #
 
-You can use the command line tool to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
+You can use the [`deken` command line tool](https://raw.githubusercontent.com/pure-data/deken/master/deken) to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
 
 If you don't want to use the `deken` packaging tool you can zip and upload the files yourself. See the "Filename format" section below.
 
@@ -32,16 +32,16 @@ If you don't want to use the `deken` packaging tool you can zip and upload the f
 
 ## Create and Upload a package ##
 
-You have a directory containing your compiled externals object files called `my-external`.
+You have a directory containing your compiled externals object files called `my_external`.
 
-This command will create a file like `my-external-v0.1-(Linux-amd64-64)-externals.zip` and upload it to your account on <http://puredata.info/> where the search plugin can find it:
+This command will create a file like `my_external-v0.1-(Linux-amd64-64)-externals.zip` and upload it to your account on <http://puredata.info/> where the search plugin can find it:
 
-	$ deken package -v 0.1 my-external
-	$ deken upload my-external
+	$ deken package -v 0.1 my_external
+	$ deken upload my_external
 
 You can also just call the 'upload' directly and it will call the package command for you in one step:
 
-	$ deken upload -v 0.1 my-external
+	$ deken upload -v 0.1 my_external
 
 ## Filename format ##
 
