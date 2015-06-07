@@ -11,7 +11,10 @@
 (import struct)
 (import ConfigParser)
 (import StringIO)
+(import hashlib)
+
 (import easywebdav)
+(require hy.contrib.loop)
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
@@ -50,6 +53,8 @@
   "0x014c" ["i386" 32]
   "0x0200" ["x86_64" 64]
   "0x8664" ["amd64" 64]})
+
+(def hasher hashlib.sha256)
 
 ; get the externals' homedir install location for this platform - from s_path.c
 (def externals-folder
@@ -164,6 +169,19 @@
       "To avoid this prompt in future please add a setting to the config or environment.\n"
       "Please enter %s for http://%s/: ")
         (tuple [(name.upper) config-file-path name name externals-host])))))
+
+; caculate the sha256 hash of a file
+(defn hash-file [filename]
+  (let [[hashfn (hasher)]
+        [ext (.pop (hasher.__name__.split "_"))]
+        [blocksize 65536]
+        [f (file filename)]
+        [chunk (fn [] (f.read blocksize))]]
+    (loop [[buf (chunk)]]
+          (if (len buf) (do
+            (hashfn.update buf)
+            (recur (chunk)))))
+    (hashfn.hexdigest)))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
