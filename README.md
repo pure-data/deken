@@ -43,6 +43,8 @@ You can also just call the 'upload' directly and it will call the package comman
 
 	$ deken upload -v 0.1 my_external
 
+The upload step will also generate a .sha256 checksum file and upload it along with the zip file.
+
 ## Filename format ##
 
 The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable on [puredata.info](http://puredata.info/):
@@ -73,10 +75,6 @@ Some examples:
 
 	$ deken -h
 
-	$ deken pd -h
-
-	$ deken build -h
-
 ## Platform ##
 
 OSX Example
@@ -94,36 +92,6 @@ Raspbian
 	$ deken --platform
 	Linux-armv6l-32bit-ELF
 
-## Build an external from a repository ##
+## Build tool ##
 
-	$ deken build svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
-	Deken 0.1
-	Checking out svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/ into ./workspace/externals/freeverb~
-	Building ./workspace/externals/freeverb~
-
-## Build and install an external from a repository ##
-
-	$ deken install svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
-	Deken 0.1
-	Updating ./workspace/externals/freeverb~
-	Building ./workspace/externals/freeverb~
-	Installing ./workspace/externals/freeverb~ into ./pd-externals/freeverb~
-
-## Manage Pd version ##
-
-Show Pd version:
-
-	$ deken pd
-	Deken 0.1
-	Pd version 0.43 checked out
-
-Change Pd version:
-
-	$ deken pd master
-	Deken 0.1
-	Pd version master checked out
-
-### How to make your externals compatible ###
-
-<http://puredata.info/docs/developer/MakefileTemplate>
-
+Deken can also be used to build some externals directly from a repository. See the [builder.md](./builder.md) for details.
