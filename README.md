@@ -45,12 +45,12 @@ You can also just call the 'upload' directly and it will call the package comman
 
 ## Filename format ##
 
-The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable:
+The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable on [puredata.info](http://puredata.info/):
 
 	NAME[-VERSION-](ARCH1)(ARCH2)(ARCHX...)-externals.zip
 
  * NAME is the name of the externals package ("zexy", "cyclone", "freeverb~").
- * -VERSION- is an optimal section which can contain version information for the end user.
+ * -VERSION- is an optional section which can contain version information for the end user.
  * (ARCH1)(ARCH2) etc. are architecture specifiers for each type of architecture the externals are compiled for within this zipfile.
 
 Note that the zipfile should contain a single directory at the top level with NAME the same as the externals package itself. For example a freeverb~ externals package would contain a directory "freeverb~" at the top level of the zipfile in which the externals live.
