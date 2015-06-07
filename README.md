@@ -12,11 +12,11 @@ Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data
  * OSX = `~/Library/Pd/`
  * Windows = `%AppData%\Pd`
 
- Then select `Help -> Find Packages` and type the name of the external you would like to search for.
+Then select `Help -> Find Packages` and type the name of the external you would like to search for.
 
 # Developers #
 
-You can use the command line tool to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~(Linux-amd64-64)-externals.zip`.
+You can use the command line tool to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
 
 If you don't want to use the `deken` packaging tool you can zip and upload the files yourself. See the "Filename format" section below.
 
