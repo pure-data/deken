@@ -171,17 +171,19 @@
         (tuple [(name.upper) config-file-path name name externals-host])))))
 
 ; caculate the sha256 hash of a file
-(defn hash-file [filename]
+(defn hash-sum-file [filename]
   (let [[hashfn (hasher)]
-        [ext (.pop (hasher.__name__.split "_"))]
+        [extension (.pop (hasher.__name__.split "_"))]
         [blocksize 65536]
         [f (file filename)]
-        [chunk (fn [] (f.read blocksize))]]
-    (loop [[buf (chunk)]]
+        [read-chunk (fn [] (f.read blocksize))]]
+    (loop [[buf (read-chunk)]]
           (if (len buf) (do
             (hashfn.update buf)
-            (recur (chunk)))))
-    (hashfn.hexdigest)))
+            (recur (read-chunk)))))
+    (let [[digest (hashfn.hexdigest)]]
+      (.write (file (+ filename (% ".%s" extension)) "wb") digest)
+      digest)))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
