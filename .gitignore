@@ -3,3 +3,4 @@ virtualenv*
 build
 workspace
 deken.cfg
+.DS_Store
