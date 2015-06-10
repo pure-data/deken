@@ -30,6 +30,8 @@ If you don't want to use the `deken` packaging tool you can zip and upload the f
 	Feel free to ctrl-C now if you don't want to do this.
 	...
 
+See [config.md](./config.md) for deken's configuration file format.
+
 ## Create and Upload a package ##
 
 You have a directory containing your compiled externals object files called `my_external`.
