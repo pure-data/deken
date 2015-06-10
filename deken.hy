@@ -162,10 +162,11 @@
               arch)))))
 
 ; try to obtain a value from environment, then config file, then prompt user
-(defn get-config-value [name]
+(defn get-config-value [name &rest default]
   (or
     (os.environ.get (+ "DEKEN_" (name.upper)))
     (config.get name)
+    (and default (get default 0))
     (raw_input (% (+
       "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
       "To avoid this prompt in future please add a setting to the config or environment.\n"
