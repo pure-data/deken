@@ -166,8 +166,11 @@
   (or
     (os.environ.get (+ "DEKEN_" (name.upper)))
     (config.get name)
-    (and default (get default 0))
-    (raw_input (% (+
+    (and default (get default 0))))
+
+; prompt for a particular config value for externals host upload
+(defn prompt-for-value [name &rest question]
+   (raw_input (or (and question (get question 0)) (% (+
       "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
       "To avoid this prompt in future please add a setting to the config or environment.\n"
       "Please enter %s for http://%s/: ")
@@ -274,8 +277,8 @@
 (defn upload-package [filepath]
   (let [
     ; get username and password from the environment, config, or user input
-    [username (get-config-value "username")]
-    [password (get-config-value "password")]
+    [username (or (get-config-value "username") (prompt-for-value "username"))]
+    [password (or (get-config-value "password") (prompt-for-value "password"))]
     [filename (os.path.basename filepath)]
     [destination (+ "/Members/" username "/" filename)]
     [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
