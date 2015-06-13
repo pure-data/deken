@@ -284,11 +284,8 @@
     [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
       (print (+ "Uploading to http://" externals-host destination))
       (try
-        (do
-          ; upload the package file
-          (dav.upload filepath destination)
-          ; upload the hash
-          (dav.upload (+ filepath "." hash-extension) (+ destination "." hash-extension)))
+        ; upload the package file
+        (dav.upload filepath destination)
         (catch [e easywebdav.client.OperationFailed]
           (print (+ "Couldn't upload to http://" externals-host destination))
           (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
@@ -365,14 +362,15 @@
         (do
           (print (+ "Uploading " args.repository))
           (hash-sum-file args.repository)
+          (upload-package (+ args.repository "." hash-extension))
           (upload-package args.repository))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
       ; otherwise we need to make the zipfile first
-      (let [[package-filename ((:package commands) args)]]
-        (hash-sum-file package-filename)
-        (upload-package package-filename))))
+      (let [[args.repository ((:package commands) args)]]
+        ; recurse - call myself again now that we have a package file
+        ((:upload commands) args))))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
