@@ -12,6 +12,7 @@
 (import ConfigParser)
 (import StringIO)
 (import hashlib)
+(import [getpass [getpass]])
 
 (import easywebdav)
 (require hy.contrib.loop)
@@ -162,15 +163,19 @@
               arch)))))
 
 ; try to obtain a value from environment, then config file, then prompt user
-(defn get-config-value [name]
+(defn get-config-value [name &rest default]
   (or
     (os.environ.get (+ "DEKEN_" (name.upper)))
     (config.get name)
-    (raw_input (% (+
-      "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
-      "To avoid this prompt in future please add a setting to the config or environment.\n"
-      "Please enter %s for http://%s/: ")
-        (tuple [(name.upper) config-file-path name name externals-host])))))
+    (and default (get default 0))))
+
+; prompt for a particular config value for externals host upload
+(defn prompt-for-value [name]
+  (raw_input (% (+
+    "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
+    "To avoid this prompt in future please add a setting to the config or environment.\n"
+    "Please enter %s for http://%s/: ")
+      (tuple [(name.upper) config-file-path name name externals-host]))))
 
 ; caculate the sha256 hash of a file
 (defn hash-sum-file [filename]
@@ -185,6 +190,27 @@
     (let [[digest (hashfn.hexdigest)]]
       (.write (file (+ filename (% ".%s" hash-extension)) "wb") digest)
       digest)))
+
+; generate a GPG signature for a particular file
+(defn gpg-sign-file [filename]
+  (print "Attempting to GPG sign" filename)
+  (let [[gnupghome (get-config-value "gpg_home")]
+        [keyid (get-config-value "key_id")]
+        [gpg (try (do
+                    (import gnupg)
+                    (apply gnupg.GPG [] (if gnupghome {"gnupghome" gnupghome} {}))))]
+        [sec (gpg.list_keys true)]]
+     (if (len sec) (let [
+       [sec-key (if keyid (get (list-comp s [s sec] (= (get s "keyid") keyid)) 0) (get sec 0))]
+       [passphrase (getpass (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s\nEnter GPG passphrase: " (tuple [(get (get sec-key "uids") 0) (get sec-key "keyid") filename])))]
+       [sig (if gpg (apply gpg.sign_file [(file filename "rb")] (if keyid {"keyid" keyid "detach" true "passphrase" passphrase} {"detach" true "passphrase" passphrase})))]]      
+         (if (hasattr sig "stderr")
+           (print sig.stderr))
+         (if (not sig)
+           (print "WARNING: Could not GPG sign the package.")
+           (do
+             (.write (file (+ filename ".asc") "wb") (str sig))
+             "signed"))))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
@@ -273,18 +299,15 @@
 (defn upload-package [filepath]
   (let [
     ; get username and password from the environment, config, or user input
-    [username (get-config-value "username")]
-    [password (get-config-value "password")]
+    [username (or (get-config-value "username") (prompt-for-value "username"))]
+    [password (or (get-config-value "password") (prompt-for-value "password"))]
     [filename (os.path.basename filepath)]
     [destination (+ "/Members/" username "/" filename)]
     [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
       (print (+ "Uploading to http://" externals-host destination))
       (try
-        (do
-          ; upload the package file
-          (dav.upload filepath destination)
-          ; upload the hash
-          (dav.upload (+ filepath "." hash-extension) (+ destination "." hash-extension)))
+        ; upload the package file
+        (dav.upload filepath destination)
         (catch [e easywebdav.client.OperationFailed]
           (print (+ "Couldn't upload to http://" externals-host destination))
           (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
@@ -361,14 +384,18 @@
         (do
           (print (+ "Uploading " args.repository))
           (hash-sum-file args.repository)
-          (upload-package args.repository))
+          (upload-package (+ args.repository "." hash-extension))
+          (upload-package args.repository)
+          (let [[signed (gpg-sign-file args.repository)]]
+            (if (= signed "signed")
+              (upload-package (+ args.repository ".asc")))))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
       ; otherwise we need to make the zipfile first
-      (let [[package-filename ((:package commands) args)]]
-        (hash-sum-file package-filename)
-        (upload-package package-filename))))
+      (let [[args.repository ((:package commands) args)]]
+        ; recurse - call myself again now that we have a package file
+        ((:upload commands) args))))
   ; manipulate the version of Pd
   :pd (fn [args]
     (let [
