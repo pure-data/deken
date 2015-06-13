@@ -12,6 +12,7 @@
 (import ConfigParser)
 (import StringIO)
 (import hashlib)
+(import [getpass [getpass]])
 
 (import easywebdav)
 (require hy.contrib.loop)
@@ -190,6 +191,27 @@
       (.write (file (+ filename (% ".%s" hash-extension)) "wb") digest)
       digest)))
 
+; generate a GPG signature for a particular file
+(defn gpg-sign-file [filename]
+  (print "Attempting to GPG sign" filename)
+  (let [[gnupghome (get-config-value "gpg_home")]
+        [keyid (get-config-value "key_id")]
+        [gpg (try (do
+                    (import gnupg)
+                    (apply gnupg.GPG [] (if gnupghome {"gnupghome" gnupghome} {}))))]
+        [sec (gpg.list_keys true)]]
+     (if (len sec) (let [
+       [sec-key (if keyid (get (list-comp s [s sec] (= (get s "keyid") keyid)) 0) (get sec 0))]
+       [passphrase (getpass (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s\nEnter GPG passphrase: " (tuple [(get (get sec-key "uids") 0) (get sec-key "keyid") filename])))]
+       [sig (if gpg (apply gpg.sign_file [(file filename "rb")] (if keyid {"keyid" keyid "detach" true "passphrase" passphrase} {"detach" true "passphrase" passphrase})))]]      
+         (if (hasattr sig "stderr")
+           (print sig.stderr))
+         (if (not sig)
+           (print "WARNING: Could not GPG sign the package.")
+           (do
+             (.write (file (+ filename ".asc") "wb") (str sig))
+             "signed"))))))
+
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
   (import sh)
@@ -363,7 +385,10 @@
           (print (+ "Uploading " args.repository))
           (hash-sum-file args.repository)
           (upload-package (+ args.repository "." hash-extension))
-          (upload-package args.repository))
+          (upload-package args.repository)
+          (let [[signed (gpg-sign-file args.repository)]]
+            (if (= signed "signed")
+              (upload-package (+ args.repository ".asc")))))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
