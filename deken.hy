@@ -385,15 +385,18 @@
       ; user has asked to upload a zipfile
       (if (args.repository.endswith ".zip")
         (do
-          (print (+ "Uploading " args.repository))
-          (setv username (or (get-config-value "username") (prompt-for-value "username")))
-          (setv password (or (get-config-value "password") (getpass)))
-          (hash-sum-file args.repository)
-          (upload-package (+ args.repository "." hash-extension) username password)
-          (upload-package args.repository username password)
-          (let [[signed (gpg-sign-file args.repository)]]
-            (if signed
-              (upload-package signedfile username password))))
+         (print (+ "Uploading " args.repository))
+         (let [
+               [signedfile (gpg-sign-file args.repository)]
+               [username (or (get-config-value "username") (prompt-for-value "username"))]
+               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
+               ]
+           (do
+            (hash-sum-file args.repository)
+            (upload-package (+ args.repository "." hash-extension) username password)
+            (upload-package args.repository username password)
+            (if signedfile
+              (upload-package signedfile username password)))))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
