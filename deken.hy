@@ -479,4 +479,6 @@
           (command arguments))))
 
 (if (= __name__ "__main__")
-  (main))
+  (try
+   (main)
+   (catch [e KeyboardInterrupt] (print "\n[interrupted by user]"))))
