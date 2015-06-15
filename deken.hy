@@ -296,11 +296,9 @@
       (zipf.close)))
 
 ; upload a zipped up package to pure-data.info
-(defn upload-package [filepath]
+(defn upload-package [filepath username password]
   (let [
     ; get username and password from the environment, config, or user input
-    [username (or (get-config-value "username") (prompt-for-value "username"))]
-    [password (or (get-config-value "password") (prompt-for-value "password"))]
     [filename (os.path.basename filepath)]
     [destination (+ "/Members/" username "/" filename)]
     [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
@@ -383,12 +381,14 @@
       (if (args.repository.endswith ".zip")
         (do
           (print (+ "Uploading " args.repository))
+          (setv username (or (get-config-value "username") (prompt-for-value "username")))
+          (setv password (or (get-config-value "password") (getpass)))
           (hash-sum-file args.repository)
-          (upload-package (+ args.repository "." hash-extension))
-          (upload-package args.repository)
+          (upload-package (+ args.repository "." hash-extension) username password)
+          (upload-package args.repository username password)
           (let [[signed (gpg-sign-file args.repository)]]
             (if (= signed "signed")
-              (upload-package (+ args.repository ".asc")))))
+              (upload-package (+ args.repository ".asc") username password))))
         (do
           (print "Not an externals zipfile.")
           (sys.exit 1)))
