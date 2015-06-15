@@ -187,9 +187,10 @@
           (if (len buf) (do
             (hashfn.update buf)
             (recur (read-chunk)))))
-    (let [[digest (hashfn.hexdigest)]]
-      (.write (file (+ filename (% ".%s" hash-extension)) "wb") digest)
-      digest)))
+    (let [[digest (hashfn.hexdigest)]
+          [hashfilename (% "%s.%s" (tuple [filename hash-extension]))]]
+      (.write (file hashfilename "wb") digest)
+      hashfilename)))
 
 ; generate a GPG signature for a particular file
 (defn gpg-sign-file [filename]
@@ -388,12 +389,12 @@
          (print (+ "Uploading " args.repository))
          (let [
                [signedfile (gpg-sign-file args.repository)]
+               [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
                [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
                ]
            (do
-            (hash-sum-file args.repository)
-            (upload-package (+ args.repository "." hash-extension) username password)
+            (upload-package hashfile username password)
             (upload-package args.repository username password)
             (if signedfile
               (upload-package signedfile username password)))))
