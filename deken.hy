@@ -192,31 +192,54 @@
       (.write (file hashfilename "wb") digest)
       hashfilename)))
 
+; read a value from the gpg config
+(defn gpg-get-config [gpg id]
+  (let [
+        [configdir (cond [gpg.gnupghome gpg.gnupghome] [True (os.path.join "~" ".gnupg")])]
+        [configfile (os.path.expanduser (os.path.join configdir "gpg.conf"))]
+        ]
+    (try
+     (get (list-comp (get (.split (.strip x)) 1) [x (.readlines ( open configfile))] (.startswith (.lstrip x) (.strip id) )) -1)
+     (catch [e IOError] None)
+     (catch [e IndexError] None))))
+
+; get the GPG key for signing
+(defn gpg-get-key [gpg]
+  (let [
+        [keyid (get-config-value "key_id" (gpg-get-config gpg "default-key"))]
+        ]
+    (try
+     (car (list-comp k [k (gpg.list_keys true)] (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])))
+     (catch [e IndexError] None))))
+
 ; generate a GPG signature for a particular file
 (defn gpg-sign-file [filename]
   (print "Attempting to GPG sign" filename)
   (let [[gnupghome (get-config-value "gpg_home")]
-        [keyid (get-config-value "key_id")]
         [gpg (try (do
-                    (import gnupg)
-                    (apply gnupg.GPG [] (if gnupghome {"gnupghome" gnupghome} {}))))]
-        [sec (gpg.list_keys true)]]
+                   (import gnupg)
+                   (apply gnupg.GPG [] (if gnupghome {"gnupghome" gnupghome} {}))))]
+        [sec-key (gpg-get-key gpg)]
+        [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
+        [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
+
+        [passphrase (if keyid
+                      (do
+                       (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
+                       (getpass "Enter GPG passphrase: " ))
+                      (print "No valid GPG key found (continue without signing)"))]
+        [sig (if gpg (apply gpg.sign_file [(file filename "rb")] (if keyid {"keyid" keyid "detach" true "passphrase" passphrase} {"detach" true "passphrase" passphrase})))]
+        [signfile (+ filename ".asc")]]
     (do
-     (if (len sec) (let [
-       [sec-key (if keyid (get (list-comp s [s sec] (= (get s "keyid") keyid)) 0) (get sec 0))]
-       [passphrase (getpass (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s\nEnter GPG passphrase: " (tuple [(get (get sec-key "uids") 0) (get sec-key "keyid") filename])))]
-       [sig (if gpg (apply gpg.sign_file [(file filename "rb")] (if keyid {"keyid" keyid "detach" true "passphrase" passphrase} {"detach" true "passphrase" passphrase})))]
-       [signfile (+ filename ".asc")]]
-         (if (hasattr sig "stderr")
-           (print sig.stderr))
-         (if (not sig)
-           (do
-            print "WARNING: Could not GPG sign the package."
-            None
-            )
-           (do
-            (.write (file signfile "wb") (str sig))
-             signfile)))))))
+     (if (hasattr sig "stderr")
+       (print sig.stderr))
+     (if (not sig)
+       (do
+        print "WARNING: Could not GPG sign the package."
+        None)
+       (do
+        (.write (file signfile "wb") (str sig))
+        signfile)))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
