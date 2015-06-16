@@ -194,10 +194,8 @@
 
 ; read a value from the gpg config
 (defn gpg-get-config [gpg id]
-  (let [
-        [configdir (cond [gpg.gnupghome gpg.gnupghome] [True (os.path.join "~" ".gnupg")])]
-        [configfile (os.path.expanduser (os.path.join configdir "gpg.conf"))]
-        ]
+  (let [[configdir (cond [gpg.gnupghome gpg.gnupghome] [True (os.path.join "~" ".gnupg")])]
+        [configfile (os.path.expanduser (os.path.join configdir "gpg.conf"))]]
     (try
      (get (list-comp (get (.split (.strip x)) 1) [x (.readlines ( open configfile))] (.startswith (.lstrip x) (.strip id) )) -1)
      (catch [e IOError] None)
@@ -205,9 +203,7 @@
 
 ; get the GPG key for signing
 (defn gpg-get-key [gpg]
-  (let [
-        [keyid (get-config-value "key_id" (gpg-get-config gpg "default-key"))]
-        ]
+  (let [[keyid (get-config-value "key_id" (gpg-get-config gpg "default-key"))]]
     (try
      (car (list-comp k [k (gpg.list_keys true)] (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])))
      (catch [e IndexError] None))))
@@ -222,7 +218,6 @@
         [sec-key (gpg-get-key gpg)]
         [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
         [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
-
         [passphrase (if keyid
                       (do
                        (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
@@ -410,12 +405,10 @@
       (if (args.repository.endswith ".zip")
         (do
          (print (+ "Uploading " args.repository))
-         (let [
-               [signedfile (gpg-sign-file args.repository)]
+         (let [[signedfile (gpg-sign-file args.repository)]
                [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
-               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
-               ]
+               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]]
            (do
             (upload-package hashfile username password)
             (upload-package args.repository username password)
