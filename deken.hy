@@ -331,6 +331,19 @@
      (.close tarf)
      tar-file)))
 
+; automatically pick the correct archiver
+(defn archive-dir [directory-to-archive archive-file]
+  (if (in "(Windows" archive-file)
+    (zip-dir directory-to-archive archive-file)
+    (tar-dir directory-to-archive archive-file)))
+
+; naive check, whether we have an archive: compare against known suffixes
+(defn is-archive? [filename]
+  (let [[FNAME (.lower filename)]]
+        (cond [(.endswith FNAME ".zip") True]
+              [(.endswith FNAME ".tar.gz") True]
+              [(.endswith FNAME ".tgz") True]
+              [True False])))
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath username password]
@@ -398,8 +411,7 @@
       ; if asking for a directory just package it up
       (let [[package-filename (make-archive-basename args.repository args.version)]]
         (print "Packaging into" package-filename)
-        (zip-dir args.repository package-filename)
-        package-filename)
+        (archive-dir args.repository package-filename))
       ; otherwise build and then package
       (let [
         [external-name (get-external-name args.repository)]
@@ -413,8 +425,8 @@
   ; upload packaged external to pure-data.info
   :upload (fn [args]
     (if (os.path.isfile args.repository)
-      ; user has asked to upload a zipfile
-      (if (args.repository.endswith ".zip")
+      ; user has asked to upload an archive file
+      (if (is-archive? args.repository)
         (do
          (print (+ "Uploading " args.repository))
          (let [[signedfile (gpg-sign-file args.repository)]
@@ -427,9 +439,9 @@
             (if signedfile
               (upload-package signedfile username password)))))
         (do
-          (print "Not an externals zipfile.")
+          (print "Not an externals archive.")
           (sys.exit 1)))
-      ; otherwise we need to make the zipfile first
+      ; otherwise we need to make the archive first
       (let [[args.repository ((:package commands) args)]]
         ; recurse - call myself again now that we have a package file
         ((:upload commands) args))))
