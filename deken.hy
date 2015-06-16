@@ -7,6 +7,7 @@
 (import shutil)
 (import platform)
 (import zipfile)
+(import tarfile)
 (import string)
 (import struct)
 (import ConfigParser)
@@ -318,6 +319,13 @@
         (let [[file-path (os.path.join root file)]]
           (zipf.write file-path (os.path.relpath file-path root-path)))))
     (zipf.close)))
+
+; tar up the directory
+(defn tar-dir [directory-to-tar tar-file]
+  (let [[tarf (tarfile.open tar-file "w:gz")]]
+    (do
+     (.add tarf directory-to-tar)
+     (.close tarf))))
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath username password]
