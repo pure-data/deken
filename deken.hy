@@ -309,15 +309,15 @@
 ; zip up a single directory
 ; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-dir [directory-to-zip zip-file]
-  (let [
-    [zipf (zipfile.ZipFile zip-file "w")]
-    [root-basename (os.path.basename directory-to-zip)]
-    [root-path (os.path.join directory-to-zip "..")]]
-      (for [[root dirs files] (os.walk directory-to-zip)]
-        (for [file files]
-             (let [[file-path (os.path.join root file)]]
-               (zipf.write file-path (os.path.relpath file-path root-path)))))
-      (zipf.close)))
+  (let [[zipf (try (zipfile.ZipFile zip-file "w" :compression zipfile.ZIP_DEFLATED)
+                   (catch [e RuntimeError] (zipfile.ZipFile zip-file "w")))]
+        [root-basename (os.path.basename directory-to-zip)]
+        [root-path (os.path.join directory-to-zip "..")]]
+    (for [[root dirs files] (os.walk directory-to-zip)]
+      (for [file files]
+        (let [[file-path (os.path.join root file)]]
+          (zipf.write file-path (os.path.relpath file-path root-path)))))
+    (zipf.close)))
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath username password]
