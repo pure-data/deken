@@ -7,6 +7,7 @@
 (import shutil)
 (import platform)
 (import zipfile)
+(import tarfile)
 (import string)
 (import struct)
 (import ConfigParser)
@@ -308,16 +309,41 @@
 
 ; zip up a single directory
 ; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
-(defn zip-dir [directory-to-zip zip-file]
-  (let [
-    [zipf (zipfile.ZipFile zip-file "w")]
-    [root-basename (os.path.basename directory-to-zip)]
-    [root-path (os.path.join directory-to-zip "..")]]
-      (for [[root dirs files] (os.walk directory-to-zip)]
-        (for [file files]
-             (let [[file-path (os.path.join root file)]]
-               (zipf.write file-path (os.path.relpath file-path root-path)))))
-      (zipf.close)))
+(defn zip-dir [directory-to-zip archive-file]
+  (let [[zip-file (+ archive-file ".zip")]
+        [zipf (try (zipfile.ZipFile zip-file "w" :compression zipfile.ZIP_DEFLATED)
+                   (catch [e RuntimeError] (zipfile.ZipFile zip-file "w")))]
+        [root-basename (os.path.basename directory-to-zip)]
+        [root-path (os.path.join directory-to-zip "..")]]
+    (for [[root dirs files] (os.walk directory-to-zip)]
+      (for [file files]
+        (let [[file-path (os.path.join root file)]]
+          (zipf.write file-path (os.path.relpath file-path root-path)))))
+    (zipf.close)
+    zip-file))
+
+; tar up the directory
+(defn tar-dir [directory-to-tar archive-file]
+  (let [[tar-file (+ archive-file ".tar.gz")]
+        [tarf (tarfile.open tar-file "w:gz")]]
+    (do
+     (.add tarf directory-to-tar)
+     (.close tarf)
+     tar-file)))
+
+; automatically pick the correct archiver
+(defn archive-dir [directory-to-archive archive-file]
+  (if (in "(Windows" archive-file)
+    (zip-dir directory-to-archive archive-file)
+    (tar-dir directory-to-archive archive-file)))
+
+; naive check, whether we have an archive: compare against known suffixes
+(defn is-archive? [filename]
+  (let [[FNAME (.lower filename)]]
+        (cond [(.endswith FNAME ".zip") True]
+              [(.endswith FNAME ".tar.gz") True]
+              [(.endswith FNAME ".tgz") True]
+              [True False])))
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath username password]
@@ -346,8 +372,8 @@
   (os.path.join externals-build-path external-name))
 
 ; compute the zipfile name for a particular external on this platform
-(defn make-zipfile-name [folder version]
-  (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals.zip"))
+(defn make-archive-basename [folder version]
+   (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
@@ -383,26 +409,24 @@
     ; are they asking the package a directory or an existing repository?
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-zipfile-name args.repository args.version)]]
+      (let [[package-filename (make-archive-basename args.repository args.version)]]
         (print "Packaging into" package-filename)
-        (zip-dir args.repository package-filename)
-        package-filename)
+        (archive-dir args.repository package-filename))
       ; otherwise build and then package
       (let [
         [external-name (get-external-name args.repository)]
         [build-folder (get-external-build-folder external-name)]
         [package-folder (os.path.join externals-packaging-path external-name)]
-        [package-filename (make-zipfile-name package-folder args.version)]]
+        [package-filename (make-archive-basename package-folder args.version)]]
           ((:build commands) args)
           (install-one build-folder externals-packaging-path)
-          (print "Packaging into" package-filename)
-          (zip-dir package-folder package-filename)
-          package-filename)))
+          (print "Build-Packaging into" package-filename)
+          (archive-dir package-folder package-filename))))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
     (if (os.path.isfile args.repository)
-      ; user has asked to upload a zipfile
-      (if (args.repository.endswith ".zip")
+      ; user has asked to upload an archive file
+      (if (is-archive? args.repository)
         (do
          (print (+ "Uploading " args.repository))
          (let [[signedfile (gpg-sign-file args.repository)]
@@ -415,9 +439,9 @@
             (if signedfile
               (upload-package signedfile username password)))))
         (do
-          (print "Not an externals zipfile.")
+          (print "Not an externals archive.")
           (sys.exit 1)))
-      ; otherwise we need to make the zipfile first
+      ; otherwise we need to make the archive first
       (let [[args.repository ((:package commands) args)]]
         ; recurse - call myself again now that we have a package file
         ((:upload commands) args))))
