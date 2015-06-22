@@ -350,8 +350,9 @@
   (if URL (do
            (import re)
            (try (setv [_ proto host path _] (re.split "^(https?)://([^/]*)(/.*)" URL))
-                (catch [e ValueError] (setv path URL)))))
-  [proto host (.strip path "/")])
+                (catch [e ValueError] (try (setv [_ proto host _] (re.split "^(https?)://(.*)" URL))
+                                           (catch [e ValueError] (setv path URL)))))))
+  [proto (.strip host "/") (+ "/" (.strip path "/"))])
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath destination username password]
