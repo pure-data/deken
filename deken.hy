@@ -358,15 +358,18 @@
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
-    [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
-      (print (+ "Uploading " filename " to http://" externals-host destination))
+    [[proto host path] (parse-url destination "http" externals-host (+ "/Members" username))]
+    [remotepath (+ path "/" filename)]
+    [url (+ proto "://" host "/" destination)]
+    [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
+      (print (+ "Uploading " filename " to " url))
       (try
         ; upload the package file
-        (dav.upload filepath destination)
+        (dav.upload filepath remotepath)
         (catch [e easywebdav.client.OperationFailed]
-          (print (+ "Couldn't upload to http://" externals-host destination))
-          (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
-          (print (% "Please ensure the folder %s exists and is writeable." destination))
+          (print (+ "Couldn't upload to " url))
+          (print (% "Are you sure you have the correct username and password set for '%s'?" host))
+          (print (% "Please ensure the folder %s exists and is writeable." path))
           (sys.exit 1)))))
 
 ; get the name of the external from the repository path
