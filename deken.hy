@@ -359,7 +359,7 @@
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
-    [[proto host path] (parse-url destination "http" externals-host (+ "/Members/" username))]
+    [[proto host path] (parse-url destination "https" externals-host (+ "/Members/" username))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
