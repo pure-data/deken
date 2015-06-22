@@ -345,6 +345,14 @@
               [(.endswith FNAME ".tgz") True]
               [True False])))
 
+; try to parse a URL into proto://host/path
+(defn parse-url [URL proto host path]
+  (if URL (do
+           (import re)
+           (try (setv [_ proto host path _] (re.split "^(https?)://([^/]*)(/.*)" URL))
+                (catch [e ValueError] (setv path URL)))))
+  [proto host (.strip path "/")])
+
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath destination username password]
   (let [
