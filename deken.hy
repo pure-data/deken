@@ -445,7 +445,7 @@
                [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
                [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
-               [destination (getattr args "destination")]]
+               [destination (or (getattr args "destination") (get-config-value "destination" ""))]]
            (do
             (upload-package hashfile destination username password)
             (upload-package args.repository destination username password)
