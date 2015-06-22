@@ -365,6 +365,8 @@
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
       (print (+ "Uploading " filename " to " url))
       (try
+        ; make sure all directories exist
+        (dav.mkdirs path)
         ; upload the package file
         (dav.upload filepath remotepath)
         (catch [e easywebdav.client.OperationFailed]
