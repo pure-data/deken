@@ -359,7 +359,7 @@
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
-    [[proto host path] (parse-url destination "http" externals-host (+ "/Members" username))]
+    [[proto host path] (parse-url destination "http" externals-host (+ "/Members/" username))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
@@ -445,7 +445,7 @@
                [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
                [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
-               [destination (or (getattr args "destination") (+ "/Members/" username "/" filename))]]
+               [destination (getattr args "destination")]]
            (do
             (upload-package hashfile destination username password)
             (upload-package args.repository destination username password)
