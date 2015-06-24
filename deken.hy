@@ -339,11 +339,7 @@
 
 ; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
-  (let [[FNAME (.lower filename)]]
-        (cond [(.endswith FNAME ".zip") True]
-              [(.endswith FNAME ".tar.gz") True]
-              [(.endswith FNAME ".tgz") True]
-              [True False])))
+  (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath username password]
