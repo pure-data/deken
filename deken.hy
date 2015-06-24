@@ -14,6 +14,7 @@
 (import StringIO)
 (import hashlib)
 (import [getpass [getpass]])
+(import [urlparse [urlparse]])
 
 (import easywebdav)
 (require hy.contrib.loop)
@@ -342,19 +343,28 @@
   (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ; upload a zipped up package to pure-data.info
-(defn upload-package [filepath username password]
+(defn upload-package [filepath destination username password]
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
-    [destination (+ "/Members/" username "/" filename)]
-    [dav (apply easywebdav.connect [externals-host] {"username" username "password" password})]]
-      (print (+ "Uploading to http://" externals-host destination))
+    [url (urlparse destination)]
+    [proto (or url.scheme "https")]
+    [host (or url.netloc externals-host)]
+    [path (if (= destination "") (+ "/Members/" username "/software") (str url.path) )]
+    [remotepath (+ path "/" filename)]
+    [url (+ proto "://" host path)]
+    [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
+      (print (+ "Uploading " filename " to " url))
       (try
-        ; upload the package file
-        (dav.upload filepath destination)
+        (do
+          ; make sure all directories exist
+          (dav.mkdirs path)
+          ; upload the package file
+          (dav.upload filepath remotepath))
         (catch [e easywebdav.client.OperationFailed]
-          (print (+ "Couldn't upload to http://" externals-host destination))
-          (print (% "Are you sure you have the correct username and password set for <http://%s/>?" externals-host))
+          (print (+ "Couldn't upload to " url))
+          (print (% "Are you sure you have the correct username and password set for '%s'?" host))
+          (print (% "Please ensure the folder '%s' exists and is writeable." path))
           (sys.exit 1)))))
 
 ; get the name of the external from the repository path
@@ -428,12 +438,13 @@
          (let [[signedfile (gpg-sign-file args.repository)]
                [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
-               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]]
+               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
+               [destination (or (getattr args "destination") (get-config-value "destination" ""))]]
            (do
-            (upload-package hashfile username password)
-            (upload-package args.repository username password)
+            (upload-package hashfile destination username password)
+            (upload-package args.repository destination username password)
             (if signedfile
-              (upload-package signedfile username password)))))
+              (upload-package signedfile destination username password)))))
         (do
           (print "Not an externals archive.")
           (sys.exit 1)))
@@ -484,6 +495,7 @@
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["repository"] {"help" "Either the path to an external zipfile to be uploaded, or the SVN or git repository of an external to package."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/)." "default" "" "required" false})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
