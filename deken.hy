@@ -354,7 +354,7 @@
     [url (urlparse destination)]
     [proto (or url.scheme "https")]
     [host (or url.netloc externals-host)]
-    [path (or url.path (+ "/Members/" username))]
+    [path (if (= url "") (+ "/Members/" username "/software") (str url.path) )]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
