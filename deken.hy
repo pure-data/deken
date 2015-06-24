@@ -14,6 +14,7 @@
 (import StringIO)
 (import hashlib)
 (import [getpass [getpass]])
+(import [urlparse [urlparse]])
 
 (import easywebdav)
 (require hy.contrib.loop)
@@ -345,21 +346,15 @@
               [(.endswith FNAME ".tgz") True]
               [True False])))
 
-; try to parse a URL into proto://host/path
-(defn parse-url [URL proto host path]
-  (if URL (do
-           (import re)
-           (try (setv [_ proto host path _] (re.split "^(https?)://([^/]*)(/.*)" URL))
-                (catch [e ValueError] (try (setv [_ proto host _] (re.split "^(https?)://(.*)" URL))
-                                           (catch [e ValueError] (setv path URL)))))))
-  [proto (.strip host "/") (+ "/" (.strip path "/"))])
-
 ; upload a zipped up package to pure-data.info
 (defn upload-package [filepath destination username password]
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
-    [[proto host path] (parse-url destination "https" externals-host (+ "/Members/" username))]
+    [url (urlparse destination)]
+    [proto (or url.scheme "https")]
+    [host (or url.netloc externals-host)]
+    [path (or url.path (+ "/Members/" username))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
