@@ -1,0 +1,13 @@
+#N canvas 547 259 450 300 10;
+#N canvas 2 50 450 300 search 0;
+#X obj 9 8 inlet;
+#X msg 9 53 \; pd plugin-dispatch deken search \$1;
+#X obj 9 30 list;
+#X connect 0 0 2 0;
+#X connect 2 0 1 0;
+#X restore 14 35 pd search;
+#X msg 14 9 freeverb;
+#X obj 14 64 r deken-plugin;
+#X obj 14 86 print deken-plugin;
+#X connect 1 0 0 0;
+#X connect 2 0 3 0;

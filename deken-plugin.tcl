@@ -17,6 +17,7 @@ package require Tcl 8.4
 package require http 2
 package require pdwindow 0.1
 package require pd_menucommands 0.1
+package provide pd_connect 0.1
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -276,6 +277,7 @@ proc ::deken::clicked_link {mytoplevel URL filename} {
     cd $PWD
     if { $success > 0 } {
         ::deken::post "Successfully unzipped $filename into $::deken::installpath.\n"
+        ::pd_connect::pdsend "deken-plugin installed $filename $::deken::installpath"
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
@@ -368,6 +370,24 @@ proc ::deken::search_for {term} {
     http::cleanup $token
     return $searchresults
 }
+
+# handle messages from Pd
+proc ::deken::pd_message {args} {
+    set unpacked [lindex $args 0]
+    ::pdwindow::post "Deken plugin got command:"
+    ::pdwindow::post $args
+    ::pdwindow::post "from Pd.\n"
+    # what command did the user send?
+    set command [lindex $unpacked 0]
+    # execute the "search" command
+    if { $command == "search" } {
+        ::deken::open_searchui .externals_searchui
+        .externals_searchui.searchbit.entry insert 0 [lindex $unpacked 1]
+    }
+}
+
+# register a callback to receive messages from Pd
+::pd_connect::register_plugin_dispatch_receiver "deken" ::deken::pd_message
 
 # create an entry for our search in the "help" menu
 set mymenu .menubar.help
