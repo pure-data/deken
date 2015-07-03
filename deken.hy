@@ -332,9 +332,9 @@
      (.close tarf)
      tar-file)))
 
-; automatically pick the correct archiver
+; automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive archive-file]
-  (if (in "(Windows" archive-file)
+  (if (or (in "(Windows" archive-file) (not (in "(" archive-file)))
     (zip-dir directory-to-archive archive-file)
     (tar-dir directory-to-archive archive-file)))
 
