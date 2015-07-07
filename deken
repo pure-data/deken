@@ -29,7 +29,7 @@ fi
 
 # This needs to be defined before we call HTTP_CLIENT below
 if [ "$HTTP_CLIENT" = "" ]; then
-    if type -p curl >/dev/null 2>&1; then
+    if which curl >/dev/null; then
         if [ "$https_proxy" != "" ]; then
             CURL_PROXY="-x $https_proxy"
         fi
@@ -72,9 +72,9 @@ install_deken {
     echo "I'm going to install myself and my dependencies into ~/.deken now."
     echo "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
-    [ "" = "$(which python)" ] && \
+    which python >/dev/null && \
         echo "Oops, no Python found! You need Python to run Deken." && bail_install;
-    [ "" = "$(which make)" ] && \
+    which make >/dev/null && \
         echo "Oops, no Make found! You need Make to run Deken." && bail_install;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
