@@ -46,8 +46,13 @@ if $cygwin; then
     export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
 fi
 
+error {
+    echo "$@" 1>&2
+}
+
 bail_install {
-    echo "Self-installation of Deken failed. Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
+    error "Self-installation of Deken failed."
+    error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
     # remove all trace of our attempts to install.
     rm -rf $DEKEN_HOME;
     # bail from this script.
@@ -69,12 +74,12 @@ install_virtualenv {
 
 install_deken {
     which python >/dev/null && \
-        echo "Oops, no Python found! You need Python to run Deken." && bail_install;
+        error "Oops, no Python found! You need Python to run Deken." && bail_install;
     which make >/dev/null && \
-        echo "Oops, no Make found! You need Make to run Deken." && bail_install;
-    echo "This is your first time running deken on this machine."
-    echo "I'm going to install myself and my dependencies into ~/.deken now."
-    echo "Feel free to ctrl-C now if you don't want to do this."
+        error "Oops, no Make found! You need Make to run Deken." && bail_install;
+    error "This is your first time running deken on this machine."
+    error "I'm going to install myself and my dependencies into ~/.deken now."
+    error "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
@@ -102,7 +107,7 @@ upgrade_deken {
     for f in requirements.txt deken.hy;
     do
         echo "Fetching $f file: $DEKEN_BASE_URL/$f";
-        $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( echo "Error upgrading $f"; exit 1; );
+        $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( error "Error upgrading $f"; exit 1; );
         mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
     done
     # finally update the python dependencies
