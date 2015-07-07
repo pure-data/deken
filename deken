@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Ensure this file is executable via `chmod a+x deken`, then place it
+# Ensure this file is executable via $(chmod a+x deken), then place it
 # somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
 # on first run into the ~/.deken/ directory.
 
@@ -8,7 +8,7 @@
 
 export DEKEN_VERSION="0.1"
 
-if [ `id -u` -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
+if [ $(id -u) -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
     echo "WARNING: You're currently running as root; probably by accident."
     echo "Press control-C to abort or Enter to continue as root."
     echo "Set DEKEN_ROOT to disable this warning."
@@ -43,7 +43,7 @@ export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
 DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/master"
 
 if $cygwin; then
-    export DEKEN_HOME=`cygpath -w "$DEKEN_HOME"`
+    export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
 fi
 
 bail_install {
@@ -72,9 +72,9 @@ install_deken {
     echo "I'm going to install myself and my dependencies into ~/.deken now."
     echo "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
-    [ "" = "`which python`" ] && \
+    [ "" = "$(which python)" ] && \
         echo "Oops, no Python found! You need Python to run Deken." && bail_install;
-    [ "" = "`which make`" ] && \
+    [ "" = "$(which make)" ] && \
         echo "Oops, no Make found! You need Make to run Deken." && bail_install;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
