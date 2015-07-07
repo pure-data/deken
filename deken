@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-# Ensure this file is executable via $(chmod a+x deken), then place it
+# Ensure this file is executable via `chmod a+x deken`, then place it
 # somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
 # on first run into the ~/.deken/ directory.
 
