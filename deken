@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Ensure this file is executable via `chmod a+x deken`, then place it
 # somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
