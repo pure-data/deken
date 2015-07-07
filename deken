@@ -96,8 +96,8 @@ install_deken {
 
 upgrade_deken {
     # first upgrade this script itself
-    echo "Upgrading $BASH_SOURCE."
-    $HTTP_CLIENT $BASH_SOURCE $DEKEN_BASE_URL/deken
+    echo "Upgrading $0."
+    $HTTP_CLIENT $0 $DEKEN_BASE_URL/deken
     # next upgrade our dependencies
     for f in requirements.txt deken.hy;
     do
