@@ -62,9 +62,9 @@ install_virtualenv {
 	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/ && \
 	mv $DEKEN_HOME/virtualenv-source/virtualenv-*/* $DEKEN_HOME/virtualenv-source
 	[ -d "$DEKEN_HOME/virtualenv-source" ] && (\
-		pushd $DEKEN_HOME/virtualenv-source && \
-		/usr/bin/env python setup.py build && \
-		popd ) || bail_install;
+		cd $DEKEN_HOME/virtualenv-source && \
+		/usr/bin/env python setup.py build ) \
+		|| bail_install;
 }
 
 install_deken {
