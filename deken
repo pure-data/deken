@@ -15,13 +15,13 @@ if [ `id -u` -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
     read _
 fi
 
-if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+if [ "$OSTYPE" = "cygwin" ] || [ "$OSTYPE" = "msys" ]; then
     delimiter=";"
 else
     delimiter=":"
 fi
 
-if [[ "$OSTYPE" == "cygwin" ]]; then
+if [ "$OSTYPE" = "cygwin" ]; then
   cygwin=true
 else
   cygwin=false
@@ -72,9 +72,9 @@ install_deken {
     echo "I'm going to install myself and my dependencies into ~/.deken now."
     echo "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
-    [ "" == "`which python`" ] && \
+    [ "" = "`which python`" ] && \
         echo "Oops, no Python found! You need Python to run Deken." && bail_install;
-    [ "" == "`which make`" ] && \
+    [ "" = "`which make`" ] && \
         echo "Oops, no Make found! You need Make to run Deken." && bail_install;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
@@ -117,7 +117,7 @@ upgrade_deken {
 [ -d "$DEKEN_HOME" ] || bail_install;
 
 # catch the special "upgrade" command
-[ "$1" == "upgrade" ] && \
+[ "$1" = "upgrade" ] && \
     # run he upgrade command instead
     upgrade_deken || \
     # run the real deken command with args passed through
