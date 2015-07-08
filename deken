@@ -46,11 +46,11 @@ if $cygwin; then
     export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
 fi
 
-error {
+error() {
     echo "$@" 1>&2
 }
 
-bail_install {
+bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
     # remove all trace of our attempts to install.
@@ -59,7 +59,7 @@ bail_install {
     exit 1;
 }
 
-install_virtualenv {
+install_virtualenv() {
 	echo "Downloading & installing Virtualenv."
 	rm -rf $DEKEN_HOME/virtualenv-source
 	mkdir -p $DEKEN_HOME/virtualenv-source && \
@@ -72,7 +72,7 @@ install_virtualenv {
 		|| bail_install;
 }
 
-install_deken {
+install_deken() {
     which python >/dev/null && \
         error "Oops, no Python found! You need Python to run Deken." && bail_install;
     which make >/dev/null && \
@@ -99,7 +99,7 @@ install_deken {
         $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || exit 1)
 }
 
-upgrade_deken {
+upgrade_deken() {
     # first upgrade this script itself
     echo "Upgrading $0."
     $HTTP_CLIENT $0 $DEKEN_BASE_URL/deken
