@@ -75,6 +75,9 @@
   :Darwin "STRIP=strip -x"
   :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
 
+; convet a string into bool, based on the string value
+(defn str-to-bool [s] (if s (in (.lower s) ["true" "t" "yes" "y" "ok" "1" ""]) True))
+
 ; read in the config file if present
 (def config
   (let [
