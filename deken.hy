@@ -381,6 +381,23 @@
 (defn make-archive-basename [folder version]
    (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
 
+;; get the password, either from
+;; - a password agent
+;; - the config-file (no, not really?)
+;; - user-input
+;; if force-ask is set, skip the agent
+;; store the password in the password agent (for later use)
+(defn get-upload-password [username force-ask]
+  (let [[passwd (if force-ask "" (try (do
+                                       (import keyring)
+                                       (keyring.get_password "deken" username)
+                                       )))]
+        [passwd (or passwd (get-config-value "password") (getpass (% "Please enter password for uploading as '%s': " username)))]]
+    (do
+     (try (if passwd (keyring.set_password "deken" username passwd)))
+     passwd)))
+
+
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
   ; download and build a particular external from a repository
