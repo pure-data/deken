@@ -232,7 +232,7 @@
        (print sig.stderr))
      (if (not sig)
        (do
-        print "WARNING: Could not GPG sign the package."
+        (print "WARNING: Could not GPG sign the package.")
         None)
        (do
         (.write (file signfile "wb") (str sig))
