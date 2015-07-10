@@ -496,6 +496,7 @@
       (apply arg-upload.add_argument ["repository"] {"help" "Either the path to an external zipfile to be uploaded, or the SVN or git repository of an external to package."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/)." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
       (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
