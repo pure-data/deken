@@ -455,7 +455,7 @@
          (let [[signedfile (gpg-sign-file args.repository)]
                [hashfile   (hash-sum-file args.repository)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
-               [password (or (get-config-value "password") (getpass "Please enter password for uploading: "))]
+               [password (get-upload-password username args.ask-password)]
                [destination (or (getattr args "destination") (get-config-value "destination" ""))]]
            (do
             (upload-package hashfile destination username password)
