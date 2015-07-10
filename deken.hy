@@ -217,6 +217,7 @@
 (defn gpg-sign-file [filename]
   (print "Attempting to GPG sign" filename)
   (let [[gnupghome (get-config-value "gpg_home")]
+        [use-agent (str-to-bool (get-config-value "gpg_agent"))]
         [gpgconfig {}]
         [_ (if gnupghome (assoc gpgconfig "gnupghome" gnupghome))]
         [_ (if use-agent (assoc gpgconfig "use_agent" true))]
@@ -226,15 +227,17 @@
         [sec-key (gpg-get-key gpg)]
         [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
         [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
-        [passphrase (if keyid
-                      (do
-                       (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
-                       (getpass "Enter GPG passphrase: " ))
-                      (print "No valid GPG key found (continue without signing)"))]
+
         [signconfig {}]
         [_ (assoc signconfig "detach" true)]
         [_ (if keyid (assoc signconfig "keyid" keyid))]
-        [_ (assoc signconfig "passphrase" passphrase)]
+        [passphrase (if (and (not use-agent) keyid)
+                      (do
+                       (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
+                       (getpass "Enter GPG passphrase: " )))]
+        [_ (if (and (not use-agent) passphrase) (print "No valid GPG key found (continue without signing)"))]
+        [_ (if passphrase (assoc signconfig "passphrase" passphrase))]
+
         [sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig ))]
         [signfile (+ filename ".asc")]]
     (do
