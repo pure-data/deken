@@ -214,8 +214,8 @@
      (catch [e IndexError] None))))
 
 ; generate a GPG signature for a particular file
-(defn gpg-sign-file [filename]
-  (print "Attempting to GPG sign" filename)
+(defn do-gpg-sign-file [filename signfile]
+  (print (% "Attempting to GPG sign '%s'" filename))
   (let [[gnupghome (get-config-value "gpg_home")]
         [use-agent (str-to-bool (get-config-value "gpg_agent"))]
         [gpgconfig {}]
@@ -250,6 +250,14 @@
        (do
         (.write (file signfile "wb") (str sig))
         signfile)))))
+; sign a file if it is not already signed
+(defn gpg-sign-file [filename]
+  (let [[signfile (+ filename ".asc")]]
+    (if (os.path.exists signfile)
+      (do
+       (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
+       signfile)
+      (do-gpg-sign-file filename signfile))))
 
 ; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
 (defn get-binary [binary-name]
