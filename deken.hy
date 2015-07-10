@@ -453,9 +453,10 @@
     ; are they asking the package a directory or an existing repository?
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-archive-basename args.repository args.version)]]
-        (print "Packaging into" package-filename)
-        (archive-dir args.repository package-filename))
+      (let [[package-filename (make-archive-basename args.repository args.version)]
+            [_ (print "Packaging into" package-filename)]
+            [archive-filename (archive-dir args.repository package-filename)]]
+        (gpg-sign-file archive-filename))
       ; otherwise build and then package
       (let [
         [external-name (get-external-name args.repository)]
@@ -465,7 +466,8 @@
           ((:build commands) args)
           (install-one build-folder externals-packaging-path)
           (print "Build-Packaging into" package-filename)
-          (archive-dir package-folder package-filename))))
+          (archive-dir package-folder package-filename)
+          (gpg-sign-file package-filename))))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
     (if (os.path.isfile args.repository)
