@@ -81,6 +81,9 @@
 ; concatenate two dictionaries - hylang's assoc is broken
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
 
+; apply attributes to objects in a functional way
+(defn set-attr [obj attr value] (do (setattr obj attr value) obj))
+
 ; read in the config file if present
 (def config
   (let [
