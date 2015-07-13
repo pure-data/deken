@@ -169,10 +169,13 @@
 
 ; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
-  (or
-    (os.environ.get (+ "DEKEN_" (name.upper)))
-    (config.get name)
-    (and default (get default 0))))
+   (first (filter (fn [x] (not (nil? x))) [
+     ; try to get the value from an environment variable
+     (os.environ.get (+ "DEKEN_" (name.upper)))
+     ; try to get the value from the config file
+     (config.get name)
+     ; finally, try the default
+     (first default)])))
 
 ; prompt for a particular config value for externals host upload
 (defn prompt-for-value [name]
