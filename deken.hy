@@ -225,37 +225,35 @@
   (let [[gnupghome (get-config-value "gpg_home")]
         [use-agent (str-to-bool (get-config-value "gpg_agent"))]
         [gpgconfig {}]
-        [_ (if gnupghome (assoc gpgconfig "gnupghome" gnupghome))]
-        [_ (if use-agent (assoc gpgconfig "use_agent" true))]
+        [gpgconfig (dict-merge gpgconfig (if gnupghome {"gnupghome" gnupghome}))]
+        [gpgconfig (dict-merge gpgconfig (if use-agent {"use_agent" true}))]
         [gpg (try (do
                    (import gnupg)
                    (apply gnupg.GPG [] gpgconfig)))]
         [sec-key (gpg-get-key gpg)]
         [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
         [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
-
-        [signconfig {}]
-        [_ (assoc signconfig "detach" true)]
-        [_ (if keyid (assoc signconfig "keyid" keyid))]
+        [signconfig {"detach" true}]
+        [signconfig (dict-merge signconfig (if keyid {"keyid" keyid}))]
         [passphrase (if (and (not use-agent) keyid)
                       (do
                        (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
                        (getpass "Enter GPG passphrase: " )))]
-        [_ (if (and (not use-agent) passphrase) (print "No valid GPG key found (continue without signing)"))]
-        [_ (if passphrase (assoc signconfig "passphrase" passphrase))]
+        [signconfig (dict-merge signconfig (if passphrase {"passphrase" passphrase}))]]
+    (if (and (not use-agent) passphrase)
+      (print "No valid GPG key found (continue without signing)"))
+    (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
+          [signfile (+ filename ".asc")]]
+      (if (hasattr sig "stderr")
+        (print sig.stderr))
+      (if (not sig)
+        (do
+         (print "WARNING: Could not GPG sign the package.")
+         None)
+        (do
+         (.write (file signfile "wb") (str sig))
+         signfile)))))
 
-        [sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig ))]
-        [signfile (+ filename ".asc")]]
-    (do
-     (if (hasattr sig "stderr")
-       (print sig.stderr))
-     (if (not sig)
-       (do
-        (print "WARNING: Could not GPG sign the package.")
-        None)
-       (do
-        (.write (file signfile "wb") (str sig))
-        signfile)))))
 ; sign a file if it is not already signed
 (defn gpg-sign-file [filename]
   (let [[signfile (+ filename ".asc")]]
@@ -359,11 +357,14 @@
      (.close tarf)
      tar-file)))
 
+; do we use zip or tar on this archive?
+(defn archive-extension [rootname]
+  (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
+
 ; automatically pick the correct archiver - windows or "no arch" = zip
-(defn archive-dir [directory-to-archive archive-file]
-  (if (or (in "(Windows" archive-file) (not (in "(" archive-file)))
-    (zip-dir directory-to-archive archive-file)
-    (tar-dir directory-to-archive archive-file)))
+(defn archive-dir [directory-to-archive rootname]
+  (let [[ext (archive-extension rootname)]]
+    ((if (= ext ".zip") zip-dir tar-dir) directory-to-archive rootname)))
 
 ; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
@@ -459,10 +460,11 @@
     ; are they asking the package a directory or an existing repository?
     (if (os.path.isdir args.repository)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-archive-basename args.repository args.version)]
-            [_ (print "Packaging into" package-filename)]
-            [archive-filename (archive-dir args.repository package-filename)]]
-        (gpg-sign-file archive-filename))
+      (let [[package-filename (make-archive-basename args.repository args.version)]]
+        (print "Packaging" (+ package-filename (archive-extension package-filename)))
+        (let [[archive-filename (archive-dir args.repository package-filename)]]
+          (hash-sum-file archive-filename)
+          (gpg-sign-file archive-filename)))
       ; otherwise build and then package
       (let [
         [external-name (get-external-name args.repository)]
