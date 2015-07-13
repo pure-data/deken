@@ -232,7 +232,7 @@
         [gpgconfig (dict-merge gpgconfig (if use-agent {"use_agent" true}))]
         [gpg (try (do
                    (import gnupg)
-                   (apply gnupg.GPG [] gpgconfig)))]
+                   (set-attr (apply gnupg.GPG [] gpgconfig) "decode_errors" "replace")))]
         [sec-key (gpg-get-key gpg)]
         [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
         [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
@@ -248,7 +248,7 @@
     (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
           [signfile (+ filename ".asc")]]
       (if (hasattr sig "stderr")
-        (print sig.stderr))
+        (print (try (str sig.stderr) (catch [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
       (if (not sig)
         (do
          (print "WARNING: Could not GPG sign the package.")
