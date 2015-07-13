@@ -76,7 +76,7 @@
   :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
 
 ; convet a string into bool, based on the string value
-(defn str-to-bool [s] (if s (in (.lower s) ["true" "t" "yes" "y" "ok" "1" ""]) True))
+(defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
 ; read in the config file if present
 (def config
