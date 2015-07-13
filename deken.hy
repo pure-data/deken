@@ -78,6 +78,9 @@
 ; convet a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
+; concatenate two dictionaries - hylang's assoc is broken
+(defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
+
 ; read in the config file if present
 (def config
   (let [
