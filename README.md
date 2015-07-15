@@ -121,7 +121,3 @@ Raspbian
 
 	$ deken --platform
 	Linux-armv6l-32bit-ELF
-
-## Build tool ##
-
-Deken can also be used to build some externals directly from a repository. See the [builder.md](./builder.md) for details.
