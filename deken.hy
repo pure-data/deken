@@ -425,7 +425,10 @@
                                        )))]
         [passwd (or passwd (get-config-value "password") (getpass (% "Please enter password for uploading as '%s': " username)))]]
     (do
-     (try (if passwd (keyring.set_password "deken" username passwd)))
+     (if passwd
+       (try (do
+             (import keyring)
+             (keyring.set_password "deken" username passwd))))
      passwd)))
 
 
