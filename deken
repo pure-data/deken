@@ -58,6 +58,10 @@ bail_install() {
     # bail from this script.
     exit 1;
 }
+bail_install_msg() {
+    error "$@"
+    bail_install
+}
 
 install_virtualenv() {
 	echo "Downloading & installing Virtualenv."
@@ -74,9 +78,9 @@ install_virtualenv() {
 
 install_deken() {
     which python >/dev/null || \
-        (error "Oops, no Python found! You need Python to run Deken." && bail_install)
+        bail_install_msg "Oops, no Python found! You need Python to run Deken."
     which make >/dev/null || \
-        (error "Oops, no Make found! You need Make to run Deken." && bail_install)
+        bail_install_msg "Oops, no Make found! You need Make to run Deken."
     error "This is your first time running deken on this machine."
     error "I'm going to install myself and my dependencies into ~/.deken now."
     error "Feel free to ctrl-C now if you don't want to do this."
