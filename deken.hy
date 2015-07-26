@@ -1,10 +1,9 @@
 #!/usr/bin/env hy
-; deken build svn://svn.code.sf.net/p/pure-data/svn/trunk/externals/freeverb~/
+; deken upload --version 0.1 ./freeverb~/
 
 (import sys)
 (import os)
 (import argparse)
-(import shutil)
 (import platform)
 (import zipfile)
 (import tarfile)
@@ -22,14 +21,7 @@
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (def version (try (.rstrip (.read (file (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
-(def pd-repo-uri "git://git.code.sf.net/p/pure-data/pure-data")
 (def externals-host "puredata.info")
-(def workspace-path (os.path.abspath (os.path.join deken-home "workspace")))
-(def pd-path (os.path.join workspace-path "pd"))
-(def pd-binary-path (os.path.join pd-path "bin" "pd"))
-(def pd-source-path (os.path.join pd-path "src"))
-(def externals-build-path (os.path.join workspace-path "externals"))
-(def externals-packaging-path (os.path.join workspace-path "pd-externals"))
 
 (def elf-arch-types {
   "EM_NONE" nil
@@ -69,12 +61,6 @@
       [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
       [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
 
-(def binary-names {:git "Git" :make "Make" :svn "Subversion"})
-
-(def strip-flag {
-  :Darwin "STRIP=strip -x"
-  :Linux "STRIP=strip --strip-unneeded -R .note -R .comment"})
-
 ; convet a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
@@ -91,21 +77,6 @@
     [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
-
-; create an architecture string - deprecated for get-architecture-strings
-(defn arch-string [&rest args]
-  (let [[arch (list-comp a [a (apply platform.architecture args)] a)]]
-    (.join "-" arch)))
-
-; obsolete: get a string we can use to specify/determine the build architecture of the current platform
-; (we now inspect binaries directly)
-(defn get-architecture-prefix []
-  (.join "-" [
-     (platform.system)
-     (platform.machine)
-     (if (os.path.isfile pd-binary-path)
-       (arch-string pd-binary-path)
-       (arch-string))]))
 
 ; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
@@ -266,21 +237,6 @@
        signfile)
       (do-gpg-sign-file filename signfile))))
 
-; get access to a command line binary in a way that checks for it's existence and reacts to errors correctly
-(defn get-binary [binary-name]
-  (import sh)
-  (try
-    (let [[binary-fn (getattr sh binary-name)]]
-      (fn [&rest args]
-        (try
-          (apply binary-fn args)
-          (catch [e sh.ErrorReturnCode]
-            (print e.stderr)
-            (sys.exit 1)))))
-    (catch [e sh.CommandNotFound]
-      (print binary-name (% "binary not found. Please install %s." (get binary-names (keyword binary-name))))
-      (sys.exit 1))))
-
 ; execute a command inside a directory
 (defn in-dir [destination f &rest args]
   (let [
@@ -289,52 +245,6 @@
     [result (apply f args)]]
       (os.chdir last-dir)
       result))
-
-; test if a repository is a git repository
-(defn is-git? [repo-uri]
-  (or (repo-uri.endswith ".git") (repo-uri.startswith "git:")))
-
-; uses git or svn to check out 
-(defn checkout [repo-uri destination]
-  (if (is-git? repo-uri)
-    ((get-binary "git") "clone" repo-uri destination)
-    ((get-binary "svn") "checkout" repo-uri destination)))
-
-; uses git or svn to update the repository
-(defn update [repo-uri destination]
-  (if (is-git? repo-uri)
-    (in-dir destination (get-binary "git") "pull")
-    (in-dir destination (get-binary "svn") "update")))
-
-; uses make to install an external
-(defn install-one [build-folder destination-folder]
-  ((get-binary "make") "-C" build-folder (get strip-flag (keyword (platform.system))) (% "DESTDIR='%s'" destination-folder) "objectsdir=''" "install"))
-
-; uses make to build an external
-(defn build-one [build-folder]
-  ((get-binary "make") "-C" build-folder (% "PD_PATH=%s" pd-source-path) (% "CFLAGS=-DPD -DHAVE_G_CANVAS_H -I%s -Wall -W" pd-source-path)))
-
-; check for the existence of m_pd.h
-(defn m-pd? []
-  (os.path.exists (os.path.join pd-source-path "m_pd.h")))
-
-; make sure there is a checkout of pd
-(defn ensure-pd []
-  (if (not (m-pd?))
-    (do
-      (print "Checking out Pure Data")
-      (checkout pd-repo-uri pd-path)))
-  pd-path)
-
-; make sure we have an up-to-date checked out copy of a particular repository
-(defn ensure-checked-out [repo-uri destination]
-  (if (os.path.isdir destination)
-    (do
-      (print "Updating" destination)
-      (update repo-uri destination))
-    (do
-      (print "Checking out" repo-uri "into" destination)
-      (checkout repo-uri destination))))
 
 ; zip up a single directory
 ; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
@@ -398,16 +308,6 @@
           (print (% "Please ensure the folder '%s' exists and is writeable." path))
           (sys.exit 1)))))
 
-; get the name of the external from the repository path
-(defn get-external-name [repo-uri]
-  (if (os.path.isdir repo-uri)
-    (os.path.basename (os.path.abspath repo-uri))
-    (os.path.basename (.rstrip (.rstrip repo-uri "/") ".git"))))
-
-; get the destination the external should go into
-(defn get-external-build-folder [external-name]
-  (os.path.join externals-build-path external-name))
-
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
    (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
@@ -431,127 +331,65 @@
              (keyring.set_password "deken" username passwd))))
      passwd)))
 
-
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
-  ; download and build a particular external from a repository
-  :build (fn [args]
-    (let [
-      [external-name (get-external-name args.repository)]
-      [build-folder (get-external-build-folder external-name)]
-      [pd-dir (ensure-pd)]]
-        (if (os.path.isdir args.repository)
-          (do
-            (print "Building" external-name)
-            (build-one args.repository))
-          (do
-            (ensure-checked-out args.repository build-folder)
-            (print "Building" build-folder)
-            (build-one build-folder)))))
-  ; install a particular external into the user's pd-externals directory
-  :install (fn [args]
-    (let [
-      [external-name (get-external-name args.repository)]
-      [build-folder (get-external-build-folder external-name)]]
-        ; make sure the repository is built
-        ((:build commands) args)
-        ; go ahead and perform the install
-        (print (% "Installing %s into %s" (tuple [external-name externals-folder])))
-        ; if they asked for a specific directory to be installed, do that
-        (if (os.path.isdir args.repository)
-          (install-one args.repository externals-folder)
-          (install-one build-folder externals-folder))))
   ; zip up a set of built externals
   :package (fn [args]
-    ; are they asking the package a directory or an existing repository?
-    (if (os.path.isdir args.repository)
+    ; are they asking to package a directory?
+    (if (os.path.isdir args.source)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-archive-basename args.repository args.version)]]
+      (let [[package-filename (make-archive-basename args.source args.version)]]
         (print "Packaging" (+ package-filename (archive-extension package-filename)))
-        (let [[archive-filename (archive-dir args.repository package-filename)]]
+        (let [[archive-filename (archive-dir args.source package-filename)]]
           (hash-sum-file archive-filename)
-          (gpg-sign-file archive-filename)))
-      ; otherwise build and then package
-      (let [
-        [external-name (get-external-name args.repository)]
-        [build-folder (get-external-build-folder external-name)]
-        [package-folder (os.path.join externals-packaging-path external-name)]
-        [package-filename (make-archive-basename package-folder args.version)]]
-          ((:build commands) args)
-          (install-one build-folder externals-packaging-path)
-          (print "Build-Packaging into" package-filename)
-          (archive-dir package-folder package-filename)
-          (gpg-sign-file package-filename))))
+          (gpg-sign-file archive-filename)
+          archive-filename))
+      (do
+        (print "Not a directory.")
+        (sys.exit 1))))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
-    (if (os.path.isfile args.repository)
+    (if (os.path.isfile args.source)
       ; user has asked to upload an archive file
-      (if (is-archive? args.repository)
+      (if (is-archive? args.source)
         (do
-         (print (+ "Uploading " args.repository))
-         (let [[signedfile (gpg-sign-file args.repository)]
-               [hashfile   (hash-sum-file args.repository)]
+         (print (+ "Uploading " args.source))
+         (let [[signedfile (gpg-sign-file args.source)]
+               [hashfile   (hash-sum-file args.source)]
                [username (or (get-config-value "username") (prompt-for-value "username"))]
                [password (get-upload-password username args.ask-password)]
                [destination (or (getattr args "destination") (get-config-value "destination" ""))]]
            (do
             (upload-package hashfile destination username password)
-            (upload-package args.repository destination username password)
+            (upload-package args.source destination username password)
             (if signedfile
               (upload-package signedfile destination username password)))))
         (do
           (print "Not an externals archive.")
           (sys.exit 1)))
       ; otherwise we need to make the archive first
-      (let [[args.repository ((:package commands) args)]]
+      (let [[args.source ((:package commands) args)]]
         ; recurse - call myself again now that we have a package file
         ((:upload commands) args))))
-  ; manipulate the version of Pd
-  :pd (fn [args]
-    (let [
-      [destination (ensure-pd)]
-      [deken-home (os.getcwd)]]
-        (os.chdir destination)
-        (if args.version
-          ((get-binary "git") "checkout" args.version))
-        ; tell the user what version is currently checked out
-        (print (% "Pd version %s checked out" (.rstrip ((get-binary "git") "rev-parse" "--abbrev-ref" "HEAD"))))
-        (os.chdir deken-home)))
-  ; deletes the workspace directory
-  :clean (fn [args]
-    (if (os.path.isdir "workspace")
-      (do
-        (print "Deleting all files in the workspace folder.")
-        (shutil.rmtree "workspace"))))
   ; self-update deken
   :upgrade (fn [args]
-    (print "The upgrade script isn't here, it's in the Bash wrapper."))
-  ; update pd binary and list of externals repositories
-  :update (fn [])})
+    (print "The upgrade script isn't here, it's in the Bash wrapper."))})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
   (let [
     [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
     [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
-    [arg-build (apply arg-subparsers.add_parser ["build"])]
-    [arg-install (apply arg-subparsers.add_parser ["install"])]
     [arg-package (apply arg-subparsers.add_parser ["package"])]
     [arg-upload (apply arg-subparsers.add_parser ["upload"])]
-    [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]
-    [arg-clean (apply arg-subparsers.add_parser ["clean"] {"help" "Deletes all files from the workspace folder."})]
-    [arg-pd (apply arg-subparsers.add_parser ["pd"])]]
+    [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
-      (apply arg-parser.add_argument ["--platform"] {"action" "version" "version" (get-architecture-prefix) "help" "Outputs the current build platform identifier string."})
-      (apply arg-build.add_argument ["repository"] {"help" "The SVN or git repository of the external to build."})
-      (apply arg-install.add_argument ["repository"] {"help" "The SVN or git repository of the external to install."})
-      (apply arg-package.add_argument ["repository"] {"help" "Either the path to a directory of externals to be packaged, or the SVN or git repository of an external to package."})
+      (apply arg-package.add_argument ["source"] {"help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["repository"] {"help" "Either the path to an external zipfile to be uploaded, or the SVN or git repository of an external to package."})
+      (apply arg-upload.add_argument ["source"] {"help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
-      (apply arg-pd.add_argument ["version"] {"help" "Fetch a particular version of Pd to build against." "nargs" "?"})
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
