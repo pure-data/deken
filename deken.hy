@@ -61,7 +61,7 @@
       [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
       [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
 
-; convet a string into bool, based on the string value
+; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
 ; concatenate two dictionaries - hylang's assoc is broken
@@ -162,7 +162,7 @@
     "Please enter %s for http://%s/: ")
       (tuple [(name.upper) config-file-path name name externals-host]))))
 
-; caculate the sha256 hash of a file
+; calculate the sha256 hash of a file
 (defn hash-sum-file [filename]
   (let [[hashfn (hasher)]
         [blocksize 65536]
@@ -283,7 +283,7 @@
 (defn is-archive? [filename]
   (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
-; upload a zipped up package to pure-data.info
+; upload a zipped up package to puredata.info
 (defn upload-package [filepath destination username password]
   (let [
     ; get username and password from the environment, config, or user input
