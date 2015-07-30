@@ -8,9 +8,9 @@ Packages are stored on <http://puredata.info/> and can be installed using the `H
 
 Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
 
- * Linux = `~/pd-externals/`
- * OSX = `~/Library/Pd/`
- * Windows = `%AppData%\Pd`
+ * Linux = `~/pd-externals/deken-plugin/`
+ * OSX = `~/Library/Pd/deken-plugin/`
+ * Windows = `%AppData%\Pd\deken-plugin\`
 
 Then select `Help -> Find Packages` and type the name of the external you would like to search for.
 
