@@ -4,6 +4,7 @@
 (import sys)
 (import os)
 (import argparse)
+
 (import platform)
 (import zipfile)
 (import tarfile)
@@ -14,8 +15,8 @@
 (import hashlib)
 (import [getpass [getpass]])
 (import [urlparse [urlparse]])
-
 (import easywebdav)
+
 (require hy.contrib.loop)
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
