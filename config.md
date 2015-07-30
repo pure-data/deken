@@ -6,5 +6,6 @@ Here are the possible values:
  * `password` = Password on puredata.info for uploads.
  * `gpg_home` = Path to treat as GPG's homedir - defaults to GPG's default.
  * `key_id` = The key ID to use when signing binary packages - defaults to your secret key.
+ * `gpg_agent` = Tell deken to invoke GPG with the `--use-agent` flag.
 
 All values are optional.
