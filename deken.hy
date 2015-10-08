@@ -297,7 +297,7 @@
     [url (urlparse destination)]
     [proto (or url.scheme "https")]
     [host (or url.netloc externals-host)]
-    [path (str (replace-words (or (.rstrip url.path "/") "/Members/%u/software") (,
+    [path (str (replace-words (or (.rstrip url.path "/") "/Members/%u/software/%p/%v") (,
                          (, "%u" username) (, "%p" pkg) (, "%v" (or ver "")))))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
@@ -404,7 +404,7 @@
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["source"] {"help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/)." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
       (let [
         [arguments (.parse_args arg-parser)]
