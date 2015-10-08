@@ -72,6 +72,9 @@
 ; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (do (setattr obj attr value) obj))
 
+; replace multiple words (given as pairs in <repls>) in a string <s>
+(defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
+
 ; read in the config file if present
 (def config
   (let [
