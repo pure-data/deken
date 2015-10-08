@@ -293,10 +293,12 @@
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
+    [[pkg ver arch ext] (parse-filename filename)]
     [url (urlparse destination)]
     [proto (or url.scheme "https")]
     [host (or url.netloc externals-host)]
-    [path (if (= destination "") (+ "/Members/" username "/software") (str url.path) )]
+    [path (str (replace-words (or (.rstrip url.path "/") "/Members/%u/software") (,
+                         (, "%u" username) (, "%p" pkg) (, "%v" (or ver "")))))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
