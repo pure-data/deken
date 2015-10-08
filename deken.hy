@@ -3,6 +3,7 @@
 
 (import sys)
 (import os)
+(import re)
 (import argparse)
 
 (import platform)
@@ -312,6 +313,15 @@
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
    (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+
+; parses a filename into a (pkgname version archs extension) tuple
+; missing values are nil
+(defn parse-filename [filename]
+  (list-comp (get
+                ; parse filename with a regex
+                (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
+                ; extract only the fields of interested
+                [x [1 3 4 6]]))
 
 ;; get the password, either from
 ;; - a password agent
