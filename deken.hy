@@ -3,6 +3,7 @@
 
 (import sys)
 (import os)
+(import re)
 (import argparse)
 
 (import platform)
@@ -70,6 +71,9 @@
 
 ; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (do (setattr obj attr value) obj))
+
+; replace multiple words (given as pairs in <repls>) in a string <s>
+(defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
 ; read in the config file if present
 (def config
@@ -289,10 +293,12 @@
   (let [
     ; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
+    [[pkg ver arch ext] (parse-filename filename)]
     [url (urlparse destination)]
     [proto (or url.scheme "https")]
     [host (or url.netloc externals-host)]
-    [path (if (= destination "") (+ "/Members/" username "/software") (str url.path) )]
+    [path (str (replace-words (or (.rstrip url.path "/") "/Members/%u/software/%p/%v") (,
+                         (, "%u" username) (, "%p" pkg) (, "%v" (or ver "")))))]
     [remotepath (+ path "/" filename)]
     [url (+ proto "://" host path)]
     [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
@@ -312,6 +318,15 @@
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
    (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+
+; parses a filename into a (pkgname version archs extension) tuple
+; missing values are nil
+(defn parse-filename [filename]
+  (list-comp (get
+                ; parse filename with a regex
+                (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
+                ; extract only the fields of interested
+                [x [1 3 4 6]]))
 
 ;; get the password, either from
 ;; - a password agent
@@ -389,7 +404,7 @@
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["source"] {"help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/)." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
       (let [
         [arguments (.parse_args arg-parser)]
