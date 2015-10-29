@@ -45,7 +45,6 @@ def showPackage(obj, url, filename):
   print("%s\t%s\t%s\t%s" % (title, url, owner, date))
   return printed
 
-
 mytypes = ('IAEMFile', 'PSCFile')
 suffixes = ['zip', 'tgz', 'tar.gz']
 
@@ -54,7 +53,8 @@ for t in mytypes:
   results = context.portal_catalog(portal_type=t)
   for i in results:
     url = url_unquote(i.getURL())
-    filename = url.split('/')[-1]
+    FileName = url.split('/')[-1]
+    filename=FileName.lower()
     match = False
     for suffix in suffixes:
       if filename.endswith("-externals.%s" % (suffix,)):
@@ -70,6 +70,6 @@ for t in mytypes:
           break
       if not match:
         continue
-    print("%s" % showPackage(i.getObject(), url, filename))
+    print("%s" % showPackage(i.getObject(), url, FileName))
 
 return printed
