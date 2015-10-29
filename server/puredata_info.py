@@ -48,7 +48,6 @@ def showPackage(obj, url, filename):
 mytypes = ('IAEMFile', 'PSCFile')
 suffixes = ['zip', 'tgz', 'tar.gz']
 
-
 for t in mytypes:
   results = context.portal_catalog(portal_type=t)
   for i in results:
@@ -65,11 +64,16 @@ for t in mytypes:
     if 'name' in args:
       match = False
       for name in args['name']:
+        name=name.lower()
         if name in filename:
           match = True
           break
       if not match:
         continue
     print("%s" % showPackage(i.getObject(), url, FileName))
+
+# make sure there is *some* content in the page
+if not printed:
+  print("")
 
 return printed
