@@ -6,7 +6,7 @@ The configuration file for the deken-plugin
 is called `deken-plugin.conf`.
 
 Put it either directly near the `deken-plugin.tcl` file,
-or into a system-specific place (`$PdPath` resp `%PdPath` are the installation directory of your Pd):
+or into a system-specific place (`$PdPath` resp `%PdPath%` are the installation directory of your Pd, `~` is your home directory):
 
 ### Linux
 - `$PdPath/extra/deken-plugin/deken-plugin.conf`
