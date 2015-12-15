@@ -335,17 +335,12 @@
 ;; if force-ask is set, skip the agent
 ;; store the password in the password agent (for later use)
 (defn get-upload-password [username force-ask]
-  (let [[passwd (if force-ask "" (try (do
-                                       (import keyring)
-                                       (keyring.get_password "deken" username)
-                                       )))]
-        [passwd (or passwd (get-config-value "password") (getpass (% "Please enter password for uploading as '%s': " username)))]]
-    (do
-     (if passwd
-       (try (do
-             (import keyring)
-             (keyring.set_password "deken" username passwd))))
-     passwd)))
+  (or (if (not force-ask)
+          (or (try (do
+                      (import keyring)
+                      (keyring.get_password "deken" username)))
+              (get-config-value "password")))
+      (getpass (% "Please enter password for uploading as '%s': " username))))
 
 ; the executable portion of the different sub-commands that make up the deken tool
 (def commands {
@@ -379,7 +374,11 @@
             (upload-package hashfile destination username password)
             (upload-package args.source destination username password)
             (if signedfile
-              (upload-package signedfile destination username password)))))
+              (upload-package signedfile destination username password))
+            (if password ; upload succeeded, so store it in the keyring (if possible)
+              (try (do
+                (import keyring)
+                (keyring.set_password "deken" username password)))))))
         (do
           (print "Not an externals archive.")
           (sys.exit 1)))
