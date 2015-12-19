@@ -40,7 +40,7 @@ if [ "$HTTP_CLIENT" = "" ]; then
 fi
 
 export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
-DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/master"
+DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/master/developer"
 
 if $cygwin; then
     export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
