@@ -362,9 +362,7 @@
                                 (if (is-source-arch? arch) (filename-to-namever filename))))
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources]
-  (do
-   (print pkgs sources)
-  (for [pkg pkgs] (if (not (in pkg sources)) (sys.exit (% "Missing sources for '%s'" pkg))))))
+  (for [pkg pkgs] (if (not (in pkg sources)) (sys.exit (% "Missing sources for '%s'" pkg)))))
 
 ;; get the password, either from
 ;; - a password agent
