@@ -409,6 +409,7 @@
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--no-source-warning"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
