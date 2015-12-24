@@ -326,7 +326,7 @@
    (upload-file (hash-sum-file pkg) destination username password)
    (upload-file pkg destination username password)
    (upload-file (gpg-sign-file pkg) destination username password)))
-(defn upload-packages [pkgs destination username password]
+(defn upload-packages [pkgs destination username password skip-source]
       (for [pkg pkgs] (upload-package pkg destination username password)))
 
 ; compute the zipfile name for a particular external on this platform
@@ -388,7 +388,7 @@
                                                  [True (sys.exit (% "Unable to process '%s'" x))])
                                            (x args.source))
                                 (or (getattr args "destination") (get-config-value "destination" ""))
-                                username password))
+                                username password args.no-source-warning))
               ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
               (if password
                 (try (do
