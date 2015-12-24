@@ -349,6 +349,8 @@
                 (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
                 ; extract only the fields of interested
              [x [1 3 4 6]]))
+(defn filename-to-namever [filename]
+  (let [[[pkg ver arch ext] (parse-filename filename)]] (add-nonempty pkg ver)))
 
 ;; get the password, either from
 ;; - a password agent
