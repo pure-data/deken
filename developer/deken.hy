@@ -352,6 +352,17 @@
 (defn filename-to-namever [filename]
   (let [[[pkg ver arch ext] (parse-filename filename)]] (add-nonempty pkg ver)))
 
+;; check if the list of archs contains sources (or is arch-independent)
+(defn is-source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
+;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
+(defn has-sources? [filename] (let [[[pkg ver arch ext] (parse-filename filename)]]
+                                (if (is-source-arch? arch) (filename-to-namever filename))))
+;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
+(defn check-sources [pkgs sources]
+  (do
+   (print pkgs sources)
+  (for [pkg pkgs] (if (not (in pkg sources)) (sys.exit (% "Missing sources for '%s'" pkg))))))
+
 ;; get the password, either from
 ;; - a password agent
 ;; - the config-file (no, not really?)
