@@ -348,7 +348,7 @@
                 ; parse filename with a regex
                 (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
                 ; extract only the fields of interested
-                [x [1 3 4 6]]))
+             [x [1 3 4 6]]))
 
 ;; get the password, either from
 ;; - a password agent
