@@ -67,6 +67,9 @@
 ; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
+;; append string s2 to s1 only if s2 is not empty (or None)
+(defn add-nonempty [s1 s2] (if s2 (+ s1 s2) s1))
+
 ; concatenate two dictionaries - hylang's assoc is broken
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
 
