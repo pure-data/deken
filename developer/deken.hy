@@ -319,14 +319,15 @@
                      (% "Couldn't upload to %s!\n" url)
                      (% "Are you sure you have the correct username and password set for '%s'?\n" host)
                      (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
-;; upload a list of archives (given the archive-filename it will also puload some extra-files (sha256, gpg,...))
+;; upload a list of archives (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
+(defn upload-package [pkg destination username password]
+  (do
+   (print "Uploading package" pkg)
+   (upload-file (hash-sum-file pkg) destination username password)
+   (upload-file pkg destination username password)
+   (upload-file (gpg-sign-file pkg) destination username password)))
 (defn upload-packages [pkgs destination username password]
-  (for [pkg pkgs]
-    (do
-     (print "Uploading package" pkg)
-     (upload-file (hash-sum-file pkg) destination username password)
-     (upload-file pkg destination username password)
-     (upload-file (gpg-sign-file pkg) destination username password))))
+      (for [pkg pkgs] (upload-package pkg destination username password)))
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
