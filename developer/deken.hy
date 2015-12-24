@@ -107,6 +107,7 @@
       [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
+      [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
       [true []])
     [f (os.listdir folder)]) []))
 
