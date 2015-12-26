@@ -349,9 +349,9 @@
 (defn parse-filename [filename]
   (list-comp (get
                 ; parse filename with a regex
-                (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
+                (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
                 ; extract only the fields of interested
-             [x [1 3 4 6]]))
+             [x [2 4 5 7]]))
 (defn filename-to-namever [filename]
   (let [[[pkg ver arch ext] (parse-filename filename)]] (add-nonempty pkg ver)))
 
