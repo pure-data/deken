@@ -67,8 +67,8 @@
 ; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
-;; append string s2 to s1 only if s2 is not empty (or None)
-(defn add-nonempty [s1 s2] (if s2 (+ s1 s2) s1))
+;; join non-empty elements
+(defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
 
 ; concatenate two dictionaries - hylang's assoc is broken
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
@@ -353,7 +353,7 @@
                 ; extract only the fields of interested
              [x [2 4 5 7]]))
 (defn filename-to-namever [filename]
-  (let [[[pkg ver arch ext] (parse-filename filename)]] (add-nonempty pkg ver)))
+  (let [[[pkg ver arch ext] (parse-filename filename)]] (join-nonempty "/" [pkg ver])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
 (defn is-source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
