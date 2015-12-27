@@ -1,12 +1,12 @@
 # Developers #
 
-You can use the [`deken` command line tool](https://raw.githubusercontent.com/pure-data/deken/master/deken) to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
+You can use the [`deken` command line tool](https://raw.githubusercontent.com/pure-data/deken/master/developer/deken) to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
 
 If you don't want to use the `deken` packaging tool you can zip and upload the files yourself. See the "Filename format" section below.
 
 ## Get started ##
 
-	$ curl https://raw.githubusercontent.com/pure-data/deken/master/deken > ~/bin/deken
+	$ curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
 	$ chmod 755 ~/bin/deken
 	$ deken
 	This is your first time running deken on this machine.
