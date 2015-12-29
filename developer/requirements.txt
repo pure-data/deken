@@ -4,3 +4,6 @@ pyelftools==0.23
 macholib==1.7
 python-gnupg==0.3.7
 keyring==4.0
+ndg_httpsclient==0.4.0
+pyasn1==0.1.9
+pyOpenSSL==0.15.1
