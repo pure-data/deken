@@ -62,10 +62,11 @@ for t in mytypes:
     if not match:
       continue
     if 'name' in args:
+      (fname, version) = getNameVersion(filename)
       match = False
       for name in args['name']:
         name=name.lower()
-        if name in filename:
+        if name in fname:
           match = True
           break
       if not match:
