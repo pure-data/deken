@@ -379,7 +379,7 @@
             (list-comp
              (get (.split x "\t") 0)
              [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
-             (get-with-default (.split x "\t") 2))]))))
+             (= username (get-with-default (.split x "\t") 2)))]))))
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources &optional puredata-info-user]
