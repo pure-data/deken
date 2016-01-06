@@ -376,8 +376,11 @@
              x)]))))
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
-(defn check-sources [pkgs sources]
-  (for [pkg pkgs] (if (not (in pkg sources)) (sys.exit (% "Missing sources for '%s'" pkg)))))
+(defn check-sources [pkgs sources &optional puredata-info-check]
+  (for [pkg pkgs] (if (and
+                       (not (in pkg sources))
+                       (not (and puredata-info-check (check-sources@puredata-info pkg))))
+                    (sys.exit (% "Missing sources for '%s'!" pkg)))))
 
 ;; get the password, either from
 ;; - a password agent
