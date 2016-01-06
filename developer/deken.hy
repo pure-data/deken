@@ -330,7 +330,8 @@
    (upload-file (gpg-sign-file pkg) destination username password)))
 (defn upload-packages [pkgs destination username password skip-source]
   (do (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
-                                           (set (list-comp (has-sources? pkg) [pkg pkgs]))))
+                                           (set (list-comp (has-sources? pkg) [pkg pkgs]))
+                                           (in "puredata.info" (or (getattr (urlparse destination) "netloc") externals-host))))
       (for [pkg pkgs] (upload-package pkg destination username password))))
 
 ; compute the zipfile name for a particular external on this platform
