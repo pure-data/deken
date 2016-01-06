@@ -387,7 +387,7 @@
       (if (os.path.isdir name)
       ; if asking for a directory just package it up
         (archive-extra (archive-dir name (make-archive-basename name args.version)))
-        (sys.exit (% "Not a directory '%s'" name)))
+        (sys.exit (% "Not a directory '%s'!" name)))
       (name args.source)))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
@@ -395,9 +395,9 @@
                   [password (get-upload-password username args.ask-password)]]
               (do
                (upload-packages (list-comp (cond [(os.path.isfile x)
-                                                  (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive" x)))]
+                                                  (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
                                                  [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
-                                                 [True (sys.exit (% "Unable to process '%s'" x))])
+                                                 [True (sys.exit (% "Unable to process '%s'!" x))])
                                            (x args.source))
                                 (or (getattr args "destination") (get-config-value "destination" ""))
                                 username password args.no-source-warning))
@@ -408,7 +408,7 @@
                       (keyring.set_password "deken" username password))))))
   ; self-update deken
   :upgrade (fn [args]
-    (sys.exit "The upgrade script isn't here, it's in the Bash wrapper."))})
+    (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
