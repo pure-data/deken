@@ -80,6 +80,9 @@
 ; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
+;; get a value at an index or a default
+(defn get-with-default [elements index &optional default] (try (get elements index) (catch [e IndexError] default)))
+
 ; read in the config file if present
 (def config
   (let [
