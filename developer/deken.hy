@@ -369,7 +369,7 @@
                                 (if (is-source-arch? arch) (filename-to-namever filename))))
 
 ;; check if the given package has a sources-arch on puredata.info
-(defn check-sources@puredata-info [pkg]
+(defn check-sources@puredata-info [pkg username]
   (do (print (% "Checking puredata.info for Source package for '%s'" pkg))
       (in pkg
           ;; list of package/version matching 'pkg' that have 'Source' archictecture
@@ -379,13 +379,13 @@
             (list-comp
              (get (.split x "\t") 0)
              [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
-             x)]))))
+             (get-with-default (.split x "\t") 2))]))))
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
-(defn check-sources [pkgs sources &optional puredata-info-check]
+(defn check-sources [pkgs sources &optional puredata-info-user]
   (for [pkg pkgs] (if (and
                        (not (in pkg sources))
-                       (not (and puredata-info-check (check-sources@puredata-info pkg))))
+                       (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
                     (sys.exit (% "Missing sources for '%s'!" pkg)))))
 
 ;; get the password, either from
