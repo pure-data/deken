@@ -17,6 +17,7 @@
 (import hashlib)
 (import [getpass [getpass]])
 (import [urlparse [urlparse]])
+(import requests)
 (import easywebdav)
 
 (require hy.contrib.loop)
@@ -360,6 +361,20 @@
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename] (let [[[pkg ver arch ext] (parse-filename filename)]]
                                 (if (is-source-arch? arch) (filename-to-namever filename))))
+
+;; check if the given package has a sources-arch on puredata.info
+(defn check-sources@puredata-info [pkg]
+  (do (print (% "Checking puredata.info for Source package for '%s'" pkg))
+      (in pkg
+          ;; list of package/version matching 'pkg' that have 'Source' archictecture
+          (list-comp
+           (has-sources? p)
+           [p
+            (list-comp
+             (get (.split x "\t") 0)
+             [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
+             x)]))))
+
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources]
   (for [pkg pkgs] (if (not (in pkg sources)) (sys.exit (% "Missing sources for '%s'" pkg)))))
