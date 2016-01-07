@@ -377,7 +377,7 @@
            (has-sources? p)
            [p
             (list-comp
-             (get (.split x "\t") 0)
+             (try-get (.split (try-get (.split x "\t") 1) "/") -1) ;; filename part of the download URL
              [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
              (= username (try-get (.split x "\t") 2)))]))))
 
