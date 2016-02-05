@@ -11,11 +11,13 @@
 (import tarfile)
 (import string)
 (import struct)
+(import copy)
 (import ConfigParser)
 (import StringIO)
 (import hashlib)
 (import [getpass [getpass]])
 (import [urlparse [urlparse]])
+(import requests)
 (import easywebdav)
 
 (require hy.contrib.loop)
@@ -66,6 +68,9 @@
 ; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
+;; join non-empty elements
+(defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
+
 ; concatenate two dictionaries - hylang's assoc is broken
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
 
@@ -74,6 +79,9 @@
 
 ; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
+
+;; get a value at an index or a default
+(defn try-get [elements index &optional default] (try (get elements index) (catch [e IndexError] default)))
 
 ; read in the config file if present
 (def config
@@ -103,6 +111,7 @@
       [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
+      [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
       [true []])
     [f (os.listdir folder)]) []))
 
@@ -289,9 +298,10 @@
   (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ; upload a zipped up package to puredata.info
-(defn upload-package [filepath destination username password]
-  (let [
-    ; get username and password from the environment, config, or user input
+(defn upload-file [filepath destination username password]
+  (if filepath
+   (let [
+    ;; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
     [[pkg ver arch ext] (parse-filename filename)]
     [url (urlparse destination)]
@@ -310,23 +320,73 @@
           ; upload the package file
           (dav.upload filepath remotepath))
         (catch [e easywebdav.client.OperationFailed]
-          (print (+ "Couldn't upload to " url))
-          (print (% "Are you sure you have the correct username and password set for '%s'?" host))
-          (print (% "Please ensure the folder '%s' exists and is writeable." path))
-          (sys.exit 1)))))
+          (sys.exit (+
+                     (% "Couldn't upload to %s!\n" url)
+                     (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                     (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
+;; upload a list of archives (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
+(defn upload-package [pkg destination username password]
+  (do
+   (print "Uploading package" pkg)
+   (upload-file (hash-sum-file pkg) destination username password)
+   (upload-file pkg destination username password)
+   (upload-file (gpg-sign-file pkg) destination username password)))
+(defn upload-packages [pkgs destination username password skip-source]
+  (do (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
+                                           (set (list-comp (has-sources? pkg) [pkg pkgs]))
+                                           (if (= "puredata.info"
+                                                  (.lower (or (getattr (urlparse destination) "netloc") externals-host)))
+                                             username)))
+      (for [pkg pkgs] (upload-package pkg destination username password))))
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
-   (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+  (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+
+; create additional files besides archive: hash-file and gpg-signature
+(defn archive-extra [zipfile]
+  (do
+   (print "Packaging" zipfile)
+   (hash-sum-file zipfile)
+   (gpg-sign-file zipfile)
+   zipfile))
 
 ; parses a filename into a (pkgname version archs extension) tuple
 ; missing values are nil
 (defn parse-filename [filename]
   (list-comp (get
                 ; parse filename with a regex
-                (re.split r"(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
+                (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
                 ; extract only the fields of interested
-                [x [1 3 4 6]]))
+             [x [2 4 5 7]]))
+(defn filename-to-namever [filename]
+  (let [[[pkg ver arch ext] (parse-filename filename)]] (join-nonempty "/" [pkg ver])))
+
+;; check if the list of archs contains sources (or is arch-independent)
+(defn is-source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
+;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
+(defn has-sources? [filename] (let [[[pkg ver arch ext] (parse-filename filename)]]
+                                (if (is-source-arch? arch) (filename-to-namever filename))))
+
+;; check if the given package has a sources-arch on puredata.info
+(defn check-sources@puredata-info [pkg username]
+  (do (print (% "Checking puredata.info for Source package for '%s'" pkg))
+      (in pkg
+          ;; list of package/version matching 'pkg' that have 'Source' archictecture
+          (list-comp
+           (has-sources? p)
+           [p
+            (list-comp
+             (try-get (.split (try-get (.split x "\t") 1) "/") -1) ;; filename part of the download URL
+             [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
+             (= username (try-get (.split x "\t") 2)))]))))
+
+;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
+(defn check-sources [pkgs sources &optional puredata-info-user]
+  (for [pkg pkgs] (if (and
+                       (not (in pkg sources))
+                       (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
+                    (sys.exit (% "Missing sources for '%s'!" pkg)))))
 
 ;; get the password, either from
 ;; - a password agent
@@ -346,49 +406,33 @@
 (def commands {
   ; zip up a set of built externals
   :package (fn [args]
-    ; are they asking to package a directory?
-    (if (os.path.isdir args.source)
+    ;; are they asking to package a directory?
+    (list-comp
+      (if (os.path.isdir name)
       ; if asking for a directory just package it up
-      (let [[package-filename (make-archive-basename args.source args.version)]]
-        (print "Packaging" (+ package-filename (archive-extension package-filename)))
-        (let [[archive-filename (archive-dir args.source package-filename)]]
-          (hash-sum-file archive-filename)
-          (gpg-sign-file archive-filename)
-          archive-filename))
-      (do
-        (print "Not a directory.")
-        (sys.exit 1))))
+        (archive-extra (archive-dir name (make-archive-basename name args.version)))
+        (sys.exit (% "Not a directory '%s'!" name)))
+      (name args.source)))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
-    (if (os.path.isfile args.source)
-      ; user has asked to upload an archive file
-      (if (is-archive? args.source)
-        (do
-         (print (+ "Uploading " args.source))
-         (let [[signedfile (gpg-sign-file args.source)]
-               [hashfile   (hash-sum-file args.source)]
-               [username (or (get-config-value "username") (prompt-for-value "username"))]
-               [password (get-upload-password username args.ask-password)]
-               [destination (or (getattr args "destination") (get-config-value "destination" ""))]]
-           (do
-            (upload-package hashfile destination username password)
-            (upload-package args.source destination username password)
-            (if signedfile
-              (upload-package signedfile destination username password))
-            (if password ; upload succeeded, so store it in the keyring (if possible)
-              (try (do
-                (import keyring)
-                (keyring.set_password "deken" username password)))))))
-        (do
-          (print "Not an externals archive.")
-          (sys.exit 1)))
-      ; otherwise we need to make the archive first
-      (let [[args.source ((:package commands) args)]]
-        ; recurse - call myself again now that we have a package file
-        ((:upload commands) args))))
+            (let [[username (or (get-config-value "username") (prompt-for-value "username"))]
+                  [password (get-upload-password username args.ask-password)]]
+              (do
+               (upload-packages (list-comp (cond [(os.path.isfile x)
+                                                  (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
+                                                 [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
+                                                 [True (sys.exit (% "Unable to process '%s'!" x))])
+                                           (x args.source))
+                                (or (getattr args "destination") (get-config-value "destination" ""))
+                                username password args.no-source-warning))
+              ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
+              (if password
+                (try (do
+                      (import keyring)
+                      (keyring.set_password "deken" username password))))))
   ; self-update deken
   :upgrade (fn [args]
-    (print "The upgrade script isn't here, it's in the Bash wrapper."))})
+    (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
 
 ; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
@@ -399,12 +443,15 @@
     [arg-upload (apply arg-subparsers.add_parser ["upload"])]
     [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
-      (apply arg-package.add_argument ["source"] {"help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
+      (apply arg-package.add_argument ["source"] {"nargs" "*"
+                                                  "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["source"] {"help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
+      (apply arg-upload.add_argument ["source"] {"nargs" "*"
+                                                 "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--no-source-warning"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
