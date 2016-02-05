@@ -412,7 +412,7 @@
       ; if asking for a directory just package it up
         (archive-extra (archive-dir name (make-archive-basename name args.version)))
         (sys.exit (% "Not a directory '%s'!" name)))
-      (name args.source)))
+      (name args.SOURCE)))
   ; upload packaged external to pure-data.info
   :upload (fn [args]
             (let [[username (or (get-config-value "username") (prompt-for-value "username"))]
@@ -420,9 +420,9 @@
               (do
                (upload-packages (list-comp (cond [(os.path.isfile x)
                                                   (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
-                                                 [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
+                                                 [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "SOURCE" [x])) 0)]
                                                  [True (sys.exit (% "Unable to process '%s'!" x))])
-                                           (x args.source))
+                                           (x args.PACKAGE))
                                 (or (getattr args "destination") (get-config-value "destination" ""))
                                 username password args.no-source-warning))
               ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
@@ -443,10 +443,10 @@
     [arg-upload (apply arg-subparsers.add_parser ["upload"])]
     [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
-      (apply arg-package.add_argument ["source"] {"nargs" "*"
+      (apply arg-package.add_argument ["SOURCE"] {"nargs" "+"
                                                   "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["source"] {"nargs" "*"
+      (apply arg-upload.add_argument ["PACKAGE"] {"nargs" "+"
                                                  "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
