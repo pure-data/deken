@@ -5,6 +5,7 @@
 (import os)
 (import re)
 (import argparse)
+(import datetime)
 
 (import platform)
 (import zipfile)
@@ -341,7 +342,15 @@
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
-  (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+  (+ (.rstrip folder "/\\")
+     (cond [(nil? version) (sys.exit
+                            (+ (% "No version for '%s'!\n" folder)
+                               (% " If '%s' doesn't have a proper version number,\n" folder)
+                               (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
+                                  (.strftime (datetime.date.today) "%Y%m%d"))))]
+           [version (% "-v%s-" version)]
+           [True ""])
+     (get-architecture-strings folder) "-externals"))
 
 ; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
