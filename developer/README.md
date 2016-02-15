@@ -67,7 +67,7 @@ fine to use `deken` with closed source libraries), however we would like to
 encourage sharing of sources.
 
 The way `deken` implements all this is by using a special pseudo architecture
-"Source", which contains the sources of a library.
+"Sources", which contains the sources of a library.
 
 `deken package` tries to automatically detect whether a package contains Sources
 by looking for common source code files (*.c, *.cpp, ...).
@@ -80,11 +80,11 @@ or because you simply do not want to upload any sources) by using the
 `--no-source-warning` flag.
 
 For uploading a Source package along with binary packages, you can upload one
-package file with multiple archs (including a "Source" arch) or multiple package
-files (one for the "Source" arch).
+package file with multiple archs (including a "Sources" arch) or multiple package
+files (one for the "Sources" arch).
 
-    deken upload frobnozzel(Windows-i386-32)(Source)-externals.zip
-    deken upload foobar-v0.1-(Linux-x86_64-64)-externals.tgz foobar-v0.1-(Source)-externals.tgz
+    deken upload frobnozzel(Windows-i386-32)(Sources)-externals.zip
+    deken upload foobar-v0.1-(Linux-x86_64-64)-externals.tgz foobar-v0.1-(Sources)-externals.tgz
 
 ## Upgrade ##
 
