@@ -386,7 +386,9 @@
   (for [pkg pkgs] (if (and
                        (not (in pkg sources))
                        (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
-                    (sys.exit (% "Missing sources for '%s'!" pkg)))))
+                    (sys.exit (+ (% "Missing sources for '%s'!\n" pkg)
+                                 "(You can override this error with the '--no-source-error' flag,\n"
+                                 " if you absolutely cannot provide the sources for this package)\n")))))
 
 ;; get the password, either from
 ;; - a password agent
