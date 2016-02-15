@@ -77,7 +77,7 @@ Source package of any library.
 If a Source package is missing, `deken` will abort operation.
 You can override this (e.g. because you have already uploaded a Source package;
 or because you simply do not want to upload any sources) by using the
-`--no-source-warning` flag.
+`--no-source-error` flag.
 
 For uploading a Source package along with binary packages, you can upload one
 package file with multiple archs (including a "Sources" arch) or multiple package

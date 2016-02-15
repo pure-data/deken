@@ -424,7 +424,7 @@
                                                  [True (sys.exit (% "Unable to process '%s'!" x))])
                                            (x args.source))
                                 (or (getattr args "destination") (get-config-value "destination" ""))
-                                username password args.no-source-warning))
+                                username password args.no-source-error))
               ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
               (if password
                 (try (do
@@ -451,7 +451,7 @@
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
-      (apply arg-upload.add_argument ["--no-source-warning"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
+      (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
