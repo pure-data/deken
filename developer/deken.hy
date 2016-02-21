@@ -345,6 +345,7 @@
   (+ (.rstrip folder "/\\")
      (cond [(nil? version) (sys.exit
                             (+ (% "No version for '%s'!\n" folder)
+                               " Please provide the version-number via the '--version' flag.\n"
                                (% " If '%s' doesn't have a proper version number,\n" folder)
                                (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
                                   (.strftime (datetime.date.today) "%Y%m%d"))))]
