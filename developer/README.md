@@ -31,6 +31,19 @@ You can also just call the 'upload' directly and it will call the package comman
 
 The upload step will also generate a .sha256 checksum file and upload it along with the zip file.
 
+
+### Creating/Uploading packages on a different machine
+`deken` inspects the files in the directory to determine the target platform
+(rather than just checking on which system you are currently runing).
+Therefore, if it is not feasible to install `deken` on the machine used for
+building your Pd library, you can run `deken` on another machine,
+
+Example: You build the "foobar" library on OSX-10.5, but (due to OSX-10.5 not
+being supported by Apple anymore) you haven't installed `deken` there.
+So you simply transfer the "foobar" directory to your linux machine, where you
+run `deken package foobar` and it will magically create the
+`foobar-v3.14-(Darwin-i386-32)(Darwin-x86_64-32)-externals.tgz` file for you.
+
 ## Filename format ##
 
 The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable on [puredata.info](http://puredata.info/):
