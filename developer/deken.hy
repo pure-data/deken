@@ -13,11 +13,14 @@
 (import string)
 (import struct)
 (import copy)
-(import ConfigParser)
-(import StringIO)
+(try (import [ConfigParser [SafeConfigParser]])
+ (catch [e ImportError] (import [configparser [SafeConfigParser]])))
+(try (import [StringIO [StringIO]])
+ (catch [e ImportError] (import [io [StringIO]])))
 (import hashlib)
 (import [getpass [getpass]])
-(import [urlparse [urlparse]])
+(try (import [urlparse [urlparse]])
+ (catch [e ImportError] (import [urllib.parse [urlparse]])))
 (import requests)
 (import easywebdav)
 
@@ -25,7 +28,7 @@
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(def version (try (.rstrip (.read (file (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
+(def version (try (.rstrip (.read (open (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
 (def externals-host "puredata.info")
 
 (def elf-arch-types {
@@ -87,8 +90,8 @@
 ; read in the config file if present
 (def config
   (let [
-    [config-file (ConfigParser.SafeConfigParser)]
-    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
+    [config-file (SafeConfigParser)]
+    [file-buffer (StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
@@ -119,7 +122,7 @@
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
 (defn get-windows-arch [filename]
-  (let [[f (file filename)]
+  (let [[f (open filename "rb")]
         [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
     ;(print magic offset)
     (if (= magic "MZ")
@@ -137,7 +140,7 @@
 ; get architecture from an ELF (e.g. Linux)
 (defn get-elf-arch [filename oshint]
   (import [elftools.elf.elffile [ELFFile]])
-  (let [[elf (ELFFile (file filename))]]
+  (let [[elf (ELFFile (open filename :mode "rb"))]]
     ; TODO: check section .ARM.attributes for v number
     ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
     [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
@@ -181,7 +184,7 @@
 (defn hash-sum-file [filename]
   (let [[hashfn (hasher)]
         [blocksize 65536]
-        [f (file filename)]
+        [f (open filename :mode "rb")]
         [read-chunk (fn [] (f.read blocksize))]]
     (loop [[buf (read-chunk)]]
           (if (len buf) (do
@@ -189,7 +192,7 @@
             (recur (read-chunk)))))
     (let [[digest (hashfn.hexdigest)]
           [hashfilename (% "%s.%s" (tuple [filename hash-extension]))]]
-      (.write (file hashfilename "wb") digest)
+      (.write (open hashfilename "w") digest)
       hashfilename)))
 
 ;; handling GPG signatures
@@ -233,7 +236,7 @@
           (if (and (not use-agent) passphrase)
             (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
           (try
-           (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
+           (let [[sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig))]
                  [signfile (+ filename ".asc")]]
              (if (hasattr sig "stderr")
                (print (try (str sig.stderr) (catch [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
@@ -242,7 +245,7 @@
                 (print "WARNING: Could not GPG sign the package.")
                 None)
                (do
-                (.write (file signfile "wb") (str sig))
+                (.write (open signfile "w") (str sig))
                 signfile)))
            (catch [e OSError] (print (.join "\n"
                                             ["WARNING: GPG signing failed:"
@@ -479,8 +482,8 @@
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
-          (print "Deken" version)
-          (command arguments))))
+        (print "Deken" version)
+        (if command (command arguments) (.print_help arg-parser)))))
 
 (if (= __name__ "__main__")
   (try
