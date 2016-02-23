@@ -47,11 +47,12 @@ with the zip file.
 Therefore, if it is not feasible to install `deken` on the machine used for
 building your Pd library, you can run `deken` on another machine,
 
-Example: You build the "foobar" library on OSX-10.5, but (due to OSX-10.5 not
-being supported by Apple anymore) you haven't installed `deken` there.
-So you simply transfer the "foobar" directory to your linux machine, where you
-run `deken package foobar` and it will magically create the
-`foobar-v3.14-(Darwin-i386-32)(Darwin-x86_64-32)-externals.tgz` file for you.
+Example: You build the "my_external" library on OSX-10.5, but (due to OSX-10.5
+not being supported by Apple anymore) you haven't installed `deken` there.
+So you simply transfer the "my_external" directory to your linux machine, where
+you run `deken package my_external` and it will magically create the
+`my_external-v3.14-(Darwin-i386-32)(Darwin-x86_64-32)-externals.tgz` file for
+you, ready to be uploaded.
 
 ## Filename format ##
 
