@@ -5,6 +5,7 @@
 (import os)
 (import re)
 (import argparse)
+(import datetime)
 
 (import platform)
 (import zipfile)
@@ -341,7 +342,16 @@
 
 ; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
-  (+ (.rstrip folder "/\\") (if version (% "-v%s-" version) "") (get-architecture-strings folder) "-externals"))
+  (+ (.rstrip folder "/\\")
+     (cond [(nil? version) (sys.exit
+                            (+ (% "No version for '%s'!\n" folder)
+                               " Please provide the version-number via the '--version' flag.\n"
+                               (% " If '%s' doesn't have a proper version number,\n" folder)
+                               (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
+                                  (.strftime (datetime.date.today) "%Y%m%d"))))]
+           [version (% "-v%s-" version)]
+           [True ""])
+     (get-architecture-strings folder) "-externals"))
 
 ; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
@@ -412,7 +422,7 @@
     (list-comp
       (if (os.path.isdir name)
       ; if asking for a directory just package it up
-        (archive-extra (archive-dir name (make-archive-basename name args.version)))
+        (archive-extra (archive-dir name (make-archive-basename (.rstrip name "/\\") args.version)))
         (sys.exit (% "Not a directory '%s'!" name)))
       (name args.source)))
   ; upload packaged external to pure-data.info
@@ -448,11 +458,15 @@
       (apply arg-package.add_argument ["source"] {"nargs" "+"
                                                   "metavar" "SOURCE"
                                                   "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-      (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
+      (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name."
+                                                                 "default" nil
+                                                                 "required" false})
       (apply arg-upload.add_argument ["source"] {"nargs" "+"
                                                  "metavar" "PACKAGE"
                                                  "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
-      (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
+      (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name. (in case a package is created)"
+                                                                "default" nil
+                                                                "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
       (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
       (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
