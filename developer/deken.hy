@@ -230,7 +230,7 @@
                        (getpass "Enter GPG passphrase: " )))]
         [signconfig (dict-merge signconfig (if passphrase {"passphrase" passphrase}))]]
     (if (and (not use-agent) passphrase)
-      (print "No valid GPG key found (continue without signing)"))
+      (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
     (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
           [signfile (+ filename ".asc")]]
       (if (hasattr sig "stderr")
