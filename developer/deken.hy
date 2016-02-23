@@ -13,11 +13,14 @@
 (import string)
 (import struct)
 (import copy)
-(import ConfigParser)
-(import StringIO)
+(try (import [ConfigParser [SafeConfigParser]])
+ (catch [e ImportError] (import [configparser [SafeConfigParser]])))
+(try (import [StringIO [StringIO]])
+ (catch [e ImportError] (import [io [StringIO]])))
 (import hashlib)
 (import [getpass [getpass]])
-(import [urlparse [urlparse]])
+(try (import [urlparse [urlparse]])
+ (catch [e ImportError] (import [urllib.parse [urlparse]])))
 (import requests)
 (import easywebdav)
 
@@ -87,8 +90,8 @@
 ; read in the config file if present
 (def config
   (let [
-    [config-file (ConfigParser.SafeConfigParser)]
-    [file-buffer (StringIO.StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
+    [config-file (SafeConfigParser)]
+    [file-buffer (StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
