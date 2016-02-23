@@ -198,7 +198,7 @@
 ;; handling GPG signatures
 (try (import gnupg)
   ;; read a value from the gpg config
-     (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPGP sign '%s':\n" filename) e)))
+     (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
      (else
       (defn gpg-get-config [gpg id]
         (let [[configdir (cond [gpg.gnupghome gpg.gnupghome] [True (os.path.join "~" ".gnupg")])]
