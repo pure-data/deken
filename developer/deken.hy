@@ -445,10 +445,12 @@
     [arg-upload (apply arg-subparsers.add_parser ["upload"])]
     [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]]
       (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
-      (apply arg-package.add_argument ["source"] {"nargs" "*"
+      (apply arg-package.add_argument ["source"] {"nargs" "+"
+                                                  "metavar" "SOURCE"
                                                   "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
       (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
-      (apply arg-upload.add_argument ["source"] {"nargs" "*"
+      (apply arg-upload.add_argument ["source"] {"nargs" "+"
+                                                 "metavar" "PACKAGE"
                                                  "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
       (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name." "default" "" "required" false})
       (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
