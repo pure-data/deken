@@ -231,6 +231,7 @@
         [signconfig (dict-merge signconfig (if passphrase {"passphrase" passphrase}))]]
     (if (and (not use-agent) passphrase)
       (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
+    (try
     (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
           [signfile (+ filename ".asc")]]
       (if (hasattr sig "stderr")
@@ -241,7 +242,11 @@
          None)
         (do
          (.write (file signfile "wb") (str sig))
-         signfile)))))
+         signfile)))
+     (catch [e OSError] (print (.join "\n"
+                                     ["WARNING: GPG signing failed:"
+                                     str(e)
+                                     "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"]))))))
 
 ; sign a file if it is not already signed
 (defn gpg-sign-file [filename]
