@@ -28,7 +28,7 @@
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(def version (try (.rstrip (.read (file (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
+(def version (try (.rstrip (.read (open (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
 (def externals-host "puredata.info")
 
 (def elf-arch-types {
@@ -122,7 +122,7 @@
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
 (defn get-windows-arch [filename]
-  (let [[f (file filename)]
+  (let [[f (open filename "rb")]
         [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
     ;(print magic offset)
     (if (= magic "MZ")
@@ -235,7 +235,7 @@
     (if (and (not use-agent) passphrase)
       (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
     (try
-    (let [[sig (if gpg (apply gpg.sign_file [(file filename "rb")] signconfig))]
+    (let [[sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig))]
           [signfile (+ filename ".asc")]]
       (if (hasattr sig "stderr")
         (print (try (str sig.stderr) (catch [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
@@ -244,7 +244,7 @@
          (print "WARNING: Could not GPG sign the package.")
          None)
         (do
-         (.write (file signfile "wb") (str sig))
+         (.write (open signfile "w") (str sig))
          signfile)))
      (catch [e OSError] (print (.join "\n"
                                      ["WARNING: GPG signing failed:"
