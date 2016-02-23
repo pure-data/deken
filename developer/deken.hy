@@ -137,7 +137,7 @@
 ; get architecture from an ELF (e.g. Linux)
 (defn get-elf-arch [filename oshint]
   (import [elftools.elf.elffile [ELFFile]])
-  (let [[elf (ELFFile (file filename))]]
+  (let [[elf (ELFFile (open filename :mode "rb"))]]
     ; TODO: check section .ARM.attributes for v number
     ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
     [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
@@ -181,7 +181,7 @@
 (defn hash-sum-file [filename]
   (let [[hashfn (hasher)]
         [blocksize 65536]
-        [f (file filename)]
+        [f (open filename :mode "rb")]
         [read-chunk (fn [] (f.read blocksize))]]
     (loop [[buf (read-chunk)]]
           (if (len buf) (do
@@ -189,7 +189,7 @@
             (recur (read-chunk)))))
     (let [[digest (hashfn.hexdigest)]
           [hashfilename (% "%s.%s" (tuple [filename hash-extension]))]]
-      (.write (file hashfilename "wb") digest)
+      (.write (open hashfilename "w") digest)
       hashfilename)))
 
 ; read a value from the gpg config
