@@ -481,8 +481,8 @@
       (let [
         [arguments (.parse_args arg-parser)]
         [command (.get commands (keyword arguments.command))]]
-          (print "Deken" version)
-          (command arguments))))
+        (print "Deken" version)
+        (if command (command arguments) (.print_help arg-parser)))))
 
 (if (= __name__ "__main__")
   (try
