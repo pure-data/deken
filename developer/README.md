@@ -1,8 +1,12 @@
 # Developers #
 
-You can use the [`deken` command line tool](https://raw.githubusercontent.com/pure-data/deken/master/developer/deken) to create packaged zipfiles with the correct searchable architectures in the filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
+You can use the [`deken` command line
+tool](https://raw.githubusercontent.com/pure-data/deken/master/developer/deken)
+to create packaged zipfiles with the correct searchable architectures in the
+filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
 
-If you don't want to use the `deken` packaging tool you can zip and upload the files yourself. See the "Filename format" section below.
+If you don't want to use the `deken` packaging tool you can zip and upload the
+files yourself. See the "Filename format" section below.
 
 ## Get started ##
 
@@ -18,18 +22,23 @@ See [config.md](./config.md) for deken's configuration file format.
 
 ## Create and Upload a package ##
 
-You have a directory containing your compiled externals object files called `my_external`.
+You have a directory containing your compiled externals object files called
+`my_external`.
 
-This command will create a file like `my_external-v0.1-(Linux-amd64-64)-externals.zip` and upload it to your account on <http://puredata.info/> where the search plugin can find it:
+This command will create a file like `my_external-v0.1-(Linux-amd64-64)-externals.zip`
+and upload it to your account on <http://puredata.info/> where the search plugin
+can find it:
 
 	$ deken package -v 0.1 my_external
 	$ deken upload my_external
 
-You can also just call the 'upload' directly and it will call the package command for you in one step:
+You can also just call the 'upload' directly and it will call the package
+command for you in one step:
 
 	$ deken upload -v 0.1 my_external
 
-The upload step will also generate a .sha256 checksum file and upload it along with the zip file.
+The upload step will also generate a .sha256 checksum file and upload it along
+with the zip file.
 
 
 ### Creating/Uploading packages on a different machine
