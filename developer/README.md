@@ -46,24 +46,64 @@ run `deken package foobar` and it will magically create the
 
 ## Filename format ##
 
-The `deken` tool names a zipfile of externals binaries with a specific format to be optimally searchable on [puredata.info](http://puredata.info/):
+The `deken` tool names a zipfile of externals binaries with a specific format to
+be optimally searchable on [puredata.info](http://puredata.info/);
 
-	NAME[-VERSION-](ARCH1)(ARCH2)(ARCHX...)-externals.zip
+	LIBNAME[-vVERSION-]{(ARCH)}-externals.EXT
 
- * NAME is the name of the externals package ("zexy", "cyclone", "freeverb~").
- * -VERSION- is an optional section which can contain version information for the end user.
- * (ARCH1)(ARCH2) etc. are architecture specifiers for each type of architecture the externals are compiled for within this zipfile.
+ * LIBNAME is the name of the externals package ("zexy", "cyclone", "freeverb~").
+ * VERSION contains the version information for the end use
+   (this information is optional though *strongly* encouraged)
+ * ARCH is the architecture specifier, and can be given multiple times
+   (once for each type of architecture the externals are compiled for within
+   this archive).
+   It is either "Sources" (see [below](#sourceful-uploads) or `OS-MARCH-BIT`,
+   with:
+   - OS being the Operating System (`Linux`, `Darwin`, W32`,...)
+   - MARCH is the machine architecture (e.g. `x86_64`)
+   - BIT is some number of bits (e.g. `64`)
+ * EXT is the archive extension (either `zip` or `tar.gz`)
 
-Note that the zipfile should contain a single directory at the top level with NAME the same as the externals package itself. For example a freeverb~ externals package would contain a directory "freeverb~" at the top level of the zipfile in which the externals live.
+Note that the archive should contain a single directory at the top level with
+NAME the same as the externals package itself. For example a freeverb~ externals
+package would contain a directory "freeverb~" at the top level of the zipfile in
+which the externals live.
 
-The square brackets around the "-VERSION-" section are to indicate it is optional, don't include them. The round braces "(" around architectures are included to separate the architectures visibly from eachother.
+The square brackets around the "-vVERSION-" section are to indicate it is
+optional, don't include them. The same goes for the curly braces around the
+"(ARCH)" (indicating that this section can be repeated multiple times).
+However, the round parentheses "()" around architectures must be included to
+separate the architectures visibly from each other.
+
+In plain english this means:
+> the library-name, followed by an optional version string (starting with `-v`
+> and ending with `-`), followed by zero or more architecture specifications
+> (each surrounded by `(`parantheses`)`), and terminated by `-externals`
+> (followed by a filename extension).
+
+
+Here is the actual regular expression used:
+
+    (.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)
+
+with the following matching groups:
+
+ - ~~`#0` anything before the path (always empty and *ignored*)~~
+ - ~~`#1` = path to filename (*ignored*)~~
+ -   `#2` = library name
+ - ~~`#3` = version string with decoration (*ignored*)~~
+ -   `#4` = version
+ -   `#5` = archs
+ - ~~`#6` = last arch in archs (*ignored*)~~
+ -   `#7` = extension
+ - ~~`#8` anything after the extension (should be empty and is *ignored*)~~
 
 Some examples:
 
-	freeverb~(Windows-i386-32)-externals.zip
-	freeverb~(Linux-armv6-32)-externals.zip
-	cyclone-0.1_alpha57(Linux-x86_64-64)-externals.zip
-	freeverb~(Darwin-i386-32)(Darwin-x86_64-32)(Linux-armv6-32)-externals.zip
+    adaptive-v0.0.extended-(Linux-i386-32)(Linux-amd64-64)-externals.tar.gz
+    adaptive-v0.0.extended-(Sources)-externals.tar.gz
+    freeverb~(Darwin-i386-32)(Darwin-x86_64-32)(Sources)-externals.zip
+    list-abs-v0.1--externals.zip
 
 
 ## Sourceful uploads
