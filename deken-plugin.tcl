@@ -307,13 +307,12 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
 
 # handle a clicked link
 proc ::deken::clicked_link {URL filename} {
+    set ::deken::installpath [tk_chooseDirectory \
+        -initialdir $::deken::installpath -title "Install to directory:"]
     ## make sure that the destination path exists
     if { "$::deken::installpath" == "" } { set ::deken::installpath [ ::deken::get_writable_dir $::sys_staticpath ] }
     if { "$::deken::installpath" == "" } {
-        ::deken::clearpost
-        ::deken::post "No writeable directory found in:" warn
-        foreach p $::sys_staticpath { ::deken::post "\t- $p\n" warn }
-        ::deken::post "Cannot download/install libraries!\n" warn
+        return
     } {
     set fullpkgfile "$::deken::installpath/$filename"
     ::deken::clearpost
