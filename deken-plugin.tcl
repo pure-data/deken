@@ -4,7 +4,7 @@
 # ex: set setl sw=2 sts=2 et
 
 # Search URL:
-# http://puredata.info/search_rss?SearchableText=xtrnl-
+# http://deken.puredata.info/search?name=foobar
 
 # The minimum version of TCL that allows the plugin to run
 package require Tcl 8.4
