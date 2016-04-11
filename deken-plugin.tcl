@@ -438,13 +438,7 @@ proc ::deken::search_for {term} {
 
 # create an entry for our search in the "help" menu
 set mymenu .menubar.help
-if {$::windowingsystem eq "aqua"} {
-    set inserthere 3
-} else {
-    set inserthere 4
-}
-$mymenu insert $inserthere separator
-$mymenu insert $inserthere command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+$mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
 # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 
 # http://rosettacode.org/wiki/URL_decoding#Tcl
