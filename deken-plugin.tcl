@@ -324,13 +324,17 @@ proc ::deken::clicked_link {URL filename} {
     ### if this still doesn't help, ask the user
     set installdir ""
     if { [ info exists ::deken::installpath ] } {
+        ## any previous choice?
         set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
     if { "$installdir" == "" } {
+        ## search the default paths
         set installdir [ ::deken::get_writable_dir $::sys_staticpath ]
     }
     if { "$installdir" == "" } {
-        set installdir [ ::deken::get_writable_dir [list [tk_chooseDirectory -title "Install to directory:" ] ] ]
+        ## ask the user (and remember the decision)
+        ::deken::prompt_installdir
+        set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
     if { "$installdir" == "" } {
         #::deken::clearpost
