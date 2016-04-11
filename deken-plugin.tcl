@@ -119,7 +119,7 @@ if { [ info exists ::deken::installpath ] } {
 }
 
 # console message to let them know we're loaded
-::pdwindow::post  "deken-plugin.tcl (Pd externals search) in $::current_plugin_loadpath loaded.\n"
+# ::pdwindow::post  "deken-plugin.tcl (Pd externals search) in $::current_plugin_loadpath loaded.\n"
 if { "$::deken::installpath" == "" } {
     ::pdwindow::error "deken: No writeable directory found in:\n"
     foreach p $::sys_staticpath { ::pdwindow::error "\t- $p\n" }
@@ -143,7 +143,7 @@ if { "Windows" eq "$::deken::platform(os)" } {
     #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
 }
 
-::pdwindow::post "Platform detected: $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit\n"
+# ::pdwindow::post "Platform detected: $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit\n"
 
 # architectures that can be substituted for eachother
 array set ::deken::architecture_substitutes {}
