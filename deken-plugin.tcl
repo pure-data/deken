@@ -18,6 +18,16 @@ package require http 2
 package require pdwindow 0.1
 package require pd_menucommands 0.1
 
+## only register this plugin if there isn't any newer version already registered
+## (if ::deken::version is defined and is higher than our own version)
+
+if { [info exists ::deken::version ] && [string compare $::deken::version 0.1] >= 0} {
+    ::pdwindow::debug "\[deken\]: the installed version appears to be up-to-date or newer...skipping!\n"
+} {
+namespace eval ::deken:: {
+    variable version 0.1
+}
+
 namespace eval ::deken:: {
     namespace export open_searchui
     variable mytoplevelref
@@ -28,7 +38,6 @@ namespace eval ::deken:: {
     variable statustimer
     variable backends
     namespace export register
-    variable version 0.1
 }
 namespace eval ::deken::search:: { }
 
@@ -527,3 +536,4 @@ proc ::deken::search::puredata.info {term} {
 }
 
 ::deken::register ::deken::search::puredata.info
+}
