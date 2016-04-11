@@ -121,19 +121,6 @@ proc ::deken::readconfig {paths filename} {
 
 
 ::deken::readconfig $::sys_staticpath deken-plugin.conf
-if { [ info exists ::deken::installpath ] } {
-    set ::deken::installpath [ ::deken::get_writable_dir [list $::deken::installpath ] ]
-} {
-    set ::deken::installpath [ ::deken::get_writable_dir $::sys_staticpath ]
-}
-
-# console message to let them know we're loaded
-::pdwindow::post  "deken-plugin.tcl (Pd externals search) in $::current_plugin_loadpath loaded.\n"
-if { "$::deken::installpath" == "" } {
-    ::pdwindow::error "deken: No writeable directory found in:\n"
-    foreach p $::sys_staticpath { ::pdwindow::error "\t- $p\n" }
-    ::pdwindow::error "deken: Will not be able to download/install libraries\n"
-}
 
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
@@ -152,7 +139,12 @@ if { "Windows" eq "$::deken::platform(os)" } {
     #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
 }
 
-::pdwindow::post "Platform detected: $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit\n"
+# console message to let them know we're loaded
+## but only if we are being called as a plugin (not as built-in)
+if { "" != "$::current_plugin_loadpath" } {
+    ::pdwindow::post "deken-plugin.tcl (Pd externals search) in $::current_plugin_loadpath loaded.\n"
+    ::pdwindow::post "Platform detected: $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit\n"
+}
 
 # architectures that can be substituted for eachother
 array set ::deken::architecture_substitutes {}
