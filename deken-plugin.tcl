@@ -317,19 +317,31 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
 # handle a clicked link
 proc ::deken::clicked_link {URL filename} {
     ## make sure that the destination path exists
-    if { "$::deken::installpath" == "" } { set ::deken::installpath [ ::deken::get_writable_dir $::sys_staticpath ] }
-    if { "$::deken::installpath" == "" } {
+    ### if ::deken::installpath is set, use the first writable item
+    ### if not, get a writable item from one of the searchpaths
+    ### if this still doesn't help, ask the user
+    set installdir ""
+    if { [ info exists ::deken::installpath ] } {
+        set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+    }
+    if { "$installdir" == "" } {
+        set installdir [ ::deken::get_writable_dir $::sys_staticpath ]
+    }
+    if { "$installdir" == "" } {
+        set installdir [ ::deken::get_writable_dir [list [tk_chooseDirectory -title "Install to directory:" ] ] ]
+    }
+    if { "$installdir" == "" } {
         ::deken::clearpost
         ::deken::post "No writeable directory found in:" warn
         foreach p $::sys_staticpath { ::deken::post "\t- $p\n" warn }
         ::deken::post "Cannot download/install libraries!\n" warn
     } {
-    set fullpkgfile "$::deken::installpath/$filename"
+    set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
-    ::deken::post "Commencing downloading of:\n$URL\nInto $::deken::installpath..."
+    ::deken::post "Commencing downloading of:\n$URL\nInto $installdir..."
     ::deken::download_file $URL $fullpkgfile
     set PWD [ pwd ]
-    cd $::deken::installpath
+    cd $installdir
     set success 1
     if { [ string match *.zip $fullpkgfile ] } then {
         if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
@@ -346,7 +358,7 @@ proc ::deken::clicked_link {URL filename} {
     }
     cd $PWD
     if { $success > 0 } {
-        ::deken::post "Successfully unzipped $filename into $::deken::installpath.\n"
+        ::deken::post "Successfully unzipped $filename into $installdir.\n"
         catch { exec rm $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
@@ -355,8 +367,8 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post "Please perform the following steps manually:"
         ::deken::post "1. Unzip $fullpkgfile."
         pd_menucommands::menu_openfile $fullpkgfile
-        ::deken::post "2. Copy the contents into $::deken::installpath.\n"
-        pd_menucommands::menu_openfile $::deken::installpath
+        ::deken::post "2. Copy the contents into $installdir.\n"
+        pd_menucommands::menu_openfile $installdir
     }
     }
 }
