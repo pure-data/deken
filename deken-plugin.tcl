@@ -333,8 +333,8 @@ proc ::deken::clicked_link {URL filename} {
     if { "$installdir" == "" } {
         ::deken::clearpost
         ::deken::post "No writeable directory found in:" warn
-        foreach p $::sys_staticpath { ::deken::post "\t- $p\n" warn }
-        ::deken::post "Cannot download/install libraries!\n" warn
+        foreach p $::sys_staticpath { ::deken::post "\t- $p" warn }
+        ::deken::post "Cannot download/install libraries!" warn
     } {
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
