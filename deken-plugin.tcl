@@ -332,7 +332,7 @@ proc ::deken::clicked_link {URL filename} {
         set installdir [ ::deken::get_writable_dir [list [tk_chooseDirectory -title "Install to directory:" ] ] ]
     }
     if { "$installdir" == "" } {
-        ::deken::clearpost
+        #::deken::clearpost
         ::deken::post "No writeable directory found in:" warn
         foreach p $::sys_staticpath { ::deken::post "\t- $p" warn }
         ::deken::post "Cannot download/install libraries!" warn
