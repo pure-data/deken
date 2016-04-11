@@ -173,6 +173,7 @@ proc ::deken::status {msg} {
 proc ::deken::post {msg {tag ""}} {
     variable mytoplevelref
     $mytoplevelref.results insert end "$msg\n" $tag
+    $mytoplevelref.results see end
 }
 proc ::deken::clearpost {} {
     variable mytoplevelref
