@@ -191,6 +191,14 @@ proc ::deken::highlightable_posttag {tag} {
     # make sure that the 'highlight' tag is topmost
     $mytoplevelref.results tag raise highlight
 }
+proc ::deken::prompt_installdir {} {
+    set installdir [tk_chooseDirectory -title "Install libraries to directory:"]
+    if { "$installdir" != "" } {
+        set ::deken::installpath $installdir
+    }
+}
+
+
 proc ::deken::update_searchbutton {mytoplevel} {
     if { [$mytoplevel.searchbit.entry get] == "" } {
         $mytoplevel.searchbit.button configure -text [_ "Show all" ]
@@ -250,6 +258,8 @@ proc ::deken::create_dialog {mytoplevel} {
     pack $mytoplevel.status -side bottom -fill x
     label $mytoplevel.status.label -textvariable ::deken::statustext
     pack $mytoplevel.status.label -side left -padx 6
+    button $mytoplevel.status.button -text [_ "Set install dir"] -default active -width 9 -command "::deken::prompt_installdir"
+    pack $mytoplevel.status.button -side right -padx 6 -pady 3
 
     text $mytoplevel.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$mytoplevel.results.ys set"
     scrollbar $mytoplevel.results.ys -orient vertical -command "$mytoplevel.results yview"
