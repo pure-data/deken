@@ -337,6 +337,7 @@ proc ::deken::clicked_link {URL filename} {
     cd $PWD
     if { $success > 0 } {
         ::deken::post "Successfully unzipped $filename into $::deken::installpath.\n"
+        catch { exec rm $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
