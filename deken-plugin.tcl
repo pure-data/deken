@@ -52,7 +52,7 @@ proc ::deken::get_writable_dir {paths} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
     foreach p $paths {
-        if { [ catch { file mkdir $p } ] } {}
+        #if { [ catch { file mkdir $p } ] } {}
         for {set i 0} {True} {incr i} {
             set tmpfile "${p}${fs}dekentmp.${i}"
             if {![file exists $tmpfile]} {
