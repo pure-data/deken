@@ -327,7 +327,8 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post "No writeable directory found in:" warn
         foreach p $::sys_staticpath { ::deken::post "\t- $p" warn }
         ::deken::post "Cannot download/install libraries!" warn
-    } {
+        return
+    }
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
     ::deken::post "Commencing downloading of:\n$URL\nInto $installdir..."
@@ -361,7 +362,6 @@ proc ::deken::clicked_link {URL filename} {
         pd_menucommands::menu_openfile $fullpkgfile
         ::deken::post "2. Copy the contents into $installdir.\n"
         pd_menucommands::menu_openfile $installdir
-    }
     }
 }
 
