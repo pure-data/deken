@@ -18,15 +18,24 @@ package require http 2
 package require pdwindow 0.1
 package require pd_menucommands 0.1
 
+namespace eval ::deken:: {
+    variable version
+}
+
 ## only register this plugin if there isn't any newer version already registered
 ## (if ::deken::version is defined and is higher than our own version)
-
-if { [info exists ::deken::version ] && [string compare $::deken::version 0.1] >= 0} {
-    ::pdwindow::debug "\[deken\]: the installed version appears to be up-to-date or newer...skipping!\n"
-} {
-namespace eval ::deken:: {
-    variable version 0.1
+proc ::deken::versioncheck {version} {
+    if { [info exists ::deken::version ] && [string compare $::deken::version $version] >= 0} {
+        ::pdwindow::debug "\[deken\]: the installed version appears to be up-to-date or newer...skipping!\n"
+        ::pdwindow::debug "\[deken\]: \t$::deken::version >= $version\n"
+        return 0
+    }
+    set ::deken::version $version
+    return 1
 }
+
+## put the current version of this package here:
+if { [::deken::versioncheck 0.1] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
