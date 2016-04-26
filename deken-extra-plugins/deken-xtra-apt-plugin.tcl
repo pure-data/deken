@@ -41,23 +41,21 @@ proc ::deken::apt::search {name} {
         if { "Packages" eq [ lindex $info_ end ] } {
             set suite [ lindex $info_ 1 ]
             set arch  [ lindex $info_ 2 ]
-            if { ! [ info exists pkgs($ver_) ] } {
-                set pkgs($ver_) [ list $pkgname $suite $arch ]
+            if { ! [ info exists pkgs($pkgname/$ver_) ] } {
+                set pkgs($pkgname/$ver_) [ list $pkgname $ver_ $suite $arch ]
             }
         }
     }
-    foreach {v inf} [ array get pkgs ] {
+    foreach {name inf} [ array get pkgs ] {
         set pkgname [ lindex $inf 0 ]
-        set suite   [ lindex $inf 1 ]
-        set arch    [ lindex $inf 2 ]
-        set name $pkgname/$v
+        set v       [ lindex $inf 1 ]
+        set suite   [ lindex $inf 2 ]
+        set arch    [ lindex $inf 3 ]
         set cmd "::deken::apt::install ${pkgname}=$v"
         set match 1
         set comment "Provided by ${::deken::apt::distribution} (${suite})"
         set status "${pkgname}_${v}_${arch}.deb"
-
         lappend result [list $name $cmd $match $comment $status]
-    }
     }
     return [lsort -dictionary -decreasing -index 1 $result ]
 }
