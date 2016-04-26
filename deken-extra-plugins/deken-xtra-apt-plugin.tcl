@@ -17,14 +17,17 @@ namespace eval ::deken::apt {
     variable distribution
 }
 
-if { [ catch { exec apt-cache -v } _ ] } { } {
-if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } { unset ::deken::apt::distribution }
-}
 proc ::deken::apt::search {name} {
     set result []
-    if { [ catch { exec apt-cache madison } _ ] } {
-        ::deken::post "Unable to run 'apt-cache madison'" error
-    } {
+    if { [info exists ::deken::apt::distribution] } { } {
+	if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } {
+	    set ::deken::apt::distribution {}
+	}
+    }
+    if { "$::deken::apt::distribution" == "" } {
+	return
+    }
+
     set name [ string tolower $name ]
     array unset pkgs
     array set pkgs {}
