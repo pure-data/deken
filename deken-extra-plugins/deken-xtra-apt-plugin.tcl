@@ -71,7 +71,6 @@ proc ::deken::apt::install {pkg} {
     if { [ catch { exec which gksudo } gsudo ] } {
         ::deken::post "Please install 'gksudo', if you want to install system packages via deken..." error
     } {
-        ::deken::clearpost
         set prog "apt-get install -y --show-progress ${pkg}"
         # for whatever reasons, we cannot have 'deken' as the description
         # (it will always show $prog instead)
