@@ -31,6 +31,7 @@ proc ::deken::apt::search {name} {
     set name [ string tolower $name ]
     array unset pkgs
     array set pkgs {}
+    set _dpkg_query {dpkg-query -W -f ${db:Status-Abbrev}${Version}\n}
     set filter "-F Provides pd-externals --or -F Depends -w pd --or -F Depends -w puredata --or -F Depends -w puredata-core"
     if { "$name" == "" } { } {
 	set filter " -F Package $name --and ( $filter )"
@@ -45,11 +46,22 @@ proc ::deken::apt::search {name} {
         #if { $pkgname ne $searchname } { continue }
         set ver_  [ string trim [ lindex $llin 1 ] ]
         set info_ [ string trim [ lindex $llin 2 ] ]
+
+	## status: is the package installed?
+	set state "Provided"
+	catch {
+	    set io2 [ open "|${_dpkg_query} ${pkgname} | egrep ^ii | egrep ${ver_}$" ]
+	    if { [ gets $io2 _ ] >= 0 } {
+		set state "Already installed"
+	    } {
+		while { [ gets $io2 _ ] >= 0 } { }
+	    }
+	}
         if { "Packages" eq [ lindex $info_ end ] } {
             set suite [ lindex $info_ 1 ]
             set arch  [ lindex $info_ 2 ]
             if { ! [ info exists pkgs($pkgname/$ver_) ] } {
-                set pkgs($pkgname/$ver_) [ list $pkgname $ver_ $suite $arch ]
+                set pkgs($pkgname/$ver_) [ list $pkgname $ver_ $suite $arch $state]
             }
         }
     }
@@ -58,9 +70,10 @@ proc ::deken::apt::search {name} {
         set v       [ lindex $inf 1 ]
         set suite   [ lindex $inf 2 ]
         set arch    [ lindex $inf 3 ]
+        set state   [ lindex $inf 4 ]
         set cmd "::deken::apt::install ${pkgname}=$v"
         set match 1
-        set comment "Provided by ${::deken::apt::distribution} (${suite})"
+        set comment "${state} by ${::deken::apt::distribution} (${suite})"
         set status "${pkgname}_${v}_${arch}.deb"
         lappend result [list $name $cmd $match $comment $status]
     }
