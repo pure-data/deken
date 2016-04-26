@@ -31,8 +31,12 @@ proc ::deken::apt::search {name} {
     set name [ string tolower $name ]
     array unset pkgs
     array set pkgs {}
+    set filter "-F Provides pd-externals --or -F Depends -w pd --or -F Depends -w puredata --or -F Depends -w puredata-core"
+    if { "$name" == "" } { } {
+	set filter " -F Package $name --and ( $filter )"
+    }
 
-    set io [ open "|grep-aptavail -n -s Package -F Package $name --and ( -F Depends -w pd --or -F Depends -w puredata --or -F Depends -w puredata-core ) | sort -u | xargs apt-cache madison" r ]
+    set io [ open "|grep-aptavail -n -s Package $filter | sort -u | xargs apt-cache madison" r ]
     while { [ gets $io line ] >= 0 } {
         #puts $line
         set llin [ split "$line" "|" ]
