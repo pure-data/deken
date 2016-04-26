@@ -82,7 +82,6 @@ proc ::deken::apt::install {pkg} {
             ::deken::post "apt::install failed to install $pkg" error
             ::deken::post "\tDid you provide the correct password and/or" error
             ::deken::post "\tis the apt database locked by another process?" error
-            #puts stderr "::deken::apt::install ${options}"
         }
     }
 }
