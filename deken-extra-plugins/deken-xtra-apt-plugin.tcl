@@ -87,8 +87,16 @@ proc ::deken::apt::install {pkg} {
     }
 }
 
-if { [ catch {::deken::register ::deken::apt::search} ] } {
-    ::pdwindow::debug "Not using APT-backend for unavailable deken\n"
-} {
+proc ::deken::apt::register { } {
+    if { [ catch { exec apt-cache madison       } _ ] } { } {
+	if { [ catch { exec which grep-aptavail } _ ] } { } {
+	    if { [ catch {::deken::register ::deken::apt::search} ] } {
+		::pdwindow::debug "Not using APT-backend for unavailable deken\n"
+	    } { return 1 }
+	}}
+    return 0
+}
+
+if { [::deken::apt::register] } {
     ::pdwindow::debug "Using APT as additional deken backend\n"
 }
