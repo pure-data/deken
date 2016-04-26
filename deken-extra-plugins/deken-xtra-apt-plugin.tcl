@@ -68,15 +68,21 @@ proc ::deken::apt::search {name} {
 }
 
 proc ::deken::apt::install {pkg} {
-    if { [ catch { exec which gksudo } gsudo ] } {
-        ::deken::post "Please install 'gksudo', if you want to install system packages via deken..." error
+    set desc deken::apt
+    set prog "apt-get install -y --show-progress ${pkg}"
+    if { [ catch { exec which pkexec } sudo ] } {
+	if { [ catch { exec which gksudo } sudo ] } {
+	    set sudo ""
+	} { set sudo "$sudo -D $desc --"
+	}
+    }
+    if { $sudo == "" } {
+	::deken::post "Please install 'policykit-1', if you want to install system packages via deken..." error
     } {
-        set prog "apt-get install -y --show-progress ${pkg}"
         # for whatever reasons, we cannot have 'deken' as the description
         # (it will always show $prog instead)
-        set desc deken::apt
-        set cmdline "$gsudo -D $desc -- $prog"
-        #puts $cmdline
+        set cmdline "$sudo $prog"
+        #::deken::post "$cmdline" error
         set io [ open "|${cmdline}" ]
         while { [ gets $io line ] >= 0 } {
             ::deken::post "apt: $line"
