@@ -26,16 +26,10 @@ proc ::deken::apt::search {name} {
         ::deken::post "Unable to run 'apt-cache madison'" error
     } {
     set name [ string tolower $name ]
-    if { "$name" eq "gem" } {
-        set searchname $name
-    } elseif { "$name" eq "" } {
-        set searchname "^pd-.*"
-    } else {
-        set searchname "^pd-${name}.*"
-    }
     array unset pkgs
     array set pkgs {}
-    set io [ open "|apt-cache madison $searchname" r ]
+
+    set io [ open "|grep-aptavail -n -s Package -F Package $name --and ( -F Depends -w pd --or -F Depends -w puredata --or -F Depends -w puredata-core ) | sort -u | xargs apt-cache madison" r ]
     while { [ gets $io line ] >= 0 } {
         #puts $line
         set llin [ split "$line" "|" ]
