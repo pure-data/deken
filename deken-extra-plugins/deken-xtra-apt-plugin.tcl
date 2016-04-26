@@ -98,9 +98,18 @@ proc ::deken::apt::install {pkg} {
 proc ::deken::apt::register { } {
     if { [ catch { exec apt-cache madison       } _ ] } { } {
 	if { [ catch { exec which grep-aptavail } _ ] } { } {
-	    if { [ catch {::deken::register ::deken::apt::search} ] } {
+	    if { [ catch {
+		## oye a hack to get the apt-backend at the beginning of the backends
+		if { [ info exists ::deken::backends ] } {
+		    set ::deken::backends [linsert $::deken::backends 0 ::deken::apt::search ]
+		} {
+		    ::deken::register ::deken::apt::search
+		}
+	    } ] } {
 		::pdwindow::debug "Not using APT-backend for unavailable deken\n"
-	    } { return 1 }
+	    } {
+		return 1
+	    }
 	}}
     return 0
 }
