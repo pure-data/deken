@@ -178,7 +178,10 @@ proc ::deken::status {msg} {
         set ::deken::statustext ""
     }
 }
-
+proc ::deken::scrollup {} {
+    variable mytoplevelref
+    $mytoplevelref.results see 0.0
+}
 proc ::deken::post {msg {tag ""}} {
     variable mytoplevelref
     $mytoplevelref.results insert end "$msg\n" $tag
@@ -302,6 +305,7 @@ proc ::deken::initiate_search {mytoplevel} {
             ::deken::show_result $mytoplevel $counter $r 0
             incr counter
         }
+	::deken::scrollup
     } else {
         ::deken::post "No matching externals found. Try using the full name e.g. 'freeverb'."
     }
