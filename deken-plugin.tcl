@@ -539,6 +539,7 @@ proc urldecode {str} {
 proc ::deken::search::puredata.info {term} {
     set searchresults [list]
 
+    set term [ join $term "&name=" ]
     set token [http::geturl "http://deken.puredata.info/search?name=$term"]
     set contents [http::data $token]
     set splitCont [split $contents "\n"]
