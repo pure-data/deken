@@ -143,7 +143,7 @@ if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
 # normalize W32 CPUs
 if { "Windows" eq "$::deken::platform(os)" } {
     # in redmond, intel only produces 32bit CPUs,...
-    if { "intel" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "i386" }
+    if { "intel" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "i686" }
     # ... and all 64bit CPUs are manufactured by amd
     #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
 }
