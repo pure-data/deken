@@ -473,9 +473,13 @@ proc ::deken::search_for {term} {
     return $result
 }
 
-# create an entry for our search in the "help" menu
+# create an entry for our search in the "help" menu (or re-use an existing one)
 set mymenu .menubar.help
-$mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+if { [catch {
+    $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+} _ ] } {
+    $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+}
 # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 
 # http://rosettacode.org/wiki/URL_decoding#Tcl
