@@ -153,8 +153,10 @@
 (defn get-mach-arch [filename]
   (import [macholib.MachO [MachO]])
   (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
-  (let [[macho (MachO filename)]]
-    (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers])))
+  (try
+   (let [[macho (MachO filename)]]
+      (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers]))
+   (catch [e ValueError] [])))
 
 ; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
 (defn parse-arm-elf-arch [arm-elf]
