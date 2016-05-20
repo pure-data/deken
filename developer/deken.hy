@@ -140,10 +140,13 @@
 ; get architecture from an ELF (e.g. Linux)
 (defn get-elf-arch [filename oshint]
   (import [elftools.elf.elffile [ELFFile]])
-  (let [[elf (ELFFile (open filename :mode "rb"))]]
-    ; TODO: check section .ARM.attributes for v number
-    ; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-    [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]]))
+  (import [elftools.common [exceptions]])
+  (try
+   (let [[elf (ELFFile (open filename :mode "rb"))]]
+      ;; TODO: check section .ARM.attributes for v number
+      ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
+     [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]])
+   (catch [e exceptions.ELFError] [])))
 
 ; get architecture from a Darwin Mach-O file (OSX)
 (defn get-mach-arch [filename]
