@@ -121,7 +121,8 @@
 
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn get-windows-arch [filename]
+(defn get-windows-arch [filename] (try (do-get-windows-arch filename) (catch [e Exception] [])))
+(defn do-get-windows-arch [filename]
   (let [[f (open filename "rb")]
         [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
     ;(print magic offset)
