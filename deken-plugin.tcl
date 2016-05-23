@@ -30,16 +30,16 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] > $version...skipping!\n"
+                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version\] > $version...skipping!\n"
                 return 0
             }
             if { $x < $y } {
-                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] < $version...overwriting!\n"
+                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version\] < $version...overwriting!\n"
                 set ::deken::version $version
                 return 1
             }
         }
-        ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] == $version...skipping!\n"
+        ::pdwindow::debug "\[deken\]: installed version \[$::deken::version\] == $version...skipping!\n"
         return 0
     }
     set ::deken::version $version
