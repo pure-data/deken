@@ -25,9 +25,21 @@ namespace eval ::deken:: {
 ## only register this plugin if there isn't any newer version already registered
 ## (if ::deken::version is defined and is higher than our own version)
 proc ::deken::versioncheck {version} {
-    if { [info exists ::deken::version ] && [string compare $::deken::version $version] >= 0} {
-        ::pdwindow::debug "\[deken\]: the installed version appears to be up-to-date or newer...skipping!\n"
-        ::pdwindow::debug "\[deken\]: \t$::deken::version >= $version\n"
+    if { [info exists ::deken::version ] } {
+        set v0 [split $::deken::version "."]
+        set v1 [split $version "."]
+        foreach x $v0 y $v1 {
+            if { $x > $y } {
+                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] > $version...skipping!\n"
+                return 0
+            }
+            if { $x < $y } {
+                ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] < $version...overwriting!\n"
+                set ::deken::version $version
+                return 1
+            }
+        }
+        ::pdwindow::debug "\[deken\]: installed version \[$::deken::version] == $version...skipping!\n"
         return 0
     }
     set ::deken::version $version
