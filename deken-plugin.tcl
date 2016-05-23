@@ -300,8 +300,7 @@ proc ::deken::initiate_search {mytoplevel} {
     if { [ catch {
         set results [::deken::search_for [$mytoplevel.searchbit.entry get]]
     } stdout ] } {
-        puts "online?"
-        puts "$stdout"
+        ::pdwindow::debug "\[deken\]: online? $stdout\n"
         ::deken::status "Unable to perform search. Are you online?"
     } else {
     # delete all text in the results
@@ -377,14 +376,14 @@ proc ::deken::clicked_link {URL filename} {
     set success 1
     if { [ string match *.zip $fullpkgfile ] } then {
         if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
-            puts $stdout
+            ::pdwindow::debug "$stdout\n"
             set success 0
         }
     } elseif  { [ string match *.tar.gz $fullpkgfile ]
                 || [ string match *.tgz $fullpkgfile ]
               } then {
         if { [ catch { exec tar xzf $fullpkgfile } stdout ] } {
-            puts $stdout
+            ::pdwindow::debug "$stdout\n"
             set success 0
         }
     }
