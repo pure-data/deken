@@ -67,7 +67,7 @@ set ::deken::statustimer ""
 
 set ::deken::backends [list]
 proc ::deken::register {fun} {
-    lappend ::deken::backends $fun
+    set ::deken::backends [linsert $::deken::backends 0 $fun]
 }
 
 proc ::deken::get_writable_dir {paths} {
