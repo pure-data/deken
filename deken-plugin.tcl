@@ -244,7 +244,7 @@ proc ::deken::open_searchui {mytoplevel} {
         $mytoplevel.results tag configure warn -foreground orange
         $mytoplevel.results tag configure info -foreground grey
         $mytoplevel.results tag configure highlight -foreground blue
-        $mytoplevel.results tag configure archmatch -foreground black
+        $mytoplevel.results tag configure archmatch
         $mytoplevel.results tag configure noarchmatch -foreground grey
     }
     ::deken::post "To get a list of all available externals, try an empty search." info
