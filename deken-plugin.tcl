@@ -70,6 +70,66 @@ proc ::deken::register {fun} {
     set ::deken::backends [linsert $::deken::backends 0 $fun]
 }
 
+proc ::deken::gettmpdir {} {
+    proc _iswdir {d} { expr [file isdirectory $d] * [file writable $d] }
+    set tmpdir ""
+    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TEMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    set tmpdir "/tmp"
+    set tmpdir [pwd]
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+}
+proc ::deken::vbs_unzipper {zipfile {path .}} {
+    ## this is w32 only
+    if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
+    if { "" eq $::deken::_vbsunzip } {
+        set ::deken::_vbsunzip [ file join [::deken::gettmpdir] unzip.vbs ]
+    }
+
+    if {[file exists $::deken::_vbsunzip]} {} {
+        ## no script yet, create one
+        set script {
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+'The location of the zip file.
+ZipFile = fso.GetAbsolutePathName(WScript.Arguments.Item(0))
+'The folder the contents should be extracted to.
+ExtractTo = fso.GetAbsolutePathName(WScript.Arguments.Item(1))
+
+'If the extraction location does not exist create it.
+If NOT fso.FolderExists(ExtractTo) Then
+   fso.CreateFolder(ExtractTo)
+End If
+
+'Extract the contants of the zip file.
+set objShell = CreateObject("Shell.Application")
+set FilesInZip=objShell.NameSpace(ZipFile).items
+objShell.NameSpace(ExtractTo).CopyHere(FilesInZip)
+Set fso = Nothing
+Set objShell = Nothing
+}
+        if {![catch {set fileId [open $::deken::_vbsunzip "w"]}]} {
+            puts $fileId $script
+            close $fileId
+        }
+    }
+    if {[file exists $::deken::_vbsunzip]} {} {
+        ## still no script, give up
+        return 0
+    }
+    ## try to call the script
+    if { [ catch { exec cscript $::deken::_vbsunzip $zipfile .} stdout ] } {
+        ::pdwindow::debug "\[deken\] VBS-unzip: $::deken::_vbsunzip\n$stdout\n"
+        return 0
+    }
+    return 1
+}
+set ::deken::_vbsunzip ""
+
 proc ::deken::get_writable_dir {paths} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
@@ -374,9 +434,11 @@ proc ::deken::clicked_link {URL filename} {
     cd $installdir
     set success 1
     if { [ string match *.zip $fullpkgfile ] } then {
-        if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
-            ::pdwindow::debug "$stdout\n"
-            set success 0
+        if { [ ::deken::vbs_unzipper $fullpkgfile  $installdir ] } { } {
+            if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
+                ::pdwindow::debug "$stdout\n"
+                set success 0
+            }
         }
     } elseif  { [ string match *.tar.gz $fullpkgfile ]
                 || [ string match *.tgz $fullpkgfile ]
