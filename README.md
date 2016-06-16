@@ -4,6 +4,15 @@ A minimal package management system for Pure Data externals.
 
 Packages are stored on <http://puredata.info/> and can be installed using the `Help -> Find Packages` menu after installing the [TCL plugin](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl).
 
+## README.1st ##
+
+Since [`Pd-0.47`](http://puredata.info/downloads/pure-data/releases/0.47-0),
+the `deken-plugin` is included into Pure Data itself,
+so there is no need to manually install it.
+
+Main development of the plugin is still happening in *this* repository,
+so you might want to manually install the plugin to help testing new features.
+
 ## Download ##
 
 Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
