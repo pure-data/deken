@@ -427,7 +427,7 @@ proc ::deken::clicked_link {URL filename} {
         return
     }
     if {[tk_messageBox -message \
-        "Install to to directory $installdir?" \
+        "Install to directory $installdir?" \
         -type yesno -default "yes" \
         -icon question] != "yes"} {
             return
