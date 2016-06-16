@@ -281,7 +281,9 @@ proc ::deken::prompt_installdir {} {
     set installdir [tk_chooseDirectory -title "Install libraries to directory:"]
     if { "$installdir" != "" } {
         set ::deken::installpath $installdir
+        return 1
     }
+    return 0
 }
 
 
