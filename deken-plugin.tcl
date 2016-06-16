@@ -428,12 +428,15 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post "Cannot download/install libraries!" warn
         return
     }
-    if {[tk_messageBox -message \
-        "Install to directory $installdir?" \
-        -type yesno -default "yes" \
-        -icon question] != "yes"} {
-            return
-    }
+    switch -- [tk_messageBox -message \
+                   "Install to directory $installdir?" \
+                   -type yesnocancel -default "yes" \
+                   -icon question] {
+                       no {set installdir ""
+                           if {[::deken::prompt_installdir]} {
+                               set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ] }
+                           if { "$installdir" eq "" } return}
+                       cancel return}
 
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
