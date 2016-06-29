@@ -76,11 +76,16 @@ def getNameVersion(filename, suffix="-externals"):
 
 
 if '__main__' ==  __name__:
-    #run()
-    data=None
-    with open("data/libraryfile.txt", "r") as f:
-        data=f.read()
-    if data:
-        ls=LibrarySearch(data)
-        for s in ls.search(["z"]):
-            print(s)
+    print("expected %s, got %s" % (["foo", "bar", "baz"], split_unescape("foo bar baz", ' ')))
+    print("expected %s, got %s" % (["foo", "bar baz"], split_unescape("foo bar baz", ' ', maxsplit=1)))
+    print("expected %s, got %s" % (["foo bar", "baz"], split_unescape("foo\ bar baz", ' ', maxsplit=1)))
+
+    def test_namever(expect, name, suffix=None):
+        if suffix is None:
+            x=getNameVersion(name)
+        else:
+            x=getNameVersion(name, suffix)
+        print("expected %s, got %s [%s]" % (expect, x, name))
+    test_namever(["patch2svg-plugin", "0.1"], "patch2svg-plugin-v0.1--externals.zip")
+    test_namever(["zexy", "2.2.5-2"], "zexy-v2.2.5-2-(Linux-amd64-64)-externals.tgz")
+    test_namever(["helloworld"], "helloworld(Linux-amd64-64)-externals.zip")
