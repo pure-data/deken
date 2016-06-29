@@ -31,6 +31,7 @@
 # $
 #
 
+from utilities import split_unescape, getNameVersion
 
 class ObjectSearch:
     def __init__(self):
@@ -42,22 +43,48 @@ class ObjectSearch:
         """add/update contents in 'filename'; if filename is missing, its content gets deleted"""
         try:
             with open(filename, "r") as f:
-                data=read(filename)
+                data=f.read()
+            pkg,ver = getNameVersion(filename.split("/")[-1], "-objects")
+            if ver:
+                pkg="%s/%s" % (pkg,ver)
             for line in data.split("\n"):
-                obj, _ = split_unescape(line, ' ', maxsplit=1)
+                if not line: continue
+                try:
+                    obj = split_unescape(line, ' ', maxsplit=1)[0]
+                    if obj not in self.db:
+                        self.db[obj]=[]
+                    self.db[obj]+=[pkg]
+                except IndexError:
+                    pass
         except FileNotFoundError:
             for key in self.db:
                 self.db[key].discard(filename)
 
     def search(self, needles=[]):
-        pass
+        keys=set()
+        for k in self.db:
+            for n in needles:
+                if n in k:
+                    keys.add(k)
+        res=[]
+        for k in sorted(keys):
+            res+=self.db[k]
+        return res
 
 if '__main__' ==  __name__:
-    #run()
     data=None
-    with open("data/libraryfile.txt", "r") as f:
-        data=f.read()
-    if data:
-        ls=LibrarySearch(data)
-        for s in ls.search(["z"]):
-            print(s)
+    os=ObjectSearch()
+    def test_search(needles):
+        if len(needles)>1:
+            for needle in needles:
+                print("search for %s::" % (needle))
+                for res in os.search([needle]):
+                    print("%s" % (res))
+        print("search for %s::" % (needles))
+        for res in os.search(needles):
+            print("%s" % (res))
+
+    os.refresh("data/iemnet-v0.2.1-objects.txt")
+    test_search(["udpclient", "phasorshot~", "z~"])
+    os.refresh("data/tof-v0.2.0-objects.txt")
+    test_search(["udpclient", "phasorshot~", "z~"])
