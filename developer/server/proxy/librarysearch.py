@@ -28,8 +28,11 @@
 # patch2svg-plugin-v0.1--externals.zip	http://puredata.info/downloads/patch2svg-plugin/releases/0.1/patch2svg-plugin-v0.1--externals.zip	zmoelnig	2016-03-22 16:29:25
 #
 
+from utilities import getNameVersion
+
 class LibrarySearch:
     def __init__(self, data=None):
+        # libs: 'package' -> [package/version,]
         # db: 'package/version' -> [responsestring,]
         self.libs=dict()
         self.db=dict()
@@ -54,21 +57,28 @@ class LibrarySearch:
             self.db[pkgver]+=[line]
     def search(self, needles=[]):
         keys=set()
-        for k in self.db:
+        for k in self.libs:
             for n in needles:
                 if n in k:
-                    keys.add(k)
+                    for l in self.libs[k]:
+                        keys.add(l)
         res=[]
         for k in sorted(keys):
             res+=self.db[k]
         return res
 
 if '__main__' ==  __name__:
-    #run()
     data=None
     with open("data/libraryfile.txt", "r") as f:
         data=f.read()
     if data:
         ls=LibrarySearch(data)
-        for s in ls.search(["z"]):
-            print(s)
+        needles=["zexy", "z", "maxlib"]
+        for needle in needles:
+            print("searching for %s" % (needle))
+            for s in ls.search([needle]):
+                print("> %s" % (s))
+            print("---------------------------")
+        print("searching for %s" % (needles))
+        for s in ls.search(needles):
+            print("> %s" % (s))
