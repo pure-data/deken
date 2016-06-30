@@ -80,7 +80,7 @@ def getopts():
     if args.config:
         cfg.read(args.config)
     if args.port:
-        cfg["http"]["port"]=args.port
+        cfg["http"]["port"]=str(args.port)
     if args.library_list:
         cfg["libraries"]["location"]=args.library_list
     if args.objectdir:
