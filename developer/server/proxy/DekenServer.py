@@ -125,28 +125,21 @@ class Server(socketserver.TCPServer):
         return self._userdata.get(key, None)
 
 class Handler(http.server.BaseHTTPRequestHandler):
-    def do_HEAD(s):
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
-        s.end_headers()
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
     def _write(self, s):
         self.wfile.write(bytes(s, 'UTF-8'))
-    def do_GET(s):
+    def do_GET(self):
         """Respond to a GET request."""
-        try:
-            length = self.headers['content-length']
-            data = self.rfile.read(int(length))
-            post("data: %s" % (data))
-        except Exception as e:
-            print("POST-exception: %s" % (e))
-            return
-
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
-        s.end_headers()
-        s._write("<html><head><title>deken.</title></head>")
-        s._write("<body><p>You should POST.</p>")
-        s._write("</body></html>")
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        #self._write("<html><head><title>Title goes here.</title></head>")
+        #self._write("<body><p>This is a test.</p>")
+        #self._write("<p>You accessed path: %s</p>" % self.path)
+        #self._write("</body></html>")
     def do_POST(self):
         try:
             length = self.headers['content-length']
