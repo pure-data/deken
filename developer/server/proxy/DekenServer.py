@@ -132,6 +132,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(bytes(s, 'UTF-8'))
     def search(self, query):
         return("search for: %s" % (query))
+    def refresh(self):
+        pass
     def do_GET(self):
         """Respond to a GET request."""
         up=urlparse(self.path)
@@ -143,7 +145,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if "/search" == up.path:
             data=self.search(query_components)
         if "/refresh" == up.path:
-            pass
+            data=self.refresh()
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
