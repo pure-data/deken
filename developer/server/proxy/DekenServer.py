@@ -105,13 +105,11 @@ def getopts():
         d["objects"]["location"]=od
     except KeyError:
         d["objects"]["location"]=[]
-
     try:
         port=d["http"]["port"]
         d["http"]["port"]=int(port)
     except (KeyError, ValueError):
         d["http"]["port"]=0
-
     return d
 
 class Server(socketserver.TCPServer):
