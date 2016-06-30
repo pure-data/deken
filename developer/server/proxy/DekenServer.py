@@ -162,7 +162,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         try:
             d=self.parseQuery(data)
-            #self._process(d, self.respond_JSON)
             print("POST: %s" % (d))
         except TypeError as e:
             print("oops: %s" % (e))
