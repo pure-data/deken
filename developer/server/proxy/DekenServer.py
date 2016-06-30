@@ -149,32 +149,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         if data:
             self._write(data)
-        #self._write("<html><head><title>Title goes here.</title></head>")
-        #self._write("<body><p>This is a test.</p>")
-        #self._write("<p>You accessed path: %s</p>" % self.path)
-        #self._write("</body></html>")
-    def do_POST(self):
-        try:
-            length = self.headers['content-length']
-            data = self.rfile.read(int(length))
-        except Exception as e:
-            print("POST-exception: %s" % (e))
-            return
-        try:
-            d=self.parseQuery(data)
-            print("POST: %s" % (d))
-        except TypeError as e:
-            print("oops: %s" % (e))
-
-
-    @staticmethod
-    def parseQuery(data):
-        d=data.decode()
-        try:
-            return json.loads(d)
-        except ValueError:
-            return parse_qs(d)
-
 
 class DekenServer:
     def __init__(self):
