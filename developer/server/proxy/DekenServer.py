@@ -131,6 +131,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
     def _write(self, s):
         self.wfile.write(bytes(s, 'UTF-8'))
+    def search(self, query):
+        return("search for: %s" % (query))
     def do_GET(self):
         """Respond to a GET request."""
         self.send_response(200)
