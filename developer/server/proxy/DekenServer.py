@@ -20,8 +20,7 @@
 
 import http.server
 import socketserver
-from urllib.parse import parse_qs
-
+from urllib.parse import parse_qs, urlparse
 PORT = 8000
 
 ##### input data
@@ -135,9 +134,21 @@ class Handler(http.server.BaseHTTPRequestHandler):
         return("search for: %s" % (query))
     def do_GET(self):
         """Respond to a GET request."""
+        up=urlparse(self.path)
+        query = up.query
+        query_components=dict()
+        data=None
+        if query:
+            query_components = dict(qc.split("=") for qc in query.split("&"))
+        if "/search" == up.path:
+            data=self.search(query_components)
+        if "/refresh" == up.path:
+            pass
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+        if data:
+            self._write(data)
         #self._write("<html><head><title>Title goes here.</title></head>")
         #self._write("<body><p>This is a test.</p>")
         #self._write("<p>You accessed path: %s</p>" % self.path)
