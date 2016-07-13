@@ -4,21 +4,6 @@ from Products.PythonScripts.standard import url_unquote
 request = container.REQUEST
 RESPONSE = request.RESPONSE
 
-qs = request['QUERY_STRING']
-
-args = {}
-if qs:
-  for arg in qs.split('&'):
-    try:
-      key, val = arg.split('=', 1)
-    except ValueError:
-      key = arg
-      val = ''
-    if key in args:
-      args[key].append(val)
-    else:
-      args[key] = [val]
-
 
 def getNameVersion(filename):
   filename = filename.split('-externals', 1)[0] .split('(')[0]
@@ -40,10 +25,9 @@ def showPackage(obj, url, filename):
       title = "%s/%s (%s)" % (name, version, title)
     else:
       title = "%s (%s)" % (name, title)
-  date = obj.Date().replace('\t', ' ')
+  date = obj.Date().replace('\t', ' ').strip()
   owner = obj.owner_info()['id'].replace('\t', ' ')
-  print("%s\t%s\t%s\t%s" % (url, title, owner, date))
-  return printed
+  return ("%s\t%s\t%s\t%s" % (url, title, owner, date))
 
 mytypes = ('IAEMFile', 'PSCFile')
 suffixes = ['zip', 'tgz', 'tar.gz']
