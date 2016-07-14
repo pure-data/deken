@@ -1,9 +1,5 @@
 # Import a standard function, and get the HTML request and response objects.
-from Products.PythonScripts.standard import html_quote
 from Products.PythonScripts.standard import url_unquote
-request = container.REQUEST
-RESPONSE = request.RESPONSE
-
 
 def getNameVersion(filename):
   filename = filename.split('-externals', 1)[0] .split('(')[0]
