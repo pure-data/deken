@@ -48,7 +48,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.2.2] } {
+if { [::deken::versioncheck 0.2.3] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -269,6 +269,15 @@ proc ::deken::bind_posttag {tag key cmd} {
     variable mytoplevelref
     $mytoplevelref.results tag bind $tag $key $cmd
 }
+
+proc ::deken::bind_postmenu {tag cmd} {
+    variable mytoplevelref
+    set rcmd [regsub -- "clicked_link" $cmd "rclicked_link"] 
+    set cmd2 "$rcmd .menu %x %y"
+#    puts " bind_postmenu $tag : $cmd / $cmd2"
+    $mytoplevelref.results tag bind $tag <3> $cmd2
+}
+
 proc ::deken::highlightable_posttag {tag} {
     variable mytoplevelref
     ::deken::bind_posttag $tag <Enter> \
@@ -412,6 +421,7 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
         ::deken::bind_posttag $tag <Enter> "+::deken::status $status"
         ::deken::bind_posttag $tag <1> "$cmd"
     }
+    ::deken::bind_postmenu $tag "$cmd"
 }
 
 # handle a clicked link
@@ -487,6 +497,39 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post "2. Copy the contents into $installdir.\n"
         pd_menucommands::menu_openfile $installdir
     }
+}
+
+proc ::deken::rclicked_link {url packageFilename theMenu theX theY} {
+	puts ""
+	puts "rclicked_link $url $packageFilename $theMenu $theX $theY "
+	set lastSlash [string last / $url]
+	set urlPath [string range $url 0 $lastSlash]
+	
+    set beforeFirstOpenBrace [expr [string first ( $packageFilename] - 1]
+    set filenameBase [string range $packageFilename 0 $beforeFirstOpenBrace]
+    
+#	puts "$urlPath $theMenu $theX $theY"
+	
+	set indexUrl "${urlPath}moreInfo"
+	set objectListUrl "${urlPath}${filenameBase}objects.txt"
+	puts "indexUrl: $indexUrl"
+	puts "objectListUrl: $objectListUrl" 
+	
+    set pMenu [menu .popupMenu]
+
+    variable mytoplevelref
+	$pMenu add command -label "List Objects" -command "::deken::openBrowser $objectListUrl $pMenu"
+	$pMenu add command -label "More Info"    -command "::deken::openBrowser $indexUrl $pMenu"
+	tk_popup $pMenu [expr [winfo rootx $mytoplevelref.results] + $theX] [expr [winfo rooty $mytoplevelref.results] + $theY]
+    variable pMenuRef $pMenu
+}
+
+proc ::deken::openBrowser {url pMenu} {
+	puts "openBrowser: $url $pMenu"
+    if [catch {::deken::launchBrowser $url} err] {
+        tk_messageBox -icon error -message "error '$err' with '$command'"
+    }
+	unset $pMenu
 }
 
 # download a file to a location
@@ -665,6 +708,34 @@ proc ::deken::search::puredata.info {term} {
     }
     http::cleanup $token
     return [lsort -dictionary -decreasing -index 5 $searchresults ]
+}
+
+#http://wiki.tcl.tk/557
+proc ::deken::launchBrowser url {
+    global tcl_platform
+
+    if {$tcl_platform(platform) eq "windows"} {
+        # first argument to "start" is "window title", which is not used here
+        set command [list {*}[auto_execok start] {}]
+        if {[file isdirectory $url]} {
+            # if there is an executable named eg ${url}.exe, avoid opening that instead:
+            set url [file nativename [file join $url .]]
+        }
+    } elseif {$tcl_platform(os) eq "Darwin"} {
+        # It *is* generally a mistake to use $tcl_platform(os) to select functionality,
+        # particularly in comparison to $tcl_platform(platform).  For now, let's just
+        # regard it as a stylistic variation subject to debate.
+        set command [list open]
+    } else {
+        set command [list xdg-open]
+    }
+    exec {*}$command $url &
+}
+
+proc ::deken::_launchBrowser {url} {
+    if [catch {::deken::launchBrowser $url} err] {
+        tk_messageBox -icon error -message "error '$err' with '$command'"
+    }
 }
 
 ::deken::register ::deken::search::puredata.info
