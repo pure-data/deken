@@ -330,7 +330,7 @@ proc ::deken::open_searchui {mytoplevel} {
 proc ::deken::create_dialog {mytoplevel} {
     toplevel $mytoplevel -class DialogWindow
     variable mytoplevelref $mytoplevel
-    wm title $mytoplevel [_ "Find externals"]
+    wm title $mytoplevel [_ "Find externals & info"]
     wm geometry $mytoplevel 670x550
     wm minsize $mytoplevel 230 360
     wm transient $mytoplevel
@@ -529,7 +529,7 @@ proc ::deken::openBrowser {url pMenu} {
     if [catch {::deken::launchBrowser $url} err] {
         tk_messageBox -icon error -message "error '$err' with '$command'"
     }
-	unset $pMenu
+	destroy .popupMenu
 }
 
 # download a file to a location
