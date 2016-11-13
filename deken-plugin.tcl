@@ -274,7 +274,6 @@ proc ::deken::bind_postmenu {tag cmd} {
     variable mytoplevelref
     set rcmd [regsub -- "clicked_link" $cmd "rclicked_link"] 
     set cmd2 "$rcmd .menu %x %y"
-#    puts " bind_postmenu $tag : $cmd / $cmd2"
     $mytoplevelref.results tag bind $tag <3> $cmd2
 }
 
@@ -500,36 +499,31 @@ proc ::deken::clicked_link {URL filename} {
 }
 
 proc ::deken::rclicked_link {url packageFilename theMenu theX theY} {
-	puts ""
-	puts "rclicked_link $url $packageFilename $theMenu $theX $theY "
 	set lastSlash [string last / $url]
 	set urlPath [string range $url 0 $lastSlash]
 	
     set beforeFirstOpenBrace [expr [string first ( $packageFilename] - 1]
     set filenameBase [string range $packageFilename 0 $beforeFirstOpenBrace]
     
-#	puts "$urlPath $theMenu $theX $theY"
-	
 	set indexUrl "${urlPath}moreInfo"
 	set objectListUrl "${urlPath}${filenameBase}objects.txt"
-	puts "indexUrl: $indexUrl"
-	puts "objectListUrl: $objectListUrl" 
 	
+	if { [winfo exists .popupMenu] } {
+		destroy .popupMenu
+	}
     set pMenu [menu .popupMenu]
 
     variable mytoplevelref
-	$pMenu add command -label "List Objects" -command "::deken::openBrowser $objectListUrl $pMenu"
-	$pMenu add command -label "More Info"    -command "::deken::openBrowser $indexUrl $pMenu"
+	$pMenu add command -label "List Objects" -command "::deken::open_browser $objectListUrl"
+	$pMenu add command -label "More Info"    -command "::deken::open_browser $indexUrl"
+	$pMenu add command -label "Download"     -command "::deken::download_file $url $packageFilename"
 	tk_popup $pMenu [expr [winfo rootx $mytoplevelref.results] + $theX] [expr [winfo rooty $mytoplevelref.results] + $theY]
-    variable pMenuRef $pMenu
 }
 
-proc ::deken::openBrowser {url pMenu} {
-	puts "openBrowser: $url $pMenu"
-    if [catch {::deken::launchBrowser $url} err] {
+proc ::deken::open_browser {url} {
+    if [catch {::deken::launch_browser $url} err] {
         tk_messageBox -icon error -message "error '$err' with '$command'"
     }
-	destroy .popupMenu
 }
 
 # download a file to a location
@@ -711,7 +705,7 @@ proc ::deken::search::puredata.info {term} {
 }
 
 #http://wiki.tcl.tk/557
-proc ::deken::launchBrowser url {
+proc ::deken::launch_browser url {
     global tcl_platform
 
     if {$tcl_platform(platform) eq "windows"} {
@@ -730,12 +724,6 @@ proc ::deken::launchBrowser url {
         set command [list xdg-open]
     }
     exec {*}$command $url &
-}
-
-proc ::deken::_launchBrowser {url} {
-    if [catch {::deken::launchBrowser $url} err] {
-        tk_messageBox -icon error -message "error '$err' with '$command'"
-    }
 }
 
 ::deken::register ::deken::search::puredata.info
