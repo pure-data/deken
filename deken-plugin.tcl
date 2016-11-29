@@ -274,7 +274,11 @@ proc ::deken::bind_postmenu {tag cmd} {
     variable mytoplevelref
     set rcmd [regsub -- "clicked_link" $cmd "rclicked_link"] 
     set cmd2 "$rcmd .menu %x %y"
-    $mytoplevelref.results tag bind $tag <3> $cmd2
+    if {"$::deken::platform(os)" eq "Darwin"} {
+        $mytoplevelref.results tag bind $tag <2> $cmd2
+    } else {
+        $mytoplevelref.results tag bind $tag <3> $cmd2
+    }
 }
 
 proc ::deken::highlightable_posttag {tag} {
@@ -522,7 +526,7 @@ proc ::deken::rclicked_link {url packageFilename theMenu theX theY} {
 
 proc ::deken::open_browser {url} {
     if [catch {::deken::launch_browser $url} err] {
-        tk_messageBox -icon error -message "error '$err' with '$command'"
+        tk_messageBox -icon error -message "error '$err' with 'launch_browser $url'"
     }
 }
 
@@ -706,16 +710,14 @@ proc ::deken::search::puredata.info {term} {
 
 #http://wiki.tcl.tk/557
 proc ::deken::launch_browser url {
-    global tcl_platform
-
-    if {$tcl_platform(platform) eq "windows"} {
+    if {"$::deken::platform(os)" eq "Windows"} {
         # first argument to "start" is "window title", which is not used here
         set command [list {*}[auto_execok start] {}]
         if {[file isdirectory $url]} {
             # if there is an executable named eg ${url}.exe, avoid opening that instead:
             set url [file nativename [file join $url .]]
         }
-    } elseif {$tcl_platform(os) eq "Darwin"} {
+    } elseif {"$::deken::platform(os)" eq "Darwin"} {
         # It *is* generally a mistake to use $tcl_platform(os) to select functionality,
         # particularly in comparison to $tcl_platform(platform).  For now, let's just
         # regard it as a stylistic variation subject to debate.
