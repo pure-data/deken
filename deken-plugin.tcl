@@ -668,5 +668,6 @@ proc ::deken::search::puredata.info {term} {
     return [lsort -dictionary -decreasing -index 5 $searchresults ]
 }
 
+::http::config -accept text/tab-separated-values
 ::deken::register ::deken::search::puredata.info
 }
