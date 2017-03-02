@@ -459,6 +459,10 @@ proc ::deken::clicked_link {URL filename} {
                 }
             }
         }
+        if { "$installdir" != "" } {
+            # try creating the installdir...just in case
+            if { [ catch { file mkdir $installdir } ] } {}
+        }
         # check whether this is a writable directory
         set installdir [ ::deken::get_writable_dir [list $installdir ] ]
         if { "$installdir" != "" } {
