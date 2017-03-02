@@ -442,22 +442,30 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::prompt_installdir
         set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
-    if { "$installdir" == "" } {
-        #::deken::clearpost
-        ::deken::post "No writeable directory found in:" warn
-        foreach p $::sys_staticpath { ::deken::post "\t- $p" warn }
-        ::deken::post "Cannot download/install libraries!" warn
-        return
+    while {1} {
+        if { "$installdir" == "" } {
+            set _args {-message "Please select a (writable) installation directory!" -type retrycancel -default retry -icon warning}
+        } {
+            set _args "-message {Install to $installdir ?} -type yesnocancel -default yes -icon question"
+        }
+        switch -- [eval tk_messageBox ${_args}] {
+            cancel return
+            yes { }
+            default {
+                if {[::deken::prompt_installdir]} {
+                    set installdir $::deken::installpath
+                } {
+                    continue
+                }
+            }
+        }
+        # check whether this is a writable directory
+        set installdir [ ::deken::get_writable_dir [list $installdir ] ]
+        if { "$installdir" != "" } {
+            # stop looping if we've found our dir
+            break
+        }
     }
-    switch -- [tk_messageBox -message \
-                   "Install to directory $installdir?" \
-                   -type yesnocancel -default "yes" \
-                   -icon question] {
-                       no {set installdir ""
-                           if {[::deken::prompt_installdir]} {
-                               set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ] }
-                           if { "$installdir" eq "" } return}
-                       cancel return}
 
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
