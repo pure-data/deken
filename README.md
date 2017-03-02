@@ -13,7 +13,12 @@ so there is no need to manually install it.
 Main development of the plugin is still happening in *this* repository,
 so you might want to manually install the plugin to help testing new features.
 
-## Download ##
+When installing the `deken-plugin`, Pd will use it if (and only if) it is newer than the version included in Pd.
+In this case you will see something like the following in the Pd-console (you first have to raise the verbosity to `Debug`):
+
+> [deken]: installed version [0.2.1] < 0.2.3...overwriting!
+
+## Download/Install ##
 
 Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
 
