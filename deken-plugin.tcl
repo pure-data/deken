@@ -630,7 +630,10 @@ proc ::deken::search::puredata.info {term} {
     set dekenserver "http://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set term [ join $term "&name=" ]
+    set httpaccept [::http::config -accept]
+    ::http::config -accept text/tab-separated-values
     set token [::http::geturl "${dekenserver}?name=${term}"]
+    ::http::config -accept $httpaccept
     set contents [::http::data $token]
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
@@ -662,6 +665,5 @@ proc ::deken::search::puredata.info {term} {
     return [lsort -dictionary -decreasing -index 5 $searchresults ]
 }
 
-::http::config -accept text/tab-separated-values
 ::deken::register ::deken::search::puredata.info
 }
