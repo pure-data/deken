@@ -21,6 +21,7 @@ package require pd_menucommands 0.1
 
 namespace eval ::deken:: {
     variable version
+    variable installpath
 }
 
 ## only register this plugin if there isn't any newer version already registered
@@ -64,6 +65,7 @@ namespace eval ::deken:: {
 }
 namespace eval ::deken::search:: { }
 
+set ::deken::installpath ""
 set ::deken::statustimer ""
 
 set ::deken::backends [list]
