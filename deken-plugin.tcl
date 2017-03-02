@@ -431,6 +431,13 @@ proc ::deken::clicked_link {URL filename} {
         set installdir [ ::deken::get_writable_dir $::sys_staticpath ]
     }
     if { "$installdir" == "" } {
+        # let's use the first of $::sys_staticpath, if it does not exist yet
+        set userdir [lindex $::sys_staticpath 0]
+        if { [file exists ${userdir} ] } {} {
+            set installdir $userdir
+        }
+    }
+    if { "$installdir" == "" } {
         ## ask the user (and remember the decision)
         ::deken::prompt_installdir
         set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
