@@ -165,47 +165,6 @@ if {[info command lreverse] == ""} {
     } ;# RS
 }
 
-
-## where to look for the config-files:
-## - near the deken-plugin.tcl file
-## + at some user-specific place (e.g. ~/pd-externals/deken-plugin/)
-## it's probably easiest to iterate through curdir and ::sys_staticpath (in reverse order)
-## and read all (existing) configurations
-#
-## the configfile's format is simple:
-# the first element of a line is the variable name, the rest the value. e.g.
-#    foo bar baz
-# will create a variable '::deken::foo' with value [list bar baz]
-## LATER: this is rather insecure, as it allows people to overwrite
-##        virtually everything... (e.g. ::deken::search_for)
-proc ::deken::readconfig {paths filename} {
-    proc doreadconfig {fname} {
-        if {[file exists $fname]} {
-            set fp [open $fname r]
-            while {![eof $fp]} {
-                set data [gets $fp]
-                if { [string is list $data ] } {
-                    if { [llength $data ] > 1 } {
-                        set ::deken::[lindex $data 0] [lrange $data 1 end]
-                    }
-                }
-            }
-            return True
-        }
-        return False
-    }
-    set fs [file separator]
-    doreadconfig "$::current_plugin_loadpath${fs}${filename}"
-    foreach p0 [lreverse $paths] {
-        foreach p1 [ list "" "${fs}deken-plugin" ] {
-            doreadconfig "${p0}${p1}${fs}${filename}"
-        }
-    }
-}
-
-
-::deken::readconfig $::sys_staticpath deken-plugin.conf
-
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
 set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
