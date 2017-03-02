@@ -137,10 +137,6 @@ proc ::deken::get_writable_dir {paths} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
     foreach p $paths {
-        # since Pd-0.47-1, linux first searches in ~/.local/lib/pd/extra
-        # so creating those directories doesn't spam the home-dir anymore;
-        # on OSX/W32 the default folders have always been out-of-view
-        if { [ catch { file mkdir $p } ] } {}
         for {set i 0} {True} {incr i} {
             set tmpfile "${p}${fs}dekentmp.${i}"
             if {![file exists $tmpfile]} {
