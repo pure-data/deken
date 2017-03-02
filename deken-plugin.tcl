@@ -489,12 +489,13 @@ proc ::deken::download_file {URL outputfilename} {
     set status ""
     set errorstatus ""
     fconfigure $f -translation binary
-    set httpresult [http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
+
+    set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
     set status [::http::status $httpresult]
     set errorstatus [::http::error $httpresult]
     flush $f
     close $f
-    http::cleanup $httpresult
+    ::http::cleanup $httpresult
     return [list $status $errorstatus ]
 }
 
@@ -629,8 +630,8 @@ proc ::deken::search::puredata.info {term} {
     set dekenserver "http://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set term [ join $term "&name=" ]
-    set token [http::geturl "${dekenserver}?name=${term}"]
-    set contents [http::data $token]
+    set token [::http::geturl "${dekenserver}?name=${term}"]
+    set contents [::http::data $token]
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
     foreach ele $splitCont {
@@ -657,7 +658,7 @@ proc ::deken::search::puredata.info {term} {
             lappend searchresults $res
         }
     }
-    http::cleanup $token
+    ::http::cleanup $token
     return [lsort -dictionary -decreasing -index 5 $searchresults ]
 }
 
