@@ -18,6 +18,7 @@ package require Tcl 8.4
 package require http 2
 package require pdwindow 0.1
 package require pd_menucommands 0.1
+package require pd_guiprefs
 
 namespace eval ::deken:: {
     variable version
@@ -67,6 +68,19 @@ namespace eval ::deken::search:: { }
 
 set ::deken::installpath ""
 set ::deken::statustimer ""
+
+if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
+    # this is a Pd without the new GUI-prefs
+    proc ::deken::set_installpath {installdir} {
+        set ::deken::installpath $installdir
+    }
+} {
+    # Pd has a generic preferences system, that we can use
+    proc ::deken::set_installpath {installdir} {
+        set ::deken::installpath $installdir
+        ::pd_guiprefs::write dekenpath $installdir
+    }
+}
 
 set ::deken::backends [list]
 proc ::deken::register {fun} {
@@ -241,7 +255,7 @@ proc ::deken::highlightable_posttag {tag} {
 proc ::deken::prompt_installdir {} {
     set installdir [tk_chooseDirectory -title "Install libraries to directory:"]
     if { "$installdir" != "" } {
-        set ::deken::installpath $installdir
+        ::deken::set_installpath $installdir
         return 1
     }
     return 0
