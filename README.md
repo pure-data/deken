@@ -24,7 +24,7 @@ In this case you will see something like the following in the Pd-console (you fi
 
 Click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl) and save it to your Pd folder:
 
- * Linux = `~/pd-externals/deken-plugin/`
+ * Linux = ~/.local/lib/pd/extra/deken-plugin/` (with Pd<0.47 try `~/pd-externals/deken-plugin/`)
  * OSX = `~/Library/Pd/deken-plugin/`
  * Windows = `%AppData%\Pd\deken-plugin\`
 
