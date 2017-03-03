@@ -13,10 +13,12 @@ so there is no need to manually install it.
 Main development of the plugin is still happening in *this* repository,
 so you might want to manually install the plugin to help testing new features.
 
-When installing the `deken-plugin`, Pd will use it if (and only if) it is newer than the version included in Pd.
+When manually installing the `deken-plugin`, Pd will use it if (and only if) it has a greater version number
+than the one included in Pd.
 In this case you will see something like the following in the Pd-console (you first have to raise the verbosity to `Debug`):
 
-> [deken]: installed version [0.2.1] < 0.2.3...overwriting!
+> `[deken]: installed version [0.2.1] < 0.2.3...overwriting!`
+> `deken-plugin.tcl (Pd externals search) in /home/frobnozzel/.local/lib/pd/extra/deken-plugin/ loaded.`
 
 ## Download/Install ##
 
