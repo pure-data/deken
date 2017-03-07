@@ -468,7 +468,7 @@ proc ::deken::clicked_link {URL filename} {
                 set success 0
             }
         }
-    } elseif  { [ string match *.tar.gz $fullpkgfile ]
+    } elseif  { [ string match *.tar.* $fullpkgfile ]
                 || [ string match *.tgz $fullpkgfile ]
               } then {
         if { [ catch { exec tar xf $fullpkgfile } stdout ] } {
