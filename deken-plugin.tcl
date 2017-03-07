@@ -147,16 +147,20 @@ Set objShell = Nothing
 }
 set ::deken::_vbsunzip ""
 
+proc ::deken::get_tmpfilename {{path ""}} {
+    for {set i 0} {True} {incr i} {
+        set tmpfile [file join ${path} dekentmp.${i}]
+        if {![file exists $tmpfile]} {
+            return $tmpfile
+        }
+    }
+}
+
 proc ::deken::get_writable_dir {paths} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
     foreach p $paths {
-        for {set i 0} {True} {incr i} {
-            set tmpfile "${p}${fs}dekentmp.${i}"
-            if {![file exists $tmpfile]} {
-                break
-            }
-        }
+        set tmpfile [::deken::get_tmpfilename $p]
         # try creating tmpfile
         if {![catch {open $tmpfile $access} channel]} {
             close $channel
