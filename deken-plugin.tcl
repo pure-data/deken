@@ -511,8 +511,15 @@ proc ::deken::download_file {URL outputfilename} {
     flush $f
     close $f
     ::http::cleanup $httpresult
-    if { "$outputfilename" != "$downloadfilename" } {
+
+    if { "$outputfilename" != "" } {
         catch { file delete $outputfilename }
+        if {[file exists $outputfilename]} {
+            ::deken::post "Unable to remove stray $outputfilename" error
+            set outputfilename ""
+        }
+    }
+    if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
         if {[catch { file rename $downloadfilename $outputfilename}]} {
             ::deken::post "Unable to rename downloaded file to $outputfilename" error
             set outputfilename ""
