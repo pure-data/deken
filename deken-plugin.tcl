@@ -16,6 +16,12 @@ package require Tcl 8.4
 #   If a requirement is missing,
 #   Pd will load, but the script will not.
 package require http 2
+# try enabling https if possible
+if { [catch {package require tls} ] } {} {
+    ::tls::init -ssl2 false -ssl3 false -tls1 true
+    ::http::register https 443 ::tls::socket
+}
+
 package require pdwindow 0.1
 package require pd_menucommands 0.1
 package require pd_guiprefs
