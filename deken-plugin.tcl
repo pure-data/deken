@@ -497,15 +497,13 @@ proc ::deken::clicked_link {URL filename} {
 proc ::deken::download_file {URL outputfilename} {
     set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
-    set status ""
-    set errorstatus ""
     fconfigure $f -translation binary
 
     set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
-    set status [::http::status $httpresult]
-    set errorstatus [::http::error $httpresult]
-    if {[expr [::http::ncode $httpresult] != 200 ]} {
-        ::deken::post "Unable to download from $URL" error
+    set ncode [::http::ncode $httpresult]
+    if {[expr $ncode != 200 ]} {
+        ## FIXXME: we probably should handle redirects correctly
+        ::deken::post "Unable to download from $URL \[$ncode\]" error
         set outputfilename ""
     }
     flush $f
