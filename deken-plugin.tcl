@@ -495,7 +495,7 @@ proc ::deken::clicked_link {URL filename} {
 # download a file to a location
 # http://wiki.tcl.tk/15303
 proc ::deken::download_file {URL outputfilename} {
-    set downloadfilename $outputfilename
+    set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
     set status ""
     set errorstatus ""
