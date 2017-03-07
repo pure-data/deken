@@ -447,7 +447,13 @@ proc ::deken::clicked_link {URL filename} {
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
     ::deken::post "Commencing downloading of:\n$URL\nInto $installdir..."
-    ::deken::download_file $URL $fullpkgfile
+    set fullpkgfile [::deken::download_file $URL $fullpkgfile]
+
+    if { "$fullpkgfile" eq "" } {
+        ::deken::post "aborting." info
+        return
+    }
+
     set PWD [ pwd ]
     cd $installdir
     set success 1
@@ -485,7 +491,8 @@ proc ::deken::clicked_link {URL filename} {
 # download a file to a location
 # http://wiki.tcl.tk/15303
 proc ::deken::download_file {URL outputfilename} {
-    set f [open $outputfilename w]
+    set downloadfilename $outputfilename
+    set f [open $downloadfilename w]
     set status ""
     set errorstatus ""
     fconfigure $f -translation binary
@@ -493,10 +500,25 @@ proc ::deken::download_file {URL outputfilename} {
     set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
     set status [::http::status $httpresult]
     set errorstatus [::http::error $httpresult]
+    if {[expr [::http::ncode $httpresult] != 200 ]} {
+        ::deken::post "Unable to download from $URL" error
+        set outputfilename ""
+    }
     flush $f
     close $f
     ::http::cleanup $httpresult
-    return [list $status $errorstatus ]
+    if { "$outputfilename" != "$downloadfilename" } {
+        catch { file delete $outputfilename }
+        if {[catch { file rename $downloadfilename $outputfilename}]} {
+            ::deken::post "Unable to rename downloaded file to $outputfilename" error
+            set outputfilename ""
+        }
+    }
+    if { "$outputfilename" eq "" } {
+        file delete $downloadfilename
+    }
+
+    return $outputfilename
 }
 
 # print the download progress to the results window
