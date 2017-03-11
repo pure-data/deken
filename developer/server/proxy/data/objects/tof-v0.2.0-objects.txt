@@ -1,0 +1,34 @@
+animate animate the object boxes inside a patch
+argument outputs the patch's creation arguments individually.
+arguments parse and output the patch's creation arguments.
+breakpoints~ graphical signal breakpoint envelope generator based on [ggee/envgen] by Guenter Geiger
+breakpoints graphical breakpoint envelope generator based on [ggee/envgen] by Guenter Geiger
+common~ "many to many" nonlocal signal connections
+crossfade~ crossfades 2 multi-channel sources
+folderpanel query for a folder
+from_ascii_code convert ASCII codes into PD messages
+gemwin+ a more user friendly Gem window manager with mouse pointer information
+getdollarzero get the $0 of a patch
+imagebang GUI bang with an image based on [ggee/image] from Guenter Geiger and [moonlib/image] from Antoine Rousseau
+list_accum accumulate anything into a list and output the list on a bang
+list_unfold output the individual elements of a list and their indices , either immediately or on bangs
+listUnfold output the individual elements of a list and their indices , either immediately or on bangs
+menubutton a button with a popup menu based on [ggee/button] from Guenter Geiger and [bbogart/popup] from Ben Bogart
+onlyone make sure it is the first or only [onlyone] to use that name.
+open_help search for an external's or an abstraction's help file and tries to open it
+openHelp searches for an external's or an abstraction's help file and tries to open it
+OSCToParam forward all incomming OSC messages to matching params
+param state saving and message routing system
+path outputs or transform paths
+phasorshot~ a feature rich phasor~
+pix_film+ a more user friendly movie file player for Gem
+pmenu pops a menu based on [bbogart/popup] by Ben Bogart and [ggee/button] by Guenter Geiger
+sample_granule~ pitchshift or timestretch a sample with the granular method
+sample load a sound file (wav) as a sample
+sample_packel modify the properties of a sample
+sample_play~ play a sample
+sample_record~ record into samples
+sample_shifft~ pitchshift or timestretch a sample with the FFT method
+sample_unpack output a sample's information
+streamMinMax output the minimum and maximum float of a stream of numbers
+to_ascii_code convert PD messages into ASCII codes

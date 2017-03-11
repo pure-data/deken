@@ -1,0 +1,9 @@
+tcpclient bi-directional communication via TCP/IP (client-side)
+tcpreceive uni-directional communication via TCP/IP (server-side)
+tcpsend uni-directional communication via TCP/IP (client-side)
+tcpserver bi-directional communication via TCP/IP (server-side)
+udpclient bi-directional communication via UDP (client-side)
+udpreceive uni-directional communication via UDP (server-side)
+udpsend uni-directional communication via UDP (client-side)
+udpserver bi-directional communication via UDP (server-side)
+udpsndrcv bi-directional communication via UDP (client-side) - compat
