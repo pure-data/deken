@@ -14,13 +14,13 @@
 (import struct)
 (import copy)
 (try (import [ConfigParser [SafeConfigParser]])
- (catch [e ImportError] (import [configparser [SafeConfigParser]])))
+ (except [e ImportError] (import [configparser [SafeConfigParser]])))
 (try (import [StringIO [StringIO]])
- (catch [e ImportError] (import [io [StringIO]])))
+ (except [e ImportError] (import [io [StringIO]])))
 (import hashlib)
 (import [getpass [getpass]])
 (try (import [urlparse [urlparse]])
- (catch [e ImportError] (import [urllib.parse [urlparse]])))
+ (except [e ImportError] (import [urllib.parse [urlparse]])))
 (import requests)
 (import easywebdav)
 
@@ -28,7 +28,7 @@
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(def version (try (.rstrip (.read (open (os.path.join deken-home "VERSION"))) "\r\n") (catch [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
+(def version (try (.rstrip (.read (open (os.path.join deken-home "VERSION"))) "\r\n") (except [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
 (def externals-host "puredata.info")
 
 (def elf-arch-types {
@@ -85,13 +85,13 @@
 (defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
 ;; get a value at an index or a default
-(defn try-get [elements index &optional default] (try (get elements index) (catch [e IndexError] default)))
+(defn try-get [elements index &optional default] (try (get elements index) (except [e IndexError] default)))
 
 ; read in the config file if present
 (def config
   (let [
     [config-file (SafeConfigParser)]
-    [file-buffer (StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (catch [e Exception] ""))))]]
+    [file-buffer (StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (except [e Exception] ""))))]]
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
@@ -121,7 +121,7 @@
 
 ; get architecture strings from a windows DLL
 ; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn get-windows-arch [filename] (try (do-get-windows-arch filename) (catch [e Exception] [])))
+(defn get-windows-arch [filename] (try (do-get-windows-arch filename) (except [e Exception] [])))
 (defn do-get-windows-arch [filename]
   (let [[f (open filename "rb")]
         [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
@@ -147,7 +147,7 @@
       ;; TODO: check section .ARM.attributes for v number
       ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
      [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]])
-   (catch [e exceptions.ELFError] [])))
+   (except [e exceptions.ELFError] [])))
 
 ; get architecture from a Darwin Mach-O file (OSX)
 (defn get-mach-arch [filename]
@@ -156,7 +156,7 @@
   (try
    (let [[macho (MachO filename)]]
       (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers]))
-   (catch [e ValueError] [])))
+   (except [e ValueError] [])))
 
 ; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
 (defn parse-arm-elf-arch [arm-elf]
@@ -211,14 +211,14 @@
               [configfile (os.path.expanduser (os.path.join configdir "gpg.conf"))]]
           (try
            (get (list-comp (get (.split (.strip x)) 1) [x (.readlines ( open configfile))] (.startswith (.lstrip x) (.strip id) )) -1)
-           (catch [e [IOError IndexError]] None))))
+           (except [e [IOError IndexError]] None))))
 
       ;; get the GPG key for signing
       (defn gpg-get-key [gpg]
         (let [[keyid (get-config-value "key_id" (gpg-get-config gpg "default-key"))]]
           (try
            (car (list-comp k [k (gpg.list_keys true)] (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])))
-           (catch [e IndexError] None))))
+           (except [e IndexError] None))))
 
       ;; generate a GPG signature for a particular file
       (defn do-gpg-sign-file [filename signfile]
@@ -230,8 +230,8 @@
                                                 (if use-agent {"use_agent" true})))
                              "decode_errors" "replace")]
               [sec-key (gpg-get-key gpg)]
-              [keyid (try (get sec-key "keyid") (catch [e KeyError] None) (catch [e TypeError] None))]
-              [uid (try (get (get sec-key "uids") 0) (catch [e KeyError] None) (catch [e TypeError] None))]
+              [keyid (try (get sec-key "keyid") (except [e KeyError] None) (except [e TypeError] None))]
+              [uid (try (get (get sec-key "uids") 0) (except [e KeyError] None) (except [e TypeError] None))]
               [passphrase (if (and (not use-agent) keyid)
                             (do
                              (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
@@ -245,7 +245,7 @@
            (let [[sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig))]
                  [signfile (+ filename ".asc")]]
              (if (hasattr sig "stderr")
-               (print (try (str sig.stderr) (catch [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+               (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
              (if (not sig)
                (do
                 (print "WARNING: Could not GPG sign the package.")
@@ -253,7 +253,7 @@
                (do
                 (.write (open signfile "w") (str sig))
                 signfile)))
-           (catch [e OSError] (print (.join "\n"
+           (except [e OSError] (print (.join "\n"
                                             ["WARNING: GPG signing failed:"
                                              str(e)
                                              "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"]))))))
@@ -281,7 +281,7 @@
 (defn zip-dir [directory-to-zip archive-file]
   (let [[zip-file (+ archive-file ".zip")]
         [zipf (try (zipfile.ZipFile zip-file "w" :compression zipfile.ZIP_DEFLATED)
-                   (catch [e RuntimeError] (zipfile.ZipFile zip-file "w")))]
+                   (except [e RuntimeError] (zipfile.ZipFile zip-file "w")))]
         [root-basename (os.path.basename directory-to-zip)]
         [root-path (os.path.join directory-to-zip "..")]]
     (for [[root dirs files] (os.walk directory-to-zip)]
@@ -335,7 +335,7 @@
           (dav.mkdirs path)
           ; upload the package file
           (dav.upload filepath remotepath))
-        (catch [e easywebdav.client.OperationFailed]
+        (except [e easywebdav.client.OperationFailed]
           (sys.exit (+
                      (% "Couldn't upload to %s!\n" url)
                      (% "Are you sure you have the correct username and password set for '%s'?\n" host)
@@ -494,4 +494,4 @@
 (if (= __name__ "__main__")
   (try
    (main)
-   (catch [e KeyboardInterrupt] (print "\n[interrupted by user]"))))
+   (except [e KeyboardInterrupt] (print "\n[interrupted by user]"))))
