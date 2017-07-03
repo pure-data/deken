@@ -61,14 +61,6 @@
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
 
-; get the externals' homedir install location for this platform - from s_path.c
-(def externals-folder
-  (let [[system-name (platform.system)]]
-    (cond
-      [(in system-name ["Linux" "FreeBSD"]) (os.path.expandvars (os.path.join "$HOME" "pd-externals"))]
-      [(= system-name "Darwin") (os.path.expandvars (os.path.join "$HOME" "Library" "Pd"))]
-      [(= system-name "Windows") (os.path.expandvars (os.path.join "%AppData%" "Pd"))])))
-
 ; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
