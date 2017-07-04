@@ -32,7 +32,7 @@
 (def externals-host "puredata.info")
 
 (def elf-arch-types {
-  "EM_NONE" nil
+  "EM_NONE" None
   "EM_386" "i386"
   "EM_68K" "m68k"
   "EM_IA_64" "x86_64"
@@ -60,6 +60,9 @@
 ;; algorithm to use to hash files
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
+
+;; nil? has gone from hy-0.12
+(defn nil? [x] (= x None))
 
 ;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
@@ -118,7 +121,7 @@
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
       [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
-      [true []])
+      [True []])
     [f (os.listdir folder)]) []))
 
 ; get architecture strings from a windows DLL
