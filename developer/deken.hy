@@ -82,8 +82,9 @@
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
 
-;; nil? has gone from hy-0.12
-(defn nil? [x] (= x None))
+;; nil? has been removed from hy-0.12
+(try (nil? None) (except [e NameError] (defn nil? [x] (= x None))))
+
 ;; in hy-0.12 'slice' has been replaced with 'cut'
 ;; but we cannot replace 'cut' in hy>=0.12, because it is a built-in...
 (defn cut-slice [x y z] (cut x y z))
