@@ -72,12 +72,22 @@
 
 ;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (do (setattr obj attr value) obj))
+;; get multiple attributes as list
+(defn get-attrs [obj attributes &optional default] (list-comp (getattr obj _default) [_ attributes]))
 
 ;; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
-;; get a value at an index or a default
-(defn try-get [elements index &optional default] (try (get elements index) (except [e IndexError] default)))
+;; get multiple values from a dict (give keys as list, get values as list)
+(defn get-values [coll keys] (list-comp (get coll _) [_ keys]))
+
+;; get a value at an index/key or a default
+(defn try-get [elements index &optional default]
+  (try (get elements index)
+       (except [e TypeError] default)
+       (except [e KeyError] default)
+       (except [e IndexError] default)))
+
 ;; read in the config file if present
 
 (def config
