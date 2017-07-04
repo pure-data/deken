@@ -74,7 +74,7 @@
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
 
 ;; apply attributes to objects in a functional way
-(defn set-attr [obj attr value] (do (setattr obj attr value) obj))
+(defn set-attr [obj attr value] (setattr obj attr value) obj)
 ;; get multiple attributes as list
 (defn get-attrs [obj attributes &optional default] (list-comp (getattr obj _default) [_ attributes]))
 
@@ -375,11 +375,10 @@
 
 ;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
-  (do
    (print "Packaging" zipfile)
    (hash-sum-file zipfile)
    (gpg-sign-file zipfile)
-   zipfile))
+   zipfile)
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
@@ -400,16 +399,16 @@
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
-  (do (print (% "Checking puredata.info for Source package for '%s'" pkg))
-      (in pkg
-          ;; list of package/version matching 'pkg' that have 'Source' archictecture
-          (list-comp
-           (has-sources? p)
-           [p
-            (list-comp
-             (try-get (.split (try-get (.split x "\t") 1) "/") -1)  ; filename part of the download URL
-             [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
-             (= username (try-get (.split x "\t") 2)))]))))
+  (print (% "Checking puredata.info for Source package for '%s'" pkg))
+  (in pkg
+      ;; list of package/version matching 'pkg' that have 'Source' archictecture
+      (list-comp
+       (has-sources? p)
+       [p
+        (list-comp
+         (try-get (.split (try-get (.split x "\t") 1) "/") -1)  ; filename part of the download URL
+         [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
+         (= username (try-get (.split x "\t") 2)))])))
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources &optional puredata-info-user]
