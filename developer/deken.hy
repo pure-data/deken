@@ -1,5 +1,5 @@
 #!/usr/bin/env hy
-; deken upload --version 0.1 ./freeverb~/
+;; deken upload --version 0.1 ./freeverb~/
 
 (import sys)
 (import os)
@@ -57,29 +57,29 @@
   "0x0200" ["x86_64" 64]
   "0x8664" ["amd64" 64]})
 
-; algorithm to use to hash files
+;; algorithm to use to hash files
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
 
-; convert a string into bool, based on the string value
+;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
 ;; join non-empty elements
 (defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
 
-; concatenate two dictionaries - hylang's assoc is broken
+;; concatenate two dictionaries - hylang's assoc is broken
 (defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
 
-; apply attributes to objects in a functional way
+;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (do (setattr obj attr value) obj))
 
-; replace multiple words (given as pairs in <repls>) in a string <s>
+;; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
 ;; get a value at an index or a default
 (defn try-get [elements index &optional default] (try (get elements index) (except [e IndexError] default)))
+;; read in the config file if present
 
-; read in the config file if present
 (def config
   (let [
     [config-file (SafeConfigParser)]
@@ -87,7 +87,7 @@
       (config-file.readfp file-buffer)
       (dict (config-file.items "default"))))
 
-; takes the externals architectures and turns them into a string
+;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
   (let [[archs (get-externals-architectures folder)]
         [sep-1 ")("]
@@ -96,11 +96,11 @@
       (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")")
       "")))
 
-; check if a particular file has an extension in a set
+;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
   (len (list-comp e [e extensions] (filename.endswith e))))
 
-; examine a folder for externals and return the architectures of those found
+;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
   (sum (list-comp (cond
       [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
@@ -141,7 +141,7 @@
      [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]])
    (except [e exceptions.ELFError] [])))
 
-; get architecture from a Darwin Mach-O file (OSX)
+;; get architecture from a Darwin Mach-O file (OSX)
 (defn get-mach-arch [filename]
   (import [macholib.MachO [MachO]])
   (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
@@ -150,7 +150,7 @@
       (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers]))
    (except [e ValueError] [])))
 
-; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
+;; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
 (defn parse-arm-elf-arch [arm-elf]
   (let [[arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes")))]
         [data (and arm-section (.startswith (arm-section.data) "A") (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi")))]]
@@ -195,7 +195,7 @@
 
 ;; handling GPG signatures
 (try (import gnupg)
-  ;; read a value from the gpg config
+     ;; read a value from the gpg config
      (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
      (else
       (defn gpg-get-config [gpg id]
@@ -347,7 +347,7 @@
                                              username)))
       (for [pkg pkgs] (upload-package pkg destination username password))))
 
-; compute the zipfile name for a particular external on this platform
+;; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
   (+ (.rstrip folder "/\\")
      (cond [(nil? version) (sys.exit
@@ -360,7 +360,7 @@
            [True ""])
      (get-architecture-strings folder) "-externals"))
 
-; create additional files besides archive: hash-file and gpg-signature
+;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
   (do
    (print "Packaging" zipfile)
@@ -368,13 +368,13 @@
    (gpg-sign-file zipfile)
    zipfile))
 
-; parses a filename into a (pkgname version archs extension) tuple
-; missing values are nil
+;; parses a filename into a (pkgname version archs extension) tuple
+;; missing values are None
 (defn parse-filename [filename]
   (list-comp (get
-                ; parse filename with a regex
+                ;; parse filename with a regex
                 (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
-                ; extract only the fields of interested
+                ;; extract only the fields of interested
              [x [2 4 5 7]]))
 (defn filename-to-namever [filename]
   (let [[[pkg ver arch ext] (parse-filename filename)]] (join-nonempty "/" [pkg ver])))
@@ -394,7 +394,7 @@
            (has-sources? p)
            [p
             (list-comp
-             (try-get (.split (try-get (.split x "\t") 1) "/") -1) ;; filename part of the download URL
+             (try-get (.split (try-get (.split x "\t") 1) "/") -1)  ; filename part of the download URL
              [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
              (= username (try-get (.split x "\t") 2)))]))))
 
@@ -453,7 +453,7 @@
   :upgrade (fn [args]
     (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
 
-; kick things off by using argparse to check out the arguments supplied by the user
+;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
   (let [
     [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
