@@ -302,23 +302,23 @@
      (.close tarf)
      tar-file)))
 
-; do we use zip or tar on this archive?
+;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
   (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
 
-; automatically pick the correct archiver - windows or "no arch" = zip
+;; automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
   (let [[ext (archive-extension rootname)]]
     ((if (= ext ".zip") zip-dir tar-dir) directory-to-archive rootname)))
 
-; naive check, whether we have an archive: compare against known suffixes
+;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
   (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
-; upload a zipped up package to puredata.info
+;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
+  ;; get username and password from the environment, config, or user input
   (if filepath
-   (let [
     ;; get username and password from the environment, config, or user input
     [filename (os.path.basename filepath)]
     [[pkg ver arch ext] (parse-filename filename)]
