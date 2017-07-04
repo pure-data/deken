@@ -287,7 +287,9 @@
           (if (not sig)
             (print "WARNING: Could not GPG sign the package.")
             (do
-             (with [f (open signfile "w")] (.write f (str sig)))
+             (setv f (open signfile "w"))
+             (.write f (str sig))
+             (.close f)
              signfile)))
          (except [e OSError] (print (.join "\n"
                                            ["WARNING: GPG signing failed:"
@@ -318,18 +320,20 @@
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file]
   (setv zip-filename (+ archive-file ".zip"))
-  (with [f (zip-file zip-filename)]
-        (for [[root dirs files] (os.walk directory-to-zip)]
-          (for [file files]
-            (setv file-path (os.path.join root file))
-              (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))
+  (setv f (zip-file zip-filename))
+  (for [[root dirs files] (os.walk directory-to-zip)]
+    (for [file files]
+      (setv file-path (os.path.join root file))
+      (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))
+  (.close f)
   zip-filename)
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
   (setv tar-file (+ archive-file ".tar.gz"))
-  (with [f (tarfile.open tar-file "w:gz")]
-        (.add f directory-to-tar))
+  (setv f (tarfile.open tar-file "w:gz"))
+  (.add f directory-to-tar)
+  (.close f)
   tar-file)
 
 ;; do we use zip or tar on this archive?
