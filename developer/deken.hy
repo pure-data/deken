@@ -92,22 +92,17 @@
        (except [e IndexError] default)))
 
 ;; read in the config file if present
+(defn read-config [configstring &optional [config-file (SafeConfigParser)]]
+  (config-file.readfp (StringIO configstring))
+  (dict (config-file.items "default")))
 
-(def config
-  (let [
-    [config-file (SafeConfigParser)]
-    [file-buffer (StringIO (+ "[default]\n" (try (.read (open config-file-path "r")) (except [e Exception] ""))))]]
-      (config-file.readfp file-buffer)
-      (dict (config-file.items "default"))))
+(def config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
-  (let [[archs (get-externals-architectures folder)]
-        [sep-1 ")("]
-        [sep-2 "-"]]
-    (if archs
-      (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")")
-      "")))
+   (defn _get_archs [archs sep-1 sep-2]
+     (if archs (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")") ""))
+   (_get_archs (get-externals-architectures folder) ")(" "-"))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
@@ -124,34 +119,33 @@
       [True []])
     [f (os.listdir folder)]) []))
 
-; get architecture strings from a windows DLL
-; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn get-windows-arch [filename] (try (do-get-windows-arch filename) (except [e Exception] [])))
-(defn do-get-windows-arch [filename]
-  (let [[f (open filename "rb")]
-        [[magic blah offset] (struct.unpack (str "<2s58sL") (f.read 64))]]
-    ;(print magic offset)
-    (if (= magic "MZ")
-      ; has correct magic bytes
-      (do
-        (f.seek offset)
-        (let [[[sig skip machine] (struct.unpack (str "<2s2sH") (f.read 6))]]
-          ;(print sig (% "0x%04x" machine))
-          (if (= sig "PE")
-            ; has correct signature
-            [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
-            (raise (Exception "Not a PE Executable.")))))
-      (raise (Exception "Not a valid Windows dll.")))))
+;; get architecture strings from a windows DLL
+;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
+(defn get-windows-arch [filename] (try (do-get-windows-arch (open filename "rb")) (except [e Exception] [])))
+(defn do-get-windows-arch [f]
+  (setv [magic _ offset] (struct.unpack (str "<2s58sL") (f.read 64)))
+  (if (= magic "MZ")  ; has correct magic bytes
+    (do
+     (f.seek offset)
+     (setv [sig _ machine] (struct.unpack (str "<2s2sH") (f.read 6)))
+     (if (= sig "PE")  ; has correct signature
+       [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
+       (raise (Exception "Not a PE Executable."))))
+    (raise (Exception "Not a valid Windows dll."))))
 
-; get architecture from an ELF (e.g. Linux)
+;; get architecture from an ELF (e.g. Linux)
 (defn get-elf-arch [filename oshint]
   (import [elftools.elf.elffile [ELFFile]])
   (import [elftools.common [exceptions]])
   (try
-   (let [[elf (ELFFile (open filename :mode "rb"))]]
-      ;; TODO: check section .ARM.attributes for v number
-      ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-     [[oshint (+ (elf-arch-types.get (elf.header.get "e_machine") nil) (or (parse-arm-elf-arch elf) "")) (int (slice (.get (elf.header.get "e_ident") "EI_CLASS") -2))]])
+   (do
+    (setv elf (ELFFile (open filename :mode "rb")))
+    ;; TODO: check section .ARM.attributes for v number
+    ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
+    [[oshint
+      (+ (elf-arch-types.get (elf.header.get "e_machine") None)
+         (or (parse-arm-elf-arch elf) ""))
+      (int (get (.get (elf.header.get "e_ident") "EI_CLASS") (slice -2 None)))]])
    (except [e exceptions.ELFError] [])))
 
 ;; get architecture from a Darwin Mach-O file (OSX)
@@ -159,31 +153,32 @@
   (import [macholib.MachO [MachO]])
   (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
   (try
-   (let [[macho (MachO filename)]]
-      (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h macho.headers]))
+   (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h (. (MachO filename) headers)])
    (except [e ValueError] [])))
+
+
 
 ;; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
 (defn parse-arm-elf-arch [arm-elf]
-  (let [[arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes")))]
-        [data (and arm-section (.startswith (arm-section.data) "A") (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi")))]]
-        (if data (do
-            ; (print (struct.unpack (str "<s") (slice data 7)))
-            (let [[[name bins] (.split (slice data 7) "\x00")]
-                  [arch (get arm-cpu-arch (ord (slice bins 1 2)))]]
-              arch)))))
+  (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
+  ;; we only support format 'A'
+  ;; the arm cpu can be found in the 'aeabi' section
+  (setv data (and arm-section (.startswith (arm-section.data) "A") (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
+  (if data
+    (get arm-cpu-arch (ord (get (get (.split (get data (slice 7 None)) "\x00" 1) 1) 1)))))
 
-; try to obtain a value from environment, then config file, then prompt user
+;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
-   (first (filter (fn [x] (not (nil? x))) [
-     ; try to get the value from an environment variable
-     (os.environ.get (+ "DEKEN_" (name.upper)))
-     ; try to get the value from the config file
-     (config.get name)
-     ; finally, try the default
-     (first default)])))
+  (first (filter (fn [x] (not (nil? x)))
+                 [
+                  ;; try to get the value from an environment variable
+                  (os.environ.get (+ "DEKEN_" (name.upper)))
+                  ;; try to get the value from the config file
+                  (config.get name)
+                  ;; finally, try the default
+                  (first default)])))
 
-; prompt for a particular config value for externals host upload
+;; prompt for a particular config value for externals host upload
 (defn prompt-for-value [name]
   (raw_input (% (+
     "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
@@ -191,20 +186,18 @@
     "Please enter %s for http://%s/: ")
       (tuple [(name.upper) config-file-path name name externals-host]))))
 
-; calculate the sha256 hash of a file
-(defn hash-sum-file [filename]
-  (let [[hashfn (hasher)]
-        [blocksize 65536]
-        [f (open filename :mode "rb")]
-        [read-chunk (fn [] (f.read blocksize))]]
-    (loop [[buf (read-chunk)]]
-          (if (len buf) (do
-            (hashfn.update buf)
-            (recur (read-chunk)))))
-    (let [[digest (hashfn.hexdigest)]
-          [hashfilename (% "%s.%s" (tuple [filename hash-extension]))]]
-      (.write (open hashfilename "w") digest)
-      hashfilename)))
+;; calculate the sha256 hash of a file
+(defn hash-sum-file [filename &optional [blocksize 65535]]
+  (setv hashfilename (% "%s.%s" (tuple [filename hash-extension])))
+  (setv hashfn (hasher))
+  (setv f (open filename :mode "rb"))
+  (setv read-chunk (fn [] (f.read blocksize)))
+  (loop [[buf (read-chunk)]]
+        (if (len buf) (do
+                       (hashfn.update buf)
+                       (recur (read-chunk)))))
+  (.write (open hashfilename "w") (hashfn.hexdigest))
+  hashfilename)
 
 ;; handling GPG signatures
 (try (import gnupg)
@@ -212,98 +205,108 @@
      (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
      (else
       (defn gpg-get-config [gpg id]
-        (let [[configdir (cond [gpg.gnupghome gpg.gnupghome] [True (os.path.join "~" ".gnupg")])]
-              [configfile (os.path.expanduser (os.path.join configdir "gpg.conf"))]]
           (try
-           (get (list-comp (get (.split (.strip x)) 1) [x (.readlines ( open configfile))] (.startswith (.lstrip x) (.strip id) )) -1)
-           (except [e [IOError IndexError]] None))))
+           (get
+            (list-comp
+             (get (.split (.strip x)) 1)
+             [x
+              (.readlines
+               ( open
+                 (os.path.expanduser
+                  (os.path.join
+                   (or gpg.gnupghome (os.path.join "~" ".gnupg"))
+                   "gpg.conf"))
+                 ))]
+             (.startswith (.lstrip x) (.strip id) )) -1)
+           (except [e [IOError IndexError]] None)))
 
       ;; get the GPG key for signing
       (defn gpg-get-key [gpg]
-        (let [[keyid (get-config-value "key_id" (gpg-get-config gpg "default-key"))]]
-          (try
-           (car (list-comp k [k (gpg.list_keys true)] (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])))
-           (except [e IndexError] None))))
+        (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
+        (try
+         (car (list-comp k
+                         [k (gpg.list_keys True)]
+                         (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )]
+                               [True True])))
+         (except [e IndexError] None)))
 
       ;; generate a GPG signature for a particular file
       (defn do-gpg-sign-file [filename signfile]
         (print (% "Attempting to GPG sign '%s'" filename))
-        (let [[gnupghome (get-config-value "gpg_home")]
-              [use-agent (str-to-bool (get-config-value "gpg_agent"))]
-              [gpg (set-attr (apply gnupg.GPG []
-                                    (dict-merge (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
-                                                (if use-agent {"use_agent" true})))
-                             "decode_errors" "replace")]
-              [sec-key (gpg-get-key gpg)]
-              [keyid (try (get sec-key "keyid") (except [e KeyError] None) (except [e TypeError] None))]
-              [uid (try (get (get sec-key "uids") 0) (except [e KeyError] None) (except [e TypeError] None))]
-              [passphrase (if (and (not use-agent) keyid)
-                            (do
-                             (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s" (tuple [uid keyid filename])))
-                             (getpass "Enter GPG passphrase: " )))]
-              [signconfig (dict-merge (dict-merge {"detach" true}
-                                                  (if keyid {"keyid" keyid}))
-                                      (if passphrase {"passphrase" passphrase}))]]
-          (if (and (not use-agent) passphrase)
-            (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
-          (try
-           (let [[sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig))]
-                 [signfile (+ filename ".asc")]]
-             (if (hasattr sig "stderr")
-               (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
-             (if (not sig)
-               (do
-                (print "WARNING: Could not GPG sign the package.")
-                None)
-               (do
-                (.write (open signfile "w") (str sig))
-                signfile)))
-           (except [e OSError] (print (.join "\n"
-                                            ["WARNING: GPG signing failed:"
-                                             str(e)
-                                             "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"]))))))
+        (setv gnupghome (get-config-value "gpg_home"))
+        (setv use-agent (str-to-bool (get-config-value "gpg_agent")))
+        (setv gpg (set-attr
+                   (apply gnupg.GPG []
+                          (dict-merge
+                           (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
+                           (if use-agent {"use_agent" True})))
+                   "decode_errors" "replace"))
+        (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
+        (setv uid (try-get uid 0 None))
+        (setv passphrase
+              (if (and (not use-agent) keyid)
+                (do
+                 (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
+                           (tuple [uid keyid filename])))
+                 (getpass "Enter GPG passphrase: " ))))
+        (setv signconfig (dict-merge (dict-merge {"detach" True}
+                                                 (if keyid {"keyid" keyid}))
+                                     (if passphrase {"passphrase" passphrase})))
+
+        (if (and (not use-agent) passphrase)
+          (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
+        (try
+         (do
+          (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
+          (if (hasattr sig "stderr")
+            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+          (if (not sig)
+            (print "WARNING: Could not GPG sign the package.")
+            (do
+             (with [f (open signfile "w")] (.write f (str sig)))
+             signfile)))
+         (except [e OSError] (print (.join "\n"
+                                           ["WARNING: GPG signing failed:"
+                                            str(e)
+                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"])))))
 
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
-        (let [[signfile (+ filename ".asc")]]
-          (if (os.path.exists signfile)
-            (do
-             (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
-             signfile)
-            (do-gpg-sign-file filename signfile))))))
+        (setv signfile (+ filename ".asc"))
+        (if (os.path.exists signfile)
+          (do
+           (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
+           signfile)
+          (do-gpg-sign-file filename signfile)))))
 
-; execute a command inside a directory
+;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
-  (let [
-    [last-dir (os.getcwd)]
-    [new-dir (os.chdir destination)]
-    [result (apply f args)]]
-      (os.chdir last-dir)
-      result))
+  (setv last-dir (os.getcwd))
+  (os.chdir destination)
+  (setv result (apply f args))
+  (os.chdir last-dir)
+  result)
 
-; zip up a single directory
-; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
+;; zip up a single directory
+;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
+(defn zip-file* [filename]
+  (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
+       (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file]
-  (let [[zip-file (+ archive-file ".zip")]
-        [zipf (try (zipfile.ZipFile zip-file "w" :compression zipfile.ZIP_DEFLATED)
-                   (except [e RuntimeError] (zipfile.ZipFile zip-file "w")))]
-        [root-basename (os.path.basename directory-to-zip)]
-        [root-path (os.path.join directory-to-zip "..")]]
-    (for [[root dirs files] (os.walk directory-to-zip)]
-      (for [file files]
-        (let [[file-path (os.path.join root file)]]
-          (zipf.write file-path (os.path.relpath file-path root-path)))))
-    (zipf.close)
-    zip-file))
+  (setv zip-file (+ archive-file ".zip"))
+  (with [f zip-file* zip-file]
+        (for [[root dirs files] (os.walk directory-to-zip)]
+          (for [file files]
+            (setv file-path (os.path.join root file))
+              (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))
+  zip-file)
 
-; tar up the directory
+;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
-  (let [[tar-file (+ archive-file ".tar.gz")]
-        [tarf (tarfile.open tar-file "w:gz")]]
-    (do
-     (.add tarf directory-to-tar)
-     (.close tarf)
-     tar-file)))
+  (setv tar-file (+ archive-file ".tar.gz"))
+  (with [f (tarfile.open tar-file "w:gz")]
+        (.add f directory-to-tar))
+  tar-file)
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
@@ -311,8 +314,7 @@
 
 ;; automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
-  (let [[ext (archive-extension rootname)]]
-    ((if (= ext ".zip") zip-dir tar-dir) directory-to-archive rootname)))
+  (if (= (archive-extension rootname) ".zip") zip-dir tar-dir) directory-to-archive rootname)
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
@@ -322,43 +324,45 @@
 (defn upload-file [filepath destination username password]
   ;; get username and password from the environment, config, or user input
   (if filepath
-    ;; get username and password from the environment, config, or user input
-    [filename (os.path.basename filepath)]
-    [[pkg ver arch ext] (parse-filename filename)]
-    [url (urlparse destination)]
-    [proto (or url.scheme "https")]
-    [host (or url.netloc externals-host)]
-    [path (str (replace-words (or (.rstrip url.path "/") "/Members/%u/software/%p/%v") (,
-                         (, "%u" username) (, "%p" pkg) (, "%v" (or ver "")))))]
-    [remotepath (+ path "/" filename)]
-    [url (+ proto "://" host path)]
-    [dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})]]
-      (print (+ "Uploading " filename " to " url))
-      (try
-        (do
-          ; make sure all directories exist
-          (dav.mkdirs path)
-          ; upload the package file
-          (dav.upload filepath remotepath))
-        (except [e easywebdav.client.OperationFailed]
-          (sys.exit (+
-                     (% "Couldn't upload to %s!\n" url)
-                     (% "Are you sure you have the correct username and password set for '%s'?\n" host)
-                     (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
+    (setv filename (os.path.basename filepath))
+    (setv [pkg ver _ _] (parse-filename filename))
+    (setv url (urlparse destination))
+    (setv proto (or url.scheme "https"))
+    (setv host (or url.netloc externals-host))
+    (setv [proto host path] (get-attrs (urlparse destination)))
+    (setv path
+          (str
+           (replace-words
+            (or (.rstrip url.path "/") "/Members/%u/software/%p/%v")
+            (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
+    (setv url (+ proto "://" host path))
+    (setv dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto}))
+    (print (+ "Uploading " filename " to " url))
+    (try
+     (do
+      ;; make sure all directories exist
+      (dav.mkdirs path)
+      ;; upload the package file
+      (dav.upload filepath (+ path "/" filename)))
+     (except [e easywebdav.client.OperationFailed]
+       (sys.exit (+
+                  (% "Couldn't upload to %s!\n" url)
+                  (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                  (% "Please ensure the folder '%s' exists on the server and is writeable." path)))))))
+
 ;; upload a list of archives (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
 (defn upload-package [pkg destination username password]
-  (do
-   (print "Uploading package" pkg)
-   (upload-file (hash-sum-file pkg) destination username password)
-   (upload-file pkg destination username password)
-   (upload-file (gpg-sign-file pkg) destination username password)))
+  (print "Uploading package" pkg)
+  (upload-file (hash-sum-file pkg) destination username password)
+  (upload-file pkg destination username password)
+  (upload-file (gpg-sign-file pkg) destination username password))
 (defn upload-packages [pkgs destination username password skip-source]
-  (do (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
-                                           (set (list-comp (has-sources? pkg) [pkg pkgs]))
-                                           (if (= "puredata.info"
-                                                  (.lower (or (getattr (urlparse destination) "netloc") externals-host)))
-                                             username)))
-      (for [pkg pkgs] (upload-package pkg destination username password))))
+  (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
+                                       (set (list-comp (has-sources? pkg) [pkg pkgs]))
+                                       (if (= "puredata.info"
+                                              (.lower (or (getattr (urlparse destination) "netloc") externals-host)))
+                                         username)))
+  (for [pkg pkgs] (upload-package pkg destination username password)))
 
 ;; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
@@ -389,13 +393,13 @@
                 ;; extract only the fields of interested
              [x [2 4 5 7]]))
 (defn filename-to-namever [filename]
-  (let [[[pkg ver arch ext] (parse-filename filename)]] (join-nonempty "/" [pkg ver])))
+  (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
 (defn is-source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
-(defn has-sources? [filename] (let [[[pkg ver arch ext] (parse-filename filename)]]
-                                (if (is-source-arch? arch) (filename-to-namever filename))))
+(defn has-sources? [filename]
+  (if (is-source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
@@ -433,67 +437,68 @@
               (get-config-value "password")))
       (getpass (% "Please enter password for uploading as '%s': " username))))
 
-; the executable portion of the different sub-commands that make up the deken tool
-(def commands {
-  ; zip up a set of built externals
-  :package (fn [args]
-    ;; are they asking to package a directory?
-    (list-comp
-      (if (os.path.isdir name)
-      ; if asking for a directory just package it up
-        (archive-extra (archive-dir name (make-archive-basename (.rstrip name "/\\") args.version)))
-        (sys.exit (% "Not a directory '%s'!" name)))
-      (name args.source)))
-  ; upload packaged external to pure-data.info
-  :upload (fn [args]
-            (let [[username (or (get-config-value "username") (prompt-for-value "username"))]
-                  [password (get-upload-password username args.ask-password)]]
-              (do
-               (upload-packages (list-comp (cond [(os.path.isfile x)
-                                                  (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
-                                                 [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
-                                                 [True (sys.exit (% "Unable to process '%s'!" x))])
-                                           (x args.source))
-                                (or (getattr args "destination") (get-config-value "destination" ""))
-                                username password args.no-source-error))
-              ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
-              (if password
-                (try (do
-                      (import keyring)
-                      (keyring.set_password "deken" username password))))))
-  ; self-update deken
+;; the executable portion of the different sub-commands that make up the deken tool
+(def commands
+  {
+   ;; zip up a set of built externals
+   :package (fn [args]
+              ;; are they asking to package a directory?
+              (list-comp
+               (if (os.path.isdir name)
+                 ;; if asking for a directory just package it up
+                 (archive-extra (archive-dir name (make-archive-basename (.rstrip name "/\\") args.version)))
+                 (sys.exit (% "Not a directory '%s'!" name)))
+               (name args.source)))
+   ;; upload packaged external to pure-data.info
+   :upload (fn [args]
+             (setv username (or (get-config-value "username") (prompt-for-value "username")))
+             (setv password (get-upload-password username args.ask-password))
+             (upload-packages (list-comp (cond [(os.path.isfile x)
+                                                (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
+                                               [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
+                                               [True (sys.exit (% "Unable to process '%s'!" x))])
+                                         (x args.source))
+                              (or (getattr args "destination") (get-config-value "destination" ""))
+                              username password args.no-source-error)
+             ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
+             (if password
+               (try (do
+                     (import keyring)
+                     (keyring.set_password "deken" username password)))))
+  ;; self-update deken
   :upgrade (fn [args]
     (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
-  (let [
-    [arg-parser (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."})]
-    [arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"})]
-    [arg-package (apply arg-subparsers.add_parser ["package"])]
-    [arg-upload (apply arg-subparsers.add_parser ["upload"])]
-    [arg-upgrade (apply arg-subparsers.add_parser ["upgrade"])]]
-      (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
-      (apply arg-package.add_argument ["source"] {"nargs" "+"
-                                                  "metavar" "SOURCE"
-                                                  "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-      (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name."
-                                                                 "default" nil
-                                                                 "required" false})
-      (apply arg-upload.add_argument ["source"] {"nargs" "+"
-                                                 "metavar" "PACKAGE"
-                                                 "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
-      (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name. (in case a package is created)"
-                                                                "default" nil
-                                                                "required" false})
-      (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" false})
-      (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" false})
-      (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" false})
-      (let [
-        [arguments (.parse_args arg-parser)]
-        [command (.get commands (keyword arguments.command))]]
-        (print "Deken" version)
-        (if command (command arguments) (.print_help arg-parser)))))
+  (print "Deken" version)
+
+  (setv arg-parser
+        (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."}))
+  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"}))
+  (setv arg-package (apply arg-subparsers.add_parser ["package"]))
+  (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
+  (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
+  (apply arg-package.add_argument ["source"]
+         {"nargs" "+"
+                  "metavar" "SOURCE"
+                  "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
+  (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name."
+                                                             "default" None
+                                                             "required" False})
+  (apply arg-upload.add_argument ["source"] {"nargs" "+"
+                                                     "metavar" "PACKAGE"
+                                                     "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
+  (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name. (in case a package is created)"
+                                                            "default" None
+                                                            "required" False})
+  (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" False})
+  (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" False})
+  (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" False})
+
+  (setv arguments (.parse_args arg-parser))
+  (setv command (.get commands (keyword arguments.command)))
+  (if command (command arguments) (.print_help arg-parser)))
 
 (if (= __name__ "__main__")
   (try
