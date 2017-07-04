@@ -162,8 +162,9 @@
 (defn parse-arm-elf-arch [arm-elf]
   (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
   ;; we only support format 'A'
+  (setv A (try (bytes "A") (except [e TypeError] (bytes "A" "ascii"))))
   ;; the arm cpu can be found in the 'aeabi' section
-  (setv data (and arm-section (.startswith (arm-section.data) "A") (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
+  (setv data (and arm-section (.startswith (arm-section.data) A) (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
   (if data
     (get arm-cpu-arch (ord (get (get (.split (get data (slice 7 None)) "\x00" 1) 1) 1)))))
 
@@ -187,16 +188,18 @@
       (tuple [(name.upper) config-file-path name name externals-host]))))
 
 ;; calculate the sha256 hash of a file
+(defn hash-file [filename &optional [blocksize 65535] [hashfn (hasher)]]
+  (setv f (open filename :mode "rb"))
+  (setv read-chunk (fn [] (.read f blocksize)))
+  (while True
+    (setv buf (read-chunk))
+    (if-not buf (break))
+    (hashfn.update buf))
+   (hashfn.hexdigest))
+
 (defn hash-sum-file [filename &optional [blocksize 65535]]
   (setv hashfilename (% "%s.%s" (tuple [filename hash-extension])))
-  (setv hashfn (hasher))
-  (setv f (open filename :mode "rb"))
-  (setv read-chunk (fn [] (f.read blocksize)))
-  (loop [[buf (read-chunk)]]
-        (if (len buf) (do
-                       (hashfn.update buf)
-                       (recur (read-chunk)))))
-  (.write (open hashfilename "w") (hashfn.hexdigest))
+  (.write (open hashfilename :mode "w") (hash-file filename blocksize))
   hashfilename)
 
 ;; handling GPG signatures
@@ -289,17 +292,17 @@
 
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
-(defn zip-file* [filename]
+(defn zip-file [filename]
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file]
-  (setv zip-file (+ archive-file ".zip"))
-  (with [f zip-file* zip-file]
+  (setv zip-filename (+ archive-file ".zip"))
+  (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
           (for [file files]
             (setv file-path (os.path.join root file))
               (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))
-  zip-file)
+  zip-filename)
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
@@ -314,7 +317,7 @@
 
 ;; automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
-  (if (= (archive-extension rootname) ".zip") zip-dir tar-dir) directory-to-archive rootname)
+  ((if (= (archive-extension rootname) ".zip") zip-dir tar-dir) directory-to-archive rootname))
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
