@@ -21,8 +21,6 @@
 (import [getpass [getpass]])
 (try (import [urlparse [urlparse]])
  (except [e ImportError] (import [urllib.parse [urlparse]])))
-(import requests)
-(import easywebdav)
 
 (require hy.contrib.loop)
 
@@ -356,6 +354,7 @@
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
   ;; get username and password from the environment, config, or user input
+  (import easywebdav)
   (if filepath
     (do
      (setv filename (os.path.basename filepath))
@@ -436,6 +435,7 @@
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
+  (import requests)
   (print (% "Checking puredata.info for Source package for '%s'" pkg))
   (in pkg
       ;; list of package/version matching 'pkg' that have 'Source' archictecture
