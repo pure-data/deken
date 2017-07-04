@@ -50,7 +50,28 @@
   "EM_BLAFKIN" "Analog Devices Blackfin"
   "RESERVED" "RESERVED"})
 
-(def arm-cpu-arch ["Pre-v4" "v4" "v4T" "v5T" "v5TE" "v5TEJ" "v6" "v6KZ" "v6T2" "v6K" "v7"])
+;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
+(def arm-cpu-arch
+  [
+   "Pre-v4"
+   "v4"
+   "v4T"
+   "v5T"
+   "v5TE"
+   "v5TEJ"
+   "v6"
+   "v6KZ"
+   "v6T2"
+   "v6K"
+   "v7"
+   "v6_M"
+   "v6S_M"
+   "v7E_M"
+   "v8"
+   "v8R"
+   "v8M_BASE"
+   "v8M_MAIN"
+   ])
 
 (def win-types {
   "0x014c" ["i386" 32]
