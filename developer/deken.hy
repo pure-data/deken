@@ -327,31 +327,31 @@
 (defn upload-file [filepath destination username password]
   ;; get username and password from the environment, config, or user input
   (if filepath
-    (setv filename (os.path.basename filepath))
-    (setv [pkg ver _ _] (parse-filename filename))
-    (setv url (urlparse destination))
-    (setv proto (or url.scheme "https"))
-    (setv host (or url.netloc externals-host))
-    (setv [proto host path] (get-attrs (urlparse destination)))
-    (setv path
-          (str
-           (replace-words
-            (or (.rstrip url.path "/") "/Members/%u/software/%p/%v")
-            (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
-    (setv url (+ proto "://" host path))
-    (setv dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto}))
-    (print (+ "Uploading " filename " to " url))
-    (try
-     (do
-      ;; make sure all directories exist
-      (dav.mkdirs path)
-      ;; upload the package file
-      (dav.upload filepath (+ path "/" filename)))
-     (except [e easywebdav.client.OperationFailed]
-       (sys.exit (+
-                  (% "Couldn't upload to %s!\n" url)
-                  (% "Are you sure you have the correct username and password set for '%s'?\n" host)
-                  (% "Please ensure the folder '%s' exists on the server and is writeable." path)))))))
+    (do
+     (setv filename (os.path.basename filepath))
+     (setv [pkg ver _ _] (parse-filename filename))
+     (setv url (urlparse destination))
+     (setv proto (or url.scheme "https"))
+     (setv host (or url.netloc externals-host))
+     (setv path
+           (str
+            (replace-words
+             (or (.rstrip url.path "/") "/Members/%u/software/%p/%v")
+             (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
+     (setv url (+ proto "://" host path))
+     (setv dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto}))
+     (print (+ "Uploading " filename " to " url))
+     (try
+      (do
+       ;; make sure all directories exist
+       (dav.mkdirs path)
+       ;; upload the package file
+       (dav.upload filepath (+ path "/" filename)))
+      (except [e easywebdav.client.OperationFailed]
+        (sys.exit (+
+                   (% "Couldn't upload to %s!\n" url)
+                   (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                   (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
 
 ;; upload a list of archives (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
 (defn upload-package [pkg destination username password]
