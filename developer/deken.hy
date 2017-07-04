@@ -84,6 +84,10 @@
 
 ;; nil? has gone from hy-0.12
 (defn nil? [x] (= x None))
+;; in hy-0.12 'slice' has been replaced with 'cut'
+;; but we cannot replace 'cut' in hy>=0.12, because it is a built-in...
+(defn cut-slice [x y z] (cut x y z))
+(try (cut []) (except [e NameError] (defn cut-slice [x y z] (slice x y z))))
 
 ;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
@@ -166,7 +170,7 @@
     [[oshint
       (+ (elf-arch-types.get (elf.header.get "e_machine") None)
          (or (parse-arm-elf-arch elf) ""))
-      (int (get (.get (elf.header.get "e_ident") "EI_CLASS") (slice -2 None)))]])
+      (int (cut-slice (.get (elf.header.get "e_ident") "EI_CLASS") -2 None))]])
    (except [e exceptions.ELFError] [])))
 
 ;; get architecture from a Darwin Mach-O file (OSX)
@@ -187,7 +191,7 @@
   ;; the arm cpu can be found in the 'aeabi' section
   (setv data (and arm-section (.startswith (arm-section.data) A) (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
   (if data
-    (get arm-cpu-arch (ord (get (get (.split (get data (slice 7 None)) "\x00" 1) 1) 1)))))
+    (get arm-cpu-arch (ord (get (get (.split (cut-slice data 7 None) "\x00" 1) 1) 1)))))
 
 ;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
