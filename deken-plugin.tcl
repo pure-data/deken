@@ -39,18 +39,18 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] > %2$s...skipping!} ] $::deken::version $version ]
+                ::pdwindow::debug [format [_ "\[deken\]: installed version \[%1\$s\] > %2\$s...skipping!" ] $::deken::version $version ]
                 ::pdwindow::debug "\n"
                 return 0
             }
             if { $x < $y } {
-                ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] < %2$s...overwriting!} ] $::deken::version $version ]
+                ::pdwindow::debug [format [_ "\[deken\]: installed version \[%1\$s] < %2\$s...overwriting!" ] $::deken::version $version ]
                 ::pdwindow::debug "\n"
                 set ::deken::version $version
                 return 1
             }
         }
-        ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] == %2$s...skipping!} ] $::deken::version $version ]
+        ::pdwindow::debug [format [_ "\[deken\]: installed version \[%1\$s\] == %2\$s...skipping!" ] $::deken::version $version ]
         ::pdwindow::debug "\n"
         return 0
     }
@@ -212,8 +212,10 @@ if { "Windows" eq "$::deken::platform(os)" } {
 # console message to let them know we're loaded
 ## but only if we are being called as a plugin (not as built-in)
 if { "" != "$::current_plugin_loadpath" } {
-    ::pdwindow::post [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.\n" ]  $::current_plugin_loadpath ]
-    ::pdwindow::post [format [_ "\[deken\] Platform detected: %s\n" ] $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit ]
+    ::pdwindow::post [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
+    ::pdwindow::post "\n"
+    ::pdwindow::post [format [_ "\[deken\] Platform detected: %s" ] $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit ]
+    ::pdwindow::post "\n"
 }
 
 # architectures that can be substituted for eachother
@@ -363,7 +365,8 @@ proc ::deken::initiate_search {mytoplevel} {
     if { [ catch {
         set results [::deken::search_for [$mytoplevel.searchbit.entry get]]
     } stdout ] } {
-        ::pdwindow::debug [format [_ "\[deken\]: online? %s\n" ] $stdout ]
+        ::pdwindow::debug [format [_ "\[deken\]: online? %s" ] $stdout ]
+        ::pdwindow::debug "\n"
         ::deken::status [_ "Unable to perform search. Are you online?" ]
     } else {
     # delete all text in the results
@@ -432,7 +435,7 @@ proc ::deken::clicked_link {URL filename} {
         if { "$installdir" == "" } {
             set _args {-message [_ "Please select a (writable) installation directory!"] -type retrycancel -default retry -icon warning}
         } {
-            set _args "-message \"[format [_ {Install to %s ?}] $installdir]\" -type yesnocancel -default yes -icon question"
+            set _args "-message \"[format [_ "Install to %s ?" ] $installdir]\" -type yesnocancel -default yes -icon question"
         }
         switch -- [eval tk_messageBox ${_args}] {
             cancel return
@@ -459,9 +462,7 @@ proc ::deken::clicked_link {URL filename} {
 
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
-    ::deken::post [format [_ {Commencing downloading of:
-%1$s
-Into %2$s...}] $URL $installdir] ]
+    ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..."] $URL $installdir] ]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
 
     if { "$fullpkgfile" eq "" } {
@@ -489,8 +490,8 @@ Into %2$s...}] $URL $installdir] ]
     }
     cd $PWD
     if { $success > 0 } {
-        ::deken::post [format [_ {Successfully unzipped %1$s into %2$s.}] $filename $installdir ]
-        ::deken::post "\n"
+        ::deken::post [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
+        ::deken::post ""
         catch { file delete $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
@@ -499,7 +500,8 @@ Into %2$s...}] $URL $installdir] ]
         ::deken::post [_ "Please perform the following steps manually:" ]
         ::deken::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
         pd_menucommands::menu_openfile $fullpkgfile
-        ::deken::post [format [_ "2. Copy the contents into %s.\n" ] $installdir]
+        ::deken::post [format [_ "2. Copy the contents into %s." ] $installdir]
+        ::deken::post ""
         pd_menucommands::menu_openfile $installdir
     }
 }
@@ -515,7 +517,8 @@ proc ::deken::download_file {URL outputfilename} {
     set ncode [::http::ncode $httpresult]
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly
-        ::deken::post [format [_ {Unable to download from %1$s [%2$s]} ] $URL $ncode ] error
+        # tcl-format
+        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $ncode ] error
         set outputfilename ""
     }
     flush $f
@@ -697,7 +700,7 @@ proc ::deken::search::puredata.info {term} {
 
             set match [::deken::architecture_match "$archs" ]
 
-            set comment [format [_ {Uploaded by %1$s @ %2$s} ] $creator $date ]
+            set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
             set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
             set res [list $name $cmd $match $comment $status $filename]
