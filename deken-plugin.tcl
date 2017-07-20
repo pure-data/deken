@@ -39,16 +39,19 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::pdwindow::debug [format [_ "\[deken\]: installed version \[%s\] > %s...skipping!\n" ] $::deken::version $version ]
+                ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] > %2$s...skipping!} ] $::deken::version $version ]
+                ::pdwindow::debug "\n"
                 return 0
             }
             if { $x < $y } {
-                ::pdwindow::debug [format [_ "\[deken\]: installed version \[%s\] < %s...overwriting!\n" ] $::deken::version $version ]
+                ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] < %2$s...overwriting!} ] $::deken::version $version ]
+                ::pdwindow::debug "\n"
                 set ::deken::version $version
                 return 1
             }
         }
-        ::pdwindow::debug [format [_ "\[deken\]: installed version \[%s\] == %s...skipping!\n" ] $::deken::version $version ]
+        ::pdwindow::debug [format [_ {[deken]: installed version [%1$s] == %2$s...skipping!} ] $::deken::version $version ]
+        ::pdwindow::debug "\n"
         return 0
     }
     set ::deken::version $version
@@ -456,7 +459,9 @@ proc ::deken::clicked_link {URL filename} {
 
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
-    ::deken::post [format [_ "Commencing downloading of:\n$%s\nInto %s..." $URL $installdir] ]
+    ::deken::post [format [_ {Commencing downloading of:
+%1$s
+Into %2$s...}] $URL $installdir] ]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
 
     if { "$fullpkgfile" eq "" } {
@@ -484,7 +489,8 @@ proc ::deken::clicked_link {URL filename} {
     }
     cd $PWD
     if { $success > 0 } {
-        ::deken::post [format [_ "Successfully unzipped %s into %s.\n"] $filename $installdir ]
+        ::deken::post [format [_ {Successfully unzipped %1$s into %2$s.}] $filename $installdir ]
+        ::deken::post "\n"
         catch { file delete $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
@@ -509,7 +515,7 @@ proc ::deken::download_file {URL outputfilename} {
     set ncode [::http::ncode $httpresult]
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly
-        ::deken::post [format [_ "Unable to download from %s \[%s\]" ] $URL $ncode ] error
+        ::deken::post [format [_ {Unable to download from %1$s [%2$s]} ] $URL $ncode ] error
         set outputfilename ""
     }
     flush $f
@@ -691,7 +697,7 @@ proc ::deken::search::puredata.info {term} {
 
             set match [::deken::architecture_match "$archs" ]
 
-            set comment [format [_ "Uploaded by %s @ %s" ] $creator $date ]
+            set comment [format [_ {Uploaded by %1$s @ %2$s} ] $creator $date ]
             set status $URL
             set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
             set res [list $name $cmd $match $comment $status $filename]
