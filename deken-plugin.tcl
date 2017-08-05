@@ -156,7 +156,7 @@ Set objShell = Nothing
 set ::deken::_vbsunzip ""
 
 proc ::deken::get_tmpfilename {{path ""}} {
-    for {set i 0} {True} {incr i} {
+    for {set i 0} {true} {incr i} {
         set tmpfile [file join ${path} dekentmp.${i}]
         if {![file exists $tmpfile]} {
             return $tmpfile
@@ -235,9 +235,9 @@ if { "Windows" eq "$::deken::platform(os)" } {
 if { "" != "$::current_plugin_loadpath" } {
     ::pdwindow::post [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
     ::pdwindow::post "\n"
-    ::pdwindow::post [format [_ "\[deken\] Platform detected: %s" ] $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit ]
-    ::pdwindow::post "\n"
 }
+::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit ]
+::pdwindow::verbose 0 "\n"
 
 # architectures that can be substituted for eachother
 array set ::deken::architecture_substitutes {}
