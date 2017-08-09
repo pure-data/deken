@@ -484,7 +484,7 @@ proc ::deken::preferences::create {mytoplevel} {
     puts "installdir: $::deken::installpath"
 }
 
-proc ::deken::preferences::show {{mytoplevel .deken_preferencess}} {
+proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
     if {[winfo exists $mytoplevel]} {
         wm deiconify $mytoplevel
         raise $mytoplevel
