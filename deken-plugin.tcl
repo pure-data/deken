@@ -164,17 +164,22 @@ proc ::deken::get_tmpfilename {{path ""}} {
     }
 }
 
-proc ::deken::get_writable_dir {paths} {
+proc ::deken::is_writable_dir {path} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
+    set tmpfile [::deken::get_tmpfilename $path]
+    # try creating tmpfile
+    if {![catch {open $tmpfile $access} channel]} {
+        close $channel
+        file delete $tmpfile
+        return true
+    }
+    return false
+}
+
+proc ::deken::get_writable_dir {paths} {
     foreach p $paths {
-        set tmpfile [::deken::get_tmpfilename $p]
-        # try creating tmpfile
-        if {![catch {open $tmpfile $access} channel]} {
-            close $channel
-            file delete $tmpfile
-            return $p
-        }
+        if { [ ::deken::is_writable_dir $p ] } { return $p }
     }
     return
 }
