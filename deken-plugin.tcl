@@ -80,6 +80,11 @@ namespace eval ::deken::search:: { }
 
 set ::deken::installpath ""
 set ::deken::statustimer ""
+proc ::deken::utilities::bool {value {fallback 0}} {
+    catch {set fallback [expr bool($value) ] } stdout
+    return $fallback
+}
+
 proc ::deken::utilities::is_writable_dir {path} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
