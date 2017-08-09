@@ -675,6 +675,7 @@ set mymenu .menubar.help
 if { [catch {
     $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
 } _ ] } {
+    $mymenu add separator
     $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
 }
 # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
