@@ -354,7 +354,7 @@ proc ::deken::create_dialog {mytoplevel} {
     bind $mytoplevel.searchbit.entry <KeyRelease> "::deken::update_searchbutton $mytoplevel"
     focus $mytoplevel.searchbit.entry
     button $mytoplevel.searchbit.button -text [_ "Show all"] -default active -command "::deken::initiate_search $mytoplevel"
-    pack $mytoplevel.searchbit.button -side right -padx 6 -pady 3
+    pack $mytoplevel.searchbit.button -side right -padx 6 -pady 3 -ipadx 10
 
     frame $mytoplevel.warning
     pack $mytoplevel.warning -side top -fill x
@@ -505,7 +505,6 @@ proc ::deken::clicked_link {URL filename} {
     ::deken::clearpost
     ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..."] $URL $installdir] ]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
-
     if { "$fullpkgfile" eq "" } {
         ::deken::post [_ "aborting."] info
         return
