@@ -30,6 +30,8 @@ namespace eval ::deken:: {
     variable version
     variable installpath
 }
+namespace eval ::deken::preferences {
+}
 
 ## only register this plugin if there isn't any newer version already registered
 ## (if ::deken::version is defined and is higher than our own version)
@@ -384,6 +386,8 @@ proc ::deken::create_dialog {mytoplevel} {
     pack $mytoplevel.status -side bottom -fill x
     label $mytoplevel.status.label -textvariable ::deken::statustext
     pack $mytoplevel.status.label -side left -padx 6
+    button $mytoplevel.status.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
+    pack $mytoplevel.status.preferences -side right
 
     text $mytoplevel.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$mytoplevel.results.ys set"
     scrollbar $mytoplevel.results.ys -orient vertical -command "$mytoplevel.results yview"
@@ -399,6 +403,95 @@ proc ::deken::create_dialog {mytoplevel} {
         }
     }
 }
+
+proc ::deken::preferences::path_doit {origin path {mkdir true}} {
+    ${origin}.doit configure -state normal
+    ${origin}.path configure -state disabled
+
+    if { [file exists ${path}] } { } {
+        ${origin}.doit configure -text "Create"
+        if { $mkdir } {
+            catch { file mkdir $path }
+        }
+    }
+
+    if { [file exists ${path}] } {
+        ${origin}.doit configure -text "Check"
+    }
+
+    if { [::deken::is_writable_dir ${path} ] } {
+        ${origin}.doit configure -state disabled
+        ${origin}.path configure -state normal
+    }
+}
+proc ::deken::preferences::create_pathentries {toplevel var paths} {
+    set i 0
+
+    foreach path $paths {
+        while {[winfo exists ${toplevel}.frame($i)]} {incr i}
+        frame ${toplevel}.frame($i)
+        pack ${toplevel}.frame($i) -anchor w -fill x
+
+        radiobutton ${toplevel}.frame($i).path -value ${path} -text "${path}" -command "puts { ${toplevel}.frame($i) }" -variable $var
+        pack ${toplevel}.frame($i).path -side left
+        frame ${toplevel}.frame($i).fill
+        pack ${toplevel}.frame($i).fill -side left -padx 12
+        button ${toplevel}.frame($i).doit -text "..." -command "::deken::preferences::path_doit ${toplevel}.frame($i) ${path}"
+        ::deken::preferences::path_doit ${toplevel}.frame($i) ${path} false
+        pack ${toplevel}.frame($i).doit -side right -fill y -anchor e -padx 5 -pady 0
+        if { [::deken::is_writable_dir ${path} ] } {
+            ${toplevel}.frame($i).doit configure -state disabled
+            ${toplevel}.frame($i).path configure -state normal
+        } else {
+            ${toplevel}.frame($i).doit configure -state normal
+            ${toplevel}.frame($i).path configure -state disabled
+        }
+    }
+}
+proc ::deken::preferences::create_pad {mypad} {
+    frame $mypad
+    pack $mypad -pady 2 -padx 2 -expand 1 -fill y
+}
+
+proc ::deken::preferences::create {mytoplevel} {
+    # this dialog allows us to select:
+    #  - which directory to extract to
+    #    - including all (writable) elements from $::sys_staticpath
+    #      and option to create each of them
+    #    - a directory chooser
+    #  - whether to delete directories before re-extracting
+    #  - whether to filter-out non-matching architectures
+    set installpad 0
+    labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $mytoplevel.installdir -side top -fill x
+    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
+        ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath {[::pd_docsdir::get_externals_path]}
+        ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
+        incr installpad
+    }
+    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath $::sys_staticpath
+
+    ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
+    incr installpad
+    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath $::sys_searchpath
+
+
+    puts "installdir: $::deken::installpath"
+}
+
+proc ::deken::preferences::show {{mytoplevel .deken_preferencess}} {
+    if {[winfo exists $mytoplevel]} {
+        wm deiconify $mytoplevel
+        raise $mytoplevel
+    } else {
+        toplevel $mytoplevel -class DialogWindow
+        frame $mytoplevel.frame
+        pack $mytoplevel.frame -side top -padx 6 -pady 3 -fill both -expand true
+
+        ::deken::preferences::create $mytoplevel.frame
+    }
+}
+
 
 proc ::deken::initiate_search {mytoplevel} {
     # let the user know what we're doing
