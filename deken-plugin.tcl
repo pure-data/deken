@@ -71,7 +71,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.2.3] } {
+if { [::deken::versioncheck 0.2.4] } {
 set ::deken::installpath {}
 set ::deken::userplatform {}
 set ::deken::hideforeignarch {}
@@ -888,19 +888,26 @@ proc ::deken::parse_filename {filename} {
 proc ::deken::architecture_match {archs} {
     # if there are no architecture sections this must be arch-independent
     if { ! [llength $archs] } { return 1}
+    set OS "$::deken::platform(os)"
+    set MACHINE "$::deken::platform(machine)"
+    set BITS "$::deken::platform(bits)"
+    if { "$::deken::userplatform" != "" } {
+        ## FIXXME what if the user-supplied input isn't valid?
+        regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE BITS
+    }
 
     # check each architecture in our list against the current one
     foreach arch $archs {
         if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine bits ] } {
-            if { "${os}" eq "$::deken::platform(os)" &&
-                 "${bits}" eq "$::deken::platform(bits)"
+            if { "${os}" eq "$OS" &&
+                 "${bits}" eq "$BITS"
              } {
                 ## so OS and word size match
                 ## check whether the CPU matches as well
-                if { "${machine}" eq "$::deken::platform(machine)" } {return 1}
+                if { "${machine}" eq "${MACHINE}" } {return 1}
                 ## not exactly; see whether it is in the list of compat CPUs
-                if {[llength [array names ::deken::architecture_substitutes -exact $::deken::platform(machine)]]} {
-                    foreach cpu $::deken::architecture_substitutes($::deken::platform(machine)) {
+                if {[llength [array names ::deken::architecture_substitutes -exact "${MACHINE}"]]} {
+                    foreach cpu $::deken::architecture_substitutes(${MACHINE}) {
                         if { "${machine}" eq "${cpu}" } {return 1}
                     }
                 }
