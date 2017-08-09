@@ -522,7 +522,25 @@ proc ::deken::preferences::create {mytoplevel} {
     ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath $::sys_searchpath
 
 
-    puts "installdir: $::deken::installpath"
+    # Use two frames for the buttons, since we want them both bottom and right
+    frame $mytoplevel.nb
+    pack $mytoplevel.nb -side bottom -fill x -pady 2m
+
+    # buttons
+    frame $mytoplevel.nb.buttonframe
+    pack $mytoplevel.nb.buttonframe -side right -fill x -padx 2m
+
+    button $mytoplevel.nb.buttonframe.cancel -text [_ "Cancel"] \
+        -command "::deken::preferences::cancel $mytoplevel"
+    pack $mytoplevel.nb.buttonframe.cancel -side left -expand 1 -fill x -padx 15 -ipadx 10
+    if {$::windowingsystem ne "aqua"} {
+        button $mytoplevel.nb.buttonframe.apply -text [_ "Apply"] \
+            -command "::deken::preferences::apply $mytoplevel"
+        pack $mytoplevel.nb.buttonframe.apply -side left -expand 1 -fill x -padx 15 -ipadx 10
+    }
+    button $mytoplevel.nb.buttonframe.ok -text [_ "OK"] \
+        -command "::deken::preferences::ok $mytoplevel"
+    pack $mytoplevel.nb.buttonframe.ok -side left -expand 1 -fill x -padx 15 -ipadx 10
 }
 
 proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
@@ -537,6 +555,26 @@ proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
         ::deken::preferences::create $mytoplevel.frame
     }
 }
+
+proc ::deken::preferences::apply {mytoplevel} {
+    ::deken::set_installpath "$::deken::preferences::installpath"
+    set plat ""
+    if { "$::deken::preferences::platform" == "USER" } {
+        set plat "$::deken::preferences::userplatform"
+    }
+    ::deken::set_userplatform "${plat}"
+    ::deken::hide_foreignarch "$::deken::preferences::hideforeignarch"
+}
+proc ::deken::preferences::cancel {mytoplevel} {
+    ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
+    if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
+    destroy $mytoplevel
+}
+proc ::deken::preferences::ok {mytoplevel} {
+    ::deken::preferences::apply $mytoplevel
+    ::deken::preferences::cancel $mytoplevel
+}
+
 
 
 proc ::deken::initiate_search {mytoplevel} {
