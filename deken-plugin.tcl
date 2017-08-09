@@ -545,6 +545,24 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post ""
         pd_menucommands::menu_openfile $installdir
     }
+
+    # add to the search paths?
+    set extpath [file join $installdir $extname]
+    if {![file exists $extpath]} {
+        ::deken::post [_ "Unable to add %s to search paths"] $extname
+        return
+    }
+    set msg [_ "Add %s to the Pd search paths?" ]
+    set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
+    switch -- [eval tk_messageBox ${_args}] {
+        yes {
+            add_to_searchpaths [file join $installdir $extname]
+            ::deken::post [format [_ "Added %s to search paths"] $extname]
+        }
+        no {
+            return
+        }
+    }
 }
 
 # download a file to a location
