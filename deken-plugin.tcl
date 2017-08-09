@@ -28,11 +28,20 @@ package require pd_guiprefs
 
 namespace eval ::deken:: {
     variable version
+
     variable installpath
+    variable userplatform
+    variable hideforeignarch
 }
+
 namespace eval ::deken::preferences {
+    variable installpath
+    variable platform
+    variable userplatform
+    variable hideforeignarch
 }
 namespace eval ::deken::utilities { }
+
 
 ## only register this plugin if there isn't any newer version already registered
 ## (if ::deken::version is defined and is higher than our own version)
@@ -63,6 +72,13 @@ proc ::deken::versioncheck {version} {
 
 ## put the current version of this package here:
 if { [::deken::versioncheck 0.2.3] } {
+set ::deken::installpath {}
+set ::deken::userplatform {}
+set ::deken::hideforeignarch {}
+set ::deken::preferences::installpath {}
+set ::deken::preferences::platform {}
+set ::deken::preferences::userplatform {}
+set ::deken::preferences::hideforeignarch {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -80,6 +96,9 @@ namespace eval ::deken::search:: { }
 
 set ::deken::installpath ""
 set ::deken::statustimer ""
+set ::deken::userplaform ""
+set ::deken::hideforeignarch false
+
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr bool($value) ] } stdout
     return $fallback
