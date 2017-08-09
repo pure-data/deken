@@ -181,9 +181,9 @@ proc ::deken::get_writable_dir {paths} {
 
 # find an install path, either from prefs or on the system
 # returns an empty string if nothing was found
-proc ::deken::find_installpath {} {
+proc ::deken::find_installpath {{ignoreprefs false}} {
     set installpath ""
-    if { [ info exists ::deken::installpath ] } {
+    if { [ info exists ::deken::installpath ] && !$ignoreprefs } {
         ## any previous choice?
         set installpath [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
