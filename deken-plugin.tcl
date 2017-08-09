@@ -436,28 +436,59 @@ proc ::deken::clicked_link {URL filename} {
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     set installdir [::deken::find_installpath]
+    set extname [lindex [split $filename "-"] 0]
     if { "$installdir" == "" } {
-        ## ask the user (and remember the decision)
-        ::deken::prompt_installdir
-        set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+        if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
+            # if the docspath is set, try the externals subdir
+            set installdir [::pd_docsdir::get_externals_path]
+        } else {
+            # ask the user (and remember the decision)
+            ::deken::prompt_installdir
+            set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+        }
     }
     while {1} {
         if { "$installdir" == "" } {
-            set _args {-message [_ "Please select a (writable) installation directory!"] -type retrycancel -default retry -icon warning}
-        } {
-            set _args "-message \"[format [_ "Install to %s ?" ] $installdir]\" -type yesnocancel -default yes -icon question"
-        }
-        switch -- [eval tk_messageBox ${_args}] {
-            cancel return
-            yes { }
-            default {
-                if {[::deken::prompt_installdir]} {
-                    set installdir $::deken::installpath
-                } {
-                    continue
+            set msg  [_ "Please select a (writable) installation directory!"]
+            set _args "-message $msg -type retrycancel -default retry -icon warning -parent .externals_searchui"
+            switch -- [eval tk_messageBox ${_args}] {
+                cancel {return}
+                retry {
+                    if {[::deken::prompt_installdir]} {
+                        set installdir $::deken::installpath
+                    } else {
+                        continue
+                    }
+                }
+            }
+        } else {
+            set msg [_ "Install %s to %s?" ]
+            set _args "-message \"[format $msg $extname $installdir]\" -type yesnocancel -default yes -icon question -parent .externals_searchui"
+            switch -- [eval tk_messageBox ${_args}] {
+                cancel {return}
+                yes { }
+                no {
+                    set prevpath $::deken::installpath
+                    if {[::deken::prompt_installdir]} {
+                        set keepprevpath 1
+                        set installdir $::deken::installpath
+                        # if docsdir is set & the install path is valid,
+                        # saying "no" is temporary to ensure the docsdir
+                        # hierarchy remains, use the Path dialog to override
+                        if {[namespace exists ::pd_docsdir] && [::pd_docsdir::path_is_valid] && \
+                            [file writable [file normalize $prevpath]] } {
+                            set keepprevpath 0
+                        }
+                        if {$keepprevpath} {
+                            set ::deken::installpath $prevpath
+                        }
+                    } else {
+                        continue
+                    }
                 }
             }
         }
+
         if { "$installdir" != "" } {
             # try creating the installdir...just in case
             if { [ catch { file mkdir $installdir } ] } {}
