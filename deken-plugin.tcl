@@ -641,9 +641,13 @@ proc ::deken::initiate_search {mytoplevel} {
             ::deken::show_result $mytoplevel $counter $r 1
             incr counter
         }
-        foreach r $results {
-            ::deken::show_result $mytoplevel $counter $r 0
-            incr counter
+        if { "$::deken::hideforeignarch" } {
+            # skip display of non-matching archs
+        } {
+            foreach r $results {
+                ::deken::show_result $mytoplevel $counter $r 0
+                incr counter
+            }
         }
 	::deken::scrollup
     } else {
