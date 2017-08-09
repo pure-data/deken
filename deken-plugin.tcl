@@ -208,6 +208,10 @@ proc ::deken::find_installpath {{ignoreprefs false}} {
     return $installpath
 }
 
+proc ::deken::platform2string {} {
+    return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)
+}
+
 # list-reverter (compat for tcl<8.5)
 if {[info command lreverse] == ""} {
     proc lreverse list {
@@ -243,7 +247,7 @@ if { "" != "$::current_plugin_loadpath" } {
     ::pdwindow::post [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
     ::pdwindow::post "\n"
 }
-::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)bit ]
+::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string] ]
 ::pdwindow::verbose 0 "\n"
 
 # architectures that can be substituted for eachother
@@ -269,7 +273,7 @@ proc ::deken::set_platform {os machine bits} {
         set ::deken::platform(machine) ${machine}
         set ::deken::platform(bits) ${bits}
 
-        ::pdwindow::verbose 0 [format [_ "\[deken\] Platform (re)detected: %s" ] ${os}-${machine}-${bits}bit ]
+        ::pdwindow::verbose 0 [format [_ "\[deken\] Platform (re)detected: %s" ] [::deken::platform2string ] ]
         ::pdwindow::verbose 0 "\n"
     }
 }
