@@ -625,7 +625,6 @@ proc ::deken::initiate_search {mytoplevel} {
     ::deken::clearpost
     ::deken::post [_ "Searching for externals..."]
     set ::deken::progressvar 0
-    # make the ajax call
     if { [ catch {
         set results [::deken::search_for [$mytoplevel.searchbit.entry get]]
     } stdout ] } {
