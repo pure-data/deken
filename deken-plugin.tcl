@@ -478,7 +478,7 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
         frame ${toplevel}.frame($i)
         pack ${toplevel}.frame($i) -anchor w -fill x
 
-        radiobutton ${toplevel}.frame($i).path -value ${path} -text "${path}" -command "puts { ${toplevel}.frame($i) }" -variable $var
+        radiobutton ${toplevel}.frame($i).path -value ${path} -text "${path}" -variable $var
         pack ${toplevel}.frame($i).path -side left
         frame ${toplevel}.frame($i).fill
         pack ${toplevel}.frame($i).fill -side left -padx 12
