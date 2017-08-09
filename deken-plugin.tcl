@@ -292,7 +292,8 @@ proc ::deken::highlightable_posttag {tag} {
     $mytoplevelref.results tag raise highlight
 }
 proc ::deken::prompt_installdir {} {
-    set installdir [tk_chooseDirectory -title [_ "Install externals to directory:"] ]
+    set installdir [tk_chooseDirectory -title [_ "Install externals to directory:"] \
+                                       -initialdir $::env(HOME) -parent .externals_searchui]
     if { "$installdir" != "" } {
         ::deken::set_installpath $installdir
         return 1
