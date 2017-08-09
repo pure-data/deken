@@ -494,9 +494,9 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
         }
     }
 }
-proc ::deken::preferences::create_pad {mypad} {
+proc ::deken::preferences::create_pad {mypad {padx 2} {pady 2} } {
     frame $mypad
-    pack $mypad -pady 2 -padx 2 -expand 1 -fill y
+    pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill y
 }
 
 proc ::deken::preferences::create {mytoplevel} {
