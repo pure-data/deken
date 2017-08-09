@@ -32,6 +32,7 @@ namespace eval ::deken:: {
 }
 namespace eval ::deken::preferences {
 }
+namespace eval ::deken::utilities { }
 
 ## only register this plugin if there isn't any newer version already registered
 ## (if ::deken::version is defined and is higher than our own version)
@@ -79,6 +80,18 @@ namespace eval ::deken::search:: { }
 
 set ::deken::installpath ""
 set ::deken::statustimer ""
+proc ::deken::utilities::is_writable_dir {path} {
+    set fs [file separator]
+    set access [list RDWR CREAT EXCL TRUNC]
+    set tmpfile [::deken::get_tmpfilename $path]
+    # try creating tmpfile
+    if {![catch {open $tmpfile $access} channel]} {
+        close $channel
+        file delete $tmpfile
+        return true
+    }
+    return false
+}
 
 if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
     # this is a Pd without the new GUI-prefs
@@ -166,22 +179,9 @@ proc ::deken::get_tmpfilename {{path ""}} {
     }
 }
 
-proc ::deken::is_writable_dir {path} {
-    set fs [file separator]
-    set access [list RDWR CREAT EXCL TRUNC]
-    set tmpfile [::deken::get_tmpfilename $path]
-    # try creating tmpfile
-    if {![catch {open $tmpfile $access} channel]} {
-        close $channel
-        file delete $tmpfile
-        return true
-    }
-    return false
-}
-
 proc ::deken::get_writable_dir {paths} {
     foreach p $paths {
-        if { [ ::deken::is_writable_dir $p ] } { return $p }
+        if { [ ::deken::utilities::is_writable_dir $p ] } { return $p }
     }
     return
 }
@@ -419,11 +419,12 @@ proc ::deken::preferences::path_doit {origin path {mkdir true}} {
         ${origin}.doit configure -text "Check"
     }
 
-    if { [::deken::is_writable_dir ${path} ] } {
+    if { [::deken::utilities::is_writable_dir ${path} ] } {
         ${origin}.doit configure -state disabled
         ${origin}.path configure -state normal
     }
 }
+
 proc ::deken::preferences::create_pathentries {toplevel var paths} {
     set i 0
 
@@ -439,7 +440,7 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
         button ${toplevel}.frame($i).doit -text "..." -command "::deken::preferences::path_doit ${toplevel}.frame($i) ${path}"
         ::deken::preferences::path_doit ${toplevel}.frame($i) ${path} false
         pack ${toplevel}.frame($i).doit -side right -fill y -anchor e -padx 5 -pady 0
-        if { [::deken::is_writable_dir ${path} ] } {
+        if { [::deken::utilities::is_writable_dir ${path} ] } {
             ${toplevel}.frame($i).doit configure -state disabled
             ${toplevel}.frame($i).path configure -state normal
         } else {
