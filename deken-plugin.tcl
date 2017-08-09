@@ -500,6 +500,16 @@ proc ::deken::preferences::create_pad {mypad} {
 }
 
 proc ::deken::preferences::create {mytoplevel} {
+    set ::deken::preferences::installpath $::deken::installpath
+    set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
+    if { $::deken::userplatform == "" } {
+        set ::deken::preferences::platform DEFAULT
+        set ::deken::preferences::userplatform [ ::deken::platform2string ]
+    } {
+        set ::deken::preferences::platform USER
+        set ::deken::preferences::userplatform $::deken::userplatform
+    }
+
     # this dialog allows us to select:
     #  - which directory to extract to
     #    - including all (writable) elements from $::sys_staticpath
@@ -511,15 +521,48 @@ proc ::deken::preferences::create {mytoplevel} {
     labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
     pack $mytoplevel.installdir -side top -fill x
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath {[::pd_docsdir::get_externals_path]}
+        ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
         ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
         incr installpad
     }
-    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath $::sys_staticpath
+    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_staticpath
 
     ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
     incr installpad
-    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::installpath $::sys_searchpath
+    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_searchpath
+
+
+    ## platform filter settings
+    labelframe $mytoplevel.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
+
+    pack $mytoplevel.platform -side top -fill x
+    # default architecture vs user-defined arch
+    radiobutton $mytoplevel.platform.default -value "DEFAULT" \
+        -text [format [_ "Default platform: %s" ] [::deken::platform2string ] ] \
+        -variable ::deken::preferences::platform \
+        -command "$mytoplevel.platform.userarch.entry configure -state disabled"
+    pack $mytoplevel.platform.default
+
+    frame $mytoplevel.platform.userarch
+    radiobutton $mytoplevel.platform.userarch.radio -value "USER" \
+        -text [_ "User-defined platform:" ] \
+        -variable ::deken::preferences::platform \
+        -command "$mytoplevel.platform.userarch.entry configure -state normal"
+    entry $mytoplevel.platform.userarch.entry -textvariable ::deken::preferences::userplatform
+    if { "$::deken::preferences::platform" == "DEFAULT" } {
+        $mytoplevel.platform.userarch.entry configure -state disabled
+    }
+
+    pack $mytoplevel.platform.userarch
+    pack $mytoplevel.platform.userarch.radio -side left
+    pack $mytoplevel.platform.userarch.entry -side right -fill x
+
+    # hide non-matching architecture?
+    ::deken::preferences::create_pad $mytoplevel.platform.pad 2 10
+    checkbutton $mytoplevel.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
+        -variable ::deken::preferences::hideforeignarch
+    pack $mytoplevel.platform.hide_foreign
+
 
 
     # Use two frames for the buttons, since we want them both bottom and right
