@@ -136,11 +136,10 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     proc ::deken::set_installpath {installdir} {
         set ::deken::installpath $installdir
     }
-    proc ::deken::set_userplatform {platform} {
+    proc ::deken::set_platform_options {platform hide} {
         set ::deken::userplatform $platform
+        set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
     }
-    proc ::deken::hide_foreignarch {bool} {
-        set ::deken::hideforeignarch [::deken::utilities::bool $bool ]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -150,14 +149,13 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
     # user requested platform (empty = DEFAULT)
     set ::deken::userplatform [::pd_guiprefs::read deken_platform]
-    proc ::deken::set_userplatform {platform} {
+    set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] ]
+    proc ::deken::set_platform_options {platform hide} {
         set ::deken::userplatform $platform
+        set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
         ::pd_guiprefs::write deken_platform "$platform"
+        ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
     }
-    set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hideforeignarchs] ]
-    proc ::deken::hide_foreignarch {bool} {
-        set ::deken::hideforeignarch [::deken::utilities::bool $bool ]
-        ::pd_guiprefs::write deken_hideforeignarchs $::deken::hideforeignarch
     }
 }
 
@@ -659,8 +657,7 @@ proc ::deken::preferences::apply {mytoplevel} {
     if { "$::deken::preferences::platform" == "USER" } {
         set plat "$::deken::preferences::userplatform"
     }
-    ::deken::set_userplatform "${plat}"
-    ::deken::hide_foreignarch "$::deken::preferences::hideforeignarch"
+    ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
 }
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
