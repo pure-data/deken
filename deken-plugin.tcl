@@ -117,6 +117,13 @@ proc ::deken::utilities::is_writable_dir {path} {
     return false
 }
 
+proc ::deken::utilities::newwidget {basename} {
+    # calculate a widget name that has not yet been taken
+    set i 0
+    while {[winfo exists ${basename}${i}]} {incr i}
+    return ${basename}${i}
+}
+
 if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
     # this is a Pd without the new GUI-prefs
     proc ::deken::set_installpath {installdir} {
