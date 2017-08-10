@@ -456,6 +456,15 @@ proc ::deken::create_dialog {mytoplevel} {
     }
 }
 
+proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
+    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
+
+    frame $mypad
+    pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill y
+
+    return mypad
+}
+
 proc ::deken::preferences::path_doit {origin path {mkdir true}} {
     ${origin}.doit configure -state normal
     ${origin}.path configure -state disabled
@@ -501,14 +510,6 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
             ${w}.path configure -state disabled
         }
     }
-}
-proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
-    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
-
-    frame $mypad
-    pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill y
-
-    return mypad
 }
 
 proc ::deken::preferences::create {mytoplevel} {
