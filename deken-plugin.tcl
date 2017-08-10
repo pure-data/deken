@@ -481,31 +481,29 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
     set i 0
 
     foreach path $paths {
-        while {[winfo exists ${toplevel}.frame($i)]} {incr i}
-        frame ${toplevel}.frame($i)
-        pack ${toplevel}.frame($i) -anchor w -fill x
+        set w [::deken::utilities::newwidget ${toplevel}.frame]
 
-        radiobutton ${toplevel}.frame($i).path -value ${path} -text "${path}" -variable $var
-        pack ${toplevel}.frame($i).path -side left
-        frame ${toplevel}.frame($i).fill
-        pack ${toplevel}.frame($i).fill -side left -padx 12
-        button ${toplevel}.frame($i).doit -text "..." -command "::deken::preferences::path_doit ${toplevel}.frame($i) ${path}"
-        ::deken::preferences::path_doit ${toplevel}.frame($i) ${path} false
-        pack ${toplevel}.frame($i).doit -side right -fill y -anchor e -padx 5 -pady 0
+        frame $w
+        pack $w -anchor w -fill x
+
+        radiobutton ${w}.path -value ${path} -text "${path}" -variable $var
+        pack ${w}.path -side left
+        frame ${w}.fill
+        pack ${w}.fill -side left -padx 12
+        button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w} ${path}"
+        ::deken::preferences::path_doit ${w} ${path} false
+        pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
         if { [::deken::utilities::is_writable_dir ${path} ] } {
-            ${toplevel}.frame($i).doit configure -state disabled
-            ${toplevel}.frame($i).path configure -state normal
+            ${w}.doit configure -state disabled
+            ${w}.path configure -state normal
         } else {
-            ${toplevel}.frame($i).doit configure -state normal
-            ${toplevel}.frame($i).path configure -state disabled
+            ${w}.doit configure -state normal
+            ${w}.path configure -state disabled
         }
     }
 }
 proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
-    set i 0
-    while {[winfo exists ${toplevel}.pad$i]} {incr i}
-
-    set mypad ${toplevel}.pad$i
+    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
 
     frame $mypad
     pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill y
@@ -569,7 +567,7 @@ proc ::deken::preferences::create {mytoplevel} {
     pack $mytoplevel.platform.userarch.entry -side right -fill x
 
     # hide non-matching architecture?
-    ::deken::preferences::create_pad $mytoplevel.platform.pad 2 10
+    ::deken::preferences::create_pad $mytoplevel.platform 2 10
     checkbutton $mytoplevel.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
         -variable ::deken::preferences::hideforeignarch
     pack $mytoplevel.platform.hide_foreign
