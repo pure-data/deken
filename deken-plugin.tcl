@@ -7,6 +7,11 @@
 # Search URL:
 # http://deken.puredata.info/search?name=foobar
 
+# TODOs
+## open embedded README
+## open README on homepage
+## remove library before unzipping
+
 # The minimum version of TCL that allows the plugin to run
 package require Tcl 8.4
 # If Tk or Ttk is needed
