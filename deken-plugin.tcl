@@ -494,9 +494,16 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
         }
     }
 }
-proc ::deken::preferences::create_pad {mypad {padx 2} {pady 2} } {
+proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
+    set i 0
+    while {[winfo exists ${toplevel}.pad$i]} {incr i}
+
+    set mypad ${toplevel}.pad$i
+
     frame $mypad
     pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill y
+
+    return mypad
 }
 
 proc ::deken::preferences::create {mytoplevel} {
@@ -517,18 +524,15 @@ proc ::deken::preferences::create {mytoplevel} {
     #    - a directory chooser
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
-    set installpad 0
     labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
     pack $mytoplevel.installdir -side top -fill x
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
         ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
-        ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
-        incr installpad
+        ::deken::preferences::create_pad $mytoplevel.installdir
     }
     ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_staticpath
 
-    ::deken::preferences::create_pad $mytoplevel.installdir.pad($installpad)
-    incr installpad
+    ::deken::preferences::create_pad $mytoplevel.installdir
     ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_searchpath
 
 
