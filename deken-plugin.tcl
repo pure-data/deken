@@ -515,7 +515,7 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
         radiobutton ${w}.path -value ${path} -text "${path}" -variable $var
         pack ${w}.path -side left
         frame ${w}.fill
-        pack ${w}.fill -side left -padx 12
+        pack ${w}.fill -side left -padx 12 -fill x -expand 1
         button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w} ${path}"
         ::deken::preferences::path_doit ${w} ${path} false
         pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
@@ -583,14 +583,14 @@ proc ::deken::preferences::create {mytoplevel} {
 
     ## platform filter settings
     labelframe $mytoplevel.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $mytoplevel.platform -side top -fill x -anchor w
 
-    pack $mytoplevel.platform -side top -fill x
     # default architecture vs user-defined arch
     radiobutton $mytoplevel.platform.default -value "DEFAULT" \
         -text [format [_ "Default platform: %s" ] [::deken::platform2string ] ] \
         -variable ::deken::preferences::platform \
         -command "$mytoplevel.platform.userarch.entry configure -state disabled"
-    pack $mytoplevel.platform.default
+    pack $mytoplevel.platform.default -anchor w
 
     frame $mytoplevel.platform.userarch
     radiobutton $mytoplevel.platform.userarch.radio -value "USER" \
@@ -602,16 +602,16 @@ proc ::deken::preferences::create {mytoplevel} {
         $mytoplevel.platform.userarch.entry configure -state disabled
     }
 
-    pack $mytoplevel.platform.userarch
+    pack $mytoplevel.platform.userarch -anchor w
     pack $mytoplevel.platform.userarch.radio -side left
     pack $mytoplevel.platform.userarch.entry -side right -fill x
 
     # hide non-matching architecture?
     ::deken::preferences::create_pad $mytoplevel.platform 2 10
+
     checkbutton $mytoplevel.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
         -variable ::deken::preferences::hideforeignarch
-    pack $mytoplevel.platform.hide_foreign
-
+    pack $mytoplevel.platform.hide_foreign -anchor w
 
 
     # Use two frames for the buttons, since we want them both bottom and right
