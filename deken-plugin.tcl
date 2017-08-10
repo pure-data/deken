@@ -664,6 +664,8 @@ proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
         raise $mytoplevel
     } else {
         toplevel $mytoplevel -class DialogWindow
+        wm title $mytoplevel [format [_ "Deken %s Preferences"] $::deken::version]
+
         frame $mytoplevel.frame
         pack $mytoplevel.frame -side top -padx 6 -pady 3 -fill both -expand true
 
@@ -672,15 +674,15 @@ proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
 }
 
 proc ::deken::preferences::apply {mytoplevel} {
-    set installpath "$::deken::preferences::installpath"
+    set installpath "${::deken::preferences::installpath}"
     if { "$installpath" == "USER" } {
-        set installpath "$::deken::preferences::userinstallpath"
+        set installpath "${::deken::preferences::userinstallpath}"
     }
 
     ::deken::set_installpath "$installpath"
     set plat ""
-    if { "$::deken::preferences::platform" == "USER" } {
-        set plat "$::deken::preferences::userplatform"
+    if { "${::deken::preferences::platform}" == "USER" } {
+        set plat "${::deken::preferences::userplatform}"
     }
     ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
     ::deken::set_install_options "${::deken::preferences::remove_on_install}" "${::deken::preferences::show_readme}"
