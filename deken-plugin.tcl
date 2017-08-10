@@ -307,8 +307,8 @@ if { "Windows" eq "$::deken::platform(os)" } {
 # console message to let them know we're loaded
 ## but only if we are being called as a plugin (not as built-in)
 if { "" != "$::current_plugin_loadpath" } {
-    ::pdwindow::post [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
-    ::pdwindow::post "\n"
+    ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
+    ::pdwindow::debug "\n"
 }
 ::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string] ]
 ::pdwindow::verbose 0 "\n"
