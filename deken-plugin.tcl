@@ -140,6 +140,9 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::userplatform $platform
         set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
     }
+    proc ::deken::set_install_options {remove readme} {
+        set ::deken::remove_on_install [::deken::utilities::bool $remove]
+        set ::deken::show_readme [::deken::utilities::bool $readme]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -156,6 +159,13 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write deken_platform "$platform"
         ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
     }
+    set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] ]
+    set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
+    proc ::deken::set_install_options {remove readme} {
+        set ::deken::remove_on_install [::deken::utilities::bool $remove]
+        set ::deken::show_readme [::deken::utilities::bool $readme]
+        ::pd_guiprefs::write deken_remove_on_install "$::deken::remove_on_install"
+        ::pd_guiprefs::write deken_show_readme "$::deken::show_readme"
     }
 }
 
@@ -541,6 +551,9 @@ proc ::deken::preferences::create {mytoplevel} {
     set ::deken::preferences::installpath USER
     set ::deken::preferences::userinstallpath $::deken::installpath
 
+    set ::deken::preferences::show_readme $::deken::show_readme
+    set ::deken::preferences::remove_on_install $::deken::remove_on_install
+
     # this dialog allows us to select:
     #  - which directory to extract to
     #    - including all (writable) elements from $::sys_staticpath
@@ -577,6 +590,18 @@ proc ::deken::preferences::create {mytoplevel} {
 
     ::deken::preferences::create_pad $mytoplevel.installdir
     ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_searchpath
+
+    ## installation options
+    labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $mytoplevel.install -side top -fill x -anchor w
+
+    checkbutton $mytoplevel.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
+        -variable ::deken::preferences::remove_on_install
+    pack $mytoplevel.install.remove -anchor w
+
+    checkbutton $mytoplevel.install.readme -text [_ "Show README of newly installed libraries?"] \
+        -variable ::deken::preferences::show_readme
+    pack $mytoplevel.install.readme -anchor w
 
 
     ## platform filter settings
@@ -658,6 +683,7 @@ proc ::deken::preferences::apply {mytoplevel} {
         set plat "$::deken::preferences::userplatform"
     }
     ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
+    ::deken::set_install_options "${::deken::preferences::remove_on_install}" "${::deken::preferences::show_readme}"
 }
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
