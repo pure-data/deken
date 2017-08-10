@@ -41,6 +41,7 @@ namespace eval ::deken:: {
 
 namespace eval ::deken::preferences {
     variable installpath
+    variable userinstallpath
     variable platform
     variable userplatform
     variable hideforeignarch
@@ -81,6 +82,7 @@ set ::deken::installpath {}
 set ::deken::userplatform {}
 set ::deken::hideforeignarch {}
 set ::deken::preferences::installpath {}
+set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
 set ::deken::preferences::userplatform {}
 set ::deken::preferences::hideforeignarch {}
@@ -474,6 +476,12 @@ proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
     return mypad
 }
 
+proc ::deken::preferences::userpath_doit { } {
+    set installdir [::deken::do_prompt_installdir ${::deken::preferences::userinstallpath}]
+    if { "${installdir}" != "" } {
+        set ::deken::preferences::userinstallpath "${installdir}"
+    }
+}
 proc ::deken::preferences::path_doit {origin path {mkdir true}} {
     ${origin}.doit configure -state normal
     ${origin}.path configure -state disabled
@@ -532,6 +540,9 @@ proc ::deken::preferences::create {mytoplevel} {
         set ::deken::preferences::userplatform $::deken::userplatform
     }
 
+    set ::deken::preferences::installpath USER
+    set ::deken::preferences::userinstallpath $::deken::installpath
+
     # this dialog allows us to select:
     #  - which directory to extract to
     #    - including all (writable) elements from $::sys_staticpath
@@ -541,6 +552,25 @@ proc ::deken::preferences::create {mytoplevel} {
     #  - whether to filter-out non-matching architectures
     labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
     pack $mytoplevel.installdir -side top -fill x
+
+    ### dekenpath: directory-chooser
+    # FIXME: should we ask user to add chosen directory to PATH?
+    set f ${mytoplevel}.installdir.user
+    labelframe ${f} -borderwidth 1
+    pack ${f} -anchor w -fill x
+
+    radiobutton ${f}.path \
+        -value "USER" \
+        -textvariable ::deken::preferences::userinstallpath \
+        -variable ::deken::preferences::installpath
+    pack ${f}.path -side left
+    frame ${f}.fill
+    pack ${f}.fill -side left -padx 12 -fill x -expand 1
+    button ${f}.doit -text "..." -command "::deken::preferences::userpath_doit"
+    pack ${f}.doit -side right -fill y -anchor e -padx 5 -pady 0
+    ::deken::preferences::create_pad $mytoplevel.installdir
+
+    ### dekenpath: default directories
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
         ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
         ::deken::preferences::create_pad $mytoplevel.installdir
@@ -619,7 +649,12 @@ proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
 }
 
 proc ::deken::preferences::apply {mytoplevel} {
-    ::deken::set_installpath "$::deken::preferences::installpath"
+    set installpath "$::deken::preferences::installpath"
+    if { "$installpath" == "USER" } {
+        set installpath "$::deken::preferences::userinstallpath"
+    }
+
+    ::deken::set_installpath "$installpath"
     set plat ""
     if { "$::deken::preferences::platform" == "USER" } {
         set plat "$::deken::preferences::userplatform"
