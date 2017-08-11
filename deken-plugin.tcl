@@ -170,6 +170,44 @@ Set objShell = Nothing
     return 1
 }
 set ::deken::_vbsunzip ""
+proc ::deken::utilities::extract {installdir filename fullpkgfile} {
+    # installdir fullpkgfile filename
+    set PWD [ pwd ]
+    cd $installdir
+    set success 1
+    if { [ string match *.zip $fullpkgfile ] } then {
+        if { [ ::deken::utilities::vbs_unzipper $fullpkgfile  $installdir ] } { } {
+            if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
+                ::pdwindow::debug "$stdout\n"
+                set success 0
+            }
+        }
+    } elseif  { [ string match *.tar.* $fullpkgfile ]
+                || [ string match *.tgz $fullpkgfile ]
+              } then {
+        if { [ catch { exec tar xf $fullpkgfile } stdout ] } {
+            ::pdwindow::debug "$stdout\n"
+            set success 0
+        }
+    }
+    cd $PWD
+
+    if { $success > 0 } {
+        ::deken::post [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
+        ::deken::post ""
+        catch { file delete $fullpkgfile }
+    } else {
+        # Open both the fullpkgfile folder and the zipfile itself
+        # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
+        ::deken::post [_ "Unable to extract package automatically." ] warn
+        ::deken::post [_ "Please perform the following steps manually:" ]
+        ::deken::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
+        pd_menucommands::menu_openfile $fullpkgfile
+        ::deken::post [format [_ "2. Copy the contents into %s." ] $installdir]
+        ::deken::post ""
+        pd_menucommands::menu_openfile $installdir
+    }
+}
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
@@ -831,40 +869,7 @@ proc ::deken::clicked_link {URL filename} {
         return
     }
 
-    set PWD [ pwd ]
-    cd $installdir
-    set success 1
-    if { [ string match *.zip $fullpkgfile ] } then {
-        if { [ ::deken::vbs_unzipper $fullpkgfile  $installdir ] } { } {
-            if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
-                ::pdwindow::debug "$stdout\n"
-                set success 0
-            }
-        }
-    } elseif  { [ string match *.tar.* $fullpkgfile ]
-                || [ string match *.tgz $fullpkgfile ]
-              } then {
-        if { [ catch { exec tar xf $fullpkgfile } stdout ] } {
-            ::pdwindow::debug "$stdout\n"
-            set success 0
-        }
-    }
-    cd $PWD
-    if { $success > 0 } {
-        ::deken::post [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
-        ::deken::post ""
-        catch { file delete $fullpkgfile }
-    } else {
-        # Open both the fullpkgfile folder and the zipfile itself
-        # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
-        ::deken::post [_ "Unable to extract package automatically." ] warn
-        ::deken::post [_ "Please perform the following steps manually:" ]
-        ::deken::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
-        pd_menucommands::menu_openfile $fullpkgfile
-        ::deken::post [format [_ "2. Copy the contents into %s." ] $installdir]
-        ::deken::post ""
-        pd_menucommands::menu_openfile $installdir
-    }
+    ::deken::utilities::extract $installdir $filename $fullpkgfile
 
 ## FIXXME: should we really suggest to add to search-paths?
 ## per library search-paths should be added via [declare]
