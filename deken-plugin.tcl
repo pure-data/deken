@@ -882,6 +882,17 @@ proc ::deken::clicked_link {URL filename} {
 
     ::deken::utilities::extract $installdir $filename $fullpkgfile
 
+    if { "$::deken::show_readme" } {
+        foreach readme {README.deken.txt README.deken.pd} {
+            set r [file join $installdir $readme]
+            if {[file exists $r]} {
+                pd_menucommands::menu_openfile $r
+                break
+            }
+        }
+    }
+
+
 ## FIXXME: should we really suggest to add to search-paths?
 ## per library search-paths should be added via [declare]
 
