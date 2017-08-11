@@ -867,7 +867,7 @@ proc ::deken::clicked_link {URL filename} {
 
     set fullpkgfile "$installdir/$filename"
     ::deken::clearpost
-    ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..."] $URL $installdir] ]
+    ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
         ::deken::post [_ "aborting."] info
