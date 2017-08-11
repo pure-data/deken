@@ -865,7 +865,7 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
 
-    set fullpkgfile "$installdir/$filename"
+    set fullpkgfile [file join $installdir $filename]
     ::deken::clearpost
     ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
