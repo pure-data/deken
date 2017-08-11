@@ -208,6 +208,11 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         pd_menucommands::menu_openfile $installdir
     }
 }
+
+proc ::deken::utilities::uninstall {path library} {
+    ::deken::post "Uninstalling not yet implemented!"
+}
+
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
@@ -867,6 +872,10 @@ proc ::deken::clicked_link {URL filename} {
     if { "$fullpkgfile" eq "" } {
         ::deken::post [_ "aborting."] info
         return
+    }
+
+    if { "$::deken::remove_on_install" } {
+        ::deken::utilities::uninstall $installdir $extname
     }
 
     ::deken::utilities::extract $installdir $filename $fullpkgfile
