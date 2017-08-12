@@ -733,7 +733,7 @@ proc ::deken::preferences::apply {mytoplevel} {
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
     if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
-    destroy $mytoplevel
+    #destroy $mytoplevel
 }
 proc ::deken::preferences::ok {mytoplevel} {
     ::deken::preferences::apply $mytoplevel
