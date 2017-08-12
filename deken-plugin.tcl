@@ -929,7 +929,7 @@ proc ::deken::download_file {URL outputfilename} {
     set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
     set ncode [::http::ncode $httpresult]
     if {[expr $ncode != 200 ]} {
-        ## FIXXME: we probably should handle redirects correctly
+        ## FIXXME: we probably should handle redirects correctly (following them...)
         # tcl-format
         ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $ncode ] error
         set outputfilename ""
