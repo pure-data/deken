@@ -11,6 +11,8 @@
 ## open embedded README
 ## open README on homepage
 ## remove library before unzipping
+## only show valid arch
+## only show most recent version (of each arch)
 
 # The minimum version of TCL that allows the plugin to run
 package require Tcl 8.4
