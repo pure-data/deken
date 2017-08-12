@@ -213,7 +213,14 @@ proc ::deken::utilities::uninstall {path library} {
     # recursively remove ${path}/${library} if it exists
     set fullpath [file join ${path} ${library}]
     if {![file exists ${fullpath}]} {
-        ::deken::post "FIXXXME Uninstalling not yet implemented!"
+        ::pdwindow::debug [format [_ "\[deken\] uninstalling '%s'" ] ${fullpath} ]
+        if { [catch {
+            file delete -force "${fullpath}"
+        } stdout ] } {
+            ::deken::status [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
+            ::pdwindow::debug $stdout
+            ::pdwindow::stdout "\n"
+        }
     }
 }
 
