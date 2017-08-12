@@ -806,7 +806,9 @@ proc ::deken::clicked_link {URL filename} {
         if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
             # if the docspath is set, try the externals subdir
             set installdir [::pd_docsdir::get_externals_path]
-        } else {
+        }
+    }
+    if { "$installdir" == "" } {
             # ask the user (and remember the decision)
             ::deken::prompt_installdir
             set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
