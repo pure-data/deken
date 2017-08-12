@@ -210,7 +210,11 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
 }
 
 proc ::deken::utilities::uninstall {path library} {
-    ::deken::post "Uninstalling not yet implemented!"
+    # recursively remove ${path}/${library} if it exists
+    set fullpath [file join ${path} ${library}]
+    if {![file exists ${fullpath}]} {
+        ::deken::post "FIXXXME Uninstalling not yet implemented!"
+    }
 }
 
 proc ::deken::utilities::newwidget {basename} {
