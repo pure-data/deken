@@ -216,12 +216,13 @@ proc ::deken::utilities::uninstall {path library} {
     set fullpath [file join ${path} ${library}]
     if {![file exists ${fullpath}]} {
         ::pdwindow::debug [format [_ "\[deken\] uninstalling '%s'" ] ${fullpath} ]
+        ::pdwindow::debug "\n"
         if { [catch {
             file delete -force "${fullpath}"
         } stdout ] } {
-            ::deken::status [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
+            ::pdwindow::debug [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
             ::pdwindow::debug $stdout
-            ::pdwindow::stdout "\n"
+            ::pdwindow::debug "\n"
         }
     }
 }
