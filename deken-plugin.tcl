@@ -822,10 +822,9 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
     if { "$installdir" == "" } {
-            # ask the user (and remember the decision)
-            ::deken::prompt_installdir
-            set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
-        }
+        # ask the user (and remember the decision)
+        ::deken::prompt_installdir
+        set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
     while {1} {
         if { "$installdir" == "" } {
