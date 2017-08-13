@@ -80,14 +80,19 @@ proc ::deken::versioncheck {version} {
 
 ## put the current version of this package here:
 if { [::deken::versioncheck 0.2.4] } {
+## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
 set ::deken::userplatform {}
 set ::deken::hideforeignarch {}
+set ::deken::show_readme {}
+set ::deken::remove_on_install {}
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
 set ::deken::preferences::userplatform {}
 set ::deken::preferences::hideforeignarch {}
+set ::deken::preferences::show_readme {}
+set ::deken::preferences::remove_on_install {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
