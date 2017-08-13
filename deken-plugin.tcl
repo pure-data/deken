@@ -898,8 +898,8 @@ proc ::deken::clicked_link {URL filename} {
     ::deken::utilities::extract $installdir $filename $fullpkgfile
 
     if { "$::deken::show_readme" } {
-        foreach readme {README.deken.txt README.deken.pd} {
-            set r [file join $installdir $readme]
+        foreach readme {README.deken.txt} {
+            set r [file join $extpath $readme]
             if {[file exists $r]} {
                 pd_menucommands::menu_openfile $r
                 break
