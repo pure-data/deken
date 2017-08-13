@@ -214,7 +214,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
 proc ::deken::utilities::uninstall {path library} {
     # recursively remove ${path}/${library} if it exists
     set fullpath [file join ${path} ${library}]
-    if {![file exists ${fullpath}]} {
+    if {[file exists ${fullpath}]} {
         ::pdwindow::debug [format [_ "\[deken\] uninstalling '%s'" ] ${fullpath} ]
         ::pdwindow::debug "\n"
         if { [catch {
