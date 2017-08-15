@@ -545,6 +545,9 @@ proc ::deken::clicked_link {URL filename} {
         pd_menucommands::menu_openfile $installdir
     }
 
+## FIXXME: should we really suggest to add to search-paths?
+## per library search-paths should be added via [declare]
+
     # add to the search paths? bail if the version of pd doesn't support it
     if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
     set extpath [file join $installdir $extname]
