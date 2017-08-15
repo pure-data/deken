@@ -801,6 +801,7 @@ proc ::deken::clicked_link {URL filename} {
     ### if this still doesn't help, ask the user
     set installdir [::deken::find_installpath]
     set extname [lindex [split $filename "-"] 0]
+
     if { "$installdir" == "" } {
         if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
             # if the docspath is set, try the externals subdir
@@ -865,6 +866,7 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
 
+    set extpath [file join $installdir $extname]
     set fullpkgfile [file join $installdir $filename]
     ::deken::clearpost
     ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
@@ -885,7 +887,6 @@ proc ::deken::clicked_link {URL filename} {
 
     # add to the search paths? bail if the version of pd doesn't support it
     if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
-    set extpath [file join $installdir $extname]
     if {![file exists $extpath]} {
         ::deken::post [_ "Unable to add %s to search paths"] $extname
         return
