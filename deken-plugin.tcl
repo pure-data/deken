@@ -558,7 +558,6 @@ proc ::deken::clicked_link {URL filename} {
         yes {
             add_to_searchpaths [file join $installdir $extname]
             ::deken::post [format [_ "Added %s to search paths"] $extname]
-
             # if this version of pd supports it, try refreshing the helpbrowser
             if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
                 ::helpbrowser::refresh
