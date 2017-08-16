@@ -89,6 +89,7 @@ set ::deken::userplatform {}
 set ::deken::hideforeignarch 0
 set ::deken::show_readme 1
 set ::deken::remove_on_install 0
+set ::deken::add_to_path 0
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
@@ -96,6 +97,7 @@ set ::deken::preferences::userplatform {}
 set ::deken::preferences::hideforeignarch {}
 set ::deken::preferences::show_readme {}
 set ::deken::preferences::remove_on_install {}
+set ::deken::preferences::add_to_path {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -251,9 +253,10 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::userplatform $platform
         set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
     }
-    proc ::deken::set_install_options {remove readme} {
+    proc ::deken::set_install_options {remove readme add} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
+        set ::deken::add_to_path [::deken::utilities::bool $remove $add]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -272,11 +275,14 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
     set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] ]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
-    proc ::deken::set_install_options {remove readme} {
+    set ::deken::add_to_path [::deken::utilities::bool [::pd_guiprefs::read deken_add_to_path] ]
+    proc ::deken::set_install_options {remove readme path} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
+        set ::deken::add_to_path [::deken::utilities::bool $path]
         ::pd_guiprefs::write deken_remove_on_install "$::deken::remove_on_install"
         ::pd_guiprefs::write deken_show_readme "$::deken::show_readme"
+        ::pd_guiprefs::write deken_add_to_path "$::deken::add_to_path"
     }
 }
 
@@ -618,6 +624,7 @@ proc ::deken::preferences::create {mytoplevel} {
 
     set ::deken::preferences::show_readme $::deken::show_readme
     set ::deken::preferences::remove_on_install $::deken::remove_on_install
+    set ::deken::preferences::add_to_path $::deken::add_to_path
 
     # this dialog allows us to select:
     #  - which directory to extract to
@@ -664,9 +671,13 @@ proc ::deken::preferences::create {mytoplevel} {
         -variable ::deken::preferences::remove_on_install
     pack $mytoplevel.install.remove -anchor w
 
-    checkbutton $mytoplevel.install.readme -text [_ "Show README of newly installed libraries?"] \
+    checkbutton $mytoplevel.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
         -variable ::deken::preferences::show_readme
     pack $mytoplevel.install.readme -anchor w
+
+    checkbutton $mytoplevel.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
+        -variable ::deken::preferences::add_to_path
+    pack $mytoplevel.install.add_to_path -anchor w
 
 
     ## platform filter settings
@@ -750,7 +761,10 @@ proc ::deken::preferences::apply {mytoplevel} {
         set plat "${::deken::preferences::userplatform}"
     }
     ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
-    ::deken::set_install_options "${::deken::preferences::remove_on_install}" "${::deken::preferences::show_readme}"
+    ::deken::set_install_options \
+        "${::deken::preferences::remove_on_install}" \
+        "${::deken::preferences::show_readme}" \
+        "${::deken::preferences::add_to_path}"
 }
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
@@ -916,28 +930,27 @@ proc ::deken::clicked_link {URL filename} {
     }
 
 
-## FIXXME: should we really suggest to add to search-paths?
-## per library search-paths should be added via [declare]
-
-    # add to the search paths? bail if the version of pd doesn't support it
-    if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
-    if {![file exists $extpath]} {
-        ::deken::post [_ "Unable to add %s to search paths"] $extname
-        return
-    }
-    set msg [_ "Add %s to the Pd search paths?" ]
-    set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
-    switch -- [eval tk_messageBox ${_args}] {
-        yes {
-            add_to_searchpaths [file join $installdir $extname]
-            ::deken::post [format [_ "Added %s to search paths"] $extname]
-            # if this version of pd supports it, try refreshing the helpbrowser
-            if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
-                ::helpbrowser::refresh
-            }
-        }
-        no {
+    if { "$::deken::add_to_path" } {
+        # add to the search paths? bail if the version of pd doesn't support it
+        if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
+        if {![file exists $extpath]} {
+            ::deken::post [_ "Unable to add %s to search paths"] $extname
             return
+        }
+        set msg [_ "Add %s to the Pd search paths?" ]
+        set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
+        switch -- [eval tk_messageBox ${_args}] {
+            yes {
+                add_to_searchpaths [file join $installdir $extname]
+                ::deken::post [format [_ "Added %s to search paths"] $extname]
+                # if this version of pd supports it, try refreshing the helpbrowser
+                if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
+                    ::helpbrowser::refresh
+                }
+            }
+            no {
+                return
+            }
         }
     }
 }
