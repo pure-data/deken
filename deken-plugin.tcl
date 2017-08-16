@@ -86,9 +86,9 @@ if { [::deken::versioncheck 0.2.4] } {
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
 set ::deken::userplatform {}
-set ::deken::hideforeignarch {}
-set ::deken::show_readme {}
-set ::deken::remove_on_install {}
+set ::deken::hideforeignarch 0
+set ::deken::show_readme 1
+set ::deken::remove_on_install 0
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
