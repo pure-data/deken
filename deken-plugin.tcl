@@ -8,11 +8,14 @@
 # http://deken.puredata.info/search?name=foobar
 
 # TODOs
-## open embedded README
-## open README on homepage
-## remove library before unzipping
-## only show valid arch
-## only show most recent version (of each arch)
+## + open embedded README
+## - open README on homepage
+## + remove library before unzipping
+## + only show valid arch
+## - only show most recent version (of each arch)
+## - check whether the "cd" thing during unzip works on w32 and multiple drives
+## - redirect ::deken::post to ::pdwindow::post (that is: use the results pane only for results)
+## + make the "add to path" thingy configurable
 
 # The minimum version of TCL that allows the plugin to run
 package require Tcl 8.4
