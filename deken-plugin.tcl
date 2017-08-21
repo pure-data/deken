@@ -761,6 +761,13 @@ proc ::deken::search::puredata.info {term} {
     ::http::config -accept text/tab-separated-values
     set token [::http::geturl "${dekenserver}?name=${term}"]
     ::http::config -accept $httpaccept
+    set ncode [::http::ncode $token]
+    if {[expr $ncode != 200 ]} {
+        ::pdwindow::debug [format [_ "\[deken\]: Search returned http-error %s" ] $ncode ]
+        ::pdwindow::debug "\n"
+        ::deken::status [_ "Unable to perform search." ]
+        return {}
+    }
     set contents [::http::data $token]
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
