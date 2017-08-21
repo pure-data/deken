@@ -399,7 +399,7 @@ set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
 set ::deken::installpath [::deken::find_installpath]
 
 # allow overriding deken platform from Pd-core
-proc ::deken::set_platform {os machine bits} {
+proc ::deken::set_platform {os machine bits floatwidth} {
     if { $os != $::deken::platform(os) ||
          $machine != $::deken::platform(machine) ||
          $bits != $::deken::platform(bits)} {
