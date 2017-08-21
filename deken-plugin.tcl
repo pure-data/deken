@@ -241,8 +241,8 @@ if { "" != "$::current_plugin_loadpath" } {
 
 # architectures that can be substituted for eachother
 array set ::deken::architecture_substitutes {}
-set ::deken::architecture_substitutes(x86_64) [list "amd64" "i386" "i586" "i686"]
-set ::deken::architecture_substitutes(amd64) [list "x86_64" "i386" "i586" "i686"]
+set ::deken::architecture_substitutes(x86_64) [list "amd64" ]
+set ::deken::architecture_substitutes(amd64) [list "x86_64" ]
 set ::deken::architecture_substitutes(i686) [list "i586" "i386"]
 set ::deken::architecture_substitutes(i586) [list "i386"]
 set ::deken::architecture_substitutes(armv6l) [list "armv6" "arm"]
