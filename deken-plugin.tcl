@@ -267,7 +267,7 @@ proc ::deken::set_platform {os machine bits} {
     }
 }
 
-proc ::deken::status {msg} {
+proc ::deken::status {{msg ""}} {
     #variable mytoplevelref
     #$mytoplevelref.results insert end "$msg\n"
     #$mytoplevelref.status.label -text "$msg"
