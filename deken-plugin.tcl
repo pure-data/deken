@@ -412,7 +412,7 @@ proc ::deken::set_platform {os machine bits floatwidth} {
     }
 }
 
-proc ::deken::status {msg} {
+proc ::deken::status {{msg ""}} {
     #variable mytoplevelref
     #$mytoplevelref.results insert end "$msg\n"
     #$mytoplevelref.status.label -text "$msg"
@@ -788,7 +788,7 @@ proc ::deken::initiate_search {mytoplevel} {
     } stdout ] } {
         ::pdwindow::debug [format [_ "\[deken\]: online? %s" ] $stdout ]
         ::pdwindow::debug "\n"
-        ::deken::status [_ "Unable to perform search. Are you online?" ]
+        ::deken::status [format "%s %s" [_ "Unable to perform search." ] [_ "Are you online?" ] ]
     } else {
     # delete all text in the results
     ::deken::clearpost
@@ -824,7 +824,7 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
         set comment [string map {"\n" "\n\t"} $comment]
         ::deken::post "$title\n\t$comment\n" [list $tag $matchtag]
         ::deken::highlightable_posttag $tag
-        ::deken::bind_posttag $tag <Enter> "+::deken::status $status"
+        ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
     }
 }
@@ -967,7 +967,8 @@ proc ::deken::download_file {URL outputfilename} {
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly (following them...)
         # tcl-format
-        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $ncode ] error
+        set err [::http::code $token]
+        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ] error
         set outputfilename ""
     }
     flush $f
@@ -1137,6 +1138,13 @@ proc ::deken::search::puredata.info {term} {
     ::http::config -accept text/tab-separated-values
     set token [::http::geturl "${dekenserver}?name=${term}"]
     ::http::config -accept $httpaccept
+    set ncode [::http::ncode $token]
+    if {[expr $ncode != 200 ]} {
+        set err [::http::code $token]
+        ::pdwindow::debug [format "\[deken\]: %s %s" [_ "Unable to perform search." ] ${err} ]
+        ::pdwindow::debug "\n"
+        return {}
+    }
     set contents [::http::data $token]
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
