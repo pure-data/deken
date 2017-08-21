@@ -406,7 +406,7 @@ proc ::deken::initiate_search {mytoplevel} {
     } stdout ] } {
         ::pdwindow::debug [format [_ "\[deken\]: online? %s" ] $stdout ]
         ::pdwindow::debug "\n"
-        ::deken::status [_ "Unable to perform search. Are you online?" ]
+        ::deken::status [format "%s %s" [_ "Unable to perform search." ] [_ "Are you online?" ] ]
     } else {
     # delete all text in the results
     ::deken::clearpost
@@ -598,7 +598,8 @@ proc ::deken::download_file {URL outputfilename} {
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly
         # tcl-format
-        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $ncode ] error
+        set err [::http::code $token]
+        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ] error
         set outputfilename ""
     }
     flush $f
@@ -763,9 +764,9 @@ proc ::deken::search::puredata.info {term} {
     ::http::config -accept $httpaccept
     set ncode [::http::ncode $token]
     if {[expr $ncode != 200 ]} {
-        ::pdwindow::debug [format [_ "\[deken\]: Search returned http-error %s" ] $ncode ]
+        set err [::http::code $token]
+        ::pdwindow::debug [format "\[deken\]: %s %s" [_ "Unable to perform search." ] ${err} ]
         ::pdwindow::debug "\n"
-        ::deken::status [_ "Unable to perform search." ]
         return {}
     }
     set contents [::http::data $token]
