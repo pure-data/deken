@@ -438,7 +438,7 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
         set comment [string map {"\n" "\n\t"} $comment]
         ::deken::post "$title\n\t$comment\n" [list $tag $matchtag]
         ::deken::highlightable_posttag $tag
-        ::deken::bind_posttag $tag <Enter> "+::deken::status $status"
+        ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
     }
 }
