@@ -124,6 +124,15 @@ upgrade_deken() {
     echo "Successfully upgraded."
 }
 
+tryrun_deken() {
+    if [ -e $DEKEN_HOME/deken.hy ]; then
+       $DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy "$@"
+    else
+       error "Unable to find '${DEKEN_HOME}/deken.hy'"
+       error "Try running '$0 install' or '$0 upgrade'"
+    fi
+}
+
 # make sure we are deployed
 [ -d "$DEKEN_HOME" ] || install_deken
 
@@ -135,4 +144,4 @@ upgrade_deken() {
     # run he upgrade command instead
     upgrade_deken || \
     # run the real deken command with args passed through
-    $DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy $@
+    tryrun_deken
