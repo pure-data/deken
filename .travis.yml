@@ -8,6 +8,10 @@ install:
   - mkdir -p ~/bin
   - curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
   - chmod u+x ~/bin/deken
+  - mkdir tmp
+  - curl "http://puredata.info/Members/dis/software/gigaverb~/0.3/gigaverb~-v0.3-(Darwin-i386-32)(Sources)(Darwin-x86_64-32)(Linux-amd64-64)(Windows-i386-32)-externals.zip" > tmp/gigaverb.zip
+  - (cd tmp; unzip gigaverb.zip)
 
 script:
   - ~/bin/deken upgrade
+  - ~/bin/deken package -v000.dekenci tmp/gigaverb
