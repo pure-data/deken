@@ -82,7 +82,7 @@ install_deken() {
     which make >/dev/null || \
         bail_install_msg "Oops, no Make found! You need Make to run Deken."
     error "This is your first time running deken on this machine."
-    error "I'm going to install myself and my dependencies into ~/.deken now."
+    error "I'm going to install myself and my dependencies into ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
     [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
