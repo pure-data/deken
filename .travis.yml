@@ -8,8 +8,7 @@ install:
   - mkdir -p ~/bin
   - curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
   - chmod u+x ~/bin/deken
-  - ~/bin/deken
+  - ~/bin/deken -h
 
 script:
-  - echo ${PYTHON}
-  - python --version
+  - ~/bin/deken -h
