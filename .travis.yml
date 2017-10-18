@@ -24,3 +24,6 @@ install:
 script:
   - ~/bin/deken upgrade
   - ~/bin/deken package -v000.dekenci tmp/gigaverb~
+
+after_script:
+  - ls -l tmp/
