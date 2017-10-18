@@ -4,6 +4,15 @@ python:
   - "2.7"
   - "3.6"
 
+matrix:
+  include:
+    - language: generic
+      os: osx
+#      before_install:
+#        - brew update
+#        - brew install python3
+#        - virtualenv env -p python3
+
 install:
   - mkdir -p ~/bin
   - curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
