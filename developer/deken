@@ -7,8 +7,7 @@
 # Much of this code is pilfered from Clojure's Leiningen tool
 
 export DEKEN_VERSION="0.1"
-VIRTUALENV_VERSION="12.1.1"
-
+VIRTUALENV_VERSION="15.1.0"
 
 error() {
     echo "$@" 1>&2
