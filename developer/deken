@@ -7,6 +7,8 @@
 # Much of this code is pilfered from Clojure's Leiningen tool
 
 export DEKEN_VERSION="0.1"
+VIRTUALENV_VERSION="12.1.1"
+
 
 error() {
     echo "$@" 1>&2
@@ -72,7 +74,8 @@ install_virtualenv() {
 	echo "Downloading & installing Virtualenv."
 	rm -rf $DEKEN_HOME/virtualenv-source
 	mkdir -p $DEKEN_HOME/virtualenv-source && \
-	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.1.1.tar.gz && \
+	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz \
+		https://pypi.python.org/packages/source/v/virtualenv/virtualenv-${VIRTUALENV_VERSION}.tar.gz && \
 	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/ && \
 	mv $DEKEN_HOME/virtualenv-source/virtualenv-*/* $DEKEN_HOME/virtualenv-source
 	[ -d "$DEKEN_HOME/virtualenv-source" ] && (\
