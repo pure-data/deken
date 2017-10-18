@@ -161,6 +161,6 @@ case "$1" in
     ;;
   *)
     # run the real deken command with args passed through
-    tryrun_deken
+    tryrun_deken "$@"
     ;;
 esac
