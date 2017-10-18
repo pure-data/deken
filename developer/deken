@@ -149,8 +149,16 @@ tryrun_deken() {
 [ -d "$DEKEN_HOME" ] || bail_install;
 
 # catch the special "upgrade" command
-[ "$1" = "upgrade" ] && \
-    # run he upgrade command instead
-    upgrade_deken || \
+case "$1" in
+  "upgrade")
+    # run the upgrade command instead
+    upgrade_deken
+    ;;
+  "install")
+    install_deken
+    ;;
+  *)
     # run the real deken command with args passed through
     tryrun_deken
+    ;;
+esac
