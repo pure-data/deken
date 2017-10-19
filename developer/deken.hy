@@ -325,9 +325,7 @@
           (if (not sig)
             (print "WARNING: Could not GPG sign the package.")
             (do
-             (setv f (open signfile "w"))
-             (.write f (str sig))
-             (.close f)
+             (with [f (open signfile "w")] (f.write (str sig)))
              signfile)))
          (except [e OSError] (print (.join "\n"
                                            ["WARNING: GPG signing failed:"
