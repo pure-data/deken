@@ -368,9 +368,11 @@
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
   (setv tar-file (+ archive-file ".tar.gz"))
-  (setv f (tarfile.open tar-file "w:gz"))
-  (.add f directory-to-tar)
-  (.close f)
+  (defn tarfilter [tarinfo]
+    (setv tarinfo.name (os.path.relpath tarinfo.name (os.path.join directory-to-tar "..")))
+    tarinfo)
+  (with [f (tarfile.open tar-file "w:gz")]
+        (f.add directory-to-tar :filter tarfilter))
   tar-file)
 
 ;; do we use zip or tar on this archive?
