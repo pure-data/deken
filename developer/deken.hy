@@ -543,7 +543,7 @@
 
   (setv arg-parser
         (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."}))
-  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"}))
+  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command" "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (setv arg-install (apply arg-subparsers.add_parser ["install"]))
