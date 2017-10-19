@@ -546,8 +546,9 @@
   (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command" "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
-  (setv arg-install (apply arg-subparsers.add_parser ["install"]))
-  (setv arg-upgrade (apply arg-subparsers.add_parser ["upgrade"] {"aliases" ["update"]}))
+  (apply arg-subparsers.add_parser ["install"])
+  (apply arg-subparsers.add_parser ["upgrade"])
+  (apply arg-subparsers.add_parser ["update"])
   (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"
