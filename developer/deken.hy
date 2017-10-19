@@ -432,7 +432,7 @@
 
 ;; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
-  (+ (.rstrip folder "/\\")
+  (+ (os.path.basename folder)
      (cond [(nil? version) (sys.exit
                             (+ (% "No version for '%s'!\n" folder)
                                " Please provide the version-number via the '--version' flag.\n"
