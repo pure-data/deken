@@ -168,7 +168,7 @@
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
-  (sorted (sum (list-comp (cond
+  (sum (sorted (list-comp (cond
       [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
       [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
