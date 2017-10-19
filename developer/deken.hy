@@ -339,13 +339,15 @@
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
         (setv signfile (+ filename ".asc"))
+        (setv gpghome (get-config-value "gpg_home"))
+        (setv gpgagent (str-to-bool (get-config-value "gpg_agent")))
+        (print "GPGhome" gpghome)
+        (print "GPGagent" gpgagent)
         (if (os.path.exists signfile)
           (do
            (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
            signfile)
-          (do-gpg-sign-file filename signfile
-                            (get-config-value "gpg_home")
-                            (str-to-bool (get-config-value "gpg_agent")))))))
+          (do-gpg-sign-file filename signfile gpghome gpgagent)))))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
