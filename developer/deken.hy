@@ -513,7 +513,7 @@
               (list-comp
                (if (os.path.isdir name)
                  ;; if asking for a directory just package it up
-                 (archive-extra (archive-dir name (make-archive-basename (.rstrip name "/\\") args.version)))
+                 (archive-extra (archive-dir name (make-archive-basename (os.path.normpath name) args.version)))
                  (sys.exit (% "Not a directory '%s'!" name)))
                (name args.source)))
    ;; upload packaged external to pure-data.info
