@@ -532,9 +532,10 @@
                (try (do
                      (import keyring)
                      (keyring.set_password "deken" username password)))))
-  ;; self-update deken
-  :upgrade (fn [args]
-    (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
+  ;; the rest should have been caught by the wrapper script
+  :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
+  :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
+  :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
@@ -545,6 +546,8 @@
   (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
+  (setv arg-install (apply arg-subparsers.add_parser ["install"]))
+  (setv arg-upgrade (apply arg-subparsers.add_parser ["upgrade"] {"aliases" ["update"]}))
   (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"
