@@ -295,15 +295,21 @@
       ;; generate a GPG signature for a particular file
       (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
         (print (% "Attempting to GPG sign '%s'" filename))
-        (setv gpg (set-attr
-                   (apply gnupg.GPG []
-                          (dict-merge
-                           (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
-                           (if use-agent {"use_agent" True})))
-                   "decode_errors" "replace"))
-        (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
-        (setv uid (try-get uid 0 None))
-        (setv passphrase
+        (try
+         (setv gpg (set-attr
+                    (apply gnupg.GPG []
+                           (dict-merge
+                            (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
+                            (if use-agent {"use_agent" True})))
+                    "decode_errors" "replace"))
+         (except [e OSError] (print (.join "\n"
+                                           ["WARNING: GPG signing failed:"
+                                            str(e)
+                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"]))))
+        (if gpg (do
+          (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
+          (setv uid (try-get uid 0 None))
+          (setv passphrase
               (if (and (not use-agent) keyid)
                 (do
                  (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
@@ -328,7 +334,7 @@
          (except [e OSError] (print (.join "\n"
                                            ["WARNING: GPG signing failed:"
                                             str(e)
-                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"])))))
+                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"])))))))
 
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
