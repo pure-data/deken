@@ -293,10 +293,8 @@
          (except [e IndexError] None)))
 
       ;; generate a GPG signature for a particular file
-      (defn do-gpg-sign-file [filename signfile]
+      (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
         (print (% "Attempting to GPG sign '%s'" filename))
-        (setv gnupghome (get-config-value "gpg_home"))
-        (setv use-agent (str-to-bool (get-config-value "gpg_agent")))
         (setv gpg (set-attr
                    (apply gnupg.GPG []
                           (dict-merge
@@ -339,7 +337,9 @@
           (do
            (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
            signfile)
-          (do-gpg-sign-file filename signfile)))))
+          (do-gpg-sign-file filename signfile
+                            (get-config-value "gpg_home")
+                            (str-to-bool (get-config-value "gpg_agent")))))))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
