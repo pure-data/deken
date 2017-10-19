@@ -1,0 +1,44 @@
+version: 1.0.{build}
+configuration: Release
+shallow_clone: true
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+
+install:
+  - cd developer
+  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - which python
+  - python --version
+  - which pip
+  - pip --version
+  - pip install -r requirements.txt
+
+  - mkdir tmp
+  - cd tmp
+  - curl -fsSL -o deken-test.zip "http://puredata.info/Members/zmoelnig/tests/deken-test.zip"
+  - 7z x deken-test.zip
+  - rm deken-test.zip
+  - cd ..
+
+build_script:
+  - deken -h
+  - deken package -v 000 tmp/deken-test
+
+on_finish:
+  - dir
