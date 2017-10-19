@@ -175,7 +175,8 @@
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
       [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
       [True []])
-    [f (os.listdir folder)]) [])))
+    [f (os.listdir folder)]
+    (os.path.exists (os.path.join folder f)))) []))
 
 ;; get architecture strings from a windows DLL
 ;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
