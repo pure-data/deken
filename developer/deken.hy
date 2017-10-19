@@ -361,7 +361,8 @@
   (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
           (for [file-path (list-comp (os.path.join root file) [file files])]
-            (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))
+            (if (os.path.exists file-path)
+              (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
 
 ;; tar up the directory
