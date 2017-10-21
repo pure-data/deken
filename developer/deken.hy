@@ -266,6 +266,14 @@
      ;; read a value from the gpg config
      (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
      (else
+      (defn gpg-unavail-error [state &optional ex]
+        (print (% "WARNING: GPG %s failed:" state))
+        (if ex (print ex))
+        (print "Do you have 'gpg' installed?")
+        (print "- If you've received numerous errors during the initial installation,")
+        (print "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+        (print "  and re-run `deken install`")
+        (print "- On OSX you might want to install the 'GPG Suite'"))
       (defn gpg-get-config [gpg id]
           (try
            (get
@@ -303,11 +311,7 @@
                             (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
                             (if use-agent {"use_agent" True})))
                     "decode_errors" "replace")
-              (except [e OSError]
-                (do
-                 (print "WARNING: GPG init failed:")
-                 (print e)
-                 (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?")))))
+              (except [e OSError] (gpg-unavail-error "init" e))))
         (if gpg (do
           (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
           (setv uid (try-get uid 0 None))
@@ -333,19 +337,13 @@
             (do
              (with [f (open signfile "w")] (f.write (str sig)))
              signfile)))
-         (except [e OSError]
-           (do
-            (print "WARNING: GPG signing failed:")
-            (print e)
-            (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?")))))))
+         (except [e OSError] (gpg-unavail-error "signing" e))))))
 
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
         (setv signfile (+ filename ".asc"))
         (setv gpghome (get-config-value "gpg_home"))
         (setv gpgagent (str-to-bool (get-config-value "gpg_agent")))
-        (print "GPGhome" gpghome)
-        (print "GPGagent" gpgagent)
         (if (os.path.exists signfile)
           (do
            (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
