@@ -8,10 +8,6 @@ matrix:
   include:
     - language: generic
       os: osx
-#      before_install:
-#        - brew update
-#        - brew install python3
-#        - virtualenv env -p python3
 
 install:
   - mkdir -p ~/bin
