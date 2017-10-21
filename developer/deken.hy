@@ -295,18 +295,19 @@
       ;; generate a GPG signature for a particular file
       (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
         (print (% "Attempting to GPG sign '%s'" filename))
-        (try
-         (setv gpg (set-attr
+        (setv gpg
+              (try
+               (set-attr
                     (apply gnupg.GPG []
                            (dict-merge
                             (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
                             (if use-agent {"use_agent" True})))
-                    "decode_errors" "replace"))
-         (except [e OSError]
-           (do
-            (print "WARNING: GPG init failed:")
-            (print e)
-            (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"))))
+                    "decode_errors" "replace")
+              (except [e OSError]
+                (do
+                 (print "WARNING: GPG init failed:")
+                 (print e)
+                 (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?")))))
         (if gpg (do
           (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
           (setv uid (try-get uid 0 None))
