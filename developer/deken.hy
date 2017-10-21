@@ -302,10 +302,11 @@
                             (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
                             (if use-agent {"use_agent" True})))
                     "decode_errors" "replace"))
-         (except [e OSError] (print (.join "\n"
-                                           ["WARNING: GPG signing failed:"
-                                            str(e)
-                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"]))))
+         (except [e OSError]
+           (do
+            (print "WARNING: GPG init failed:")
+            (print e)
+            (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"))))
         (if gpg (do
           (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
           (setv uid (try-get uid 0 None))
@@ -331,10 +332,11 @@
             (do
              (with [f (open signfile "w")] (f.write (str sig)))
              signfile)))
-         (except [e OSError] (print (.join "\n"
-                                           ["WARNING: GPG signing failed:"
-                                            str(e)
-                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"])))))))
+         (except [e OSError]
+           (do
+            (print "WARNING: GPG signing failed:")
+            (print e)
+            (print "Do you have 'gpg' (on OSX: 'GPG Suite') installed?")))))))
 
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
