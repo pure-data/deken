@@ -324,8 +324,8 @@
         (try
          (do
           (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
-          (if (hasattr sig "stderr")
-            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+;          (if (hasattr sig "stderr")
+;            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
           (if (not sig)
             (print "WARNING: Could not GPG sign the package.")
             (do
