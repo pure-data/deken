@@ -319,7 +319,7 @@
                                                  (if keyid {"keyid" keyid}))
                                      (if passphrase {"passphrase" passphrase})))
 
-        (if (and (not use-agent) passphrase)
+        (if (and (not use-agent) (not passphrase))
           (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
         (try
          (do
