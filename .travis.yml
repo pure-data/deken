@@ -11,7 +11,7 @@ matrix:
 
 install:
   - mkdir -p ~/bin
-  - curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
+  - cp developer/deken ~/bin/deken
   - chmod u+x ~/bin/deken
   - mkdir tmp
   - curl -fsSL -o tmp/deken-test.zip "https://puredata.info/Members/zmoelnig/tests/deken-test.zip"
