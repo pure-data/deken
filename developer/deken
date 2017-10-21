@@ -152,11 +152,11 @@ tryrun_deken() {
 
 # catch the special "upgrade" command
 case "$1" in
-  "upgrade")
+  upgrade|update)
     # run the upgrade command instead
     upgrade_deken
     ;;
-  "install")
+  install)
     install_deken
     ;;
   *)
