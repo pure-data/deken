@@ -22,10 +22,7 @@ environment:
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
-  - which python
   - python --version
-  - which pip
-  - pip --version
 
   - cd developer
   - pip install -r requirements.txt
