@@ -19,7 +19,8 @@ install:
 
 script:
   - ~/bin/deken upgrade
-  - ~/bin/deken package -v000.dekenci tmp/deken-test
+  - ./developer/deken package -v000.dekenci tmp/deken-test
 
 after_script:
+  - ls -l
   - ls -l tmp/
