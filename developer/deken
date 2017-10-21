@@ -72,6 +72,19 @@ bail_install_msg() {
     bail_install
 }
 
+bail_requirements() {
+    rm -f "${DEKEN_HOME}/requirements.txt"
+    error "Installation of requirements failed."
+    error "You probably should install the following packages first:"
+    error " - 'python-dev'"
+    error " - 'libffi-dev'"
+    error " - 'libssl-dev'"
+    error "You can run 'deken install' or 'deken upgrade' anytime to"
+    error " re-install (or upgrade) your Deken installation"
+
+    exit 1
+}
+
 install_virtualenv() {
 	echo "Downloading & installing Virtualenv."
 	rm -rf $DEKEN_HOME/virtualenv-source
@@ -110,7 +123,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         $DEKEN_HOME/virtualenv-source/virtualenv.py "$DEKEN_HOME/virtualenv" || exit 1)
     [ -x "$DEKEN_HOME/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
-        $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || exit 1)
+        $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements)
 }
 
 upgrade_deken() {
@@ -125,7 +138,7 @@ upgrade_deken() {
         mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
     done
     # finally update the python dependencies
-    $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt
+    $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements
     echo "Successfully upgraded."
 }
 
