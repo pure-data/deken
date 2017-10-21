@@ -18,7 +18,10 @@ install:
   - (cd tmp; unzip deken-test.zip; rm deken-test.zip)
 
 script:
-  - ~/bin/deken upgrade
+# 'deken upgrade' downloads files from the 'master' branch, so we can only use
+# it, if this CI-build is actually run for this 'master' branch.
+# if not, we just pip 'requiremements.txt' directly
+  - if [[ "x${TRAVIS_PR_BRANCH:-${TRAVIS_BRANCH}}" != "xmaster" ]]; then pip install -r development/requirements.txt; else ~/bin/deken upgrade ; fi
   - ./developer/deken package -v000.dekenci tmp/deken-test
 
 after_script:
