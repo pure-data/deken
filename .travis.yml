@@ -11,13 +11,13 @@ matrix:
 
 install:
   - mkdir -p ~/bin
-  - cp developer/deken ~/bin/deken
+  - mkdir -p tmp
   - chmod u+x ~/bin/deken
-  - mkdir tmp
   - curl -fsSL -o tmp/deken-test.zip "https://puredata.info/Members/zmoelnig/tests/deken-test.zip"
   - (cd tmp; unzip deken-test.zip; rm deken-test.zip)
 
 script:
+  - cp developer/deken ~/bin/deken
   - ~/bin/deken upgrade
   - ./developer/deken package -v000.dekenci tmp/deken-test
 
