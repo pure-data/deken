@@ -36,6 +36,7 @@ package require pd_guiprefs
 namespace eval ::deken:: {
     variable version
     variable installpath
+    variable protocol
 }
 
 ## only register this plugin if there isn't any newer version already registered
@@ -84,6 +85,10 @@ namespace eval ::deken::search:: { }
 
 set ::deken::installpath ""
 set ::deken::statustimer ""
+set ::deken::protocol "http"
+if { ! [catch {package present tls} stdout] } {
+    set ::deken::protocol "https"
+}
 
 if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
     # this is a Pd without the new GUI-prefs
@@ -760,7 +765,7 @@ proc urldecode {str} {
 ## searching puredata.info
 proc ::deken::search::puredata.info {term} {
     set searchresults [list]
-    set dekenserver "http://deken.puredata.info/search"
+    set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set term [ join $term "&name=" ]
 
