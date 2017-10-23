@@ -69,9 +69,9 @@ be optimally searchable on [puredata.info](http://puredata.info/);
    this archive).
    It is either "Sources" (see [below](#sourceful-uploads) or `OS-MARCH-BIT`,
    with:
-   - OS being the Operating System (`Linux`, `Darwin`, W32`,...)
+   - OS being the Operating System (`Linux`, `Darwin`, `W32`,...)
    - MARCH is the machine architecture (e.g. `x86_64`)
-   - BIT is some number of bits (e.g. `64`)
+   - BIT is some number of bits (e.g. `32`)
  * EXT is the archive extension (either `zip` or `tar.gz`)
 
 Note that the archive should contain a single directory at the top level with
