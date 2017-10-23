@@ -756,10 +756,17 @@ proc ::deken::search::puredata.info {term} {
     set dekenserver "http://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set term [ join $term "&name=" ]
+
+    # deken-specific socket config
     set httpaccept [::http::config -accept]
     ::http::config -accept text/tab-separated-values
+
+    # fetch search result
     set token [::http::geturl "${dekenserver}?name=${term}"]
+
+    # restore http settings
     ::http::config -accept $httpaccept
+
     set ncode [::http::ncode $token]
     if {[expr $ncode != 200 ]} {
         set err [::http::code $token]
