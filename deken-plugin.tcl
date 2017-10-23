@@ -24,7 +24,9 @@ if { [catch {package require tls} ] } {} {
 # try enabling PROXY support if possible
 if { [catch {package require autoproxy} ] } {} {
     ::autoproxy::init
-    ::http::register https 443 ::autoproxy::tls_socket
+    if { ! [catch {package present tls} stdout] } {
+        ::http::register https 443 ::autoproxy::tls_socket
+    }
 }
 
 package require pdwindow 0.1
