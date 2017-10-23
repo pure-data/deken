@@ -767,14 +767,19 @@ proc ::deken::search::puredata.info {term} {
     set searchresults [list]
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
-    set term [ join $term "&name=" ]
+    set queryterm {}
+    foreach x $term {lappend queryterm name $x}
+    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stderr ] } {
+        set queryterm [ join $term "&name=" ]
+        set queryterm "name=${queryterm}"
+    }
 
     # deken-specific socket config
     set httpaccept [::http::config -accept]
     ::http::config -accept text/tab-separated-values
 
     # fetch search result
-    set token [::http::geturl "${dekenserver}?name=${term}"]
+    set token [::http::geturl "${dekenserver}?${queryterm}"]
 
     # restore http settings
     ::http::config -accept $httpaccept
