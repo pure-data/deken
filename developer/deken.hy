@@ -1,6 +1,40 @@
 #!/usr/bin/env hy
 ;; deken upload --version 0.1 ./freeverb~/
 
+;; This software is copyrighted by Chris McCormick, IOhannes m zmölnig and
+;; others.
+;; The following terms (the "Standard Improved BSD License") apply to all
+;; files associated with the software unless explicitly disclaimed in
+;; individual files:
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are
+;; met:
+;;
+;; 1. Redistributions of source code must retain the above copyright
+;;    notice, this list of conditions and the following disclaimer.
+;; 2. Redistributions in binary form must reproduce the above
+;;    copyright notice, this list of conditions and the following
+;;    disclaimer in the documentation and/or other materials provided
+;;    with the distribution.
+;; 3. The name of the author may not be used to endorse or promote
+;;    products derived from this software without specific prior
+;;    written permission.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
+;; EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+;; THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+;; PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
+;; BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+;; EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+;; TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+;; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+;; ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+;; LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+;; IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+;; THE POSSIBILITY OF SUCH DAMAGE.
+
+
 (import sys)
 (import os)
 (import re)
@@ -134,14 +168,15 @@
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
-  (sum (list-comp (cond
+  (sum (sorted (list-comp (cond
       [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
       [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
       [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
       [True []])
-    [f (os.listdir folder)]) []))
+    [f (os.listdir folder)]
+    (os.path.exists (os.path.join folder f)))) []))
 
 ;; get architecture strings from a windows DLL
 ;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
@@ -231,6 +266,14 @@
      ;; read a value from the gpg config
      (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
      (else
+      (defn gpg-unavail-error [state &optional ex]
+        (print (% "WARNING: GPG %s failed:" state))
+        (if ex (print ex))
+        (print "Do you have 'gpg' installed?")
+        (print "- If you've received numerous errors during the initial installation,")
+        (print "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+        (print "  and re-run `deken install`")
+        (print "- On OSX you might want to install the 'GPG Suite'"))
       (defn gpg-get-config [gpg id]
           (try
            (get
@@ -258,19 +301,21 @@
          (except [e IndexError] None)))
 
       ;; generate a GPG signature for a particular file
-      (defn do-gpg-sign-file [filename signfile]
+      (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
         (print (% "Attempting to GPG sign '%s'" filename))
-        (setv gnupghome (get-config-value "gpg_home"))
-        (setv use-agent (str-to-bool (get-config-value "gpg_agent")))
-        (setv gpg (set-attr
-                   (apply gnupg.GPG []
-                          (dict-merge
-                           (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
-                           (if use-agent {"use_agent" True})))
-                   "decode_errors" "replace"))
-        (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
-        (setv uid (try-get uid 0 None))
-        (setv passphrase
+        (setv gpg
+              (try
+               (set-attr
+                    (apply gnupg.GPG []
+                           (dict-merge
+                            (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
+                            (if use-agent {"use_agent" True})))
+                    "decode_errors" "replace")
+              (except [e OSError] (gpg-unavail-error "init" e))))
+        (if gpg (do
+          (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
+          (setv uid (try-get uid 0 None))
+          (setv passphrase
               (if (and (not use-agent) keyid)
                 (do
                  (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
@@ -280,33 +325,30 @@
                                                  (if keyid {"keyid" keyid}))
                                      (if passphrase {"passphrase" passphrase})))
 
-        (if (and (not use-agent) passphrase)
+        (if (and (not use-agent) (not passphrase))
           (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
         (try
          (do
           (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
-          (if (hasattr sig "stderr")
-            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+;          (if (hasattr sig "stderr")
+;            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
           (if (not sig)
             (print "WARNING: Could not GPG sign the package.")
             (do
-             (setv f (open signfile "w"))
-             (.write f (str sig))
-             (.close f)
+             (with [f (open signfile "w")] (f.write (str sig)))
              signfile)))
-         (except [e OSError] (print (.join "\n"
-                                           ["WARNING: GPG signing failed:"
-                                            str(e)
-                                            "Do you have 'gpg' (on OSX: 'GPG Suite') installed?"])))))
+         (except [e OSError] (gpg-unavail-error "signing" e))))))
 
       ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
         (setv signfile (+ filename ".asc"))
+        (setv gpghome (get-config-value "gpg_home"))
+        (setv gpgagent (str-to-bool (get-config-value "gpg_agent")))
         (if (os.path.exists signfile)
           (do
            (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
            signfile)
-          (do-gpg-sign-file filename signfile)))))
+          (do-gpg-sign-file filename signfile gpghome gpgagent)))))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
@@ -323,20 +365,21 @@
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file]
   (setv zip-filename (+ archive-file ".zip"))
-  (setv f (zip-file zip-filename))
-  (for [[root dirs files] (os.walk directory-to-zip)]
-    (for [file files]
-      (setv file-path (os.path.join root file))
-      (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))
-  (.close f)
+  (with [f (zip-file zip-filename)]
+        (for [[root dirs files] (os.walk directory-to-zip)]
+          (for [file-path (list-comp (os.path.join root file) [file files])]
+            (if (os.path.exists file-path)
+              (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
   (setv tar-file (+ archive-file ".tar.gz"))
-  (setv f (tarfile.open tar-file "w:gz"))
-  (.add f directory-to-tar)
-  (.close f)
+  (defn tarfilter [tarinfo]
+    (setv tarinfo.name (os.path.relpath tarinfo.name (os.path.join directory-to-tar "..")))
+    tarinfo)
+  (with [f (tarfile.open tar-file "w:gz")]
+        (f.add directory-to-tar :filter tarfilter))
   tar-file)
 
 ;; do we use zip or tar on this archive?
@@ -398,7 +441,7 @@
 
 ;; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
-  (+ (.rstrip folder "/\\")
+  (+ (os.path.basename folder)
      (cond [(nil? version) (sys.exit
                             (+ (% "No version for '%s'!\n" folder)
                                " Please provide the version-number via the '--version' flag.\n"
@@ -479,7 +522,7 @@
               (list-comp
                (if (os.path.isdir name)
                  ;; if asking for a directory just package it up
-                 (archive-extra (archive-dir name (make-archive-basename (.rstrip name "/\\") args.version)))
+                 (archive-extra (archive-dir name (make-archive-basename (os.path.normpath name) args.version)))
                  (sys.exit (% "Not a directory '%s'!" name)))
                (name args.source)))
    ;; upload packaged external to pure-data.info
@@ -498,9 +541,10 @@
                (try (do
                      (import keyring)
                      (keyring.set_password "deken" username password)))))
-  ;; self-update deken
-  :upgrade (fn [args]
-    (sys.exit "The upgrade script isn't here, it's in the Bash wrapper!"))})
+  ;; the rest should have been caught by the wrapper script
+  :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
+  :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
+  :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
@@ -508,9 +552,12 @@
 
   (setv arg-parser
         (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."}))
-  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command"}))
+  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command" "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
+  (apply arg-subparsers.add_parser ["install"])
+  (apply arg-subparsers.add_parser ["upgrade"])
+  (apply arg-subparsers.add_parser ["update"])
   (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"

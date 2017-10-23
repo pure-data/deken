@@ -31,6 +31,13 @@ if { [catch {package require tls} ] } {} {
     ::tls::init -ssl2 false -ssl3 false -tls1 true
     ::http::register https 443 ::tls::socket
 }
+# try enabling PROXY support if possible
+if { [catch {package require autoproxy} ] } {} {
+    ::autoproxy::init
+    if { ! [catch {package present tls} stdout] } {
+        ::http::register https 443 ::autoproxy::tls_socket
+    }
+}
 
 package require pdwindow 0.1
 package require pd_menucommands 0.1
@@ -50,6 +57,7 @@ namespace eval ::deken::preferences {
     variable platform
     variable userplatform
     variable hideforeignarch
+    variable protocol
 }
 namespace eval ::deken::utilities { }
 
@@ -82,7 +90,8 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.2.4] } {
+if { [::deken::versioncheck 0.2.5] } {
+
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
 set ::deken::userplatform {}
@@ -117,6 +126,11 @@ set ::deken::installpath ""
 set ::deken::statustimer ""
 set ::deken::userplaform ""
 set ::deken::hideforeignarch false
+
+set ::deken::protocol "http"
+if { ! [catch {package present tls} stdout] } {
+    set ::deken::protocol "https"
+}
 
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr bool($value) ] } stdout
@@ -386,8 +400,8 @@ if { "" != "$::current_plugin_loadpath" } {
 
 # architectures that can be substituted for eachother
 array set ::deken::architecture_substitutes {}
-set ::deken::architecture_substitutes(x86_64) [list "amd64" "i386" "i586" "i686"]
-set ::deken::architecture_substitutes(amd64) [list "x86_64" "i386" "i586" "i686"]
+set ::deken::architecture_substitutes(x86_64) [list "amd64" ]
+set ::deken::architecture_substitutes(amd64) [list "x86_64" ]
 set ::deken::architecture_substitutes(i686) [list "i586" "i386"]
 set ::deken::architecture_substitutes(i586) [list "i386"]
 set ::deken::architecture_substitutes(armv6l) [list "armv6" "arm"]
@@ -929,6 +943,26 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
 
+    # add to the search paths? bail if the version of pd doesn't support it
+    if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
+    set extpath [file join $installdir $extname]
+    if {![file exists $extpath]} {
+        ::deken::post [format [_ "Unable to add %s to search paths"] $extname]
+        return
+    }
+    set msg [_ "Add %s to the Pd search paths?" ]
+    set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
+    switch -- [eval tk_messageBox ${_args}] {
+        yes {
+            add_to_searchpaths [file join $installdir $extname]
+            ::deken::post [format [_ "Added %s to search paths"] $extname]
+            # if this version of pd supports it, try refreshing the helpbrowser
+            if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
+                ::helpbrowser::refresh
+            }
+        }
+    }
+
 
     if { "$::deken::add_to_path" } {
         # add to the search paths? bail if the version of pd doesn't support it
@@ -1041,10 +1075,8 @@ proc ::deken::architecture_match {archs} {
     # check each architecture in our list against the current one
     foreach arch $archs {
         if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine bits ] } {
-            if { "${os}" eq "$OS" &&
-                 "${bits}" eq "$BITS"
-             } {
-                ## so OS and word size match
+            if { "${os}" eq "$::deken::platform(os)" } {
+                ## so OS matches...
                 ## check whether the CPU matches as well
                 if { "${machine}" eq "${MACHINE}" } {return 1}
                 ## not exactly; see whether it is in the list of compat CPUs
@@ -1131,13 +1163,25 @@ proc urldecode {str} {
 ## searching puredata.info
 proc ::deken::search::puredata.info {term} {
     set searchresults [list]
-    set dekenserver "http://deken.puredata.info/search"
+    set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
-    set term [ join $term "&name=" ]
+    set queryterm {}
+    foreach x $term {lappend queryterm name $x}
+    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stderr ] } {
+        set queryterm [ join $term "&name=" ]
+        set queryterm "name=${queryterm}"
+    }
+
+    # deken-specific socket config
     set httpaccept [::http::config -accept]
     ::http::config -accept text/tab-separated-values
-    set token [::http::geturl "${dekenserver}?name=${term}"]
+
+    # fetch search result
+    set token [::http::geturl "${dekenserver}?${queryterm}"]
+
+    # restore http settings
     ::http::config -accept $httpaccept
+
     set ncode [::http::ncode $token]
     if {[expr $ncode != 200 ]} {
         set err [::http::code $token]
