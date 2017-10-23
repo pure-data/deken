@@ -49,15 +49,20 @@ namespace eval ::deken:: {
     variable installpath
     variable userplatform
     variable hideforeignarch
+
+    # whether to use http:// or https://
+    variable protocol
 }
 
 namespace eval ::deken::preferences {
     variable installpath
     variable userinstallpath
+    # automatically detected platform
     variable platform
+    # user specified platform
     variable userplatform
+    # boolean whether non-matching archs should be hidden
     variable hideforeignarch
-    variable protocol
 }
 namespace eval ::deken::utilities { }
 
