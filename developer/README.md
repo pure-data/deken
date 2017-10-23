@@ -43,7 +43,7 @@ with the zip file.
 
 ### Creating/Uploading packages on a different machine
 `deken` inspects the files in the directory to determine the target platform
-(rather than just checking on which system you are currently runing).
+(rather than just checking on which system you are currently running).
 Therefore, if it is not feasible to install `deken` on the machine used for
 building your Pd library, you can run `deken` on another machine,
 
