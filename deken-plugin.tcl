@@ -21,6 +21,11 @@ if { [catch {package require tls} ] } {} {
     ::tls::init -ssl2 false -ssl3 false -tls1 true
     ::http::register https 443 ::tls::socket
 }
+# try enabling PROXY support if possible
+if { [catch {package require autoproxy} ] } {} {
+    ::autoproxy::init
+    ::http::register https 443 ::autoproxy::tls_socket
+}
 
 package require pdwindow 0.1
 package require pd_menucommands 0.1
