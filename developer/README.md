@@ -49,7 +49,7 @@ building your Pd library, you can run `deken` on another machine,
 
 Example: You build the "my_external" library on OSX-10.5, but (due to OSX-10.5
 not being supported by Apple anymore) you haven't installed `deken` there.
-So you simply transfer the "my_external" directory to your linux machine, where
+So you simply transfer the "my_external" directory to your Linux machine, where
 you run `deken package my_external` and it will magically create the
 `my_external-v3.14-(Darwin-i386-32)(Darwin-x86_64-32)-externals.tgz` file for
 you, ready to be uploaded.
@@ -85,10 +85,10 @@ optional, don't include them. The same goes for the curly braces around the
 However, the round parentheses "()" around architectures must be included to
 separate the architectures visibly from each other.
 
-In plain english this means:
+In plain English this means:
 > the library-name, followed by an optional version string (starting with `-v`
 > and ending with `-`), followed by zero or more architecture specifications
-> (each surrounded by `(`parantheses`)`), and terminated by `-externals`
+> (each surrounded by `(`parentheses`)`), and terminated by `-externals`
 > (followed by a filename extension).
 
 

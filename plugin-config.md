@@ -1,4 +1,4 @@
-the deken-plugin for Pd can be configured via a simple text-file.
+The deken-plugin for Pd can be configured via a simple text-file.
 
 # deken-plugin.conf
 
@@ -28,7 +28,7 @@ or into a system-specific place (`$PdPath` resp `%PdPath%` are the installation 
 Here are the possible values:
 
  * `installpath` = Path where you would want to install the externals
- (default: the first writeable path in the standard search paths)
+ (default: the first writable path in the standard search paths)
  (note: you should *always* use `/` as path-separator, even on W32!)
 
 
