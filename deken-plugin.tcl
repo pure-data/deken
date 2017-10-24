@@ -964,19 +964,6 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::post [format [_ "Unable to add %s to search paths"] $extname]
         return
     }
-    set msg [_ "Add %s to the Pd search paths?" ]
-    set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
-    switch -- [eval tk_messageBox ${_args}] {
-        yes {
-            add_to_searchpaths [file join $installdir $extname]
-            ::deken::post [format [_ "Added %s to search paths"] $extname]
-            # if this version of pd supports it, try refreshing the helpbrowser
-            if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
-                ::helpbrowser::refresh
-            }
-        }
-    }
-
 
     if { "$::deken::add_to_path" } {
         # add to the search paths? bail if the version of pd doesn't support it
