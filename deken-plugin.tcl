@@ -159,7 +159,7 @@ proc ::deken::utilities::vbs_unzipper {zipfile {path .}} {
     ## this is w32 only
     if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
     if { "" eq $::deken::_vbsunzip } {
-        set ::deken::_vbsunzip [ file join [::deken::gettmpdir] unzip.vbs ]
+        set ::deken::_vbsunzip [ file join [::deken::gettmpdir] deken_unzip.vbs ]
     }
 
     if {[file exists $::deken::_vbsunzip]} {} {
