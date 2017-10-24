@@ -155,6 +155,7 @@ proc ::deken::utilities::is_writable_dir {path} {
     return false
 }
 
+if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
     if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
@@ -200,7 +201,14 @@ Set objShell = Nothing
     }
     return 1
 }
+} { # successfully imported zipfile::decode
+proc ::deken::utilities::unzipper {zipfile {path .}} {
+    ::zipfile::decode::unzipfile "${zipfile}" "${path}"
+    return 1
+}
+}
 set ::deken::_vbsunzip ""
+
 proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     # installdir fullpkgfile filename
     set PWD [ pwd ]
