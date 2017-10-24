@@ -942,10 +942,16 @@ proc ::deken::clicked_link {URL filename} {
     ::deken::utilities::extract $installdir $filename $fullpkgfile
 
     if { "$::deken::show_readme" } {
-        foreach readme {README.deken.txt} {
-            set r [file join $extpath $readme]
+        foreach ext {pd html txt} {
+            set r [file join $extpath "README.deken.$ext"]
             if {[file exists $r]} {
-                pd_menucommands::menu_openfile $r
+                if { "$ext" == "pd" } {
+                    set directory [file normalize [file dirname $r]]
+                    set basename [file tail $r]
+                    pdsend "pd open [enquote_path $basename] [enquote_path $directory]"
+                } {
+                    pd_menucommands::menu_openfile $r
+                }
                 break
             }
         }
