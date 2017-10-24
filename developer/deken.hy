@@ -60,7 +60,7 @@
 
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(def version (try (.rstrip (.read (open (os.path.join deken-home "VERSION"))) "\r\n") (except [e Exception] (.get os.environ "DEKEN_VERSION" "0.1"))))
+(def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
 (def externals-host "puredata.info")
 
 (def elf-arch-types {
