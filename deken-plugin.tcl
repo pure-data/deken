@@ -9,7 +9,7 @@
 
 # TODOs
 ## + open embedded README
-## - open README on homepage
+## - open README on homepage (aka "More info...")
 ## + remove library before unzipping
 ## + only show valid arch
 ## - only show most recent version (of each arch)
@@ -155,7 +155,7 @@ proc ::deken::utilities::is_writable_dir {path} {
     return false
 }
 
-proc ::deken::utilities::vbs_unzipper {zipfile {path .}} {
+proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
     if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
     if { "" eq $::deken::_vbsunzip } {
@@ -207,7 +207,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     cd $installdir
     set success 1
     if { [ string match *.zip $fullpkgfile ] } then {
-        if { [ ::deken::utilities::vbs_unzipper $fullpkgfile  $installdir ] } { } {
+        if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
             if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
                 ::pdwindow::debug "$stdout\n"
                 set success 0
