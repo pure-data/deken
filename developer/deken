@@ -8,7 +8,8 @@
 
 export DEKEN_VERSION="0.2.5"
 export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
-DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/master/developer"
+DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-master}"
+DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer"
 
 VIRTUALENV_VERSION="15.1.0"
 VIRTUALENV_URL="https://pypi.io/packages/source/v/virtualenv/virtualenv-${VIRTUALENV_VERSION}.tar.gz"
