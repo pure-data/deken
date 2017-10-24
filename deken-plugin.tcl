@@ -605,6 +605,9 @@ proc ::deken::preferences::create_pathentries {toplevel var paths} {
     set i 0
 
     foreach path $paths {
+        # only add absolute paths to the pathentries
+        if { [file pathtype $path] != "absolute" } { continue }
+
         set w [::deken::utilities::newwidget ${toplevel}.frame]
 
         frame $w
