@@ -194,7 +194,7 @@ Set objShell = Nothing
         return 0
     }
     ## try to call the script
-    if { [ catch { exec cscript $::deken::_vbsunzip $zipfile .} stdout ] } {
+    if { [ catch { exec cscript $::deken::_vbsunzip "${zipfile}" .} stdout ] } {
         ::pdwindow::debug "\[deken\] VBS-unzip: $::deken::_vbsunzip\n$stdout\n"
         return 0
     }
