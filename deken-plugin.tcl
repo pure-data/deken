@@ -966,14 +966,6 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
 
-    # add to the search paths? bail if the version of pd doesn't support it
-    if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
-    set extpath [file join $installdir $extname]
-    if {![file exists $extpath]} {
-        ::deken::post [format [_ "Unable to add %s to search paths"] $extname]
-        return
-    }
-
     if { "$::deken::add_to_path" } {
         # add to the search paths? bail if the version of pd doesn't support it
         if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
