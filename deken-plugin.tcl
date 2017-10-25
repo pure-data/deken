@@ -1056,15 +1056,21 @@ proc ::deken::parse_filename {filename} {
         # basename <pkgname>[-v<version>-]?{(<arch>)}
         ## strip off the archs
         set baselist [split $basename () ]
-
         # get pkgname + version
         set pkgver [lindex $baselist 0]
-        if { ! [ regexp "(.*)-(.*)-" $pkgver _ pkgname version ] } {
+        if { ! [ regexp "(.*)-(v.*)-" $pkgver _ pkgname version ] } {
             set pkgname $pkgver
             set $version ""
         }
         # get archs
         foreach {a _} [lreplace $baselist 0 0] { lappend archs $a }
+        if { "x$archs$version" == "x" } {
+            # try again as <pkgname>-v<version>
+            if { ! [ regexp "(.*)-(v.*)" $pkgver _ pkgname version ] } {
+                set pkgname $pkgver
+                set $version ""
+            }
+        }
     }
     return [list $pkgname $version $archs]
 }
