@@ -866,7 +866,8 @@ proc ::deken::clicked_link {URL filename} {
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     set installdir [::deken::find_installpath]
-    set extname [lindex [split $filename "-"] 0]
+    set parsedname [::deken::parse_filename $filename]
+    set extname [lindex $parsedname 0]
 
     if { "$installdir" == "" } {
         if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
