@@ -112,6 +112,7 @@ set ::deken::preferences::hideforeignarch {}
 set ::deken::preferences::show_readme {}
 set ::deken::preferences::remove_on_install {}
 set ::deken::preferences::add_to_path {}
+set ::deken::preferences::add_to_path_temp {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -139,6 +140,11 @@ if { ! [catch {package present tls} stdout] } {
 
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr bool($value) ] } stdout
+    return $fallback
+}
+
+proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
+    catch {set fallback [expr (int($value) + int($offset))% 3 ]} stdout
     return $fallback
 }
 
@@ -284,7 +290,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     proc ::deken::set_install_options {remove readme add} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
-        set ::deken::add_to_path [::deken::utilities::bool $remove $add]
+        set ::deken::add_to_path [::deken::utilities::tristate $add 0 0]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -303,11 +309,12 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
     set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] ]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
-    set ::deken::add_to_path [::deken::utilities::bool [::pd_guiprefs::read deken_add_to_path] ]
+    set ::deken::add_to_path [::deken::utilities::tristate [::pd_guiprefs::read deken_add_to_path] ]
+
     proc ::deken::set_install_options {remove readme path} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
-        set ::deken::add_to_path [::deken::utilities::bool $path]
+        set ::deken::add_to_path [::deken::utilities::tristate $path]
         ::pd_guiprefs::write deken_remove_on_install "$::deken::remove_on_install"
         ::pd_guiprefs::write deken_show_readme "$::deken::show_readme"
         ::pd_guiprefs::write deken_add_to_path "$::deken::add_to_path"
@@ -656,6 +663,7 @@ proc ::deken::preferences::create {mytoplevel} {
     set ::deken::preferences::show_readme $::deken::show_readme
     set ::deken::preferences::remove_on_install $::deken::remove_on_install
     set ::deken::preferences::add_to_path $::deken::add_to_path
+    set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
 
     # this dialog allows us to select:
     #  - which directory to extract to
@@ -708,6 +716,14 @@ proc ::deken::preferences::create {mytoplevel} {
 
     checkbutton $mytoplevel.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
         -variable ::deken::preferences::add_to_path
+    catch { $mytoplevel.install.add_to_path configure \
+                -tristatevalue 1 \
+                -onvalue 2 \
+                -command {set ::deken::preferences::add_to_path \
+                              [set ::deken::preferences::add_to_path_temp \
+                                   [::deken::utilities::tristate $::deken::preferences::add_to_path_temp 1 0]]}
+    } stdout
+
     pack $mytoplevel.install.add_to_path -anchor w
 
 
