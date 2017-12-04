@@ -232,18 +232,19 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     cd $PWD
 
     if { $success > 0 } {
-        ::deken::post [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
-        ::deken::post ""
+        ::pdwindow::debug [_ "\[deken\]: " ]
+        ::pdwindow::debug [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
+        ::pdwindow::debug ""
         catch { file delete $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
-        ::deken::post [_ "Unable to extract package automatically." ] warn
-        ::deken::post [_ "Please perform the following steps manually:" ]
-        ::deken::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
+        ::pdwindow::error [_ "\[deken\]: Unable to extract package automatically." ] warn
+        ::pdwindow::post [_ "Please perform the following steps manually:" ]
+        ::pdwindow::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
         pd_menucommands::menu_openfile $fullpkgfile
-        ::deken::post [format [_ "2. Copy the contents into %s." ] $installdir]
-        ::deken::post ""
+        ::pdwindow::post [format [_ "2. Copy the contents into %s." ] $installdir]
+        ::pdwindow::post ""
         pd_menucommands::menu_openfile $installdir
     }
 }
@@ -501,7 +502,7 @@ proc ::deken::update_searchbutton {mytoplevel} {
 }
 
 proc ::deken::progress {x} {
-    ::deken::post "= ${x}%"
+    ::pdwindow::debug "\[deken\]: = ${x}%"
 }
 
 # this function gets called when the menu is clicked
@@ -809,12 +810,14 @@ proc ::deken::preferences::ok {mytoplevel} {
 
 
 proc ::deken::initiate_search {mytoplevel} {
+    set searchterm [$mytoplevel.searchbit.entry get]
     # let the user know what we're doing
     ::deken::clearpost
-    ::deken::post [_ "Searching for externals..."]
+    ::pdwindow::debug [_ "\[deken\]: Start searching for externals..."]
+    ::pdwindow::debug "${searchterm}\n"
     set ::deken::progressvar 0
     if { [ catch {
-        set results [::deken::search_for [$mytoplevel.searchbit.entry get]]
+        set results [::deken::search_for ${searchterm}]
     } stdout ] } {
         ::pdwindow::debug [format [_ "\[deken\]: online? %s" ] $stdout ]
         ::pdwindow::debug "\n"
@@ -839,7 +842,11 @@ proc ::deken::initiate_search {mytoplevel} {
         }
 	::deken::scrollup
     } else {
-        ::deken::post [_ "No matching externals found. Try using the full name e.g. 'freeverb'." ]
+        ::pdwindow::post [_ "\[deken\]: No matching externals found." ]
+        ::pdwindow::debug " "
+        ::pdwindow::debug [_ "Try using the full name e.g. 'freeverb'." ]
+        ::pdwindow::post "\n"
+        ::deken::status [_ "No matching externals found." ]
     }
 }}
 
@@ -937,13 +944,13 @@ proc ::deken::clicked_link {URL filename} {
     set extpath [file join $installdir $extname]
     set fullpkgfile [file join $installdir $filename]
     ::deken::clearpost
-    ::deken::post [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
+    ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
-        ::deken::post [_ "aborting."] info
+        ::pdwindow::debug [_ "aborting.\n"]
         return
     }
-
+    ::pdwindow::debug "\n"
     if { "$::deken::remove_on_install" } {
         ::deken::utilities::uninstall $installdir $extname
     }
@@ -970,7 +977,9 @@ proc ::deken::clicked_link {URL filename} {
         # add to the search paths? bail if the version of pd doesn't support it
         if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
         if {![file exists $extpath]} {
-            ::deken::post [_ "Unable to add %s to search paths"] $extname
+            ::pdwindow::debug "\[deken\]: "
+            ::pdwindow::debug [_ "Unable to add %s to search paths"] $extname
+            ::pdwindow::debug "\n"
             return
         }
         set msg [_ "Add %s to the Pd search paths?" ]
@@ -978,7 +987,9 @@ proc ::deken::clicked_link {URL filename} {
         switch -- [eval tk_messageBox ${_args}] {
             yes {
                 add_to_searchpaths [file join $installdir $extname]
-                ::deken::post [format [_ "Added %s to search paths"] $extname]
+                ::pdwindow::debug "\[deken\]: "
+                ::pdwindow::debug [format [_ "Added %s to search paths"] $extname]
+                ::pdwindow::debug "\n"
                 # if this version of pd supports it, try refreshing the helpbrowser
                 if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
                     ::helpbrowser::refresh
@@ -1004,7 +1015,7 @@ proc ::deken::download_file {URL outputfilename} {
         ## FIXXME: we probably should handle redirects correctly (following them...)
         # tcl-format
         set err [::http::code $token]
-        ::deken::post [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ] error
+        ::pdwindow::error [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ] error
         set outputfilename ""
     }
     flush $f
@@ -1014,13 +1025,17 @@ proc ::deken::download_file {URL outputfilename} {
     if { "$outputfilename" != "" } {
         catch { file delete $outputfilename }
         if {[file exists $outputfilename]} {
-            ::deken::post [format [_ "Unable to remove stray file %s" ] $outputfilename ] error
+            ::pdwindow::debug "\[deken\]: "
+            ::pdwindow::debug [format [_ "Unable to remove stray file %s" ] $outputfilename ]
+            ::pdwindow::debug "\n"
             set outputfilename ""
         }
     }
     if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
         if {[catch { file rename $downloadfilename $outputfilename}]} {
-            ::deken::post [format [_ "Unable to rename downloaded file to %s" ] $outputfilename ] error
+            ::pdwindow::debug "\[deken\]: "
+            ::pdwindow::debug [format [_ "Unable to rename downloaded file to %s" ] $outputfilename ] error
+            ::pdwindow::debug "\n"
             set outputfilename ""
         }
     }
