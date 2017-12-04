@@ -442,9 +442,23 @@ proc ::deken::set_platform {os machine bits floatwidth} {
         set ::deken::platform(machine) ${machine}
         set ::deken::platform(bits) ${bits}
 
-        ::pdwindow::verbose 0 [format [_ "\[deken\] Platform (re)detected: %s" ] [::deken::platform2string ] ]
-        ::pdwindow::verbose 0 "\n"
+        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] ${os}-${machine}-${bits}bit ]
+        ::pdwindow::verbose 1 "\n"
     }
+}
+
+proc ::deken::versioncompare {a b} {
+    # compares to versions, the Debian way
+    # each version string is split into numeric and non-numeric elements
+    # the elements are compared pairwise
+    # "~" sorts before everything else
+    foreach x [regexp -all -inline {\d+|\D+} [string map {~ \t} $a]] y [regexp -all -inline {\d+|\D+} [string map {~ \t} $b]] {
+        if { "$x" == "" } { set x " " }
+        if { "$y" == "" } { set y " " }
+        set c [dict get {1 0 {0 1} -1 {1 0} 1} [lsort -indices -dictionary -unique [list $x $y]]]
+        if { $c != "0" } {return $c}
+    }
+    return 0
 }
 
 proc ::deken::status {{msg ""}} {
@@ -1262,7 +1276,7 @@ proc ::deken::search::puredata.info {term} {
         }
     }
     ::http::cleanup $token
-    return [lsort -dictionary -decreasing -index 5 $searchresults ]
+    return [lsort -command ::deken::versioncompare -decreasing -index 5 $searchresults ]
 }
 
 ::deken::register ::deken::search::puredata.info
