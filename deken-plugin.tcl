@@ -557,7 +557,7 @@ proc ::deken::create_dialog {mytoplevel} {
     label $mytoplevel.status.label -textvariable ::deken::statustext
     pack $mytoplevel.status.label -side left -padx 6
     button $mytoplevel.status.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
-    pack $mytoplevel.status.preferences -side right
+    pack $mytoplevel.status.preferences -side right -padx 6 -pady 3 -ipadx 10
 
     text $mytoplevel.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$mytoplevel.results.ys set"
     scrollbar $mytoplevel.results.ys -orient vertical -command "$mytoplevel.results yview"
