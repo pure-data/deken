@@ -234,7 +234,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     if { $success > 0 } {
         ::pdwindow::debug [_ "\[deken\]: " ]
         ::pdwindow::debug [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
-        ::pdwindow::debug ""
+        ::pdwindow::debug "\n"
         catch { file delete $fullpkgfile }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
