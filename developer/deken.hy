@@ -186,11 +186,11 @@
 (defn get-windows-arch [filename] (try (do-get-windows-arch (open filename "rb")) (except [e Exception] [])))
 (defn do-get-windows-arch [f]
   (setv [magic _ offset] (struct.unpack (str "<2s58sL") (f.read 64)))
-  (if (= magic "MZ")  ; has correct magic bytes
+  (if (= magic (str-to-bytes "MZ"))  ; has correct magic bytes
     (do
      (f.seek offset)
      (setv [sig _ machine] (struct.unpack (str "<2s2sH") (f.read 6)))
-     (if (= sig "PE")  ; has correct signature
+     (if (= sig (str-to-bytes "PE"))  ; has correct signature
        [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
        (raise (Exception "Not a PE Executable."))))
     (raise (Exception "Not a valid Windows dll."))))
