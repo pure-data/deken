@@ -122,6 +122,9 @@
 (defn cut-slice [x y z] (cut x y z))
 (try (cut []) (except [e NameError] (defn cut-slice [x y z] (slice x y z))))
 
+;; convert a string into bytes
+(defn str-to-bytes [s] (try (bytes s) (except [e TypeError] (bytes s "utf-8"))))
+
 ;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
@@ -221,7 +224,7 @@
 (defn parse-arm-elf-arch [arm-elf]
   (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
   ;; we only support format 'A'
-  (setv A (try (bytes "A") (except [e TypeError] (bytes "A" "ascii"))))
+  (setv A (str-to-bytes "A"))
   ;; the arm cpu can be found in the 'aeabi' section
   (setv data (and arm-section (.startswith (arm-section.data) A) (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
   (if data
