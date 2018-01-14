@@ -6,7 +6,7 @@
 
 # Much of this code is pilfered from Clojure's Leiningen tool
 
-export DEKEN_VERSION="0.2.5"
+export DEKEN_VERSION="0.2.6"
 export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
 DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-master}"
 DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer"
