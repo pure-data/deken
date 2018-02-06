@@ -169,17 +169,29 @@
 (defn test-extensions [filename extensions]
   (len (list-comp e [e extensions] (filename.endswith e))))
 
+;; check for a particular file in a directory, recursively
+(defn test-filename-under-dir [pred dir]
+    (any (map (lambda [w] (any (map pred (get w 2))))
+              (os.walk dir))))
+
+;; check if a particular file has an extension in a directory, recursively
+(defn test-extensions-under-dir [dir extensions]
+  (test-filename-under-dir
+   (lambda [filename] (test-extensions filename extensions)) dir))
+
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
-  (sum (sorted (list-comp (cond
+  (sum (sorted (+
+    (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
+        [[["Sources"]]] [])
+    (list-comp (cond
       [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
       [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
       [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
       [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
-      [(test-extensions f [".c" ".cpp" ".C" ".cxx" ".cc"]) [["Sources"]]]
       [True []])
     [f (os.listdir folder)]
-    (os.path.exists (os.path.join folder f)))) []))
+    (os.path.exists (os.path.join folder f))))) []))
 
 ;; get architecture strings from a windows DLL
 ;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
