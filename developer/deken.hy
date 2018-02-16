@@ -245,7 +245,7 @@
                   (.index (arm-section.data) aeabi)
                   (.pop (.split (arm-section.data) aeabi))))
   (if data
-    (get arm-cpu-arch (ord (get (get (.split
+    (get arm-cpu-arch (byte-to-int (get (get (.split
                                               (cut-slice data 7 None)
                                               (str-to-bytes "\x00") 1) 1) 1)))))
 
