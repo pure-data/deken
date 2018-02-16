@@ -83,8 +83,7 @@
   "RESERVED" "RESERVED"})
 
 ;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
-(def arm-cpu-arch
-  [
+(def elf-armcpu [
    "Pre-v4"
    "v4"
    "v4T"
@@ -245,7 +244,7 @@
                   (.index (arm-section.data) aeabi)
                   (.pop (.split (arm-section.data) aeabi))))
   (if data
-    (get arm-cpu-arch (byte-to-int (get (get (.split
+    (get elf-armcpu (byte-to-int (get (get (.split
                                               (cut-slice data 7 None)
                                               (str-to-bytes "\x00") 1) 1) 1)))))
 
