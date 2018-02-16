@@ -128,6 +128,8 @@
 ;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
+(defn byte-to-int [b] (try (ord b) (except [e TypeError] (int b))))
+
 ;; join non-empty elements
 (defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
 
