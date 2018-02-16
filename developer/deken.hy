@@ -238,11 +238,16 @@
 (defn parse-arm-elf-arch [arm-elf]
   (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
   ;; we only support format 'A'
-  (setv A (str-to-bytes "A"))
+  (setv aeabi (str-to-bytes "aeabi"))
   ;; the arm cpu can be found in the 'aeabi' section
-  (setv data (and arm-section (.startswith (arm-section.data) A) (.index (arm-section.data) "aeabi") (.pop (.split (arm-section.data) "aeabi"))))
+  (setv data (and arm-section
+                  (.startswith (arm-section.data) (str-to-bytes "A"))
+                  (.index (arm-section.data) aeabi)
+                  (.pop (.split (arm-section.data) aeabi))))
   (if data
-    (get arm-cpu-arch (ord (get (get (.split (cut-slice data 7 None) "\x00" 1) 1) 1)))))
+    (get arm-cpu-arch (ord (get (get (.split
+                                              (cut-slice data 7 None)
+                                              (str-to-bytes "\x00") 1) 1) 1)))))
 
 ;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
