@@ -186,10 +186,10 @@
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
-      [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-archs (os.path.join folder f) "Linux")]
-      [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-archs (os.path.join folder f) "FreeBSD")]
-      [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-archs (os.path.join folder f))]
-      [(test-extensions f [".m_i386" ".dll"]) (get-windows-archs (os.path.join folder f))]
+      [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "Linux")]
+      [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "FreeBSD")]
+      [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs (os.path.join folder f))]
+      [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs (os.path.join folder f))]
       [True []])
     [f (os.listdir folder)]
     (os.path.exists (os.path.join folder f))))) []))
