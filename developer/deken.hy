@@ -186,10 +186,10 @@
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
-      [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
-      [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
-      [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
-      [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
+      [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-archs (os.path.join folder f) "Linux")]
+      [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-archs (os.path.join folder f) "FreeBSD")]
+      [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-archs (os.path.join folder f))]
+      [(test-extensions f [".m_i386" ".dll"]) (get-windows-archs (os.path.join folder f))]
       [True []])
     [f (os.listdir folder)]
     (os.path.exists (os.path.join folder f))))) []))
@@ -203,7 +203,7 @@
 
 
 ;; Linux ELF file
-(defn get-elf-arch [filename &optional [oshint "Linux"]]
+(defn get-elf-archs [filename &optional [oshint "Linux"]]
   (def elf-osabi {
                   "ELFOSABI_SYSV" None
                   "ELFOSABI_HPUX" "HPUX"
@@ -316,7 +316,7 @@
 
 
 ;; macOS MachO file
-(defn get-mach-arch [filename]
+(defn get-mach-archs [filename]
   (def macho-cpu {
                   1 "vac"
                   6 "m68k"
@@ -355,7 +355,7 @@
        (except [e Exception] (list))))
 
 ;; Windows PE file
-(defn get-windows-arch [filename]
+(defn get-windows-archs [filename]
   (defn get-pe-sectionarchs [cpu symbols]
     (list-comp (, "Windows" cpu (classnew-to-floatsize fun)) [fun symbols]))
   (defn get-pe-archs [pef cpudict]
