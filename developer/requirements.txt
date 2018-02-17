@@ -2,6 +2,7 @@ hy==0.12.1
 easywebdav==1.2.0
 pyelftools==0.24
 macholib==1.8
+pefile==2017.11.5
 python-gnupg==0.4.1
 keyring==10.4.0
 ndg_httpsclient==0.4.3
