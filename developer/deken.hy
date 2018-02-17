@@ -163,7 +163,7 @@
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
    (defn _get_archs [archs sep-1 sep-2]
-     (if archs (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")") ""))
+     (if archs (+ "(" (sep-1.join (sorted (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])))) ")") ""))
    (_get_archs (get-externals-architectures folder) ")(" "-"))
 
 ;; check if a particular file has an extension in a set
@@ -182,7 +182,7 @@
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
-  (sum (sorted (+
+  (sum (+
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
@@ -192,7 +192,7 @@
       [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs (os.path.join folder f))]
       [True []])
     [f (os.listdir folder)]
-    (os.path.exists (os.path.join folder f))))) []))
+    (os.path.exists (os.path.join folder f)))) []))
 
 ; class_new -> t_float=float; class_new64 -> t_float=double
 (defn classnew-to-floatsize [fun]
