@@ -162,9 +162,16 @@
 
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
-   (defn _get_archs [archs sep-1 sep-2]
-     (if archs (+ "(" (sep-1.join (sorted (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs])))) ")") ""))
-   (_get_archs (get-externals-architectures folder) ")(" "-"))
+  (defn _get_archs [archs]
+    (print archs)
+     (if archs
+       (+
+        "("
+        (.join ")(" (list-comp a [a (sorted (set archs))] (!= a "Sources")))
+        ")"
+        (if (in "Sources" archs) "(Sources)" ""))
+         ""))
+   (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder)])))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
