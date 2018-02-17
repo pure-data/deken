@@ -194,59 +194,187 @@
     [f (os.listdir folder)]
     (os.path.exists (os.path.join folder f))))) []))
 
-;; get architecture strings from a windows DLL
-;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn get-windows-arch [filename] (try (do-get-windows-arch (open filename "rb")) (except [e Exception] [])))
-(defn do-get-windows-arch [f]
-  (setv [magic _ offset] (struct.unpack (str "<2s58sL") (f.read 64)))
-  (if (= magic (str-to-bytes "MZ"))  ; has correct magic bytes
-    (do
-     (f.seek offset)
-     (setv [sig _ machine] (struct.unpack (str "<2s2sH") (f.read 6)))
-     (if (= sig (str-to-bytes "PE"))  ; has correct signature
-       [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
-       (raise (Exception "Not a PE Executable."))))
-    (raise (Exception "Not a valid Windows dll."))))
+; class_new -> t_float=float; class_new64 -> t_float=double
+(defn classnew-to-floatsize [fun]
+  (cond
+   [(in fun ["_class_new" "class_new"]) 32]
+   [(in fun ["_class_new64" "class_new64"]) 64]
+   [True None]))
 
-;; get architecture from an ELF (e.g. Linux)
-(defn get-elf-arch [filename oshint]
-  (import [elftools.elf.elffile [ELFFile]])
-  (import [elftools.common [exceptions]])
-  (try
-   (do
-    (setv elf (ELFFile (open filename :mode "rb")))
-    ;; TODO: check section .ARM.attributes for v number
-    ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-    [[oshint
-      (+ (elf-arch-types.get (elf.header.get "e_machine") None)
-         (or (parse-arm-elf-arch elf) ""))
-      (int (cut-slice (.get (elf.header.get "e_ident") "EI_CLASS") -2 None))]])
-   (except [e exceptions.ELFError] [])))
 
-;; get architecture from a Darwin Mach-O file (OSX)
+;; Linux ELF file
+(defn get-elf-arch [filename &optional [oshint "Linux"]]
+  (def elf-osabi {
+                  "ELFOSABI_SYSV" None
+                  "ELFOSABI_HPUX" "HPUX"
+                  "ELFOSABI_NETBSD" "NetBSD"
+                  "ELFOSABI_LINUX" "Linux"
+                  "ELFOSABI_HURD" "Hurd"
+                  "ELFOSABI_SOLARIS" "Solaris"
+                  "ELFOSABI_AIX" "AIX"
+                  "ELFOSABI_IRIX" "Irix"
+                  "ELFOSABI_FREEBSD" "FreeBSD"
+                  "ELFOSABI_TRU64" "Tru64"
+                  "ELFOSABI_MODESTO" None
+                  "ELFOSABI_OPENBSD" "OpenBSD"
+                  "ELFOSABI_OPENVMS" "OpenVMS"
+                  "ELFOSABI_NSK" None
+                  "ELFOSABI_AROS" None
+                  "ELFOSABI_ARM_AEABI" None
+                  "ELFOSABI_ARM" None
+                  "ELFOSABI_STANDALONE" None})
+  (def elf-cpu {
+                ;; format: (, CPU elfsize littlendian) "id"
+                (, "EM_386" 32 True) "i386"
+                (, "EM_X86_64" 64 True) "amd64"
+                (, "EM_X86_64" 32 True) "x32"
+                (, "EM_ARM" 32 True) "arm" ;; needs more
+                (, "EM_AARCH64" 64 True) "arm64"
+                ;; more or less exotic archs
+                (, "EM_IA_64" 64 False) "ia64"
+                (, "EM_IA_64" 64 True) "ia64el"
+                (, "EM_68K" 32 False) "m68k"
+                (, "EM_PARISC" 32 False) "hppa"
+                (, "EM_PPC" 32 False) "ppc"
+                (, "EM_PPC64" 64 False) "ppc64"
+                (, "EM_PPC64" 64 True) "ppc64el"
+                (, "EM_S390" 32 False) "s390" ;; 31bit!?
+                (, "EM_S390" 64 False) "s390x"
+                (, "EM_SH" 32 True) "sh4"
+                (, "EM_SPARC" 32 False) "sparc"
+                (, "EM_SPARCV9" 64 False) "sparc64"
+                (, "EM_ALPHA" 64 True) "alpha" ;; can also be big-endian
+                (, 36902 64 True) "alpha"
+                (, "EM_MIPS" 32 False) "mips"
+                (, "EM_MIPS" 32 True) "mipsel"
+                (, "EM_MIPS" 64 False) "mips64"
+                (, "EM_MIPS" 64 True) "mips64el"
+                ;; microcontrollers
+                (, "EM_BLAFKIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                (, "EM_BLACKFIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                (, "EM_AVR" 32 True) "avr" ;; "Atmel AVR 8-bit microcontroller" e.g. arduino
+                ;; dead archs
+                ;;  (, "EM_88K" 32 None) "m88k" ;; predecessor of PowerPC
+                ;;  (, "EM_M32" ) "WE32100" ;; Belmac32 the world's first 32bit processor!
+                ;;  (, "EM_S370" ) "s370" ;; terminated 1990
+                ;;  (, "EM_MIPS_RS4_BE" ) "r4000" ;; "MIPS 4000 big-endian" ;; direct concurrent to the i486
+                ;;  (, "EM_860" ) "i860" ;; terminated mid-90s
+                ;;  (, "EM_NONE", None, None) None
+                ;;  (, "RESERVED", None, None) "RESERVED"
+                })
+  (def elf-armcpu [
+                   "armPre4"
+                   "armv4"
+                   "armv4T"
+                   "armv5T"
+                   "armv5TE"
+                   "armv5TEJ"
+                   "armv6"
+                   "armv6KZ"
+                   "armv6T2"
+                   "armv6K"
+                   "armv7"
+                   "armv6_M"
+                   "armv6S_M"
+                   "armv7E_M"
+                   "armv8"
+                   "armv8R"
+                   "armv8M_BASE"
+                   "armv8M_MAIN"
+                   ])
+  (defn do-get-elf-archs [elffile oshint]
+    ; get the size of t_float in the elffile
+    (defn get-elf-floatsizes [elffile]
+      (list-comp
+       (classnew-to-floatsize _.name)
+       [_ (.iter_symbols (elffile.get_section_by_name ".dynsym"))]
+       (in "class_new" _.name)))
+    (defn get-elf-armcpu [cpu]
+      (defn armcpu-from-aeabi [arm aeabi]
+        (defn armcpu-from-aeabi-helper [data]
+          (if data
+            (get elf-armcpu (byte-to-int (get (get (.split
+                                                    (cut-slice data 7 None)
+                                                    (str-to-bytes "\x00") 1) 1) 1)))))
+        (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
+      (or
+       (if (= cpu "arm") (armcpu-from-aeabi
+                          (.data (elffile.get_section_by_name ".ARM.attributes"))
+                          (str-to-bytes "aeabi")))
+       cpu))
+    (list-comp (,
+                (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
+                (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
+                floatsize)
+               [floatsize (get-elf-floatsizes elffile)]
+               floatsize))
+  (try (do
+        (import [elftools.elf.elffile [ELFFile]])
+        (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint)
+        )
+       (except [e Exception] (or None (list)))))
+
+
+;; macOS MachO file
 (defn get-mach-arch [filename]
-  (import [macholib.MachO [MachO]])
-  (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
-  (try
-   (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h (. (MachO filename) headers)])
-   (except [e ValueError] [])))
+  (def macho-cpu {
+                  1 "vac"
+                  6 "m68k"
+                  7 "i386"
+                  16777223 "amd64"
+                  8 "mips"
+                  10 "m98k"
+                  11 "hppa"
+                  12 "arm"
+                  16777228 "arm64"
+                  13 "m88k"
+                  14 "spark"
+                  15 "i860"
+                  16 "alpha"
+                  18 "ppc"
+                  16777234 "ppc64"
+                  })
+  (defn get-macho-arch [macho]
+    (defn get-macho-floatsizes [header]
+      (import [macholib.SymbolTable [SymbolTable]])
+      (list-comp
+       (classnew-to-floatsize (.decode name))
+       [(, _ name) (getattr (SymbolTable macho header) "undefsyms")]
+       (in (str-to-bytes "class_new") name)
+       )
+      )
+    (defn get-macho-headerarchs [header]
+      (list-comp
+       (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)
+       [floatsize (get-macho-floatsizes header)]))
+    (list (chain.from_iterable
+           (list-comp (get-macho-headerarchs hdr) [hdr macho.headers]))))
+  (try (do
+        (import [macholib.MachO [MachO]])
+        (get-macho-arch (MachO filename)))
+       (except [e Exception] (list))))
 
+;; Windows PE file
+(defn get-windows-arch [filename]
+  (defn get-pe-sectionarchs [cpu symbols]
+    (list-comp (, "Windows" cpu (classnew-to-floatsize fun)) [fun symbols]))
+  (defn get-pe-archs [pef cpudict]
+    (pef.parse_data_directories)
+    (get-pe-sectionarchs
+     (.lower (.pop (.split (cpudict.get pef.FILE_HEADER.Machine "") "_")))
+     (flatten
+      (list-comp
+       (list-comp
+        (.decode imp.name)
+        [imp entry.imports]
+        (in (str-to-bytes "class_new") imp.name))
+       [entry pef.DIRECTORY_ENTRY_IMPORT]))))
+  (try (do
+        (import pefile)
+        (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE)
+        )
+       (except [e Exception] (list))))
 
-
-;; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
-(defn parse-arm-elf-arch [arm-elf]
-  (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
-  ;; we only support format 'A'
-  (setv aeabi (str-to-bytes "aeabi"))
-  ;; the arm cpu can be found in the 'aeabi' section
-  (setv data (and arm-section
-                  (.startswith (arm-section.data) (str-to-bytes "A"))
-                  (.index (arm-section.data) aeabi)
-                  (.pop (.split (arm-section.data) aeabi))))
-  (if data
-    (get elf-armcpu (byte-to-int (get (get (.split
-                                              (cut-slice data 7 None)
-                                              (str-to-bytes "\x00") 1) 1) 1)))))
 
 ;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
