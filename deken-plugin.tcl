@@ -220,7 +220,14 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     set PWD [ pwd ]
     cd $installdir
     set success 1
-    if { [ string match *.zip $fullpkgfile ] } then {
+    if { [ string match *.dek $fullpkgfile ] } then {
+        if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
+            if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
+                ::pdwindow::debug "$stdout\n"
+                set success 0
+            }
+        }
+    } elseif { [ string match *.zip $fullpkgfile ] } then {
         if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
             if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
                 ::pdwindow::debug "$stdout\n"
