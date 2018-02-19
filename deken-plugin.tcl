@@ -421,7 +421,7 @@ if { "" != "$::current_plugin_loadpath" } {
     ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
     ::pdwindow::debug "\n"
 }
-::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string] ]
+::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
 ::pdwindow::verbose 0 "\n"
 
 # architectures that can be substituted for eachother
@@ -450,7 +450,7 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(bits) ${bits}
         set ::deken::platform(floatsize) ${floatsize}
 
-        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] ${os}-${machine}-${bits}bit ]
+        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] [::deken::platform2string 1] ]
         ::pdwindow::verbose 1 "\n"
     }
 }
