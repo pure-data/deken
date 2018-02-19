@@ -1233,13 +1233,17 @@ proc ::deken::search::puredata.info {term} {
 
     # deken-specific socket config
     set httpaccept [::http::config -accept]
+    set httpagent [::http::config -useragent]
+    set pdversion "Pd/$::PD_MAJOR_VERSION.$::PD_MINOR_VERSION.$::PD_BUGFIX_VERSION$::PD_TEST_VERSION"
     ::http::config -accept text/tab-separated-values
+    ::http::config -useragent "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
 
     # fetch search result
     set token [::http::geturl "${dekenserver}?${queryterm}"]
 
     # restore http settings
     ::http::config -accept $httpaccept
+    ::http::config -useragent $httpagent
 
     set ncode [::http::ncode $token]
     if {[expr $ncode != 200 ]} {
