@@ -377,8 +377,12 @@ proc ::deken::find_installpath {{ignoreprefs false}} {
     return $installpath
 }
 
-proc ::deken::platform2string {} {
-    return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)
+proc ::deken::platform2string {{verbose 0}} {
+    if { $verbose } {
+        return $::deken::platform(os)-$::deken::platform(machine)-float$::deken::platform(floatsize)
+    } {
+        return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(floatsize)
+    }
 }
 
 # list-reverter (compat for tcl<8.5)
