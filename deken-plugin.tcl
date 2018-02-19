@@ -1104,7 +1104,9 @@ proc ::deken::download_progress {token total current} {
     }
 }
 
-# parse a deken-packagefilename into it's components: <pkgname>[-v<version>-]?{(<arch>)}-externals.zip
+# parse a deken-packagefilename into it's components:
+# v0:: <pkgname>[-v<version>-]?{(<arch>)}-externals.<ext>
+# v1:: <pkgname>[\[<version\]]?{(<arch>)}
 # return: list <pkgname> <version> [list <arch> ...]
 proc ::deken::parse_filename {filename} {
     set pkgname $filename
