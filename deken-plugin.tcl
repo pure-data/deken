@@ -396,6 +396,7 @@ if {[info command lreverse] == ""} {
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
 set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
+set ::deken::platform(floatsize) 32
 
 # normalize W32 OSs
 if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
@@ -434,13 +435,16 @@ set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
 set ::deken::installpath [::deken::find_installpath]
 
 # allow overriding deken platform from Pd-core
-proc ::deken::set_platform {os machine bits floatwidth} {
+proc ::deken::set_platform {os machine bits floatsize} {
     if { $os != $::deken::platform(os) ||
          $machine != $::deken::platform(machine) ||
-         $bits != $::deken::platform(bits)} {
+         $bits != $::deken::platform(bits) ||
+         $floatsize != $::deken::platform(floatsize)
+     } {
         set ::deken::platform(os) ${os}
         set ::deken::platform(machine) ${machine}
         set ::deken::platform(bits) ${bits}
+        set ::deken::platform(floatsize) ${floatsize}
 
         ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] ${os}-${machine}-${bits}bit ]
         ::pdwindow::verbose 1 "\n"
@@ -1126,6 +1130,7 @@ proc ::deken::architecture_match {archs} {
     set OS "$::deken::platform(os)"
     set MACHINE "$::deken::platform(machine)"
     set BITS "$::deken::platform(bits)"
+    set FLOATSIZE "$::deken::platform(floatsize)"
     if { "$::deken::userplatform" != "" } {
         ## FIXXME what if the user-supplied input isn't valid?
         regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE BITS
