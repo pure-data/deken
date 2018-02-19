@@ -1049,9 +1049,9 @@ proc ::deken::download_file {URL outputfilename} {
     set ncode [::http::ncode $httpresult]
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly (following them...)
-        # tcl-format
-        set err [::http::code $token]
-        ::pdwindow::error [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ] error
+        set err [::http::code $httpresult]
+        ::pdwindow::error [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ]
+        ::pdwindow::error "\n"
         set outputfilename ""
     }
     flush $f
