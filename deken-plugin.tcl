@@ -1163,9 +1163,9 @@ proc ::deken::architecture_match {archs} {
 
     # check each architecture in our list against the current one
     foreach arch $archs {
-        if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine bits ] } {
-            if { "${os}" eq "$::deken::platform(os)" } {
-                ## so OS matches...
+        if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine floatsize ] } {
+            if { "${os}" eq "${OS}" && "${floatsize}" eq "${FLOATSIZE}" } {
+                ## so OS and floatsize match...
                 ## check whether the CPU matches as well
                 if { "${machine}" eq "${MACHINE}" } {return 1}
                 ## not exactly; see whether it is in the list of compat CPUs
