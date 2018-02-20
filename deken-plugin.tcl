@@ -1158,7 +1158,7 @@ proc ::deken::architecture_match {archs} {
     set FLOATSIZE "$::deken::platform(floatsize)"
     if { "$::deken::userplatform" != "" } {
         ## FIXXME what if the user-supplied input isn't valid?
-        regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE BITS
+        regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE FLOATSIZE
     }
 
     # check each architecture in our list against the current one
