@@ -1131,7 +1131,12 @@ proc ::deken::parse_filename {filename} {
             set $version ""
         }
         # get archs
-        foreach {a _} [lreplace $baselist 0 0] { lappend archs $a }
+        foreach {a _} [lreplace $baselist 0 0] {
+            # in filename.v0 the semantics of the last arch field ("bits") was unclear
+            # since this format predates float64 builds, we just force it to 32
+            regsub -- {-[0-9]+$} $a {-32} a
+            lappend archs $a
+        }
         if { "x$archs$version" == "x" } {
             # try again as <pkgname>-v<version>
             if { ! [ regexp "(.*)-(v.*)" $pkgver _ pkgname version ] } {
