@@ -636,12 +636,27 @@
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
+(defn parse-filename0 [filename]
+  (try
+   (get-values
+    ;; parse filename with a regex
+    (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename)
+    ;; extract only the fields of interested
+    [2 4 5 7])
+   (except [e IndexError] [])))
+(defn parse-filename1 [filename]
+  (try
+   (get-values
+    (re.split r"(.*/)?([^\[\]\(\)]+)(\[[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
+    [2 3 4 6])
+   (except [e IndexError] [])))
 (defn parse-filename [filename]
-  (list-comp (get
-                ;; parse filename with a regex
-                (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
-                ;; extract only the fields of interested
-             [x [2 4 5 7]]))
+  (list-comp
+   (or x None)
+   [x (or
+       (parse-filename1 filename)
+       (parse-filename0 filename)
+       [None None None None])]))
 (defn filename-to-namever [filename]
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
