@@ -594,6 +594,33 @@
                                          username)))
   (for [pkg pkgs] (upload-package pkg destination username password)))
 
+;; compute the archive filename for a particular external on this platform
+;; v1: "<pkgname>[<version>](<arch1>)(<arch2>).dek"
+;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
+(defn make-archive-name [folder version &optional [filenameversion 1]]
+  (defn do-make-name [pkgname version archs filenameversion]
+    (cond
+     [(= filenameversion 1) (+ pkgname
+                               (if version (% "[%s]" version) "")
+                               archs
+                               ".dek")]
+     [(= filenameversion 0) (+ pkgname
+                               (if version (% "-v%s-" version) "")
+                               archs
+                               "-externals"
+                               (archive-extension archs))]))
+  (do-make-name
+   (os.path.basename folder)
+   (cond [(nil? version) (sys.exit
+                          (+ (% "No version for '%s'!\n" folder)
+                             " Please provide the version-number via the '--version' flag.\n"
+                             (% " If '%s' doesn't have a proper version number,\n" folder)
+                             (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
+                                (.strftime (datetime.date.today) "%Y%m%d"))))]
+         [version version])
+   (get-architecture-strings folder)
+   filenameversion))
+
 ;; compute the zipfile name for a particular external on this platform
 (defn make-archive-basename [folder version]
   (+ (os.path.basename folder)
