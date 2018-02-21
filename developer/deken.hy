@@ -541,9 +541,14 @@
 (defn archive-extension [rootname]
   (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
 
-;; automatically pick the correct archiver - windows or "no arch" = zip
+;; v1: all archives are ZIP-files with .dek extension
+;; v0: automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
-  ((if (= (archive-extension rootname) ".zip") zip-dir tar-dir) directory-to-archive rootname))
+  ((cond
+   [(.endswith rootname ".dek") zip-dir]
+   [(.endswith rootname ".zip") zip-dir]
+   [True tar-dir])
+  directory-to-archive rootname ""))
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
@@ -704,7 +709,7 @@
               (list-comp
                (if (os.path.isdir name)
                  ;; if asking for a directory just package it up
-                 (archive-extra (archive-dir name (make-archive-basename (os.path.normpath name) args.version)))
+                 (archive-extra (archive-dir name (make-archive-name (os.path.normpath name) args.version)))
                  (sys.exit (% "Not a directory '%s'!" name)))
                (name args.source)))
    ;; upload packaged external to pure-data.info
