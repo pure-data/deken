@@ -519,8 +519,8 @@
 (defn zip-file [filename]
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
-(defn zip-dir [directory-to-zip archive-file]
-  (setv zip-filename (+ archive-file ".zip"))
+(defn zip-dir [directory-to-zip archive-file &optional [extension ".zip"]]
+  (setv zip-filename (+ archive-file extension))
   (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
           (for [file-path (list-comp (os.path.join root file) [file files])]
