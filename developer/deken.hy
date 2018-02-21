@@ -526,7 +526,6 @@
             (if (os.path.exists file-path)
               (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
-(defn dek-dir [directory-to-zip archive-file] (zip-dir directory-to-zip archive-file :extension ".dek"))
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file]
