@@ -163,8 +163,7 @@
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
   (defn _get_archs [archs]
-    (print archs)
-     (if archs
+    (if archs
        (+
         "("
         (.join ")(" (list-comp a [a (sorted (set archs))] (!= a "Sources")))
