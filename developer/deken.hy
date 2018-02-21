@@ -548,7 +548,7 @@
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
-  (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
+  (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
