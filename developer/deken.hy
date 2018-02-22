@@ -614,7 +614,8 @@
                                (if version (% "-v%s-" version) "")
                                archs
                                "-externals"
-                               (archive-extension archs))]))
+                               (archive-extension archs))]
+     [True (sys.exit (% "Unknown dekformat '%s'" filenameversion))]))
   (do-make-name
    (os.path.basename folder)
    (cond [(nil? version) (sys.exit
