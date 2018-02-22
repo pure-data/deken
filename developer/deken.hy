@@ -519,7 +519,7 @@
     (do
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
-     (setv ver (.strip ver "[]"))
+     (setv ver (.strip (or ver "") "[]"))
      (setv url (urlparse destination))
      (setv proto (or url.scheme "https"))
      (setv host (or url.netloc externals-host))
