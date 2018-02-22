@@ -63,52 +63,6 @@
 (def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
 (def externals-host "puredata.info")
 
-(def elf-arch-types {
-  "EM_NONE" None
-  "EM_386" "i386"
-  "EM_68K" "m68k"
-  "EM_IA_64" "x86_64"
-  "EM_X86_64" "amd64"
-  "EM_ARM" "arm"
-  "EM_M32" "WE32100"
-  "EM_SPARC" "Sparc"
-  "EM_88K" "m88k"
-  "EM_860" "Intel 80860"
-  "EM_MIPS" "MIPS R3000"
-  "EM_S370" "IBM System/370"
-  "EM_MIPS_RS4_BE" "MIPS 4000 big-endian"
-  "EM_AVR" "Atmel AVR 8-bit microcontroller"
-  "EM_AARCH64" "AArch64"
-  "EM_BLAFKIN" "Analog Devices Blackfin"
-  "RESERVED" "RESERVED"})
-
-;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
-(def elf-armcpu [
-   "Pre-v4"
-   "v4"
-   "v4T"
-   "v5T"
-   "v5TE"
-   "v5TEJ"
-   "v6"
-   "v6KZ"
-   "v6T2"
-   "v6K"
-   "v7"
-   "v6_M"
-   "v6S_M"
-   "v7E_M"
-   "v8"
-   "v8R"
-   "v8M_BASE"
-   "v8M_MAIN"
-   ])
-
-(def win-types {
-  "0x014c" ["i386" 32]
-  "0x0200" ["x86_64" 64]
-  "0x8664" ["amd64" 64]})
-
 ;; algorithm to use to hash files
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
@@ -271,6 +225,7 @@
                 ;;  (, "EM_NONE", None, None) None
                 ;;  (, "RESERVED", None, None) "RESERVED"
                 })
+  ;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
   (def elf-armcpu [
                    "armPre4"
                    "armv4"
