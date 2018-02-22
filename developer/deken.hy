@@ -712,11 +712,14 @@
    :package (fn [args]
               ;; are they asking to package a directory?
               (list-comp
-               (if (os.path.isdir name)
-                 ;; if asking for a directory just package it up
-                 (archive-extra (archive-dir name (make-archive-name (os.path.normpath name) args.version)))
-                 (sys.exit (% "Not a directory '%s'!" name)))
-               (name args.source)))
+                (if (os.path.isdir name)
+                    ;; if asking for a directory just package it up
+                    (archive-extra
+                      (archive-dir
+                        name
+                        (make-archive-name (os.path.normpath name) args.version (int args.dekformat))))
+                    (sys.exit (% "Not a directory '%s'!" name)))
+                (name args.source)))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
              (setv username (or (get-config-value "username") (prompt-for-value "username")))
