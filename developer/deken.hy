@@ -113,6 +113,9 @@
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
 
+;; simple debugging helper: prints an object and returns it
+(defn debug [x] (print "DEBUG: " x) x)
+
 ;; nil? has been removed from hy-0.12
 (try (nil? None) (except [e NameError] (defn nil? [x] (= x None))))
 
