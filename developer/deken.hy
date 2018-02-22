@@ -759,11 +759,11 @@
                                                              "required" False})
   (apply arg-upload.add_argument ["source"] {"nargs" "+"
                                                      "metavar" "PACKAGE"
-                                                     "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
+                                                     "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
   (apply arg-upload.add_argument ["--version" "-v"] {"help" "A library version number to insert into the package name, in case a package is created."
                                                             "default" None
                                                             "required" False})
-  (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" False})
+  (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" False})
   (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" False})
   (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" False})
 
