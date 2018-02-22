@@ -318,9 +318,8 @@
                [floatsize (get-elf-floatsizes elffile)]
                floatsize))
   (try (do
-        (import [elftools.elf.elffile [ELFFile]])
-        (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint)
-        )
+         (import [elftools.elf.elffile [ELFFile]])
+         (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
        (except [e Exception] (or None (list)))))
 
 
