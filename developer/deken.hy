@@ -529,7 +529,7 @@
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file &optional [extension ".tar.gz"]]
-  (setv tar-file (+ archive-file ".tar.gz"))
+  (setv tar-file (+ archive-file extension))
   (defn tarfilter [tarinfo]
     (setv tarinfo.name (os.path.relpath tarinfo.name (os.path.join directory-to-tar "..")))
     tarinfo)
