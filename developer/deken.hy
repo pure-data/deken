@@ -236,7 +236,8 @@
 
 ;; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
 (defn parse-arm-elf-arch [arm-elf]
-  (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes"))))
+  (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes")
+                                     (except [e Exception] None))))
   ;; we only support format 'A'
   (setv aeabi (str-to-bytes "aeabi"))
   ;; the arm cpu can be found in the 'aeabi' section
@@ -531,7 +532,8 @@
   (or (if (not force-ask)
           (or (try (do
                       (import keyring)
-                      (keyring.get_password "deken" username)))
+                      (keyring.get_password "deken" username))
+                   (except [e Exception] (print "WARNING: " e)))
               (get-config-value "password")))
       (getpass (% "Please enter password for uploading as '%s': " username))))
 
@@ -562,7 +564,8 @@
              (if password
                (try (do
                      (import keyring)
-                     (keyring.set_password "deken" username password)))))
+                     (keyring.set_password "deken" username password))
+                    (except [e Exception] (print "WARNING: " e)))))
   ;; the rest should have been caught by the wrapper script
   :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
   :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
