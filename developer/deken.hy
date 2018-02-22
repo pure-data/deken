@@ -742,36 +742,59 @@
   (print "Deken" version)
 
   (setv arg-parser
-        (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."}))
-  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command" "metavar" "{package,upload}"}))
+        (apply argparse.ArgumentParser []
+               {"prog" "deken"
+                "description" "Deken is a build tool for Pure Data externals."}))
+  (setv arg-subparsers (apply arg-parser.add_subparsers []
+                              {"help" "-h for help."
+                               "dest" "command"
+                               "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (apply arg-subparsers.add_parser ["install"])
   (apply arg-subparsers.add_parser ["upgrade"])
   (apply arg-subparsers.add_parser ["update"])
-  (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
+  (apply arg-parser.add_argument ["--version"]
+         {"action" "version"
+          "version" version
+          "help" "Outputs the version number of Deken."})
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"
-                  "metavar" "SOURCE"
-                  "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-  (apply arg-package.add_argument ["--version" "-v"] {"help" "A library version number to insert into the package name."
-                                                             "default" None
-                                                             "required" False})
-  (apply arg-package.add_argument ["--dekformat"] {"help" "Override the deken packaging format (DEFAULT: 1)."
-                                                   "default" 1
-                                                   "required" False})
-  (apply arg-upload.add_argument ["source"] {"nargs" "+"
-                                                     "metavar" "PACKAGE"
-                                                     "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
-  (apply arg-upload.add_argument ["--version" "-v"] {"help" "A library version number to insert into the package name, in case a package is created."
-                                                            "default" None
-                                                            "required" False})
-  (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" False})
-  (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" False})
-  (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" False})
-  (apply arg-upload.add_argument ["--dekformat"] {"help" "Override the deken packaging format, in case a package is created. (DEFAULT: 1)."
-                                                  "default" 1
-                                                  "required" False})
+          "metavar" "SOURCE"
+          "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
+  (apply arg-package.add_argument ["--version" "-v"]
+         {"help" "A library version number to insert into the package name."
+          "default" None
+          "required" False})
+  (apply arg-package.add_argument ["--dekformat"]
+         {"help" "Override the deken packaging format (DEFAULT: 1)."
+          "default" 1
+          "required" False})
+  (apply arg-upload.add_argument ["source"]
+         {"nargs" "+"
+          "metavar" "PACKAGE"
+          "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
+  (apply arg-upload.add_argument ["--version" "-v"]
+         {"help" "A library version number to insert into the package name, in case a package is created."
+          "default" None
+          "required" False})
+  (apply arg-upload.add_argument ["--dekformat"]
+         {"help" "Override the deken packaging format, in case a package is created. (DEFAULT: 1)."
+          "default" 1
+          "required" False})
+  (apply arg-upload.add_argument ["--destination" "-d"]
+         {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
+          "default" ""
+          "required" False})
+  (apply arg-upload.add_argument ["--ask-password" "-P"]
+         {"action" "store_true"
+          "help" "Ask for upload password (rather than using password-manager."
+          "default" ""
+          "required" False})
+  (apply arg-upload.add_argument ["--no-source-error"]
+         {"action" "store_true"
+          "help" "Force-allow uploading of packages without sources."
+          "required" False})
 
   (setv arguments (.parse_args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
