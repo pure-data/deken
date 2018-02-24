@@ -558,13 +558,13 @@
   (for [pkg pkgs] (upload-package pkg destination username password)))
 
 ;; compute the archive filename for a particular external on this platform
-;; v1: "<pkgname>[<version>](<arch1>)(<arch2>).dek"
+;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
 ;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
 (defn make-archive-name [folder version &optional [filenameversion 1]]
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
      [(= filenameversion 1) (+ pkgname
-                               (if version (% "[%s]" version) "")
+                               (if version (% "[v%s]" version) "")
                                archs
                                ".dek")]
      [(= filenameversion 0) (+ pkgname
@@ -606,7 +606,7 @@
 (defn parse-filename1 [filename]
   (try
    (get-values
-    (re.split r"(.*/)?([^\[\]\(\)]+)(\[[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
+    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
     [2 3 4 6])
    (except [e IndexError] [])))
 (defn parse-filename [filename]
