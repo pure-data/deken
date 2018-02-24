@@ -10,6 +10,9 @@ matrix:
     - python: "3.6"
       env: PIP=pip
 
+before_install:
+  - export DEKEN_BASE_URL=https://raw.githubusercontent.com/${TRAVIS_PULL_REQUEST_SLUG:-TRAVIS_REPO_SLUG}/developer
+
 install:
   - mkdir -p ~/bin
   - mkdir -p tmp
