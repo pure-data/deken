@@ -1114,9 +1114,14 @@ proc ::deken::parse_filename {filename} {
     set archs [list]
     set version ""
     if { [ string match "*.dek" $filename ] } {
-        ## deken filename v1: <library>[<version>](<arch1>)(<arch2>).dek
+        ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
         set archstring ""
-        regexp {^([^\[\]\(\)]+)(\[[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname version archstring
+        regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring
+        foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
+            if {![string first v ${o}]} {
+                set version [string range $o 1 end]
+            } { # ignoring unknown option... }
+        }
         foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
     } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
         ## deken filename v0
