@@ -11,7 +11,8 @@ matrix:
       env: PIP=pip
 
 before_install:
-  - export DEKEN_BASE_URL=https://raw.githubusercontent.com/${TRAVIS_PULL_REQUEST_SLUG:-$TRAVIS_REPO_SLUG}/${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}developer
+  - export DEKEN_BASE_URL=https://raw.githubusercontent.com/${TRAVIS_PULL_REQUEST_SLUG:-$TRAVIS_REPO_SLUG}/${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}/developer
+  - echo ${DEKEN_BASE_URL}
 
 install:
   - mkdir -p ~/bin
