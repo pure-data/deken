@@ -28,6 +28,7 @@ script:
 # if not, we just pip 'requiremements.txt' directly
   - if [[ "x${TRAVIS_PR_BRANCH:-${TRAVIS_BRANCH}}" != "xmaster" ]]; then "${PIP}" install -r developer/requirements.txt; else ~/bin/deken upgrade ; fi
   - ./developer/deken package -v000.dekenci tmp/deken-test
+  - ./developer/deken package --dekformat 0 -v000.dekenci tmp/deken-test
 
 after_script:
   - ls -l
