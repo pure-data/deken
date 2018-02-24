@@ -423,7 +423,7 @@
                             (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
                             (if use-agent {"use_agent" True})))
                     "decode_errors" "replace")
-              (except [e OSError] (gpg-unavail-error "init" e))))
+               (except [e OSError] (gpg-unavail-error "init" e))))
         (if gpg (do
           (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
           (setv uid (try-get uid 0 None))
