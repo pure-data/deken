@@ -8,7 +8,7 @@ Packages are stored on <http://puredata.info/> and can be installed using the `H
 
 Since [`Pd-0.47`](http://puredata.info/downloads/pure-data/releases/0.47-0),
 the `deken-plugin` is included into Pure Data itself,
-so there is no need to manually install it.
+so the only reason to manually install it is to get the newest version.
 
 Main development of the plugin is still happening in *this* repository,
 so you might want to manually install the plugin to help testing new features.
