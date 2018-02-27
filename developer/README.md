@@ -25,8 +25,8 @@ See [config.md](./config.md) for deken's configuration file format.
 You have a directory containing your compiled externals object files called
 `my_external`.
 
-This command will create a file like `my_external-v0.1-(Linux-amd64-64)-externals.zip`
-and upload it to your account on <http://puredata.info/> where the search plugin
+This command will create a file like `my_external[v0.1](Linux-amd64-64).dek`
+and upload it to your account on <https://puredata.info/> where the search plugin
 can find it:
 
 	$ deken package -v 0.1 my_external
@@ -38,7 +38,7 @@ command for you in one step:
 	$ deken upload -v 0.1 my_external
 
 The upload step will also generate a .sha256 checksum file and upload it along
-with the zip file.
+with the dek file.
 
 
 ### Creating/Uploading packages on a different machine
@@ -51,7 +51,7 @@ Example: You build the "my_external" library on OSX-10.5, but (due to OSX-10.5
 not being supported by Apple anymore) you haven't installed `deken` there.
 So you simply transfer the "my_external" directory to your Linux machine, where
 you run `deken package my_external` and it will magically create the
-`my_external-v3.14-(Darwin-i386-32)(Darwin-x86_64-32)-externals.tgz` file for
+`my_external[v3.14](Darwin-i386-32)(Darwin-amd64-32)-externals.tgz` file for
 you, ready to be uploaded.
 
 ## Filename format ##
@@ -59,7 +59,7 @@ you, ready to be uploaded.
 The `deken` tool names a zipfile of externals binaries with a specific format to
 be optimally searchable on [puredata.info](http://puredata.info/);
 
-	LIBNAME[-vVERSION-]{(ARCH)}-externals.EXT
+	LIBNAME[vVERSION]{(ARCH)}.dek
 
  * LIBNAME is the name of the externals package ("zexy", "cyclone", "freeverb~").
  * VERSION contains the version information for the end use
@@ -71,49 +71,49 @@ be optimally searchable on [puredata.info](http://puredata.info/);
    with:
    - OS being the Operating System (`Linux`, `Darwin`, `W32`,...)
    - MARCH is the machine architecture (e.g. `x86_64`)
-   - BIT is some number of bits (e.g. `32`)
- * EXT is the archive extension (either `zip` or `tar.gz`)
+   - BIT is the size of Pd's numbers in bits (usually `32`; for double-precision it is `64`)
 
 Note that the archive should contain a single directory at the top level with
 NAME the same as the externals package itself. For example a freeverb~ externals
 package would contain a directory "freeverb~" at the top level of the zipfile in
 which the externals live.
 
-The square brackets around the "-vVERSION-" section are to indicate it is
-optional, don't include them. The same goes for the curly braces around the
-"(ARCH)" (indicating that this section can be repeated multiple times).
-However, the round parentheses "()" around architectures must be included to
+The version string must be enclosed by square brackets (`[]`) and start with a `v`.
+The version string itself must not contain any brackets or parentheses.
+Strictly speaking, the version (with the enclosing brackets) is optional, however
+it is highly suggested that you provide it.
+
+The curly braces around the "(ARCH)" specifiers are only to indicate that this section
+can occur multiple times (or not at all).
+However, the round parentheses "()" enclosing the architectures string must be included to
 separate the architectures visibly from each other.
 
 In plain English this means:
-> the library-name, followed by an optional version string (starting with `-v`
-> and ending with `-`), followed by zero or more architecture specifications
-> (each surrounded by `(`parentheses`)`), and terminated by `-externals`
-> (followed by a filename extension).
+> the library-name, followed by an optional version string (starting with `[v`
+> and ending with `]`), followed by zero or more architecture specifications
+> (each surrounded by `(`parentheses`)`), and terminated by `.dek`.
 
 
 Here is the actual regular expression used:
 
-    (.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)
+    (.*/)?([^\[\]\(\)]+)(\[v[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)
 
 with the following matching groups:
 
  - ~~`#0` anything before the path (always empty and *ignored*)~~
  - ~~`#1` = path to filename (*ignored*)~~
  -   `#2` = library name
- - ~~`#3` = version string with decoration (*ignored*)~~
- -   `#4` = version
- -   `#5` = archs
- - ~~`#6` = last arch in archs (*ignored*)~~
- -   `#7` = extension
- - ~~`#8` anything after the extension (should be empty and is *ignored*)~~
+ - ~~`#3` = options (including the version)
+ -   `#4` = archs
+ - ~~`#5` = last arch in archs (*ignored*)~~
+ -   `#6` = extension ('dek')
 
 Some examples:
 
-    adaptive-v0.0.extended-(Linux-i386-32)(Linux-amd64-64)-externals.tar.gz
-    adaptive-v0.0.extended-(Sources)-externals.tar.gz
-    freeverb~(Darwin-i386-32)(Darwin-x86_64-32)(Sources)-externals.zip
-    list-abs-v0.1--externals.zip
+    adaptive[v0.0.extended](Linux-i386-32)(Linux-amd64-32).dek
+    adaptive[v0.0.extended](Sources).dek
+    freeverb~(Darwin-i386-32)(Darwin-x86_64-32)(Sources).dek
+    list-abs[v0.1].dek
 
 
 ## Sourceful uploads
@@ -146,8 +146,8 @@ For uploading a Source package along with binary packages, you can upload one
 package file with multiple archs (including a "Sources" arch) or multiple package
 files (one for the "Sources" arch).
 
-    deken upload frobnozzel(Windows-i386-32)(Sources)-externals.zip
-    deken upload foobar-v0.1-(Linux-x86_64-64)-externals.tgz foobar-v0.1-(Sources)-externals.tgz
+    deken upload frobnozzel(Windows-i386-32)(Sources).dek
+    deken upload foobar[v0.1](Linux-x86_64-32).dek foobar[v0.1](Sources).dek
 
 ## Upgrade ##
 
