@@ -47,8 +47,8 @@ by following these steps:
 - Navigate to `Help -> Find Packages` and search for an external
 - Hover your mouse over one of the search results
 - At the bottom of the search window, a download link will appear
-- Remember this link! (e.g. http://puredata.info/Members/the-bfg/software/frobscottle-1.10-externals.zip)
-- Append `.asc` to the link (e.g. http://puredata.info/Members/the-bfg/software/frobscottle-1.10-externals.zip.asc)
+- Remember this link! (e.g. http://puredata.info/Members/the-bfg/software/frobscottle[v1.10].dek)
+- Append `.asc` to the link (e.g. http://puredata.info/Members/the-bfg/software/frobscottle[v1.10].dek.asc)
 - Download the GPG-signature from the link (besides the downloaded archive)
 - Run `gpg --verify` on the downloaded file
 
