@@ -519,13 +519,12 @@
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
      (setv ver (.strip (or ver "") "[]"))
-     (setv url (urlparse destination))
-     (setv proto (or url.scheme "https"))
-     (setv host (or url.netloc externals-host))
+     (setv proto (or destination.scheme "https"))
+     (setv host (or destination.hostname externals-host))
      (setv path
            (str
             (replace-words
-             (or (.rstrip url.path "/") "/Members/%u/software/%p/%v")
+             (or (.rstrip destination.path "/") "/Members/%u/software/%p/%v")
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
      (setv url (+ proto "://" host path))
      (setv dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto}))
@@ -552,7 +551,7 @@
   (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
                                        (set (list-comp (has-sources? pkg) [pkg pkgs]))
                                        (if (= "puredata.info"
-                                              (.lower (or (getattr (urlparse destination) "netloc") externals-host)))
+                                              (.lower (or (getattr destination "hostname") externals-host)))
                                          username)))
   (for [pkg pkgs] (upload-package pkg destination username password)))
 
@@ -701,8 +700,9 @@
              (upload-packages (list-comp
                                 (mk-pkg-ifneeded x)
                                 (x args.source))
+                              (urlparse
                                 (or (getattr args "destination")
-                                    (get-config-value "destination" ""))
+                                    (get-config-value "destination" "")))
                               username password args.no-source-error)
              ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
              (set-nonempty-password password))
