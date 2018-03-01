@@ -344,7 +344,7 @@
     "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
     "To avoid this prompt in future please add a setting to the config or environment.\n"
     "Please enter %s for http://%s/: ")
-      (tuple [(name.upper) config-file-path name name externals-host]))))
+      (, (name.upper) config-file-path name name externals-host))))
 
 ;; calculate the sha256 hash of a file
 (defn hash-file [file hashfn &optional [blocksize 65535]]
@@ -427,7 +427,7 @@
                 (do
                   (import getpass)
                   (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
-                           (tuple [uid keyid filename])))
+                           (, uid keyid filename)))
                   (getpass.getpass "Enter GPG passphrase: " ))))
         (setv signconfig (dict-merge (dict-merge {"detach" True}
                                                  (if keyid {"keyid" keyid}))
