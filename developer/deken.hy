@@ -48,7 +48,6 @@
  (except [e ImportError] (import [configparser [SafeConfigParser]])))
 (try (import [StringIO [StringIO]])
  (except [e ImportError] (import [io [StringIO]])))
-(import hashlib)
 (try (import [urlparse [urlparse]])
  (except [e ImportError] (import [urllib.parse [urlparse]])))
 
@@ -58,10 +57,6 @@
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
 (def externals-host "puredata.info")
-
-;; algorithm to use to hash files
-(def hasher hashlib.sha256)
-(def hash-extension (.pop (hasher.__name__.split "_")))
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (print "DEBUG: " x) x)
@@ -355,19 +350,26 @@
       (tuple [(name.upper) config-file-path name name externals-host]))))
 
 ;; calculate the sha256 hash of a file
-(defn hash-file [filename &optional [blocksize 65535] [hashfn (hasher)]]
-  (setv f (open filename :mode "rb"))
-  (setv read-chunk (fn [] (.read f blocksize)))
+(defn hash-file [file hashfn &optional [blocksize 65535]]
+  (setv read-chunk (fn [] (.read file blocksize)))
   (while True
     (setv buf (read-chunk))
     (if-not buf (break))
     (hashfn.update buf))
    (hashfn.hexdigest))
 
-(defn hash-sum-file [filename &optional [blocksize 65535]]
-  (setv hashfilename (% "%s.%s" (tuple [filename hash-extension])))
-  (.write (open hashfilename :mode "w") (hash-file filename blocksize))
-  hashfilename)
+(defn hash-sum-file [filename &optional [algorithm "sha256"] [blocksize 65535]]
+  (import hashlib)
+  (defn do-hash-file [filename hashfilename hasher blocksize]
+    (.write (open hashfilename :mode "w")
+            (hash-file (open filename :mode "rb")
+                       (hasher)
+                       blocksize))
+    hashfilename)
+  (do-hash-file filename
+                (% "%s.%s" (, filename algorithm))
+                (.get hashlib.__dict__ algorithm)
+                blocksize))
 
 ;; handling GPG signatures
 (try (import gnupg)
