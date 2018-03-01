@@ -722,8 +722,8 @@
                                        (get-config-value "username")
                                        (prompt-for-value "username"
                                                          (% "for %s://%s"
-                                                            (, (or  destination.scheme "http")
-                                                               destination.hostname))))
+                                                            (, (or destination.scheme default-destination.scheme)
+                                                               (or destination.hostname default-destination.hostname)))))
                                    check-sources?))
              ;; do-upload returns the username (on success)...
              ;; so let's try storing the (non-empty) password in the keyring
