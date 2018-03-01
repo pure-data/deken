@@ -521,13 +521,13 @@
        (dav.mkdirs path)
        ;; upload the package file
        (dav.upload filepath (+ path "/" filename)))
-      (except [e easywebdav.client.OperationFailed]
+      (except [e easywebdav2.client.OperationFailed]
         (sys.exit (+
                    (str e)
                    (% "Couldn't upload to %s!\n" url)
                    (% "Are you sure you have the correct username and password set for '%s'?\n" host)
                    (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
-  (import easywebdav)
+  (import easywebdav2)
   (if filepath
     (do
      (setv filename (os.path.basename filepath))
@@ -541,7 +541,7 @@
              (or (.rstrip destination.path "/") default-destination.path)
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
      (do-upload-file
-       (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})
+       (apply easywebdav2.connect [host] {"username" username "password" password "protocol" proto})
        path
        filename
        (+ proto "://" host path)
