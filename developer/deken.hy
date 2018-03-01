@@ -562,7 +562,7 @@
   (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
                                        (set (list-comp (has-sources? pkg) [pkg pkgs]))
                                        (if (= "puredata.info"
-                                              (.lower (or (getattr destination "hostname") externals-host)))
+                                              (.lower (or destination.hostname externals-host)))
                                          username)))
   (for [pkg pkgs] (upload-package pkg destination username password))
   (, username password))
@@ -711,13 +711,13 @@
                (upload-packages packages
                                 destination
                                 username
-                                (or (getattr destination "password")
+                                (or destination.password
                                     (get-upload-password username args.ask-password))
                                 check-sources?))
              (defn do-upload [packages destination check-sources?]
                (do-upload-username packages
                                    destination
-                                   (or (getattr destination "username")
+                                   (or destination.username
                                        (get-config-value "username")
                                        (prompt-for-value "username"))
                                    check-sources?))
