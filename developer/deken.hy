@@ -339,13 +339,13 @@
                   (first default)])))
 
 ;; prompt for a particular config value for externals host upload
-(defn prompt-for-value [name]
+(defn prompt-for-value [name &optional [forstring ""]]
   ((try raw_input (except [e NameError] input))
     (% (+
     "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
     "To avoid this prompt in future please add a setting to the config or environment.\n"
-    "Please enter %s for http://%s/: ")
-      (, (name.upper) config-file-path name name externals-host))))
+    "Please enter %s %s:: ")
+      (, (name.upper) config-file-path name name forstring))))
 
 ;; calculate the sha256 hash of a file
 (defn hash-file [file hashfn &optional [blocksize 65535]]
