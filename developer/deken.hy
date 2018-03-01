@@ -42,8 +42,6 @@
 (import datetime)
 
 (import platform)
-(import zipfile)
-(import tarfile)
 (import string)
 (import struct)
 (import copy)
@@ -473,6 +471,7 @@
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-file [filename]
+  (import zipfile)
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file &optional [extension ".zip"]]
@@ -486,6 +485,7 @@
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file &optional [extension ".tar.gz"]]
+  (import tarfile)
   (setv tar-file (+ archive-file extension))
   (defn tarfilter [tarinfo]
     (setv tarinfo.name (os.path.relpath tarinfo.name (os.path.join directory-to-tar "..")))
