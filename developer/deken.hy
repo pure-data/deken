@@ -63,56 +63,12 @@
 (def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
 (def externals-host "puredata.info")
 
-(def elf-arch-types {
-  "EM_NONE" None
-  "EM_386" "i386"
-  "EM_68K" "m68k"
-  "EM_IA_64" "x86_64"
-  "EM_X86_64" "amd64"
-  "EM_ARM" "arm"
-  "EM_M32" "WE32100"
-  "EM_SPARC" "Sparc"
-  "EM_88K" "m88k"
-  "EM_860" "Intel 80860"
-  "EM_MIPS" "MIPS R3000"
-  "EM_S370" "IBM System/370"
-  "EM_MIPS_RS4_BE" "MIPS 4000 big-endian"
-  "EM_AVR" "Atmel AVR 8-bit microcontroller"
-  "EM_AARCH64" "AArch64"
-  "EM_BLAFKIN" "Analog Devices Blackfin"
-  "RESERVED" "RESERVED"})
-
-;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
-(def arm-cpu-arch
-  [
-   "Pre-v4"
-   "v4"
-   "v4T"
-   "v5T"
-   "v5TE"
-   "v5TEJ"
-   "v6"
-   "v6KZ"
-   "v6T2"
-   "v6K"
-   "v7"
-   "v6_M"
-   "v6S_M"
-   "v7E_M"
-   "v8"
-   "v8R"
-   "v8M_BASE"
-   "v8M_MAIN"
-   ])
-
-(def win-types {
-  "0x014c" ["i386" 32]
-  "0x0200" ["x86_64" 64]
-  "0x8664" ["amd64" 64]})
-
 ;; algorithm to use to hash files
 (def hasher hashlib.sha256)
 (def hash-extension (.pop (hasher.__name__.split "_")))
+
+;; simple debugging helper: prints an object and returns it
+(defn debug [x] (print "DEBUG: " x) x)
 
 ;; nil? has been removed from hy-0.12
 (try (nil? None) (except [e NameError] (defn nil? [x] (= x None))))
@@ -127,7 +83,7 @@
 
 ;; convert a string into bool, based on the string value
 (defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
-
+;; convert a single byte (e.g. bytes('\x01\x02')[0]) to an integer
 (defn byte-to-int [b] (try (ord b) (except [e TypeError] (int b))))
 
 ;; join non-empty elements
@@ -163,9 +119,15 @@
 
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
-   (defn _get_archs [archs sep-1 sep-2]
-     (if archs (+ "(" (sep-1.join (set (list-comp (sep-2.join (list-comp (str a) [a arch])) [arch archs]))) ")") ""))
-   (_get_archs (get-externals-architectures folder) ")(" "-"))
+  (defn _get_archs [archs]
+    (if archs
+       (+
+        "("
+        (.join ")(" (list-comp a [a (sorted (set archs))] (!= a "Sources")))
+        ")"
+        (if (in "Sources" archs) "(Sources)" ""))
+         ""))
+   (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder)])))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
@@ -183,72 +145,199 @@
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
-  (sum (sorted (+
+  (sum (+
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
-      [(test-extensions f [".pd_linux" ".l_ia64" ".l_i386" ".l_arm" ".so"]) (get-elf-arch (os.path.join folder f) "Linux")]
-      [(test-extensions f [".pd_freebsd" ".b_i386"]) (get-elf-arch (os.path.join folder f) "FreeBSD")]
-      [(test-extensions f [".pd_darwin" ".d_fat" ".d_ppc"]) (get-mach-arch (os.path.join folder f))]
-      [(test-extensions f [".m_i386" ".dll"]) (get-windows-arch (os.path.join folder f))]
+      [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "Linux")]
+      [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "FreeBSD")]
+      [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs (os.path.join folder f))]
+      [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs (os.path.join folder f))]
       [True []])
     [f (os.listdir folder)]
-    (os.path.exists (os.path.join folder f))))) []))
+    (os.path.exists (os.path.join folder f)))) []))
 
-;; get architecture strings from a windows DLL
-;; http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
-(defn get-windows-arch [filename] (try (do-get-windows-arch (open filename "rb")) (except [e Exception] [])))
-(defn do-get-windows-arch [f]
-  (setv [magic _ offset] (struct.unpack (str "<2s58sL") (f.read 64)))
-  (if (= magic (str-to-bytes "MZ"))  ; has correct magic bytes
-    (do
-     (f.seek offset)
-     (setv [sig _ machine] (struct.unpack (str "<2s2sH") (f.read 6)))
-     (if (= sig (str-to-bytes "PE"))  ; has correct signature
-       [(+ ["Windows"] (win-types.get (% "0x%04x" machine) ["unknown" "unknown"]))]
-       (raise (Exception "Not a PE Executable."))))
-    (raise (Exception "Not a valid Windows dll."))))
-
-;; get architecture from an ELF (e.g. Linux)
-(defn get-elf-arch [filename oshint]
-  (import [elftools.elf.elffile [ELFFile]])
-  (import [elftools.common [exceptions]])
-  (try
-   (do
-    (setv elf (ELFFile (open filename :mode "rb")))
-    ;; TODO: check section .ARM.attributes for v number
-    ;; python ./virtualenv/bin/readelf.py -p .ARM.attributes ...
-    [[oshint
-      (+ (elf-arch-types.get (elf.header.get "e_machine") None)
-         (or (parse-arm-elf-arch elf) ""))
-      (int (cut-slice (.get (elf.header.get "e_ident") "EI_CLASS") -2 None))]])
-   (except [e exceptions.ELFError] [])))
-
-;; get architecture from a Darwin Mach-O file (OSX)
-(defn get-mach-arch [filename]
-  (import [macholib.MachO [MachO]])
-  (import [macholib.mach_o [MH_MAGIC_64 CPU_TYPE_NAMES]])
-  (try
-   (list-comp ["Darwin" (CPU_TYPE_NAMES.get h.header.cputype h.header.cputype) (if (= h.MH_MAGIC MH_MAGIC_64) 64 32)] [h (. (MachO filename) headers)])
-   (except [e ValueError] [])))
+; class_new -> t_float=float; class_new64 -> t_float=double
+(defn classnew-to-floatsize [fun]
+  (cond
+   [(in fun ["_class_new" "class_new"]) 32]
+   [(in fun ["_class_new64" "class_new64"]) 64]
+   [True None]))
 
 
+;; Linux ELF file
+(defn get-elf-archs [filename &optional [oshint "Linux"]]
+  (def elf-osabi {
+                  "ELFOSABI_SYSV" None
+                  "ELFOSABI_HPUX" "HPUX"
+                  "ELFOSABI_NETBSD" "NetBSD"
+                  "ELFOSABI_LINUX" "Linux"
+                  "ELFOSABI_HURD" "Hurd"
+                  "ELFOSABI_SOLARIS" "Solaris"
+                  "ELFOSABI_AIX" "AIX"
+                  "ELFOSABI_IRIX" "Irix"
+                  "ELFOSABI_FREEBSD" "FreeBSD"
+                  "ELFOSABI_TRU64" "Tru64"
+                  "ELFOSABI_MODESTO" None
+                  "ELFOSABI_OPENBSD" "OpenBSD"
+                  "ELFOSABI_OPENVMS" "OpenVMS"
+                  "ELFOSABI_NSK" None
+                  "ELFOSABI_AROS" None
+                  "ELFOSABI_ARM_AEABI" None
+                  "ELFOSABI_ARM" None
+                  "ELFOSABI_STANDALONE" None})
+  (def elf-cpu {
+                ;; format: (, CPU elfsize littlendian) "id"
+                (, "EM_386" 32 True) "i386"
+                (, "EM_X86_64" 64 True) "amd64"
+                (, "EM_X86_64" 32 True) "x32"
+                (, "EM_ARM" 32 True) "arm" ;; needs more
+                (, "EM_AARCH64" 64 True) "arm64"
+                ;; more or less exotic archs
+                (, "EM_IA_64" 64 False) "ia64"
+                (, "EM_IA_64" 64 True) "ia64el"
+                (, "EM_68K" 32 False) "m68k"
+                (, "EM_PARISC" 32 False) "hppa"
+                (, "EM_PPC" 32 False) "ppc"
+                (, "EM_PPC64" 64 False) "ppc64"
+                (, "EM_PPC64" 64 True) "ppc64el"
+                (, "EM_S390" 32 False) "s390" ;; 31bit!?
+                (, "EM_S390" 64 False) "s390x"
+                (, "EM_SH" 32 True) "sh4"
+                (, "EM_SPARC" 32 False) "sparc"
+                (, "EM_SPARCV9" 64 False) "sparc64"
+                (, "EM_ALPHA" 64 True) "alpha" ;; can also be big-endian
+                (, 36902 64 True) "alpha"
+                (, "EM_MIPS" 32 False) "mips"
+                (, "EM_MIPS" 32 True) "mipsel"
+                (, "EM_MIPS" 64 False) "mips64"
+                (, "EM_MIPS" 64 True) "mips64el"
+                ;; microcontrollers
+                (, "EM_BLAFKIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                (, "EM_BLACKFIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                (, "EM_AVR" 32 True) "avr" ;; "Atmel AVR 8-bit microcontroller" e.g. arduino
+                ;; dead archs
+                ;;  (, "EM_88K" 32 None) "m88k" ;; predecessor of PowerPC
+                ;;  (, "EM_M32" ) "WE32100" ;; Belmac32 the world's first 32bit processor!
+                ;;  (, "EM_S370" ) "s370" ;; terminated 1990
+                ;;  (, "EM_MIPS_RS4_BE" ) "r4000" ;; "MIPS 4000 big-endian" ;; direct concurrent to the i486
+                ;;  (, "EM_860" ) "i860" ;; terminated mid-90s
+                ;;  (, "EM_NONE", None, None) None
+                ;;  (, "RESERVED", None, None) "RESERVED"
+                })
+  ;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
+  (def elf-armcpu [
+                   "armPre4"
+                   "armv4"
+                   "armv4T"
+                   "armv5T"
+                   "armv5TE"
+                   "armv5TEJ"
+                   "armv6"
+                   "armv6KZ"
+                   "armv6T2"
+                   "armv6K"
+                   "armv7"
+                   "armv6_M"
+                   "armv6S_M"
+                   "armv7E_M"
+                   "armv8"
+                   "armv8R"
+                   "armv8M_BASE"
+                   "armv8M_MAIN"
+                   ])
+  (defn do-get-elf-archs [elffile oshint]
+    ; get the size of t_float in the elffile
+    (defn get-elf-floatsizes [elffile]
+      (list-comp
+       (classnew-to-floatsize _.name)
+       [_ (.iter_symbols (elffile.get_section_by_name ".dynsym"))]
+       (in "class_new" _.name)))
+    (defn get-elf-armcpu [cpu]
+      (defn armcpu-from-aeabi [arm aeabi]
+        (defn armcpu-from-aeabi-helper [data]
+          (if data
+            (get elf-armcpu (byte-to-int (get (get (.split
+                                                    (cut-slice data 7 None)
+                                                    (str-to-bytes "\x00") 1) 1) 1)))))
+        (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
+      (or
+       (if (= cpu "arm") (armcpu-from-aeabi
+                          (.data (elffile.get_section_by_name ".ARM.attributes"))
+                          (str-to-bytes "aeabi")))
+       cpu))
+    (list-comp (,
+                (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
+                (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
+                floatsize)
+               [floatsize (get-elf-floatsizes elffile)]
+               floatsize))
+  (try (do
+         (import [elftools.elf.elffile [ELFFile]])
+         (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
+       (except [e Exception] (or None (list)))))
 
-;; gets the specific flavour of arm by hacking the .ARM.attributes ELF section
-(defn parse-arm-elf-arch [arm-elf]
-  (setv arm-section (if arm-elf (try (arm-elf.get_section_by_name ".ARM.attributes")
-                                     (except [e Exception] None))))
-  ;; we only support format 'A'
-  (setv aeabi (str-to-bytes "aeabi"))
-  ;; the arm cpu can be found in the 'aeabi' section
-  (setv data (and arm-section
-                  (.startswith (arm-section.data) (str-to-bytes "A"))
-                  (.index (arm-section.data) aeabi)
-                  (.pop (.split (arm-section.data) aeabi))))
-  (if data
-    (get arm-cpu-arch (byte-to-int (get (get (.split
-                                              (cut-slice data 7 None)
-                                              (str-to-bytes "\x00") 1) 1) 1)))))
+
+;; macOS MachO file
+(defn get-mach-archs [filename]
+  (def macho-cpu {
+                  1 "vac"
+                  6 "m68k"
+                  7 "i386"
+                  16777223 "amd64"
+                  8 "mips"
+                  10 "m98k"
+                  11 "hppa"
+                  12 "arm"
+                  16777228 "arm64"
+                  13 "m88k"
+                  14 "spark"
+                  15 "i860"
+                  16 "alpha"
+                  18 "ppc"
+                  16777234 "ppc64"
+                  })
+  (defn get-macho-arch [macho]
+    (defn get-macho-floatsizes [header]
+      (import [macholib.SymbolTable [SymbolTable]])
+      (list-comp
+       (classnew-to-floatsize (.decode name))
+       [(, _ name) (getattr (SymbolTable macho header) "undefsyms")]
+       (in (str-to-bytes "class_new") name)
+       )
+      )
+    (defn get-macho-headerarchs [header]
+      (list-comp
+       (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)
+       [floatsize (get-macho-floatsizes header)]))
+    (list (chain.from_iterable
+           (list-comp (get-macho-headerarchs hdr) [hdr macho.headers]))))
+  (try (do
+        (import [macholib.MachO [MachO]])
+        (get-macho-arch (MachO filename)))
+       (except [e Exception] (list))))
+
+;; Windows PE file
+(defn get-windows-archs [filename]
+  (defn get-pe-sectionarchs [cpu symbols]
+    (list-comp (, "Windows" cpu (classnew-to-floatsize fun)) [fun symbols]))
+  (defn get-pe-archs [pef cpudict]
+    (pef.parse_data_directories)
+    (get-pe-sectionarchs
+     (.lower (.pop (.split (cpudict.get pef.FILE_HEADER.Machine "") "_")))
+     (flatten
+      (list-comp
+       (list-comp
+        (.decode imp.name)
+        [imp entry.imports]
+        (in (str-to-bytes "class_new") imp.name))
+       [entry pef.DIRECTORY_ENTRY_IMPORT]))))
+  (try (do
+        (import pefile)
+        (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE)
+        )
+       (except [e Exception] (list))))
+
 
 ;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
@@ -334,7 +423,7 @@
                             (dict-merge {} (if gnupghome {"gnupghome" gnupghome}))
                             (if use-agent {"use_agent" True})))
                     "decode_errors" "replace")
-              (except [e OSError] (gpg-unavail-error "init" e))))
+               (except [e OSError] (gpg-unavail-error "init" e))))
         (if gpg (do
           (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
           (setv uid (try-get uid 0 None))
@@ -386,8 +475,8 @@
 (defn zip-file [filename]
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
-(defn zip-dir [directory-to-zip archive-file]
-  (setv zip-filename (+ archive-file ".zip"))
+(defn zip-dir [directory-to-zip archive-file &optional [extension ".zip"]]
+  (setv zip-filename (+ archive-file extension))
   (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
           (for [file-path (list-comp (os.path.join root file) [file files])]
@@ -396,8 +485,8 @@
   zip-filename)
 
 ;; tar up the directory
-(defn tar-dir [directory-to-tar archive-file]
-  (setv tar-file (+ archive-file ".tar.gz"))
+(defn tar-dir [directory-to-tar archive-file &optional [extension ".tar.gz"]]
+  (setv tar-file (+ archive-file extension))
   (defn tarfilter [tarinfo]
     (setv tarinfo.name (os.path.relpath tarinfo.name (os.path.join directory-to-tar "..")))
     tarinfo)
@@ -409,13 +498,18 @@
 (defn archive-extension [rootname]
   (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
 
-;; automatically pick the correct archiver - windows or "no arch" = zip
+;; v1: all archives are ZIP-files with .dek extension
+;; v0: automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
-  ((if (= (archive-extension rootname) ".zip") zip-dir tar-dir) directory-to-archive rootname))
+  ((cond
+   [(.endswith rootname ".dek") zip-dir]
+   [(.endswith rootname ".zip") zip-dir]
+   [True tar-dir])
+  directory-to-archive rootname ""))
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn is-archive? [filename]
-  (len (list-comp f [f [".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
+  (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
@@ -425,6 +519,7 @@
     (do
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
+     (setv ver (.strip (or ver "") "[]"))
      (setv url (urlparse destination))
      (setv proto (or url.scheme "https"))
      (setv host (or url.netloc externals-host))
@@ -462,18 +557,34 @@
                                          username)))
   (for [pkg pkgs] (upload-package pkg destination username password)))
 
-;; compute the zipfile name for a particular external on this platform
-(defn make-archive-basename [folder version]
-  (+ (os.path.basename folder)
-     (cond [(nil? version) (sys.exit
-                            (+ (% "No version for '%s'!\n" folder)
-                               " Please provide the version-number via the '--version' flag.\n"
-                               (% " If '%s' doesn't have a proper version number,\n" folder)
-                               (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
-                                  (.strftime (datetime.date.today) "%Y%m%d"))))]
-           [version (% "-v%s-" version)]
-           [True ""])
-     (get-architecture-strings folder) "-externals"))
+;; compute the archive filename for a particular external on this platform
+;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
+;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
+(defn make-archive-name [folder version &optional [filenameversion 1]]
+  (defn do-make-name [pkgname version archs filenameversion]
+    (cond
+     [(= filenameversion 1) (+ pkgname
+                               (if version (% "[v%s]" version) "")
+                               archs
+                               ".dek")]
+     [(= filenameversion 0) (+ pkgname
+                               (if version (% "-v%s-" version) "")
+                               archs
+                               "-externals"
+                               (archive-extension archs))]
+     [True (sys.exit (% "Unknown dekformat '%s'" filenameversion))]))
+  (do-make-name
+   (os.path.basename folder)
+   (cond [(nil? version) (sys.exit
+                          (+ (% "No version for '%s'!\n" folder)
+                             " Please provide the version-number via the '--version' flag.\n"
+                             (% " If '%s' doesn't have a proper version number,\n" folder)
+                             (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
+                                (.strftime (datetime.date.today) "%Y%m%d"))))]
+         [version version])
+   (get-architecture-strings folder)
+   filenameversion))
+
 
 ;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
@@ -484,12 +595,27 @@
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
+(defn parse-filename0 [filename]
+  (try
+   (get-values
+    ;; parse filename with a regex
+    (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename)
+    ;; extract only the fields of interested
+    [2 4 5 7])
+   (except [e IndexError] [])))
+(defn parse-filename1 [filename]
+  (try
+   (get-values
+    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
+    [2 3 4 6])
+   (except [e IndexError] [])))
 (defn parse-filename [filename]
-  (list-comp (get
-                ;; parse filename with a regex
-                (re.split r"(.*/)?(.+?)(-v(.+)-)?((\([^\)]+\))+|-)*-externals\.([a-z.]*)" filename) x)
-                ;; extract only the fields of interested
-             [x [2 4 5 7]]))
+  (list-comp
+   (or x None)
+   [x (or
+       (parse-filename1 filename)
+       (parse-filename0 filename)
+       [None None None None])]))
 (defn filename-to-namever [filename]
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
@@ -544,11 +670,14 @@
    :package (fn [args]
               ;; are they asking to package a directory?
               (list-comp
-               (if (os.path.isdir name)
-                 ;; if asking for a directory just package it up
-                 (archive-extra (archive-dir name (make-archive-basename (os.path.normpath name) args.version)))
-                 (sys.exit (% "Not a directory '%s'!" name)))
-               (name args.source)))
+                (if (os.path.isdir name)
+                    ;; if asking for a directory just package it up
+                    (archive-extra
+                      (archive-dir
+                        name
+                        (make-archive-name (os.path.normpath name) args.version (int args.dekformat))))
+                    (sys.exit (% "Not a directory '%s'!" name)))
+                (name args.source)))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
              (setv username (or (get-config-value "username") (prompt-for-value "username")))
@@ -576,30 +705,59 @@
   (print "Deken" version)
 
   (setv arg-parser
-        (apply argparse.ArgumentParser [] {"prog" "deken" "description" "Deken is a build tool for Pure Data externals."}))
-  (setv arg-subparsers (apply arg-parser.add_subparsers [] {"help" "-h for help." "dest" "command" "metavar" "{package,upload}"}))
+        (apply argparse.ArgumentParser []
+               {"prog" "deken"
+                "description" "Deken is a build tool for Pure Data externals."}))
+  (setv arg-subparsers (apply arg-parser.add_subparsers []
+                              {"help" "-h for help."
+                               "dest" "command"
+                               "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (apply arg-subparsers.add_parser ["install"])
   (apply arg-subparsers.add_parser ["upgrade"])
   (apply arg-subparsers.add_parser ["update"])
-  (apply arg-parser.add_argument ["--version"] {"action" "version" "version" version "help" "Outputs the version number of Deken."})
+  (apply arg-parser.add_argument ["--version"]
+         {"action" "version"
+          "version" version
+          "help" "Outputs the version number of Deken."})
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"
-                  "metavar" "SOURCE"
-                  "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-  (apply arg-package.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name."
-                                                             "default" None
-                                                             "required" False})
-  (apply arg-upload.add_argument ["source"] {"nargs" "+"
-                                                     "metavar" "PACKAGE"
-                                                     "help" "The path to an externals/abstractions/plugins zipfile to be uploaded, or a directory which will be packaged first automatically."})
-  (apply arg-upload.add_argument ["--version" "-v"] {"help" "An external version number to insert into the package name. (in case a package is created)"
-                                                            "default" None
-                                                            "required" False})
-  (apply arg-upload.add_argument ["--destination" "-d"] {"help" "The destination folder to upload the file into (defaults to /Members/USER/software/PKGNAME/VERSION/)." "default" "" "required" False})
-  (apply arg-upload.add_argument ["--ask-password" "-P"] {"action" "store_true" "help" "Ask for upload password (rather than using password-manager." "default" "" "required" False})
-  (apply arg-upload.add_argument ["--no-source-error"] {"action" "store_true" "help" "Force-allow uploading of packages without sources." "required" False})
+          "metavar" "SOURCE"
+          "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
+  (apply arg-package.add_argument ["--version" "-v"]
+         {"help" "A library version number to insert into the package name."
+          "default" None
+          "required" False})
+  (apply arg-package.add_argument ["--dekformat"]
+         {"help" "Override the deken packaging format (DEFAULT: 1)."
+          "default" 1
+          "required" False})
+  (apply arg-upload.add_argument ["source"]
+         {"nargs" "+"
+          "metavar" "PACKAGE"
+          "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
+  (apply arg-upload.add_argument ["--version" "-v"]
+         {"help" "A library version number to insert into the package name, in case a package is created."
+          "default" None
+          "required" False})
+  (apply arg-upload.add_argument ["--dekformat"]
+         {"help" "Override the deken packaging format, in case a package is created. (DEFAULT: 1)."
+          "default" 1
+          "required" False})
+  (apply arg-upload.add_argument ["--destination" "-d"]
+         {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
+          "default" ""
+          "required" False})
+  (apply arg-upload.add_argument ["--ask-password" "-P"]
+         {"action" "store_true"
+          "help" "Ask for upload password (rather than using password-manager."
+          "default" ""
+          "required" False})
+  (apply arg-upload.add_argument ["--no-source-error"]
+         {"action" "store_true"
+          "help" "Force-allow uploading of packages without sources."
+          "required" False})
 
   (setv arguments (.parse_args arg-parser))
   (setv command (.get commands (keyword arguments.command)))

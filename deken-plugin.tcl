@@ -220,7 +220,14 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
     set PWD [ pwd ]
     cd $installdir
     set success 1
-    if { [ string match *.zip $fullpkgfile ] } then {
+    if { [ string match *.dek $fullpkgfile ] } then {
+        if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
+            if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
+                ::pdwindow::debug "$stdout\n"
+                set success 0
+            }
+        }
+    } elseif { [ string match *.zip $fullpkgfile ] } then {
         if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
             if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
                 ::pdwindow::debug "$stdout\n"
@@ -377,8 +384,12 @@ proc ::deken::find_installpath {{ignoreprefs false}} {
     return $installpath
 }
 
-proc ::deken::platform2string {} {
-    return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(bits)
+proc ::deken::platform2string {{verbose 0}} {
+    if { $verbose } {
+        return $::deken::platform(os)-$::deken::platform(machine)-float$::deken::platform(floatsize)
+    } {
+        return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(floatsize)
+    }
 }
 
 # list-reverter (compat for tcl<8.5)
@@ -396,6 +407,7 @@ if {[info command lreverse] == ""} {
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
 set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
+set ::deken::platform(floatsize) 32
 
 # normalize W32 OSs
 if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
@@ -416,7 +428,7 @@ if { "" != "$::current_plugin_loadpath" } {
     ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
     ::pdwindow::debug "\n"
 }
-::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string] ]
+::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
 ::pdwindow::verbose 0 "\n"
 
 # architectures that can be substituted for eachother
@@ -434,15 +446,18 @@ set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
 set ::deken::installpath [::deken::find_installpath]
 
 # allow overriding deken platform from Pd-core
-proc ::deken::set_platform {os machine bits floatwidth} {
+proc ::deken::set_platform {os machine bits floatsize} {
     if { $os != $::deken::platform(os) ||
          $machine != $::deken::platform(machine) ||
-         $bits != $::deken::platform(bits)} {
+         $bits != $::deken::platform(bits) ||
+         $floatsize != $::deken::platform(floatsize)
+     } {
         set ::deken::platform(os) ${os}
         set ::deken::platform(machine) ${machine}
         set ::deken::platform(bits) ${bits}
+        set ::deken::platform(floatsize) ${floatsize}
 
-        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] ${os}-${machine}-${bits}bit ]
+        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] [::deken::platform2string 1] ]
         ::pdwindow::verbose 1 "\n"
     }
 }
@@ -1041,6 +1056,7 @@ proc ::deken::clicked_link {URL filename} {
 # download a file to a location
 # http://wiki.tcl.tk/15303
 proc ::deken::download_file {URL outputfilename} {
+    set URL [string map {{[} "%5b" {]} "%5d"} $URL]
     set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
@@ -1089,13 +1105,26 @@ proc ::deken::download_progress {token total current} {
     }
 }
 
-# parse a deken-packagefilename into it's components: <pkgname>[-v<version>-]?{(<arch>)}-externals.zip
+# parse a deken-packagefilename into it's components:
+# v0:: <pkgname>[-v<version>-]?{(<arch>)}-externals.<ext>
+# v1:: <pkgname>[\[<version\]]?{(<arch>)}
 # return: list <pkgname> <version> [list <arch> ...]
 proc ::deken::parse_filename {filename} {
     set pkgname $filename
     set archs [list]
     set version ""
-    if { [ regexp {(.*)-externals\..*} $filename _ basename] } {
+    if { [ string match "*.dek" $filename ] } {
+        ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
+        set archstring ""
+        regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring
+        foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
+            if {![string first v ${o}]} {
+                set version [string range $o 1 end]
+            } { # ignoring unknown option... }
+        }
+        foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
+    } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
+        ## deken filename v0
         set pkgname $basename
         # basename <pkgname>[-v<version>-]?{(<arch>)}
         ## strip off the archs
@@ -1107,7 +1136,12 @@ proc ::deken::parse_filename {filename} {
             set $version ""
         }
         # get archs
-        foreach {a _} [lreplace $baselist 0 0] { lappend archs $a }
+        foreach {a _} [lreplace $baselist 0 0] {
+            # in filename.v0 the semantics of the last arch field ("bits") was unclear
+            # since this format predates float64 builds, we just force it to 32
+            regsub -- {-[0-9]+$} $a {-32} a
+            lappend archs $a
+        }
         if { "x$archs$version" == "x" } {
             # try again as <pkgname>-v<version>
             if { ! [ regexp "(.*)-(v.*)" $pkgver _ pkgname version ] } {
@@ -1126,16 +1160,17 @@ proc ::deken::architecture_match {archs} {
     set OS "$::deken::platform(os)"
     set MACHINE "$::deken::platform(machine)"
     set BITS "$::deken::platform(bits)"
+    set FLOATSIZE "$::deken::platform(floatsize)"
     if { "$::deken::userplatform" != "" } {
         ## FIXXME what if the user-supplied input isn't valid?
-        regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE BITS
+        regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE FLOATSIZE
     }
 
     # check each architecture in our list against the current one
     foreach arch $archs {
-        if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine bits ] } {
-            if { "${os}" eq "$::deken::platform(os)" } {
-                ## so OS matches...
+        if { [ regexp -- {(.*)-(.*)-(.*)} $arch _ os machine floatsize ] } {
+            if { "${os}" eq "${OS}" && "${floatsize}" eq "${FLOATSIZE}" } {
+                ## so OS and floatsize match...
                 ## check whether the CPU matches as well
                 if { "${machine}" eq "${MACHINE}" } {return 1}
                 ## not exactly; see whether it is in the list of compat CPUs
