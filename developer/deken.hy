@@ -44,13 +44,11 @@
 (import platform)
 (import string)
 (import struct)
-(import copy)
 (try (import [ConfigParser [SafeConfigParser]])
  (except [e ImportError] (import [configparser [SafeConfigParser]])))
 (try (import [StringIO [StringIO]])
  (except [e ImportError] (import [io [StringIO]])))
 (import hashlib)
-(import [getpass [getpass]])
 (try (import [urlparse [urlparse]])
  (except [e ImportError] (import [urllib.parse [urlparse]])))
 
@@ -428,9 +426,10 @@
           (setv passphrase
               (if (and (not use-agent) keyid)
                 (do
+                  (import getpass)
                  (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
                            (tuple [uid keyid filename])))
-                 (getpass "Enter GPG passphrase: " ))))
+                  (getpass.getpass "Enter GPG passphrase: " ))))
         (setv signconfig (dict-merge (dict-merge {"detach" True}
                                                  (if keyid {"keyid" keyid}))
                                      (if passphrase {"passphrase" passphrase})))
@@ -661,7 +660,9 @@
                       (keyring.get_password "deken" username))
                    (except [e Exception] (print "WARNING: " e)))
               (get-config-value "password")))
-      (getpass (% "Please enter password for uploading as '%s': " username))))
+      (do
+        (import getpass)
+        (getpass.getpass (% "Please enter password for uploading as '%s': " username)))))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (def commands
@@ -684,7 +685,11 @@
              (setv password (get-upload-password username args.ask-password))
              (upload-packages (list-comp (cond [(os.path.isfile x)
                                                 (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
-                                               [(os.path.isdir x) (get ((:package commands) (set-attr (copy.deepcopy args) "source" [x])) 0)]
+                                               [(os.path.isdir x)
+                                                (do
+                                                  (import copy)
+                                                  (get ((:package commands)
+                                                         (set-attr (copy.deepcopy args) "source" [x])) 0))]
                                                [True (sys.exit (% "Unable to process '%s'!" x))])
                                          (x args.source))
                               (or (getattr args "destination") (get-config-value "destination" ""))
