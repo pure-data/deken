@@ -41,9 +41,6 @@
 (import argparse)
 (import datetime)
 
-(import platform)
-(import string)
-(import struct)
 (try (import [ConfigParser [SafeConfigParser]])
  (except [e ImportError] (import [configparser [SafeConfigParser]])))
 (try (import [StringIO [StringIO]])
