@@ -692,7 +692,7 @@
                 (name args.source)))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
-             (defn set-nonempty-password [password]
+             (defn set-nonempty-password [username password]
                (if password
                    (try (do
                           (import keyring)
@@ -723,7 +723,7 @@
                                    check-sources?))
              ;; do-upload returns the username (on success)...
              ;; so let's try storing the (non-empty) password in the keyring
-             (set-nonempty-password
+             (apply set-nonempty-password
                (do-upload (list-comp
                             (mk-pkg-ifneeded x)
                             (x args.source))
