@@ -541,19 +541,26 @@
                    (% "Are you sure you have the correct username and password set for '%s'?\n" host)
                    (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
 
-;; upload a list of archives (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
+;; upload an archive (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
+;; returns a (username, password) tuple in case of success
+;; in case of failure, this exits
 (defn upload-package [pkg destination username password]
   (print "Uploading package" pkg)
   (upload-file (hash-sum-file pkg) destination username password)
   (upload-file pkg destination username password)
-  (upload-file (gpg-sign-file pkg) destination username password))
+  (upload-file (gpg-sign-file pkg) destination username password)
+  (, username password))
+;; upload a list of archives (with aux files)
+;; returns a (username, password) tuple in case of success
+;; in case of failure, this exits
 (defn upload-packages [pkgs destination username password skip-source]
   (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
                                        (set (list-comp (has-sources? pkg) [pkg pkgs]))
                                        (if (= "puredata.info"
                                               (.lower (or (getattr destination "hostname") externals-host)))
                                          username)))
-  (for [pkg pkgs] (upload-package pkg destination username password)))
+  (for [pkg pkgs] (upload-package pkg destination username password))
+  (, username password))
 
 ;; compute the archive filename for a particular external on this platform
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
