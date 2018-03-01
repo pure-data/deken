@@ -340,7 +340,8 @@
 
 ;; prompt for a particular config value for externals host upload
 (defn prompt-for-value [name]
-  (raw_input (% (+
+  ((try raw_input (except [e NameError] input))
+    (% (+
     "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
     "To avoid this prompt in future please add a setting to the config or environment.\n"
     "Please enter %s for http://%s/: ")
