@@ -707,17 +707,30 @@
                         (get ((:package commands)
                                (set-attr (copy.deepcopy args) "source" [x])) 0))]
                      [True (sys.exit (% "Unable to process '%s'!" x))]))
-             (setv username (or (get-config-value "username") (prompt-for-value "username")))
-             (setv password (get-upload-password username args.ask-password))
-             (upload-packages (list-comp
-                                (mk-pkg-ifneeded x)
-                                (x args.source))
-                              (urlparse
-                                (or (getattr args "destination")
-                                    (get-config-value "destination" "")))
-                              username password args.no-source-error)
-             ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
-             (set-nonempty-password password))
+             (defn do-upload-username [packages destination username check-sources?]
+               (upload-packages packages
+                                destination
+                                username
+                                (or (getattr destination "password")
+                                    (get-upload-password username args.ask-password))
+                                check-sources?))
+             (defn do-upload [packages destination check-sources?]
+               (do-upload-username packages
+                                   destination
+                                   (or (getattr destination "username")
+                                       (get-config-value "username")
+                                       (prompt-for-value "username"))
+                                   check-sources?))
+             ;; do-upload returns the username (on success)...
+             ;; so let's try storing the (non-empty) password in the keyring
+             (set-nonempty-password
+               (do-upload (list-comp
+                            (mk-pkg-ifneeded x)
+                            (x args.source))
+                          (urlparse
+                            (or (getattr args "destination")
+                                (get-config-value "destination" "")))
+                          args.no-source-error)))
   ;; the rest should have been caught by the wrapper script
   :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
   :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
