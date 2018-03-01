@@ -53,7 +53,7 @@
 (def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (def config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
-(def externals-host "puredata.info")
+(def default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (print "DEBUG: " x) x)
@@ -533,12 +533,12 @@
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
      (setv ver (.strip (or ver "") "[]"))
-     (setv proto (or destination.scheme "https"))
-     (setv host (or destination.hostname externals-host))
+     (setv proto (or destination.scheme default-destination.scheme))
+     (setv host (or destination.hostname default-destination.hostname))
      (setv path
            (str
             (replace-words
-             (or (.rstrip destination.path "/") "/Members/%u/software/%p/%v")
+             (or (.rstrip destination.path "/") default-destination.path)
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
      (do-upload-file
        (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})
@@ -563,7 +563,7 @@
   (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
                                        (set (list-comp (has-sources? pkg) [pkg pkgs]))
                                        (if (= "puredata.info"
-                                              (.lower (or destination.hostname externals-host)))
+                                              (.lower (or destination.hostname default-destination.hostname)))
                                          username)))
   (for [pkg pkgs] (upload-package pkg destination username password))
   (, username password))
