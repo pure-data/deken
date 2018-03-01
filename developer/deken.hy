@@ -426,7 +426,7 @@
               (if (and (not use-agent) keyid)
                 (do
                   (import getpass)
-                 (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
+                  (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
                            (tuple [uid keyid filename])))
                   (getpass.getpass "Enter GPG passphrase: " ))))
         (setv signconfig (dict-merge (dict-merge {"detach" True}
