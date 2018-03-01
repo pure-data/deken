@@ -513,6 +513,19 @@
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
   ;; get username and password from the environment, config, or user input
+  (defn do-upload-file [dav path filename url host]
+    (print (+ "Uploading " filename " to " url))
+     (try
+      (do
+       ;; make sure all directories exist
+       (dav.mkdirs path)
+       ;; upload the package file
+       (dav.upload filepath (+ path "/" filename)))
+      (except [e easywebdav.client.OperationFailed]
+        (sys.exit (+
+                   (% "Couldn't upload to %s!\n" url)
+                   (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                   (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
   (import easywebdav)
   (if filepath
     (do
@@ -526,20 +539,12 @@
             (replace-words
              (or (.rstrip destination.path "/") "/Members/%u/software/%p/%v")
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
-     (setv url (+ proto "://" host path))
-     (setv dav (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto}))
-     (print (+ "Uploading " filename " to " url))
-     (try
-      (do
-       ;; make sure all directories exist
-       (dav.mkdirs path)
-       ;; upload the package file
-       (dav.upload filepath (+ path "/" filename)))
-      (except [e easywebdav.client.OperationFailed]
-        (sys.exit (+
-                   (% "Couldn't upload to %s!\n" url)
-                   (% "Are you sure you have the correct username and password set for '%s'?\n" host)
-                   (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))))
+     (do-upload-file
+       (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})
+       path
+       filename
+       (+ proto "://" host path)
+       (+ proto "://" host)))))
 
 ;; upload an archive (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
 ;; returns a (username, password) tuple in case of success
