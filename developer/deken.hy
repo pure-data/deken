@@ -617,8 +617,8 @@
 (defn parse-filename1 [filename]
   (try
    (get-values
-    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v[^\[\]\(\)]+\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
-    [2 3 4 6])
+    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
+    [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename [filename]
   (list-comp
