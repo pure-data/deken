@@ -681,25 +681,31 @@
                 (name args.source)))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
+             (defn set-nonempty-password [password]
+               (if password
+                   (try (do
+                          (import keyring)
+                          (keyring.set_password "deken" username password))
+                        (except [e Exception] (print "WARNING: " e)))))
+             (defn mk-pkg-ifneeded [x]
+               (cond [(os.path.isfile x)
+                      (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
+                     [(os.path.isdir x)
+                      (do
+                        (import copy)
+                        (get ((:package commands)
+                               (set-attr (copy.deepcopy args) "source" [x])) 0))]
+                     [True (sys.exit (% "Unable to process '%s'!" x))]))
              (setv username (or (get-config-value "username") (prompt-for-value "username")))
              (setv password (get-upload-password username args.ask-password))
-             (upload-packages (list-comp (cond [(os.path.isfile x)
-                                                (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
-                                               [(os.path.isdir x)
-                                                (do
-                                                  (import copy)
-                                                  (get ((:package commands)
-                                                         (set-attr (copy.deepcopy args) "source" [x])) 0))]
-                                               [True (sys.exit (% "Unable to process '%s'!" x))])
-                                         (x args.source))
-                              (or (getattr args "destination") (get-config-value "destination" ""))
+             (upload-packages (list-comp
+                                (mk-pkg-ifneeded x)
+                                (x args.source))
+                                (or (getattr args "destination")
+                                    (get-config-value "destination" ""))
                               username password args.no-source-error)
              ;; if we reach this line, upload has succeeded; so let's try storing the (non-empty) password in the keyring
-             (if password
-               (try (do
-                     (import keyring)
-                     (keyring.set_password "deken" username password))
-                    (except [e Exception] (print "WARNING: " e)))))
+             (set-nonempty-password password))
   ;; the rest should have been caught by the wrapper script
   :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
   :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
