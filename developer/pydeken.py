@@ -38,26 +38,34 @@
 import hy
 import deken
 
-import argparse
-import copy
-import getpass
-import os
-import re
-import sys
-import tarfile
-import zipfile
 
-import datetime
+try:
+    import argparse
+    import copy
+    import getpass
+    import os
+    import re
+    import sys
+    import tarfile
+    import zipfile
 
-import elftools
-import macholib
-import pefile
+    import datetime
 
-import gnupg
-import hashlib
+    import elftools
+    import macholib
+    import pefile
 
-#import keyring
-import requests
+    import gnupg
+    import hashlib
+
+    import requests
+
+    # 'keyring' is disabled here as it makes problems with pyinstaller
+    #import keyring
+
+except ImportError:
+    pass
+
 try:
     import easywebdav2
 except ImportError:
