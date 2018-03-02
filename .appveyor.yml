@@ -37,8 +37,8 @@ install:
 
 build_script:
   - pyinstaller deken.spec
-  - dist/deken -h
-  - dist/deken package -v 000 tmp/deken-test
+  - dist\deken -h
+  - dist\deken package -v 000 tmp/deken-test
 
 on_finish:
   - dir
