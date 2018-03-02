@@ -1,12 +1,13 @@
 # -*- mode: python -*-
 
 block_cipher = None
+datas = [('deken.hy', '.')]
 
 
 a = Analysis(['pydeken.py'],
              pathex=['.'],
              binaries=[],
-             datas=[('deken.hy', '.')],
+             datas=datas,
              hiddenimports=[],
              hookspath=['installer/'],
              runtime_hooks=[],
