@@ -50,13 +50,13 @@
 
 (require hy.contrib.loop)
 
-(def deken-home (os.path.expanduser (os.path.join "~" ".deken")))
-(def config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(def version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
-(def default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
-
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (print "DEBUG: " x) x)
+
+(setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
+(setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
+(setv version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
+(setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 
 ;; nil? has been removed from hy-0.12
 (try (nil? None) (except [e NameError] (defn nil? [x] (= x None))))
@@ -103,7 +103,7 @@
   (config-file.readfp (StringIO configstring))
   (dict (config-file.items "default")))
 
-(def config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
+(setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
 ;; takes the externals architectures and turns them into a string
 (defn get-architecture-strings [folder]
@@ -155,7 +155,7 @@
 
 ;; Linux ELF file
 (defn get-elf-archs [filename &optional [oshint "Linux"]]
-  (def elf-osabi {
+  (setv elf-osabi {
                   "ELFOSABI_SYSV" None
                   "ELFOSABI_HPUX" "HPUX"
                   "ELFOSABI_NETBSD" "NetBSD"
@@ -174,7 +174,7 @@
                   "ELFOSABI_ARM_AEABI" None
                   "ELFOSABI_ARM" None
                   "ELFOSABI_STANDALONE" None})
-  (def elf-cpu {
+  (setv elf-cpu {
                 ;; format: (, CPU elfsize littlendian) "id"
                 (, "EM_386" 32 True) "i386"
                 (, "EM_X86_64" 64 True) "amd64"
@@ -214,7 +214,7 @@
                 ;;  (, "RESERVED", None, None) "RESERVED"
                 })
   ;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
-  (def elf-armcpu [
+  (setv elf-armcpu [
                    "armPre4"
                    "armv4"
                    "armv4T"
@@ -268,7 +268,7 @@
 
 ;; macOS MachO file
 (defn get-mach-archs [filename]
-  (def macho-cpu {
+  (setv macho-cpu {
                   1 "vac"
                   6 "m68k"
                   7 "i386"
@@ -677,7 +677,7 @@
         (getpass.getpass (% "Please enter password for uploading as '%s': " username)))))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
-(def commands
+(setv commands
   {
    ;; zip up a set of built externals
    :package (fn [args]
