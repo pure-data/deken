@@ -263,7 +263,7 @@
   (try (do
          (import [elftools.elf.elffile [ELFFile]])
          (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
-       (except [e Exception] (or None (list)))))
+       (except [e Exception] (or (print e) (list)))))
 
 
 ;; macOS MachO file
@@ -303,7 +303,7 @@
   (try (do
         (import [macholib.MachO [MachO]])
         (get-macho-arch (MachO filename)))
-       (except [e Exception] (list))))
+       (except [e Exception] (or (print e) (list)))))
 
 ;; Windows PE file
 (defn get-windows-archs [filename]
