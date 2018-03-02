@@ -58,7 +58,10 @@ import hashlib
 
 #import keyring
 import requests
-import easywebdav
+try:
+    import easywebdav2
+except ImportError:
+    import easywebdav
 
 try:
     import ConfigParser
