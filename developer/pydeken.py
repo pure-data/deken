@@ -80,9 +80,18 @@ except ImportError:
     import io
     import urllib.parse
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 if __name__ == "__main__":
     try:
-        with open("DEKEN_VERSION", 'r') as f:
+        with open(resource_path("DEKEN_VERSION"), 'r') as f:
             version = f.read().strip()
         deken.version = version
     except OSError:
