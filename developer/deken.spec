@@ -7,11 +7,10 @@ versionfile = "DEKEN_VERSION"
 try:
     import os
     import tempfile
-    import subprocess
-    version = subprocess.check_output(["./deken", "--version"]).strip()
     tmpdir = tempfile.TemporaryDirectory()
+    version = os.environ['DEKEN_VERSION']
     versionfile = os.path.join(tmpdir.name, versionfile)
-    with open(versionfile, 'wb') as f:
+    with open(versionfile, 'w') as f:
         f.write(version)
         datas += [(versionfile, '.')]
 except Exception as e:
