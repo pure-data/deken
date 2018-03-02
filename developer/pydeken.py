@@ -73,4 +73,10 @@ except ImportError:
     import urllib.parse
 
 if __name__ == "__main__":
+    try:
+        with open("DEKEN_VERSION", 'r') as f:
+            version = f.read().strip()
+        deken.version = version
+    except OSError:
+        pass
     deken.main()
