@@ -1,11 +1,11 @@
 # -*- mode: python -*-
+import os
 
 block_cipher = None
 datas = [('deken.hy', '.')]
 
 versionfile = "DEKEN_VERSION"
 try:
-    import os
     import tempfile
     tmpdir = tempfile.TemporaryDirectory()
     version = os.environ['DEKEN_VERSION']
