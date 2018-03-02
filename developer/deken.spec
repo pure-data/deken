@@ -17,6 +17,24 @@ except Exception as e:
     print("OOPS: %s" % (e,))
     versionfile = None
 
+def easywebdav2_patch1():
+    try:
+        import easywebdav2
+        print("trying to fix 'easywebdav2'")
+        A="""            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"""
+        B="""            for dir_ in dirs:\n                try:\n                    self.mkdir(dir_, safe=True, **kwargs)"""
+
+        filename = os.path.join(os.path.dirname(easywebdav2.__file__), 'client.py')
+        print(filename)
+        with open(filename, "r") as f:
+            data = f.read()
+        data = data.replace(A, B)
+        with open(filename, "w") as f:
+            f.write(data)
+    except Exception as e:
+        print("FAILED to patch 'easywebdav2', continuing anyhow...\n %s" % (e))
+easywebdav2_patch1()
+
 a = Analysis(['pydeken.py'],
              pathex=['.'],
              binaries=[],
