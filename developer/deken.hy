@@ -513,6 +513,7 @@
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
   ;; get username and password from the environment, config, or user input
+  (try (do (import easywebdav2) (setv easywebdav easywebdav2)) (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename url host]
     (print (+ "Uploading " filename " to " url))
      (try
@@ -527,7 +528,6 @@
                    (% "Couldn't upload to %s!\n" url)
                    (% "Are you sure you have the correct username and password set for '%s'?\n" host)
                    (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
-  (import easywebdav)
   (if filepath
     (do
      (setv filename (os.path.basename filepath))
