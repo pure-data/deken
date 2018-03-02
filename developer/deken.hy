@@ -123,13 +123,13 @@
 
 ;; check for a particular file in a directory, recursively
 (defn test-filename-under-dir [pred dir]
-    (any (map (lambda [w] (any (map pred (get w 2))))
+    (any (map (fn [w] (any (map pred (get w 2))))
               (os.walk dir))))
 
 ;; check if a particular file has an extension in a directory, recursively
 (defn test-extensions-under-dir [dir extensions]
   (test-filename-under-dir
-   (lambda [filename] (test-extensions filename extensions)) dir))
+   (fn [filename] (test-extensions filename extensions)) dir))
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
