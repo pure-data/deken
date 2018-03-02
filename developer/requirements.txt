@@ -1,5 +1,5 @@
 hy==0.13.1
-easywebdav==1.2.0
+easywebdav2==1.3.0
 pyelftools==0.24
 macholib==1.9
 pefile==2017.11.5
