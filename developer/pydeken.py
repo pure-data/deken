@@ -38,5 +38,36 @@
 import hy
 import deken
 
+import argparse
+import copy
+import getpass
+import os
+import re
+import sys
+import tarfile
+import zipfile
+
+import datetime
+
+import elftools
+import macholib
+import pefile
+
+import gnupg
+import hashlib
+
+#import keyring
+import requests
+import easywebdav
+
+try:
+    import ConfigParser
+    import StringIO
+    import urlparse
+except ImportError:
+    import configparser
+    import io
+    import urllib.parse
+
 if __name__ == "__main__":
     deken.main()
