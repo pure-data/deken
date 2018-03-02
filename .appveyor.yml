@@ -26,6 +26,7 @@ install:
 
   - cd developer
   - pip install -r requirements.txt
+  - pip install pyinstaller
 
   - mkdir tmp
   - cd tmp
@@ -35,8 +36,9 @@ install:
   - cd ..
 
 build_script:
-  - deken -h
-  - deken package -v 000 tmp/deken-test
+  - pyinstaller deken.spec
+  - dist/deken -h
+  - dist/deken package -v 000 tmp/deken-test
 
 on_finish:
   - dir
