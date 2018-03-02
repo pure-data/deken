@@ -1,4 +1,4 @@
-hy==0.12.1
+hy==0.14.0
 easywebdav==1.2.0
 pyelftools==0.24
 macholib==1.9
