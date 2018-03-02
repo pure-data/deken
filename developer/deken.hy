@@ -402,7 +402,7 @@
       (defn gpg-get-key [gpg]
         (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
         (try
-         (car (list-comp k
+         (first (list-comp k
                          [k (gpg.list_keys True)]
                          (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )]
                                [True True])))
