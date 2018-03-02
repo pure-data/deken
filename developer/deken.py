@@ -35,8 +35,8 @@
 # this is a thin wrapper around deken.hy, to launch it without a
 # HY executable (or file associations)
 
-import os
 import hy
-hy.importer.import_file_to_module(
-    "__main__",
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "deken.hy"))
+import deken
+
+if __name__ == "__main__":
+    deken.main()
