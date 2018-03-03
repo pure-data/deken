@@ -20,6 +20,10 @@ environment:
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
 
+matrix:
+  allow_failures:
+    - PYTHON_VERSION: "2.7"
+
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - python --version
