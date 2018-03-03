@@ -66,10 +66,10 @@ try:
 except ImportError:
     pass
 
-try:
-    import easywebdav2
+try: import easywebdav2
 except ImportError:
-    import easywebdav
+    try: import easywebdav
+    except ImportError: pass
 
 try:
     import ConfigParser
