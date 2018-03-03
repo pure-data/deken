@@ -58,13 +58,26 @@
 (setv version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 
-;; nil? has been removed from hy-0.12
-(try (nil? None) (except [e NameError] (defn nil? [x] (= x None))))
+;; check whether a form executes or not
+(eval-when-compile
+  (defmacro runs? [exp]
+    `(try (do ~exp True) (except [] False))))
 
-;; in hy-0.12 'slice' has been replaced with 'cut'
-;; but we cannot replace 'cut' in hy>=0.12, because it is a built-in...
-(defn cut-slice [x y z] (cut x y z))
-(try (cut []) (except [e NameError] (defn cut-slice [x y z] (slice x y z))))
+;; portability between hy versions
+(eval-when-compile
+ (defmacro defcompat []
+  `(do
+    ;; nil? has been removed from hy-0.12
+    ~@(if (runs? (nil? None)) []
+         [`(defmacro nil? [x] `(= ~x None))])
+    ;; in hy-0.12 'slice' has been replaced with 'cut'
+    ~@(if (runs? (slice [])) []
+         [`(defmacro slice [&rest args] `(cut ~@args))])
+    ;; apply has been removed from hy-0.14
+    ~@(if (runs? (apply (fn []))) []
+         [`(defmacro apply [f &optional (args []) (kwargs {})]
+            `(~f #* ~args #** ~kwargs))]))))
+(defcompat)
 
 ;; convert a string into bytes
 (defn str-to-bytes [s] (try (bytes s) (except [e TypeError] (bytes s "utf-8"))))
@@ -246,7 +259,7 @@
         (defn armcpu-from-aeabi-helper [data]
           (if data
             (get elf-armcpu (byte-to-int (get (get (.split
-                                                    (cut-slice data 7 None)
+                                                    (slice data 7 None)
                                                     (str-to-bytes "\x00") 1) 1) 1)))))
         (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
       (or
