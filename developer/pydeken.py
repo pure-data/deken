@@ -94,6 +94,6 @@ if __name__ == "__main__":
         with open(resource_path("DEKEN_VERSION"), 'r') as f:
             version = f.read().strip()
         deken.version = version
-    except OSError:
-        pass
+    except OSError: pass
+    except IOError: pass
     deken.main()
