@@ -49,5 +49,5 @@ $ pyinstaller deken.spec
 This will give you something like `deken/development/dist/deken.exe`
 (The standalone installer can be created on macOS and Linux as well)
 
-When creating a standalone executable, make sure that you patch
-easywebdav2.
+When creating a standalone executable, an attempt is made to automatically fix
+the 'easywebdav2' package.
