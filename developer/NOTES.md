@@ -43,6 +43,7 @@ you can build a standalone executable with the following steps:
 
 ~~~bash
 $ cd deken/development/
+$ pip install pyinstaller
 $ pyinstaller deken.spec
 ~~~
 
