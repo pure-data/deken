@@ -46,3 +46,7 @@ build_script:
 
 on_finish:
   - dir
+
+artifacts:
+  - path: developer\dist\deken.exe
+    name: deken
