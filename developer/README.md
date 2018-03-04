@@ -115,7 +115,7 @@ with the following matching groups:
  - ~~`#0` anything before the path (always empty and *ignored*)~~
  - ~~`#1` = path to filename (*ignored*)~~
  -   `#2` = library name
- - ~~`#3` = options (including the version)
+ -   `#3` = options (including the version)
  -   `#4` = archs
  - ~~`#5` = last arch in archs (*ignored*)~~
  -   `#6` = extension ('dek')
