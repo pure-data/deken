@@ -1023,7 +1023,7 @@ proc ::deken::clicked_link {URL filename} {
         if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
         if {![file exists $extpath]} {
             ::pdwindow::debug "\[deken\]: "
-            ::pdwindow::debug [_ "Unable to add %s to search paths"] $extname
+            ::pdwindow::debug [format [_ "Unable to add %s to search paths"] $extname]
             ::pdwindow::debug "\n"
             return
         }
