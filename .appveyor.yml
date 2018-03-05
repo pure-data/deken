@@ -40,7 +40,9 @@ install:
   - cd ..
 
 build_script:
+  - for /f %%i in ('git describe --always') do set DEKEN_VERSION=%%i
   - pyinstaller deken.spec
+  - set DEKEN_VERSION=
   - dist\deken -h
   - dist\deken package -v 000 tmp/deken-test
 
