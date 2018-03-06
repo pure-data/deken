@@ -757,6 +757,16 @@
 (defn main []
   (print "Deken" version)
 
+  (defn add-package-args [parser]
+    (apply parser.add_argument ["--version" "-v"]
+           {"help" "A library version number to insert into the package name (in case the package is created)."
+                   "default" None
+                   "required" False})
+    (apply parser.add_argument ["--dekformat"]
+           {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
+                   "default" 0
+                   "required" False}))
+
   (setv arg-parser
         (apply argparse.ArgumentParser []
                {"prog" "deken"
@@ -778,26 +788,12 @@
          {"nargs" "+"
           "metavar" "SOURCE"
           "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-  (apply arg-package.add_argument ["--version" "-v"]
-         {"help" "A library version number to insert into the package name."
-          "default" None
-          "required" False})
-  (apply arg-package.add_argument ["--dekformat"]
-         {"help" "Override the deken packaging format (DEFAULT: 0)."
-          "default" 0
-          "required" False})
+  (add-package-args arg-package)
   (apply arg-upload.add_argument ["source"]
          {"nargs" "+"
           "metavar" "PACKAGE"
           "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
-  (apply arg-upload.add_argument ["--version" "-v"]
-         {"help" "A library version number to insert into the package name, in case a package is created."
-          "default" None
-          "required" False})
-  (apply arg-upload.add_argument ["--dekformat"]
-         {"help" "Override the deken packaging format, in case a package is created. (DEFAULT: 1)."
-          "default" 1
-          "required" False})
+  (add-package-args arg-upload)
   (apply arg-upload.add_argument ["--destination" "-d"]
          {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
           "default" ""
