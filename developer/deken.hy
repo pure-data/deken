@@ -579,7 +579,10 @@
                                        (if (= "puredata.info"
                                               (.lower (or destination.hostname default-destination.hostname)))
                                          username)))
-  (for [pkg pkgs] (upload-package pkg destination username password))
+  (for [pkg pkgs]
+    (if (get (parse-filename pkg) 0)
+      (upload-package pkg destination username password)
+      (print (% "Skipping '%s', it is not a valid deken package" pkg))))
   (, username password))
 
 ;; compute the archive filename for a particular external on this platform
