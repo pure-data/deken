@@ -783,8 +783,8 @@
           "default" None
           "required" False})
   (apply arg-package.add_argument ["--dekformat"]
-         {"help" "Override the deken packaging format (DEFAULT: 1)."
-          "default" 1
+         {"help" "Override the deken packaging format (DEFAULT: 0)."
+          "default" 0
           "required" False})
   (apply arg-upload.add_argument ["source"]
          {"nargs" "+"
