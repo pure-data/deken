@@ -545,6 +545,7 @@
     (do
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
+     (setv pkg (or pkg (sys.exit (% "'%s' is not a valid deken file(name)" filename))))
      (setv ver (.strip (or ver "") "[]"))
      (setv proto (or destination.scheme default-destination.scheme))
      (setv host (or destination.hostname default-destination.hostname))
