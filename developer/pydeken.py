@@ -35,10 +35,6 @@
 # this is a thin wrapper around deken.hy, to launch it without a
 # HY executable (or file associations)
 
-import hy
-import deken
-
-
 try:
     import argparse
     import copy
@@ -82,6 +78,10 @@ except ImportError:
     import configparser
     import io
     import urllib.parse
+
+
+import hy
+import deken
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
