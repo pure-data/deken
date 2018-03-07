@@ -871,6 +871,7 @@
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
   (print "Deken" version)
+  (log.debug (.join " " sys.argv))
   (if command (command arguments) (.print_help arg-parser)))
 
 (if (= __name__ "__main__")
