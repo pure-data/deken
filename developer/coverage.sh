@@ -102,7 +102,7 @@ python "${VE}/fix_easywebdav.py"
 }
 
 
-virtualenv "$@" "${VE}" || teardown $?
+virtualenv -p python3 "${VE}" || teardown $?
 . "${VE}/bin/activate"
 
 pip install -r requirements.txt
