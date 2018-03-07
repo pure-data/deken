@@ -56,13 +56,14 @@
 (log.addHandler (logging.StreamHandler))
 
 ;; do nothing
-(defn nop [&rest args])
+(defn nop [&rest args] "do nothing" None)
 
 ;; simple debugging helper: prints an object and returns it
-(defn debug [x] (log.debug x) x)
+(defn debug [x] "print the argument and return it" (log.debug x) x)
 
 ;; print a fatal error and exit with an error code
 (defn fatal [x]
+  "print argument as an error message and exit"
   (log.fatal x)
   (sys.exit 1))
 
@@ -92,19 +93,25 @@
             `(~f #* ~args #** ~kwargs))]))))
 (defcompat)
 
-;; convert a string into bytes
-(defn str-to-bytes [s] (try (bytes s) (except [e TypeError] (bytes s "utf-8"))))
+(defn str-to-bytes [s]
+  "convert a string into bytes"
+  (try (bytes s) (except [e TypeError] (bytes s "utf-8"))))
 
-;; convert a string into bool, based on the string value
-(defn str-to-bool [s] (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
-;; convert a single byte (e.g. bytes('\x01\x02')[0]) to an integer
-(defn byte-to-int [b] (try (ord b) (except [e TypeError] (int b))))
+(defn str-to-bool [s]
+  "convert a string into a bool, based on its value"
+  (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
-;; join non-empty elements
-(defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
+(defn byte-to-int [b]
+  "convert a single byte (e.g. an element of bytes()) into an interger"
+  (try (ord b) (except [e TypeError] (int b))))
+
+(defn join-nonempty [joiner elements]
+  "join all non-empty (non-false) elements"
+  (.join joiner (list-comp (str x) [x elements] x)))
 
 ;; concatenate dictionaries - hylang's assoc is broken
 (defn dict-merge [dict0 &rest dicts]
+  "merge several dictionaries; if a key exists in more than one dict, the latet takes precedence"
   (defn dict-merge-aux [dict0 dicts]
     (for [d dicts] (if d (dict0.update d)))
     dict0)
@@ -112,22 +119,34 @@
   (dict-merge-aux (.copy dict0) dicts))
 
 ;; apply attributes to objects in a functional way
-(defn set-attr [obj attr value] (setattr obj attr value) obj)
-;; get multiple attributes as list
-(defn get-attrs [obj attributes &optional default] (list-comp (getattr obj _default) [_ attributes]))
+(defn set-attr [obj attr value]
+  "sets an attribute of an obj in a function way (returns the obj)"
+  (setattr obj attr value) obj)
 
-;; replace multiple words (given as pairs in <repls>) in a string <s>
-(defn replace-words [s repls] (reduce (fn [a kv] (apply a.replace kv)) repls s))
+;; get multiple attributes as list
+(defn get-attrs [obj attributes &optional default]
+  "returns a list of values, one for each attr in <attributes>"
+  (list-comp (getattr obj _default) [_ attributes]))
 
 ;; get multiple values from a dict (give keys as list, get values as list)
-(defn get-values [coll keys] (list-comp (get coll _) [_ keys]))
+(defn get-values [coll keys]
+  "returns a list of values from a dictionary, pass the keys as list"
+  (list-comp (get coll _) [_ keys]))
 
 ;; get a value at an index/key or a default
 (defn try-get [elements index &optional default]
+  "get a value at an index/key, falling back to a default"
   (try (get elements index)
        (except [e TypeError] default)
        (except [e KeyError] default)
        (except [e IndexError] default)))
+
+;; replace multiple words (given as pairs in <repls>) in a string <s>
+(defn replace-words [s repls]
+  "replace multiple words (given as pairs in <repls>) in a string <s>"
+  (reduce (fn [a kv] (apply a.replace kv)) repls s))
+
+
 
 ;; read in the config file if present
 (defn read-config [configstring &optional [config-file (SafeConfigParser)]]
@@ -150,6 +169,7 @@
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
+  "check if filename has one of the extensions in the set"
   (len (list-comp e [e extensions] (filename.endswith e))))
 
 ;; check for a particular file in a directory, recursively
@@ -164,6 +184,7 @@
 
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
+  "examine a folder for external binaries (and sources) and return the architectures of those found"
   (sum (+
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
@@ -178,6 +199,7 @@
 
 ; class_new -> t_float=float; class_new64 -> t_float=double
 (defn classnew-to-floatsize [fun]
+  "detect Pd-floatsize based on the list of <fun>ctions used in the binary"
   (if (in fun ["_class_new64" "class_new64"])
       (do
         (log.warn "Detection of double-precision is experimental and requires")
@@ -190,6 +212,7 @@
 
 ;; Linux ELF file
 (defn get-elf-archs [filename &optional [oshint "Linux"]]
+  "guess OS/CPU/floatsize for ELF binaries"
   (setv elf-osabi {
                   "ELFOSABI_SYSV" None
                   "ELFOSABI_HPUX" "HPUX"
@@ -303,6 +326,7 @@
 
 ;; macOS MachO file
 (defn get-mach-archs [filename]
+  "guess OS/CPU/floatsize for MachO binaries"
   (setv macho-cpu {
                   1 "vac"
                   6 "m68k"
@@ -342,6 +366,7 @@
 
 ;; Windows PE file
 (defn get-windows-archs [filename]
+  "guess OS/CPU/floatsize for PE (Windows) binaries"
   (defn get-pe-sectionarchs [cpu symbols]
     (list-comp (, "Windows" cpu (classnew-to-floatsize fun)) [fun symbols]))
   (defn get-pe-archs [pef cpudict]
@@ -364,6 +389,7 @@
 
 ;; try to obtain a value from environment, then config file, then prompt user
 (defn get-config-value [name &rest default]
+  "tries to get a value first from the envvars, then from the config-file and finally falls back to a default"
   (first (filter (fn [x] (not (nil? x)))
                  [
                   ;; try to get the value from an environment variable
@@ -375,6 +401,7 @@
 
 ;; prompt for a particular config value for externals host upload
 (defn prompt-for-value [name &optional [forstring ""]]
+  "prompt the user for a particular config value (with an explanatory text)"
   ((try raw_input (except [e NameError] input))
     (% (+
     "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
@@ -384,6 +411,7 @@
 
 ;; calculate the sha256 hash of a file
 (defn hash-file [file hashfn &optional [blocksize 65535]]
+  "calculate the hash of a file"
   (setv read-chunk (fn [] (.read file blocksize)))
   (while True
     (setv buf (read-chunk))
@@ -392,6 +420,7 @@
    (hashfn.hexdigest))
 
 (defn hash-sum-file [filename &optional [algorithm "sha256"] [blocksize 65535]]
+  "calculates the (sha256) hash of a file and stores it into a separate file"
   (import hashlib)
   (defn do-hash-file [filename hashfilename hasher blocksize]
     (.write (open hashfilename :mode "w")
@@ -409,6 +438,7 @@
      ;; read a value from the gpg config
      (except [e ImportError]
        (defn gpg-sign-file [filename]
+         "sign a file with GPG (if the gnupg module is installed)"
          (log.warn (+
                      (% "Unable to GPG sign '%s'\n" filename)
                      "'gnupg' module not loaded"))))
@@ -500,6 +530,7 @@
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
+  "execute a command f(args) inside a directory"
   (setv last-dir (os.getcwd))
   (os.chdir destination)
   (setv result (apply f args))
@@ -509,10 +540,12 @@
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-file [filename]
+  "create a ZIP-file with a default compression"
   (import zipfile)
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file &optional [extension ".zip"]]
+  "create a ZIP-archive of a directory"
   (setv zip-filename (+ archive-file extension))
   (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
@@ -523,6 +556,7 @@
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file &optional [extension ".tar.gz"]]
+  "create a (gzipped) TAR archive of a directory"
   (import tarfile)
   (setv tar-file (+ archive-file extension))
   (defn tarfilter [tarinfo]
@@ -534,11 +568,13 @@
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
+  "default extension for dekformat.v0: if the architecture is Windows are any, w euse 'zip', else 'tar.gz'"
   (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
 
 ;; v1: all archives are ZIP-files with .dek extension
 ;; v0: automatically pick the correct archiver - windows or "no arch" = zip
 (defn archive-dir [directory-to-archive rootname]
+  "create an archive of a directory,using a method based on the extension"
   ((cond
    [(.endswith rootname ".dek") zip-dir]
    [(.endswith rootname ".zip") zip-dir]
@@ -547,10 +583,12 @@
 
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn archive? [filename]
+  "(naive) check if the given filename is a (known) archive: just check the file extension"
   (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
+  "upload a file to a destination via webdav, using username/password"
   ;; get username and password from the environment, config, or user input
   (try (do (import easywebdav2) (setv easywebdav easywebdav2)) (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename url host]
@@ -593,6 +631,7 @@
 ;; returns a (username, password) tuple in case of success
 ;; in case of failure, this exits
 (defn upload-package [pkg destination username password]
+  "upload a package (with sha256-file and gpg-signature if possible)"
   (log.info (% "Uploading package '%s'" pkg))
   (upload-file (hash-sum-file pkg) destination username password)
   (upload-file pkg destination username password)
@@ -602,6 +641,7 @@
 ;; returns a (username, password) tuple in case of success
 ;; in case of failure, this exits
 (defn upload-packages [pkgs destination username password skip-source]
+  "upload multiple packages at once"
   (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
                                        (set (list-comp (has-sources? pkg) [pkg pkgs]))
                                        (if (= "puredata.info"
@@ -617,6 +657,7 @@
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
 ;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
 (defn make-archive-name [folder version &optional [filenameversion 1]]
+  "calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
      [(= filenameversion 1) (+ pkgname
@@ -645,6 +686,7 @@
 
 ;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
+  "create additional files besides archive: hash-file and GPG-signature"
    (log.info (% "Packaging %s" zipfile))
    (hash-sum-file zipfile)
    (gpg-sign-file zipfile)
@@ -653,6 +695,7 @@
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
 (defn parse-filename0 [filename]
+  "parses a dekenformat.v0 filename into a (pkgname version archs extension) tuple"
   (try
    (get-values
     ;; parse filename with a regex
@@ -661,12 +704,14 @@
     [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename1 [filename]
+  "parses a dekenformat.v1 filename into a (pkgname version archs extension) tuple"
   (try
    (get-values
     (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
     [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename [filename]
+  "parses a dekenformat filename (any version) into a (pkgname version archs extension) tuple"
   (list-comp
    (or x None)
    [x (or
@@ -674,16 +719,21 @@
        (parse-filename0 filename)
        [None None None None])]))
 (defn filename-to-namever [filename]
+  "extracts a <name>/<version> string from a filename"
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
-(defn source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
+(defn source-arch? [arch]
+  "check if the arch string contains sources (or doesn't need them because its arch-independent)"
+  (or (not arch) (in "(Sources)" arch)))
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
+  "returns name/version if the filename contains sources (so we check whether we still need to upload sources)"
   (if (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
+  "check if there has been a sourceful upload for a given package"
   (import requests)
   (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
   (in pkg
@@ -698,6 +748,7 @@
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources &optional puredata-info-user]
+  "bail out if there are no sources on puredata.info yet and we don't currently upload sources"
   (for [pkg pkgs] (if (and
                        (not (in pkg sources))
                        (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
@@ -712,6 +763,7 @@
 ;; if force-ask is set, skip the agent
 ;; store the password in the password agent (for later use)
 (defn get-upload-password [username force-ask]
+  "get password from keyring agent, config-file (ouch), or user-input"
   (or (if (not force-ask)
           (or (try (do
                       (import keyring)
@@ -725,6 +777,7 @@
 
 ; instruct the user how to manually upgrade 'deken'
 (defn upgrade [&optional args]
+  "print a big fat notice about manually upgrading via the webpage"
   (defn open-webpage [page]
     (log.warn
       (% "Please manually check for updates on: %s" page))
@@ -810,6 +863,7 @@
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
+  "run deken"
   (defn add-package-args [parser]
     (apply parser.add_argument ["--version" "-v"]
            {"help" "A library version number to insert into the package name (in case the package is created)."
