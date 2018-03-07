@@ -743,6 +743,10 @@
    ;; zip up a set of built externals
    :package (fn [args]
               ;; are they asking to package a directory?
+              (defn int-dekformat [value]
+                (try (int value)
+                     (except [e ValueError]
+                       (fatal (% "Illegal dekformat '%s'" value)))))
               (list-comp
                 (if (os.path.isdir name)
                     ;; if asking for a directory just package it up
@@ -752,7 +756,7 @@
                         (make-archive-name
                           (os.path.normpath name)
                           args.version
-                          (int args.dekformat))))
+                          (int-dekformat args.dekformat))))
                     (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
    ;; upload packaged external to pure-data.info
