@@ -554,8 +554,8 @@
   ;; get username and password from the environment, config, or user input
   (try (do (import easywebdav2) (setv easywebdav easywebdav2)) (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename url host]
-    (log.info (+ "Uploading " filename " to " url))
-     (try
+    (log.info (% "Uploading '%s' to %s" (, filename url)))
+    (try
       (do
        ;; make sure all directories exist
        (dav.mkdirs path)
@@ -593,7 +593,7 @@
 ;; returns a (username, password) tuple in case of success
 ;; in case of failure, this exits
 (defn upload-package [pkg destination username password]
-  (log.info "Uploading package" pkg)
+  (log.info (% "Uploading package '%s'" pkg))
   (upload-file (hash-sum-file pkg) destination username password)
   (upload-file pkg destination username password)
   (upload-file (gpg-sign-file pkg) destination username password)
@@ -645,7 +645,7 @@
 
 ;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
-   (log.info "Packaging" zipfile)
+   (log.info (% "Packaging %s" zipfile))
    (hash-sum-file zipfile)
    (gpg-sign-file zipfile)
    zipfile)
