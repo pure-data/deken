@@ -110,8 +110,7 @@ pip install coverage
 PY="$(which python) pydeken.py"
 COVERAGE=$(which coverage)
 if [ "x${COVERAGE}" != "x" ]; then
-    git clone https://github.com/timmartin/hy-coverage "${VE}/hy-coverage" \
-        && (cd "${VE}/hy-coverage" && python setup.py install)
+    pip install hy-coverage-plugin
     covconf > "${VE}/coveragerc"
     "${COVERAGE}" erase
     PY="${COVERAGE} run --rcfile ${VE}/coveragerc -a --include deken*.hy pydeken.py -vvv"
