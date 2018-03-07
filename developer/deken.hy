@@ -749,7 +749,10 @@
                     (archive-extra
                       (archive-dir
                         name
-                        (make-archive-name (os.path.normpath name) args.version (int args.dekformat))))
+                        (make-archive-name
+                          (os.path.normpath name)
+                          args.version
+                          (int args.dekformat))))
                     (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
    ;; upload packaged external to pure-data.info
