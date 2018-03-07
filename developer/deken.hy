@@ -105,13 +105,11 @@
 
 ;; concatenate dictionaries - hylang's assoc is broken
 (defn dict-merge [dict0 &rest dicts]
-  (defn dupdate [d0 d1]
-    (d0.update d1)
-    d0)
-  (defn dict-merge-aux [out d0 dicts]
-    (cond [(not d0) out]
-          [True (dict-merge-aux (dupdate out d0) (first dicts) (rest dicts))]))
-  (dict-merge-aux (.copy dict0) (first dicts) (rest dicts)))
+  (defn dict-merge-aux [dict0 dicts]
+    (for [d dicts] (if d (dict0.update d)))
+    dict0)
+  ; we need the aux just to precent side-effects on dict0
+  (dict-merge-aux (.copy dict0) dicts))
 
 ;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (setattr obj attr value) obj)
