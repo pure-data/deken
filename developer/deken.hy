@@ -561,7 +561,9 @@
              (or (.rstrip destination.path "/") default-destination.path)
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
      (do-upload-file
-       (apply easywebdav.connect [host] {"username" username "password" password "protocol" proto})
+       (apply easywebdav.connect [host] {"username" username
+                                         "password" password
+                                         "protocol" proto})
        path
        filename
        (+ proto "://" host path)
@@ -770,12 +772,12 @@
   (defn add-package-args [parser]
     (apply parser.add_argument ["--version" "-v"]
            {"help" "A library version number to insert into the package name (in case the package is created)."
-                   "default" None
-                   "required" False})
+            "default" None
+            "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
-                   "default" 0
-                   "required" False}))
+            "default" 0
+            "required" False}))
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
