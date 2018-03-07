@@ -198,7 +198,7 @@
     (os.path.exists (os.path.join folder f)))) []))
 
 ; class_new -> t_float=float; class_new64 -> t_float=double
-(defn classnew-to-floatsize [fun]
+(defn --classnew-to-floatsize-- [fun]
   "detect Pd-floatsize based on the list of <fun>ctions used in the binary"
   (if (in fun ["_class_new64" "class_new64"])
       (do
@@ -296,7 +296,7 @@
     ; get the size of t_float in the elffile
     (defn get-elf-floatsizes [elffile]
       (list-comp
-       (classnew-to-floatsize _.name)
+       (--classnew-to-floatsize-- _.name)
        [_ (.iter_symbols (elffile.get_section_by_name ".dynsym"))]
        (in "class_new" _.name)))
     (defn get-elf-armcpu [cpu]
@@ -348,7 +348,7 @@
     (defn get-macho-floatsizes [header]
       (import [macholib.SymbolTable [SymbolTable]])
       (list-comp
-       (classnew-to-floatsize (.decode name))
+       (--classnew-to-floatsize-- (.decode name))
        [(, _ name) (getattr (SymbolTable macho header) "undefsyms")]
        (in (str-to-bytes "class_new") name)
        )
@@ -368,7 +368,7 @@
 (defn get-windows-archs [filename]
   "guess OS/CPU/floatsize for PE (Windows) binaries"
   (defn get-pe-sectionarchs [cpu symbols]
-    (list-comp (, "Windows" cpu (classnew-to-floatsize fun)) [fun symbols]))
+    (list-comp (, "Windows" cpu (--classnew-to-floatsize-- fun)) [fun symbols]))
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
     (get-pe-sectionarchs
