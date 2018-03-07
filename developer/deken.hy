@@ -103,8 +103,13 @@
 ;; join non-empty elements
 (defn join-nonempty [joiner elements] (.join joiner (list-comp (str x) [x elements] x)))
 
-;; concatenate two dictionaries - hylang's assoc is broken
-(defn dict-merge [d1 d2] (apply dict [d1] (or d2 {})))
+;; concatenate dictionaries - hylang's assoc is broken
+(defn dict-merge [dict0 &rest dicts]
+  (defn dict-merge-aux [out dicts]
+    (if (not (first dicts))
+        out
+        (dict-merge-aux (or (out.update (first dicts)) out) (rest dicts))))
+  (dict-merge-aux (.copy dict0) dicts))
 
 ;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value] (setattr obj attr value) obj)
