@@ -713,6 +713,21 @@
         (import getpass)
         (getpass.getpass (% "Please enter password for uploading as '%s': " username)))))
 
+
+; instruct the user how to manually upgrade 'deken'
+(defn upgrade [&optional args]
+  (defn open-webpage [page]
+    (log.warn
+      (% "Please manually check for updates on: %s" page))
+    (try (do
+           (import webbrowser)
+           (log.debug "Trying to open the page for you...")
+           (webbrowser.open_new(page)))
+         (except [e Exception])))
+  (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
+  (sys.exit "'upgrade' not implemented for this platform!"))
+
+
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
   {
@@ -772,10 +787,10 @@
                             (or (getattr args "destination")
                                 (get-config-value "destination" "")))
                           args.no-source-error)))
-  ;; the rest should have been caught by the wrapper script
-  :upgrade (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
-  :update  (fn [args] (sys.exit "'upgrade' not implemented for this platform!"))
-  :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
+   ;; the rest should have been caught by the wrapper script
+   :upgrade upgrade
+   :update  upgrade
+   :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
