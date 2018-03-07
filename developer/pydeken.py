@@ -66,6 +66,9 @@ try:
 except ImportError:
     pass
 
+try: import webbrowser
+except ImportError: pass
+
 try: import easywebdav2
 except ImportError:
     try: import easywebdav
