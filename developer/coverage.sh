@@ -121,7 +121,7 @@ echo "PY: $PY"
 
 fixeasywebdav
 makedata
-runtests
+runtests 2>&1 | tee coverage.log
 
 if [ "x${COVERAGE}" != "x" ]; then
     "${COVERAGE}" report --rcfile ${VE}/coveragerc
