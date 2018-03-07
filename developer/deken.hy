@@ -493,6 +493,7 @@
                   "decode_errors" "replace")
                  (except [e OSError] (gpg-unavail-error "init" e))))
           (if gpg (do
+                   (setv gpg.encoding "utf-8")
                    (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
                    (setv uid (try-get uid 0 None))
                    (setv passphrase
