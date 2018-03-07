@@ -55,6 +55,8 @@
 (setv log (logging.getLogger "deken"))
 (log.addHandler (logging.StreamHandler))
 
+;; do nothing
+(defn nop [&rest args])
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (log.debug x) x)
