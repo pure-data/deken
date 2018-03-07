@@ -60,6 +60,8 @@
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (log.debug x) x)
+
+;; print a fatal error and exit with an error code
 (defn fatal [x]
   (log.fatal x)
   (sys.exit 1))
