@@ -120,7 +120,7 @@
 
 ;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value]
-  "sets an attribute of an obj in a function way (returns the obj)"
+  "sets an attribute of an obj in a functional way (returns the obj)"
   (setattr obj attr value) obj)
 
 ;; get multiple attributes as list
