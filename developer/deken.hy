@@ -478,47 +478,49 @@
          (except [e IndexError] None)))
 
       ;; generate a GPG signature for a particular file
-      (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
-        (log.info (% "Attempting to GPG sign '%s'" filename))
-        (setv gpg
-              (try
-               (set-attr
-                    (apply gnupg.GPG []
-                           (dict-merge
-                             (if gnupghome {"gnupghome" gnupghome} {})
-                             (if use-agent {"use_agent" True} {})))
-                    "decode_errors" "replace")
-               (except [e OSError] (gpg-unavail-error "init" e))))
-        (if gpg (do
-          (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
-          (setv uid (try-get uid 0 None))
-          (setv passphrase
-              (if (and (not use-agent) keyid)
-                (do
-                  (import getpass)
-                  (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
-                           (, uid keyid filename)))
-                  (getpass.getpass "Enter GPG passphrase: " ))))
-          (setv signconfig (dict-merge
-                             {"detach" True}
-                             (if keyid {"keyid" keyid} {})
-                             (if passphrase {"passphrase" passphrase} {})))
-          (if (and (not use-agent) (not passphrase))
-              (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
-          (try
-            (do
-              (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
-              (if (hasattr sig "stderr")
-                  (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
-              (if (not sig)
-                  (log.warn "Could not GPG sign the package.")
-                  (do
-                    (with [f (open signfile "w")] (f.write (str sig)))
-                    signfile)))
-            (except [e OSError] (gpg-unavail-error "signing" e))))))
-
-      ;; sign a file if it is not already signed
       (defn gpg-sign-file [filename]
+        "sign a file with GPG (if the gnupg module is installed)"
+
+        (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
+          (log.info (% "Attempting to GPG sign '%s'" filename))
+          (setv gpg
+                (try
+                 (set-attr
+                  (apply gnupg.GPG []
+                         (dict-merge
+                          (if gnupghome {"gnupghome" gnupghome} {})
+                          (if use-agent {"use_agent" True} {})))
+                  "decode_errors" "replace")
+                 (except [e OSError] (gpg-unavail-error "init" e))))
+          (if gpg (do
+                   (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
+                   (setv uid (try-get uid 0 None))
+                   (setv passphrase
+                         (if (and (not use-agent) keyid)
+                           (do
+                            (import getpass)
+                            (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
+                                      (, uid keyid filename)))
+                            (getpass.getpass "Enter GPG passphrase: " ))))
+                   (setv signconfig (dict-merge
+                                     {"detach" True}
+                                     (if keyid {"keyid" keyid} {})
+                                     (if passphrase {"passphrase" passphrase} {})))
+                   (if (and (not use-agent) (not passphrase))
+                     (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
+                   (try
+                    (do
+                     (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
+                     (if (hasattr sig "stderr")
+                       (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+                     (if (not sig)
+                       (log.warn "Could not GPG sign the package.")
+                       (do
+                        (with [f (open signfile "w")] (f.write (str sig)))
+                        signfile)))
+                    (except [e OSError] (gpg-unavail-error "signing" e))))))
+
+        ;; sign a file if it is not already signed
         (setv signfile (+ filename ".asc"))
         (setv gpghome (get-config-value "gpg_home"))
         (setv gpgagent (str-to-bool (get-config-value "gpg_agent")))
