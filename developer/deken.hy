@@ -40,6 +40,7 @@
 (import re)
 (import argparse)
 (import datetime)
+(import logging)
 
 (try (import [ConfigParser [SafeConfigParser]])
  (except [e ImportError] (import [configparser [SafeConfigParser]])))
@@ -49,6 +50,11 @@
  (except [e ImportError] (import [urllib.parse [urlparse]])))
 
 (require hy.contrib.loop)
+
+;; setup logging
+(setv log (logging.getLogger "deken"))
+(log.addHandler (logging.StreamHandler))
+
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] (print "DEBUG: " x) x)
@@ -770,6 +776,12 @@
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
                    "default" 0
                    "required" False}))
+  (defn parse-args [parser]
+    (setv args (.parse_args parser))
+    (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
+    (del args.verbose)
+    (del args.quiet)
+    args)
 
   (setv arg-parser
         (apply argparse.ArgumentParser []
@@ -784,6 +796,14 @@
   (apply arg-subparsers.add_parser ["install"])
   (apply arg-subparsers.add_parser ["upgrade"])
   (apply arg-subparsers.add_parser ["update"])
+  (apply arg-parser.add_argument ["-v" "--verbose"]
+         {"help" "Raise verbosity"
+          "action" "count"
+          "default" 0})
+  (apply arg-parser.add_argument ["-q" "--quiet"]
+         {"help" "Lower verbosity"
+          "action" "count"
+          "default" 0})
   (apply arg-parser.add_argument ["--version"]
          {"action" "version"
           "version" version
@@ -812,7 +832,7 @@
           "help" "Force-allow uploading of packages without sources."
           "required" False})
 
-  (setv arguments (.parse_args arg-parser))
+  (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
   (if command (command arguments) (.print_help arg-parser)))
 
