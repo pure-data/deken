@@ -57,7 +57,10 @@
 
 
 ;; simple debugging helper: prints an object and returns it
-(defn debug [x] (print "DEBUG: " x) x)
+(defn debug [x] (log.debug x) x)
+(defn fatal [x]
+  (log.fatal x)
+  (sys.exit 1))
 
 (setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
@@ -282,7 +285,7 @@
   (try (do
          (import [elftools.elf.elffile [ELFFile]])
          (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
-       (except [e Exception] (or (print e) (list)))))
+       (except [e Exception] (or (log.debug e) (list)))))
 
 
 ;; macOS MachO file
@@ -322,7 +325,7 @@
   (try (do
         (import [macholib.MachO [MachO]])
         (get-macho-arch (MachO filename)))
-       (except [e Exception] (or (print e) (list)))))
+       (except [e Exception] (or (log.debug e) (list)))))
 
 ;; Windows PE file
 (defn get-windows-archs [filename]
@@ -391,16 +394,20 @@
 ;; handling GPG signatures
 (try (import gnupg)
      ;; read a value from the gpg config
-     (except [e ImportError] (defn gpg-sign-file [filename] (print (% "Unable to GPG sign '%s'\n" filename) "'gnupg' module not loaded")))
+     (except [e ImportError]
+       (defn gpg-sign-file [filename]
+         (log.warn (+
+                     (% "Unable to GPG sign '%s'\n" filename)
+                     "'gnupg' module not loaded"))))
      (else
       (defn gpg-unavail-error [state &optional ex]
-        (print (% "WARNING: GPG %s failed:" state))
-        (if ex (print ex))
-        (print "Do you have 'gpg' installed?")
-        (print "- If you've received numerous errors during the initial installation,")
-        (print "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
-        (print "  and re-run `deken install`")
-        (print "- On OSX you might want to install the 'GPG Suite'"))
+        (log.warn (% "GPG %s failed:" state))
+        (if ex (log.warn ex))
+        (log.warn "Do you have 'gpg' installed?")
+        (log.warn "- If you've received numerous errors during the initial installation,")
+        (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+        (log.warn "  and re-run `deken install`")
+        (log.warn "- On OSX you might want to install the 'GPG Suite'"))
       (defn gpg-get-config [gpg id]
           (try
            (get
@@ -429,7 +436,7 @@
 
       ;; generate a GPG signature for a particular file
       (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
-        (print (% "Attempting to GPG sign '%s'" filename))
+        (log.info (% "Attempting to GPG sign '%s'" filename))
         (setv gpg
               (try
                (set-attr
@@ -454,14 +461,14 @@
                                      (if passphrase {"passphrase" passphrase})))
 
         (if (and (not use-agent) (not passphrase))
-          (print "No passphrase and not using gpg-agent...trying to sign anyhow"))
+          (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
         (try
          (do
           (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
-;          (if (hasattr sig "stderr")
-;            (print (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+          (if (hasattr sig "stderr")
+              (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
           (if (not sig)
-            (print "WARNING: Could not GPG sign the package.")
+            (log.warn "Could not GPG sign the package.")
             (do
              (with [f (open signfile "w")] (f.write (str sig)))
              signfile)))
@@ -474,8 +481,8 @@
         (setv gpgagent (str-to-bool (get-config-value "gpg_agent")))
         (if (os.path.exists signfile)
           (do
-           (print (% "NOTICE: not GPG-signing already signed file '%s'\nNOTICE: delete '%s' to re-sign" (, filename signfile)))
-           signfile)
+            (log.info (% "not GPG-signing already signed file '%s'" filename))
+            (log.info (% "delete '%s' to re-sign" signfile)))
           (do-gpg-sign-file filename signfile gpghome gpgagent)))))
 
 ;; execute a command inside a directory
@@ -534,7 +541,7 @@
   ;; get username and password from the environment, config, or user input
   (try (do (import easywebdav2) (setv easywebdav easywebdav2)) (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename url host]
-    (print (+ "Uploading " filename " to " url))
+    (log.info (+ "Uploading " filename " to " url))
      (try
       (do
        ;; make sure all directories exist
@@ -542,16 +549,16 @@
        ;; upload the package file
        (dav.upload filepath (+ path "/" filename)))
       (except [e easywebdav.client.OperationFailed]
-        (sys.exit (+
-                   (str e)
-                   (% "Couldn't upload to %s!\n" url)
-                   (% "Are you sure you have the correct username and password set for '%s'?\n" host)
-                   (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
+        (fatal (+
+                 (str e)
+                 (% "Couldn't upload to %s!\n" url)
+                 (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                 (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
   (if filepath
     (do
      (setv filename (os.path.basename filepath))
      (setv [pkg ver _ _] (parse-filename filename))
-     (setv pkg (or pkg (sys.exit (% "'%s' is not a valid deken file(name)" filename))))
+     (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
      (setv ver (.strip (or ver "") "[]"))
      (setv proto (or destination.scheme default-destination.scheme))
      (setv host (or destination.hostname default-destination.hostname))
@@ -573,7 +580,7 @@
 ;; returns a (username, password) tuple in case of success
 ;; in case of failure, this exits
 (defn upload-package [pkg destination username password]
-  (print "Uploading package" pkg)
+  (log.info "Uploading package" pkg)
   (upload-file (hash-sum-file pkg) destination username password)
   (upload-file pkg destination username password)
   (upload-file (gpg-sign-file pkg) destination username password)
@@ -590,7 +597,7 @@
   (for [pkg pkgs]
     (if (get (parse-filename pkg) 0)
       (upload-package pkg destination username password)
-      (print (% "Skipping '%s', it is not a valid deken package" pkg))))
+      (log.warn (% "Skipping '%s', it is not a valid deken package" pkg))))
   (, username password))
 
 ;; compute the archive filename for a particular external on this platform
@@ -608,15 +615,16 @@
                                archs
                                "-externals"
                                (archive-extension archs))]
-     [True (sys.exit (% "Unknown dekformat '%s'" filenameversion))]))
+     [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
   (do-make-name
    (os.path.basename folder)
-   (cond [(nil? version) (sys.exit
-                          (+ (% "No version for '%s'!\n" folder)
-                             " Please provide the version-number via the '--version' flag.\n"
-                             (% " If '%s' doesn't have a proper version number,\n" folder)
-                             (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
-                                (.strftime (datetime.date.today) "%Y%m%d"))))]
+   (cond [(nil? version)
+          (fatal
+              (+ (% "No version for '%s'!\n" folder)
+                 " Please provide the version-number via the '--version' flag.\n"
+                 (% " If '%s' doesn't have a proper version number,\n" folder)
+                 (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
+                    (.strftime (datetime.date.today) "%Y%m%d"))))]
          [version version])
    (get-architecture-strings folder)
    filenameversion))
@@ -624,7 +632,7 @@
 
 ;; create additional files besides archive: hash-file and gpg-signature
 (defn archive-extra [zipfile]
-   (print "Packaging" zipfile)
+   (log.info "Packaging" zipfile)
    (hash-sum-file zipfile)
    (gpg-sign-file zipfile)
    zipfile)
@@ -664,7 +672,7 @@
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
   (import requests)
-  (print (% "Checking puredata.info for Source package for '%s'" pkg))
+  (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
   (in pkg
       ;; list of package/version matching 'pkg' that have 'Source' archictecture
       (list-comp
@@ -680,9 +688,9 @@
   (for [pkg pkgs] (if (and
                        (not (in pkg sources))
                        (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
-                    (sys.exit (+ (% "Missing sources for '%s'!\n" pkg)
-                                 "(You can override this error with the '--no-source-error' flag,\n"
-                                 " if you absolutely cannot provide the sources for this package)\n")))))
+                    (fatal (+ (% "Missing sources for '%s'!\n" pkg)
+                              "(You can override this error with the '--no-source-error' flag,\n"
+                              " if you absolutely cannot provide the sources for this package)\n")))))
 
 ;; get the password, either from
 ;; - a password agent
@@ -695,7 +703,7 @@
           (or (try (do
                       (import keyring)
                       (keyring.get_password "deken" username))
-                   (except [e Exception] (print "WARNING: " e)))
+                   (except [e Exception] (log.warn e)))
               (get-config-value "password")))
       (do
         (import getpass)
@@ -714,7 +722,7 @@
                       (archive-dir
                         name
                         (make-archive-name (os.path.normpath name) args.version (int args.dekformat))))
-                    (sys.exit (% "Not a directory '%s'!" name)))
+                    (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
@@ -723,16 +731,16 @@
                    (try (do
                           (import keyring)
                           (keyring.set_password "deken" username password))
-                        (except [e Exception] (print "WARNING: " e)))))
+                        (except [e Exception] (log.warn e)))))
              (defn mk-pkg-ifneeded [x]
                (cond [(os.path.isfile x)
-                      (if (is-archive? x) x (sys.exit (% "'%s' is not an externals archive!" x)))]
+                      (if (is-archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
                      [(os.path.isdir x)
                       (do
                         (import copy)
                         (get ((:package commands)
                                (set-attr (copy.deepcopy args) "source" [x])) 0))]
-                     [True (sys.exit (% "Unable to process '%s'!" x))]))
+                     [True (fatal (% "Unable to process '%s'!" x))]))
              (defn do-upload-username [packages destination username check-sources?]
                (upload-packages packages
                                 destination
@@ -841,4 +849,4 @@
 (if (= __name__ "__main__")
   (try
    (main)
-   (except [e KeyboardInterrupt] (print "\n[interrupted by user]"))))
+   (except [e KeyboardInterrupt] (log.warn "\n[interrupted by user]"))))
