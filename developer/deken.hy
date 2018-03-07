@@ -798,8 +798,6 @@
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
-  (print "Deken" version)
-
   (defn add-package-args [parser]
     (apply parser.add_argument ["--version" "-v"]
            {"help" "A library version number to insert into the package name (in case the package is created)."
@@ -867,6 +865,7 @@
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
+  (print "Deken" version)
   (if command (command arguments) (.print_help arg-parser)))
 
 (if (= __name__ "__main__")
