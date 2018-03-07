@@ -169,6 +169,10 @@
 
 ; class_new -> t_float=float; class_new64 -> t_float=double
 (defn classnew-to-floatsize [fun]
+  (if (in fun ["_class_new64" "class_new64"])
+      (do
+        (log.warn "Detection of double-precision is experimental and requires")
+        (log.warn "https://github.com/pure-data/pure-data/pull/300 to be accepted into Pd")))
   (cond
    [(in fun ["_class_new" "class_new"]) 32]
    [(in fun ["_class_new64" "class_new64"]) 64]
