@@ -541,7 +541,7 @@
   directory-to-archive rootname ""))
 
 ;; naive check, whether we have an archive: compare against known suffixes
-(defn is-archive? [filename]
+(defn archive? [filename]
   (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
 ;; upload a zipped up package to puredata.info
@@ -672,10 +672,10 @@
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
-(defn is-source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
+(defn source-arch? [arch] (or (not arch) (in "(Sources)" arch)))
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
-  (if (is-source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
+  (if (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
@@ -757,7 +757,7 @@
                         (except [e Exception] (log.warn e)))))
              (defn mk-pkg-ifneeded [x]
                (cond [(os.path.isfile x)
-                      (if (is-archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
+                      (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
                      [(os.path.isdir x)
                       (do
                         (import copy)
