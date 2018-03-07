@@ -81,6 +81,7 @@ fixeasywebdav() {
 cat >"${VE}/fix_easywebdav.py" <<EOF
 def easywebdav2_patch1():
     try:
+        import os.path
         import easywebdav2
         print("trying to fix 'easywebdav2'")
         A="""            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"""
