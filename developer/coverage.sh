@@ -52,7 +52,7 @@ runtests() {
     ${PY} package -v 000 --dekformat 3 "${VDATA}/deken-test"
     ${PY} package -v 000 --dekformat bla "${VDATA}/deken-test"
 
-    for f in "${VDATA}/*.*"; do
+    for f in "${VDATA}"/*.*; do
         ${PY} package --version 000 "${f}"
     done
 
