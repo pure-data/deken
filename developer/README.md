@@ -51,6 +51,10 @@ command for you in one step:
 
 The upload step will also generate a .sha256 checksum file and upload it along
 with the dek file.
+If possible, also a GPG signature file (with the .asc extension) will be created
+and uploaded (but you must have [GPG](https://www.gnupg.org/) installed and you
+need to have a GPG key for signing. The GPG signature mostly makes sense, if
+your GPG key is cross-signed by (many) other people).
 
 
 ### Creating/Uploading packages on a different machine
