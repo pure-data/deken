@@ -443,43 +443,45 @@
                      (% "Unable to GPG sign '%s'\n" filename)
                      "'gnupg' module not loaded"))))
      (else
-      (defn gpg-unavail-error [state &optional ex]
-        (log.warn (% "GPG %s failed:" state))
-        (if ex (log.warn ex))
-        (log.warn "Do you have 'gpg' installed?")
-        (log.warn "- If you've received numerous errors during the initial installation,")
-        (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
-        (log.warn "  and re-run `deken install`")
-        (log.warn "- On OSX you might want to install the 'GPG Suite'"))
-      (defn gpg-get-config [gpg id]
-          (try
-           (get
-            (list-comp
-             (get (.split (.strip x)) 1)
-             [x
-              (.readlines
-               ( open
-                 (os.path.expanduser
-                  (os.path.join
-                   (or gpg.gnupghome (os.path.join "~" ".gnupg"))
-                   "gpg.conf"))
-                 ))]
-             (.startswith (.lstrip x) (.strip id) )) -1)
-           (except [e [IOError IndexError]] None)))
-
-      ;; get the GPG key for signing
-      (defn gpg-get-key [gpg]
-        (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
-        (try
-         (first (list-comp k
-                         [k (gpg.list_keys True)]
-                         (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )]
-                               [True True])))
-         (except [e IndexError] None)))
-
       ;; generate a GPG signature for a particular file
       (defn gpg-sign-file [filename]
         "sign a file with GPG (if the gnupg module is installed)"
+
+        (defn gpg-unavail-error [state &optional ex]
+          (log.warn (% "GPG %s failed:" state))
+          (if ex (log.warn ex))
+          (log.warn "Do you have 'gpg' installed?")
+          (log.warn "- If you've received numerous errors during the initial installation,")
+          (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+          (log.warn "  and re-run `deken install`")
+          (log.warn "- On OSX you might want to install the 'GPG Suite'")
+          (log.warn "Signing your package with GPG is optional.")
+          (log.warn " You can safely ignore this warning if you don't want to sign your package"))
+        (defn gpg-get-config [gpg id]
+          (try
+            (get
+              (list-comp
+                (get (.split (.strip x)) 1)
+                [x
+                 (.readlines
+                   ( open
+                    (os.path.expanduser
+                      (os.path.join
+                        (or gpg.gnupghome (os.path.join "~" ".gnupg"))
+                        "gpg.conf"))
+                    ))]
+                (.startswith (.lstrip x) (.strip id) )) -1)
+            (except [e [IOError IndexError]] None)))
+
+        ;; get the GPG key for signing
+        (defn gpg-get-key [gpg]
+          (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
+          (try
+            (first (list-comp k
+                              [k (gpg.list_keys True)]
+                              (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )]
+                                    [True True])))
+            (except [e IndexError] None)))
 
         (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
           (log.info (% "Attempting to GPG sign '%s'" filename))
