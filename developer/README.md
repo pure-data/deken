@@ -42,7 +42,7 @@ and upload it to your account on <https://puredata.info/> where the search plugi
 can find it:
 
 	$ deken package -v 0.1 my_external
-	$ deken upload my_external
+	$ deken upload "my_external[v0.1](Linux-amd64-64).dek"
 
 You can also just call the 'upload' directly and it will call the package
 command for you in one step:
