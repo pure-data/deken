@@ -530,7 +530,8 @@
         (if (os.path.exists signfile)
           (do
             (log.info (% "not GPG-signing already signed file '%s'" filename))
-            (log.info (% "delete '%s' to re-sign" signfile)))
+            (log.info (% "delete '%s' to re-sign" signfile))
+            signfile)
           (do-gpg-sign-file filename signfile gpghome gpgagent)))))
 
 ;; execute a command inside a directory
