@@ -877,7 +877,7 @@
             "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
-            "default" 0
+            "default" 1
             "required" False}))
   (defn parse-args [parser]
     (setv args (.parse_args parser))
