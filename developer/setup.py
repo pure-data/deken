@@ -48,7 +48,7 @@ except ImportError:
 # This is a list of files to install, and where
 # (relative to the 'root' dir, where setup.py is)
 # You could be more specific.
-files = ["deken.py",]
+files = ["pydeken.py",]
 data_files = ["deken.hy",]
 setup_requires = []
 dist_dir = ""
@@ -75,7 +75,7 @@ setupargs = {
     'install_requires': [
         # 'PySide',
         ],
-    'scripts': ["deken", "deken.py"],
+    'scripts': ["deken", "pydeken.py"],
     'long_description': """
 a tool to create and upload dek packages to puredata.info,
 so they can be installed by Pd's built-in package manager
@@ -138,7 +138,7 @@ if 'py2exe' in sys.argv:
 
     setupargs['windows'] = [{
         # 'icon_resources': [(1, "media\deken.ico")],
-        'script': 'deken.py',
+        'script': 'pydeken.py',
         }]
     setupargs['zipfile'] = None
 
@@ -153,7 +153,7 @@ if 'py2app' in sys.argv:
     dist_dir = "%s.app" % (setupargs['name'], )
     dist_file = "%s.app-%s.zip" % (setupargs['name'], setupargs['version'])
     setup_requires += ['py2app', ]
-    setupargs['app'] = ['deken.py', ]
+    setupargs['app'] = ['pydeken.py', ]
     options['py2app'] = {
         'packages': ['requests', ],
         }
