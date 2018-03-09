@@ -713,7 +713,7 @@
   "parses a dekenformat.v1 filename into a (pkgname version archs extension) tuple"
   (try
    (get-values
-    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek)" filename)
+    (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek(\.[a-z0-9_.-]*)?)" filename)
     [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename [filename]
