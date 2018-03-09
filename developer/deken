@@ -21,7 +21,7 @@ error() {
     echo "$@" 1>&2
 }
 
-if [ "x$@" = "x--version" ]; then
+if test $# -eq 1 && test "x$1" = "x--version"; then
   echo "${DEKEN_VERSION}"
   exit
 fi
