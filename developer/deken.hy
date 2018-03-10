@@ -623,7 +623,11 @@
 (defn upload-file [filepath destination username password]
   "upload a file to a destination via webdav, using username/password"
   ;; get username and password from the environment, config, or user input
-  (try (do (import easywebdav2) (setv easywebdav easywebdav2)) (except [e ImportError] (import easywebdav)))
+  (try (do
+        (import easywebdav2)
+        (fix-easywebdav2 easywebdav2)
+        (setv easywebdav easywebdav2))
+       (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename url host]
     (log.info (% "Uploading '%s' to %s" (, filename url)))
     (try
