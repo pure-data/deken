@@ -183,7 +183,7 @@
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
 ;; takes the externals architectures and turns them into a string
-(defn get-architecture-strings [folder]
+(defn get-architecture-string [folder]
   (defn _get_archs [archs]
     (if archs
        (+
@@ -718,7 +718,7 @@
                  (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
                     (.strftime (datetime.date.today) "%Y%m%d"))))]
          [version version])
-   (get-architecture-strings folder)
+   (get-architecture-string folder)
    filenameversion))
 
 
