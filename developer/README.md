@@ -173,3 +173,7 @@ files (one for the "Sources" arch).
 ## Show help ##
 
 	$ deken -h
+
+## Troubleshooting ##
+
+see [DEVELOPMENT.md](DEVELOPMENT.md) for some troubleshooting advice.

@@ -52,3 +52,11 @@ This will give you something like `deken/development/dist/deken.exe`
 
 When creating a standalone executable, an attempt is made to automatically fix
 the 'easywebdav2' package.
+
+# Recommended backend
+
+You may see the error:
+
+`No recommended backend was available. Install the keyrings.alt package if you want to use the non-recommended backends. See README.rst for details.`
+
+This should be safe to ignore.
