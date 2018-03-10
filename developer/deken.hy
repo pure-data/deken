@@ -146,6 +146,33 @@
   "replace multiple words (given as pairs in <repls>) in a string <s>"
   (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
+(defn fix-easywebdav2 [pkg &optional
+                       [broken "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"]
+                       [fixed "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir_, safe=True, **kwargs)"]]
+  "try to patch easywebdav2, it's broken as of 1.3.0"
+  (try
+   (do
+    (setv filename (os.path.join (os.path.dirname pkg.__file__) "client.py"))
+    (with [f (open filename "r")]
+          (setv data (f.read)))
+    (if (in broken data)
+      (try
+       (do
+        (with [f (open filename "w")]
+              (f.write (.replace data broken fixed)))
+        ;; TODO: stop execution and require the user to re-start
+        (fatal (.join "\n"
+                      ["Fixing a problem with the 'easywebdav' module succeeded."
+                       "Please re-run your command!"]))
+        )
+       (except [e OSError]
+         (do
+          (log.error "The 'easywebdav2' module is broken, and trying to fix the problem failed,")
+          (log.error "so I will not be able to create directories on the remote server.")
+          (log.error "As a workaround, please manually create any required directory on the remote server.")
+          (log.error "For more information see https://github.com/zabuldon/easywebdav/pull/1")))
+       )))
+   (except [e Exception] (log.debug (% "Unable to patch 'easywebdav2'\n%s" e)))))
 
 
 ;; read in the config file if present
