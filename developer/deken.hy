@@ -182,16 +182,25 @@
 
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
-;; takes the externals architectures and turns them into a string
+(defn sort-archs [archs]
+  "alphabetically sort list of archs with 'Sources' always at the end"
+  (+
+   (sorted (.difference (set archs) (set ["Sources"])))
+   (if (in "Sources" archs)
+     ["Sources"]
+     [])))
+
+;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder]
+  "get architecture-string for all Pd-binaries in the folder"
   (defn _get_archs [archs]
+    (print "ARCHS: " archs)
     (if archs
        (+
         "("
-        (.join ")(" (list-comp a [a (sorted (set archs))] (!= a "Sources")))
-        ")"
-        (if (in "Sources" archs) "(Sources)" ""))
-         ""))
+        (.join ")(" (list-comp a [a (sort-archs archs)]))
+        ")")
+       ""))
    (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder)])))
 
 ;; check if a particular file has an extension in a set
