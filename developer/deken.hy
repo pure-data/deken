@@ -642,7 +642,7 @@
                  "\n"
                  (% "Couldn't upload to %s!\n" url)
                  (% "Are you sure you have the correct username and password set for '%s'?\n" host)
-                 (% "Please ensure the folder '%s' exists on the server and is writeable." path))))))
+                 (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
   (if filepath
     (do
      (setv filename (os.path.basename filepath))
