@@ -806,6 +806,7 @@
           (or (try (do
                       (import keyring)
                       (keyring.get_password "deken" username))
+                   (except [e RuntimeError] (log.debug e))
                    (except [e Exception] (log.warn e)))
               (get-config-value "password")))
       (do
