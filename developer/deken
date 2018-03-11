@@ -129,7 +129,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv;
     [ -d "$DEKEN_HOME/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
-        $DEKEN_HOME/virtualenv-source/virtualenv.py "$DEKEN_HOME/virtualenv" || exit 1)
+        $DEKEN_HOME/virtualenv-source/virtualenv.py -p "${PYTHON_BIN}" "$DEKEN_HOME/virtualenv" || exit 1)
     [ -x "$DEKEN_HOME/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
         $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements)
