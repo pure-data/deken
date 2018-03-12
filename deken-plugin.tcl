@@ -711,7 +711,14 @@ proc ::deken::preferences::create {mytoplevel} {
     #    - a directory chooser
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
-    set pathsframe [labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1]
+    labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    canvas $mytoplevel.installdir.cnv \
+        -confine true \
+        -yscrollincrement 25 \
+        -scrollregion {0 0 0 650}
+    pack $mytoplevel.installdir.cnv
+    pack $mytoplevel.installdir
+    set pathsframe [frame $mytoplevel.installdir.cnv.f]
     pack ${pathsframe} -side top -fill x
 
     ### dekenpath: directory-chooser
