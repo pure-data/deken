@@ -711,12 +711,12 @@ proc ::deken::preferences::create {mytoplevel} {
     #    - a directory chooser
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
-    labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    pack $mytoplevel.installdir -side top -fill x
+    set pathsframe [labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1]
+    pack ${pathsframe} -side top -fill x
 
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
-    set f ${mytoplevel}.installdir.user
+    set f ${pathsframe}.user
     labelframe ${f} -borderwidth 1
     pack ${f} -anchor w -fill x
 
@@ -729,17 +729,17 @@ proc ::deken::preferences::create {mytoplevel} {
     pack ${f}.fill -side left -padx 12 -fill x -expand 1
     button ${f}.doit -text "..." -command "::deken::preferences::userpath_doit"
     pack ${f}.doit -side right -fill y -anchor e -padx 5 -pady 0
-    ::deken::preferences::create_pad $mytoplevel.installdir
+    ::deken::preferences::create_pad ${pathsframe}
 
     ### dekenpath: default directories
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
-        ::deken::preferences::create_pad $mytoplevel.installdir
+        ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
+        ::deken::preferences::create_pad ${pathsframe}
     }
-    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_staticpath
+    ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath $::sys_staticpath
 
-    ::deken::preferences::create_pad $mytoplevel.installdir
-    ::deken::preferences::create_pathentries $mytoplevel.installdir ::deken::preferences::installpath $::sys_searchpath
+    ::deken::preferences::create_pad ${pathsframe}
+    ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath $::sys_searchpath
 
     ## installation options
     labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
