@@ -712,14 +712,18 @@ proc ::deken::preferences::create {mytoplevel} {
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
     labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    scrollbar $mytoplevel.installdir.scroll \
+        -command "$mytoplevel.installdir.cnv yview"
     canvas $mytoplevel.installdir.cnv \
         -confine true \
-        -yscrollincrement 25 \
-        -scrollregion {0 0 0 650}
-    pack $mytoplevel.installdir.cnv
-    pack $mytoplevel.installdir
+        -yscrollincrement 0 \
+        -yscrollcommand " $mytoplevel.installdir.scroll set"
+
+    pack $mytoplevel.installdir.cnv -side left -fill x -fill y
+    pack $mytoplevel.installdir.scroll -side right -fill y
+    pack $mytoplevel.installdir -fill x
     set pathsframe [frame $mytoplevel.installdir.cnv.f]
-    pack ${pathsframe} -side top -fill x
+    #pack ${pathsframe} -side top -fill x
 
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
@@ -747,6 +751,11 @@ proc ::deken::preferences::create {mytoplevel} {
 
     ::deken::preferences::create_pad ${pathsframe}
     ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath $::sys_searchpath
+
+    pack $pathsframe -fill x
+    $mytoplevel.installdir.cnv create window 0 0 -anchor nw -window $pathsframe
+    #$mytoplevel.installdir.cnv configure -scrollregion [$mytoplevel.installdir.cnv bbox all]
+    $mytoplevel.installdir.cnv configure -scrollregion {0 0 0 1150}
 
     ## installation options
     labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
