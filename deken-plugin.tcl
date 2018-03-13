@@ -620,7 +620,15 @@ proc ::deken::create_dialog {mytoplevel} {
     }
 }
 
-proc ::deken::preferences::create_pad {toplevel {padx 2} {pady 2} } {
+proc ::deken::preferences::create_pathpad {toplevel} {
+    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
+
+    frame $mypad
+    pack $mypad -padx 2 -pady 2 -expand 1 -fill y
+
+    return mypad
+}
+proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
     set mypad [::deken::utilities::newwidget ${toplevel}.pad]
 
     frame $mypad
@@ -656,32 +664,28 @@ proc ::deken::preferences::path_doit {origin path {mkdir true}} {
     }
 }
 
-proc ::deken::preferences::create_pathentries {toplevel var paths} {
-    set i 0
+proc ::deken::preferences::create_pathentry {toplevel var path} {
+    # only add absolute paths to the pathentries
+    if { [file pathtype $path] != "absolute" } { return }
 
-    foreach path $paths {
-        # only add absolute paths to the pathentries
-        if { [file pathtype $path] != "absolute" } { continue }
+    set w [::deken::utilities::newwidget ${toplevel}.frame]
 
-        set w [::deken::utilities::newwidget ${toplevel}.frame]
+    frame $w
+    pack $w -anchor w -fill x
 
-        frame $w
-        pack $w -anchor w -fill x
-
-        radiobutton ${w}.path -value ${path} -text "${path}" -variable $var
-        pack ${w}.path -side left
-        frame ${w}.fill
-        pack ${w}.fill -side left -padx 12 -fill x -expand 1
-        button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w} ${path}"
-        ::deken::preferences::path_doit ${w} ${path} false
-        pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
-        if { [::deken::utilities::is_writable_dir ${path} ] } {
-            ${w}.doit configure -state disabled
-            ${w}.path configure -state normal
-        } else {
-            ${w}.doit configure -state normal
-            ${w}.path configure -state disabled
-        }
+    radiobutton ${w}.path -value ${path} -text "${path}" -variable $var
+    pack ${w}.path -side left
+    frame ${w}.fill
+    pack ${w}.fill -side left -padx 12 -fill x -expand 1
+    button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w} ${path}"
+    ::deken::preferences::path_doit ${w} ${path} false
+    pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
+    if { [::deken::utilities::is_writable_dir ${path} ] } {
+        ${w}.doit configure -state disabled
+        ${w}.path configure -state normal
+    } else {
+        ${w}.doit configure -state normal
+        ${w}.path configure -state disabled
     }
 }
 
@@ -740,17 +744,23 @@ proc ::deken::preferences::create {mytoplevel} {
     pack ${f}.fill -side left -padx 12 -fill x -expand 1
     button ${f}.doit -text "..." -command "::deken::preferences::userpath_doit"
     pack ${f}.doit -side right -fill y -anchor e -padx 5 -pady 0
-    ::deken::preferences::create_pad ${pathsframe}
+    ::deken::preferences::create_pathpad ${pathsframe}
 
     ### dekenpath: default directories
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath {[::pd_docsdir::get_externals_path]}
-        ::deken::preferences::create_pad ${pathsframe}
+        foreach p [::pd_docsdir::get_externals_path] {
+            ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+        }
+        ::deken::preferences::create_pathpad ${pathsframe}
     }
-    ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath $::sys_staticpath
+    foreach p $::sys_staticpath {
+        ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+    }
+    ::deken::preferences::create_pathpad ${pathsframe}
 
-    ::deken::preferences::create_pad ${pathsframe}
-    ::deken::preferences::create_pathentries ${pathsframe} ::deken::preferences::installpath $::sys_searchpath
+    foreach p $::sys_searchpath {
+        ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+    }
 
     pack $pathsframe -fill x
     $mytoplevel.installdir.cnv create window 0 0 -anchor nw -window $pathsframe
@@ -808,7 +818,7 @@ proc ::deken::preferences::create {mytoplevel} {
     pack $mytoplevel.platform.userarch.entry -side right -fill x
 
     # hide non-matching architecture?
-    ::deken::preferences::create_pad $mytoplevel.platform 2 10
+    ::deken::preferences::create_packpad $mytoplevel.platform 2 10
 
     checkbutton $mytoplevel.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
         -variable ::deken::preferences::hideforeignarch
