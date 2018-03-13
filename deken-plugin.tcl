@@ -729,19 +729,26 @@ proc ::deken::preferences::create {mytoplevel} {
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
     labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    scrollbar $mytoplevel.installdir.scroll \
-        -command "$mytoplevel.installdir.cnv yview"
     canvas $mytoplevel.installdir.cnv \
-        -confine true \
+        -confine true
+    scrollbar $mytoplevel.installdir.scrollv \
+        -command "$mytoplevel.installdir.cnv yview"
+    scrollbar $mytoplevel.installdir.scrollh \
+        -orient horizontal \
+        -command "$mytoplevel.installdir.cnv xview"
+    $mytoplevel.installdir.cnv configure \
+        -xscrollincrement 0 \
+        -xscrollcommand " $mytoplevel.installdir.scrollh set"
+    $mytoplevel.installdir.cnv configure \
         -yscrollincrement 0 \
-        -yscrollcommand " $mytoplevel.installdir.scroll set"
-    pack $mytoplevel.installdir.cnv -side left -fill x -fill y
-    pack $mytoplevel.installdir.scroll -side right -fill y
-    pack $mytoplevel.installdir -fill x
+        -yscrollcommand " $mytoplevel.installdir.scrollv set" \
+
+    pack $mytoplevel.installdir.cnv -side left -fill both -expand 1
+    pack $mytoplevel.installdir.scrollv -side right -fill y
+    pack $mytoplevel.installdir.scrollh -side bottom -fill x -before  $mytoplevel.installdir.cnv
+    pack $mytoplevel.installdir -fill both
 
     set pathsframe [frame $mytoplevel.installdir.cnv.f]
-    grid columnconfigure ${pathsframe} 0 -weight 2
-    grid columnconfigure ${pathsframe} 1 -weight 0
     set row 0
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
