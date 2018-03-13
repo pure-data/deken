@@ -32,6 +32,20 @@ These builds are snaphots of the latest development branch of `deken`.
 If they don't work for you, you might want to check the [releases page](https://github.com/pure-data/deken/releases)
 for downloads that have been tested by humans.
 
+## Show help ##
+
+~~~sh
+$ deken -h
+~~~
+
+## Upgrade ##
+
+To run a self-upgrade (not supported on all platforms), simply do:
+
+~~~sh
+$ deken upgrade
+~~~
+
 ## Create and Upload a package ##
 
 You have a directory containing your compiled externals object files called
@@ -41,13 +55,17 @@ This command will create a file like `my_external[v0.1](Linux-amd64-64).dek`
 and upload it to your account on <https://puredata.info/> where the search plugin
 can find it:
 
-	$ deken package -v 0.1 my_external
-	$ deken upload "my_external[v0.1](Linux-amd64-64).dek"
+~~~sh
+$ deken package -v 0.1 my_external
+$ deken upload "my_external[v0.1](Linux-amd64-64).dek"
+~~~
 
 You can also just call the 'upload' directly and it will call the package
 command for you in one step:
 
-	$ deken upload -v 0.1 my_external
+~~~sh
+$ deken upload -v 0.1 my_external
+~~~
 
 The upload step will also generate a .sha256 checksum file and upload it along
 with the dek file.
@@ -162,14 +180,43 @@ For uploading a Source package along with binary packages, you can upload one
 package file with multiple archs (including a "Sources" arch) or multiple package
 files (one for the "Sources" arch).
 
-    deken upload frobnozzel(Windows-i386-32)(Sources).dek
-    deken upload foobar[v0.1](Linux-x86_64-32).dek foobar[v0.1](Sources).dek
+~~~sh
+$ deken upload frobnozzel(Windows-i386-32)(Sources).dek
+$ deken upload foobar[v0.1](Linux-x86_64-32).dek foobar[v0.1](Sources).dek
+~~~
 
-## Upgrade ##
+## objectlists
+Sometimes the user only knows the object they need, not the library.
+Therefore, a search initiated via the `deken-plugin` (Pd's package manager) also
+searches for *objects*.
+For this to work, the infrastructure must know which objects are contained in a
+library; which is done via an objectlist file.
 
-	$ deken upgrade
-	... self upgrades the scripts ...
+The objectlist file has one line per object, with the object-name at the beginning,
+followed by a TAB (`\t`) and a short (single-line) description of the object.
 
-## Show help ##
+~~~
+frobnofy	frobfurcate a bugle of numbers
+frobnofy~	signal frobfurcation
+~~~
 
-	$ deken -h
+The objectlist file has the same name as the package with a `.txt` appended.
+E.g. if your library is called `frobnozzel(Windows-i386-32)(Sources).dek`, the
+objectlist would have the name `frobnozzel(Windows-i386-32)(Sources).dek.txt`
+
+`deken` will try to automatically generate an objectlist file for a package.
+It looks for all "*-help.pd" files in the library directory, and creates an
+entry in the objectlists for each. The short description is set to a generic one.
+
+You can provide your own (manually maintained) objectlist file via the
+`--objects`  flag:
+
+~~~sh
+$ deken package --objects mylist.txt my_external
+~~~
+
+To prevent the creation/use of an objectlist file, pass an empty string
+
+~~~sh
+$ deken package --objects "" my_external
+~~~
