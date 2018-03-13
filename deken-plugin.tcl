@@ -685,9 +685,9 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     frame ${pad}
     button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${path}"
 
-    grid ${rdb} -sticky w    -row ${row} -column 0
+    grid ${rdb} -sticky w    -row ${row} -column 2
     grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
-    grid ${chk} -sticky nsew -row ${row} -column 2
+    grid ${chk} -sticky nsew -row ${row} -column 0
 
 
     if {! $generic} {
