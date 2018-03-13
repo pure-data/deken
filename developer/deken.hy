@@ -732,12 +732,12 @@
 
 
 ;; create additional files besides archive: hash-file and gpg-signature
-(defn archive-extra [zipfile]
+(defn archive-extra [dekfile]
   "create additional files besides archive: hash-file and GPG-signature"
-  (log.info (% "Packaging %s" zipfile))
-  (hash-sum-file zipfile)
-  (gpg-sign-file zipfile)
-  zipfile)
+  (log.info (% "Packaging %s" dekfile))
+  (hash-sum-file dekfile)
+  (gpg-sign-file dekfile)
+  dekfile)
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
