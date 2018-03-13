@@ -521,9 +521,14 @@ proc ::deken::highlightable_posttag {tag} {
     # make sure that the 'highlight' tag is topmost
     $mytoplevelref.results tag raise highlight
 }
-proc ::deken::do_prompt_installdir {path} {
-   return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
-               -initialdir ${path} -parent .externals_searchui]
+proc ::deken::do_prompt_installdir {path {mytoplevel .externals_searchui}} {
+    if {[winfo exists $mytoplevel]} {
+        return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
+                    -initialdir ${path} -parent .externals_searchui]
+    } {
+        return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
+                    -initialdir ${path}]
+    }
 }
 
 proc ::deken::prompt_installdir {} {
