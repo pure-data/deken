@@ -95,7 +95,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.3.1] } {
+if { [::deken::versioncheck 0.3.2] } {
 
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
