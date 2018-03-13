@@ -1447,6 +1447,7 @@ proc ::deken::search::puredata.info {term} {
             set creator [ string trim [ lindex $sele 2 ]]
             set date    [regsub -all {[TZ]} [ string trim [ lindex $sele 3 ] ] { }]
             set decURL [urldecode $URL]
+            set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
             set filename [ file tail $URL ]
             set cmd [list ::deken::clicked_link $decURL $filename]
             set pkgverarch [ ::deken::parse_filename $filename ]
@@ -1457,14 +1458,19 @@ proc ::deken::search::puredata.info {term} {
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
             set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
-            set res [list $filename $name $cmd $match $comment $status]
+            set menus [list \
+                           [_ "Install package" ] $cmd \
+                           [_ "Copy URL" ] "clipboard clear; clipboard append $saveURL" \
+                           [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
+                          ]
+            set res [list $filename $name $cmd $match $comment $status $menus]
             lappend searchresults $res
         }
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {filename title cmd match comment status} $r {
-            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status]
+        foreach {_ title cmd match comment status menus} $r {
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus]
             break
         }
     }
