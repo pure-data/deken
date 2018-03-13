@@ -356,7 +356,12 @@ proc ::deken::register {fun} {
     set ::deken::backends [linsert $::deken::backends 0 $fun]
 }
 
-proc ::deken::normalize_result {title cmd {match 1} {subtitle ""} {statusline ""} args} {
+proc ::deken::normalize_result {title
+                                cmd
+                                {match 1}
+                                {subtitle ""}
+                                {statusline ""}
+                                args} {
     ## normalize a search-result
     # the function parameters are guaranteed to be a stable API (with the exception or args)
     # but the value returned by this function is an implementation detail
