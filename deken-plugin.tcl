@@ -674,9 +674,11 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
     }
 }
 
-proc ::deken::preferences::create_pathentry {toplevel var path} {
+proc ::deken::preferences::create_pathentry {toplevel var path {generic false}} {
     # only add absolute paths to the pathentries
-    if { [file pathtype $path] != "absolute" } { return }
+    if {! $generic} {
+        if { [file pathtype $path] != "absolute" } { return }
+    }
 
     set w [::deken::utilities::newwidget ${toplevel}.frame]
 
@@ -688,8 +690,12 @@ proc ::deken::preferences::create_pathentry {toplevel var path} {
     frame ${w}.fill
     pack ${w}.fill -side left -padx 12 -fill x -expand 1
     button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w}.path ${w}.doit ${path}"
-    ::deken::preferences::path_doit ${w}.path ${w}.doit ${path} false
     pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
+
+    if {! $generic} {
+        ::deken::preferences::path_doit ${w}.path ${w}.doit ${path} false
+    }
+    return [list ${w}.path ${w}.doit]
 }
 
 proc ::deken::preferences::create {mytoplevel} {
@@ -725,28 +731,22 @@ proc ::deken::preferences::create {mytoplevel} {
         -confine true \
         -yscrollincrement 0 \
         -yscrollcommand " $mytoplevel.installdir.scroll set"
-
     pack $mytoplevel.installdir.cnv -side left -fill x -fill y
     pack $mytoplevel.installdir.scroll -side right -fill y
     pack $mytoplevel.installdir -fill x
-    set pathsframe [frame $mytoplevel.installdir.cnv.f]
-    #pack ${pathsframe} -side top -fill x
 
+    set pathsframe [frame $mytoplevel.installdir.cnv.f]
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
-    set f ${pathsframe}.user
-    labelframe ${f} -borderwidth 1
-    pack ${f} -anchor w -fill x
-
-    radiobutton ${f}.path \
+    set pathdoit [::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath "USER" true]
+    [lindex $pathdoit 0] configure \
+        -foreground blue \
         -value "USER" \
         -textvariable ::deken::preferences::userinstallpath \
         -variable ::deken::preferences::installpath
-    pack ${f}.path -side left
-    frame ${f}.fill
-    pack ${f}.fill -side left -padx 12 -fill x -expand 1
-    button ${f}.doit -text "..." -command "::deken::preferences::userpath_doit"
-    pack ${f}.doit -side right -fill y -anchor e -padx 5 -pady 0
+    [lindex $pathdoit 1] configure \
+        -text "..." \
+        -command "::deken::preferences::userpath_doit"
     ::deken::preferences::create_pathpad ${pathsframe}
 
     ### dekenpath: default directories
