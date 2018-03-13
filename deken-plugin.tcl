@@ -685,13 +685,6 @@ proc ::deken::preferences::create_pathentry {toplevel var path} {
     button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w}.path ${w}.doit ${path}"
     ::deken::preferences::path_doit ${w}.path ${w}.doit ${path} false
     pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
-    if { [::deken::utilities::is_writable_dir ${path} ] } {
-        ${w}.doit configure -state disabled
-        ${w}.path configure -state normal
-    } else {
-        ${w}.doit configure -state normal
-        ${w}.path configure -state disabled
-    }
 }
 
 proc ::deken::preferences::create {mytoplevel} {
