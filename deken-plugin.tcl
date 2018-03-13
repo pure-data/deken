@@ -643,24 +643,29 @@ proc ::deken::preferences::userpath_doit { } {
         set ::deken::preferences::userinstallpath "${installdir}"
     }
 }
-proc ::deken::preferences::path_doit {origin path {mkdir true}} {
-    ${origin}.doit configure -state normal
-    ${origin}.path configure -state disabled
+proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
+    # handler for the check/create button
+    # if the path does not exist, disable the radiobutton and suggest to Create it
+    # if the path exists, check whether it is writable
+    #  if it is writable, enable the radiobutton and disable the check/create button
+    #  if it is not writable, keep the radiobutton disabled and suggest to (Re)Check
+    ${ckb} configure -state normal
+    ${rdb} configure -state disabled
 
     if { [file exists ${path}] } { } {
-        ${origin}.doit configure -text "Create"
+        ${ckb} configure -text "Create"
         if { $mkdir } {
             catch { file mkdir $path }
         }
     }
 
     if { [file exists ${path}] } {
-        ${origin}.doit configure -text "Check"
+        ${ckb} configure -text "Check"
     }
 
     if { [::deken::utilities::is_writable_dir ${path} ] } {
-        ${origin}.doit configure -state disabled
-        ${origin}.path configure -state normal
+        ${ckb} configure -state disabled
+        ${rdb} configure -state normal
     }
 }
 
@@ -677,8 +682,8 @@ proc ::deken::preferences::create_pathentry {toplevel var path} {
     pack ${w}.path -side left
     frame ${w}.fill
     pack ${w}.fill -side left -padx 12 -fill x -expand 1
-    button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w} ${path}"
-    ::deken::preferences::path_doit ${w} ${path} false
+    button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w}.path ${w}.doit ${path}"
+    ::deken::preferences::path_doit ${w}.path ${w}.doit ${path} false
     pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
     if { [::deken::utilities::is_writable_dir ${path} ] } {
         ${w}.doit configure -state disabled
