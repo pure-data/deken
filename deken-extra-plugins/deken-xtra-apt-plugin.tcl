@@ -77,7 +77,22 @@ proc ::deken::apt::search {name} {
         set status "${pkgname}_${v}_${arch}.deb"
         lappend result [list $name $cmd $match $comment $status]
     }
-    return [lsort -dictionary -decreasing -index 1 $result ]
+
+    # version-sort the results and normalize the result-string
+    set sortedresult []
+    if {[expr {[llength [info procs ::deken::normalize_result ]] > 0}]} {
+        foreach r [lsort -dictionary -decreasing -index 1 $result ] {
+            foreach {title cmd match comment status} $r {break}
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status]
+        }
+    } {
+        foreach r [lsort -dictionary -decreasing -index 1 $result ] {
+            # [list $title $cmd $match $comment $status]
+            foreach {title cmd match comment status} $r {break}
+            lappend sortedresult [list $title $cmd $match $comment $status]
+        }
+    }
+    return $sortedresult
 }
 
 proc ::deken::apt::install {pkg} {
