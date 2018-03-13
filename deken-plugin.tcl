@@ -1427,11 +1427,18 @@ proc ::deken::search::puredata.info {term} {
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
             set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
-            set res [list $name $cmd $match $comment $status $filename]
+            set res [list $filename $name $cmd $match $comment $status]
             lappend searchresults $res
         }
     }
-    return [lsort -command ::deken::versioncompare -decreasing -index 5 $searchresults ]
+    set sortedresult []
+    foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
+        foreach {filename title cmd match comment status} $r {
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status]
+            break
+        }
+    }
+    return $sortedresult
 }
 
 ::deken::register ::deken::search::puredata.info
