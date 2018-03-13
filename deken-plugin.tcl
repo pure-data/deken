@@ -1345,4 +1345,7 @@ proc ::deken::search::puredata.info {term} {
 }
 
 ::deken::register ::deken::search::puredata.info
+
+puts "JMZ: show deken prefs"
+::deken::preferences::show
 }
