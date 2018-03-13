@@ -361,6 +361,7 @@ proc ::deken::normalize_result {title
                                 {match 1}
                                 {subtitle ""}
                                 {statusline ""}
+                                {contextmenus {}}
                                 args} {
     ## normalize a search-result
     # the function parameters are guaranteed to be a stable API (with the exception or args)
@@ -370,9 +371,10 @@ proc ::deken::normalize_result {title
     # - <match> boolean value to indicate whether this entry matches the current architecture
     # - <subtitle> additional text to be shown under the <name>
     # - <statusline> additional text to be shown in the STATUS line if the mouse hovers over the result
+    # - <contextmenus> list of <menuitem> <menucmd> pairs to be shown via a right-click context-menu
     # - <args> RESERVED FOR FUTURE USE (do not use!)
 
-    return [list "" $title $cmd $match $subtitle $statusline]
+    return [list "" $title $cmd $match $subtitle $statusline $contextmenus]
 }
 
 
@@ -558,6 +560,26 @@ proc ::deken::highlightable_posttag {tag} {
     # make sure that the 'highlight' tag is topmost
     $mytoplevelref.results tag raise highlight
 }
+proc ::deken::bind_postmenu {mytoplevel tag menus} {
+    set cmd "::deken::result_contextmenu %W %x %y $menus"
+    if {$::windowingsystem eq "aqua"} {
+        $mytoplevel.results tag bind $tag <2> $cmd
+    } else {
+        $mytoplevel.results tag bind $tag <3> $cmd
+    }
+}
+proc ::deken::result_contextmenu {widget theX theY args} {
+    set m .dekenresults_contextMenu
+    if { [winfo exists $m] } {
+        destroy $m
+    }
+    menu $m
+    foreach {title cmd} $args {
+        $m add command -label $title -command $cmd
+    }
+    tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
+}
+
 proc ::deken::do_prompt_installdir {path {mytoplevel .externals_searchui}} {
     if {[winfo exists $mytoplevel]} {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
@@ -1004,7 +1026,7 @@ proc ::deken::initiate_search {mytoplevel} {
 
 # display a single found entry
 proc ::deken::show_result {mytoplevel counter result showmatches} {
-    foreach {title cmd match comment status} $result {break}
+    foreach {title cmd match comment status contextmenus} $result {break}
 
     set tag ch$counter
     #if { [ ($match) ] } { set matchtag archmatch } { set matchtag noarchmatch }
@@ -1015,6 +1037,9 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
         ::deken::highlightable_posttag $tag
         ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
+        if { "" ne $contextmenus } {
+            ::deken::bind_postmenu $mytoplevel $tag $contextmenus
+        }
     }
 }
 
