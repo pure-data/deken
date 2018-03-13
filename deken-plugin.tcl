@@ -627,8 +627,8 @@ proc ::deken::create_dialog {mytoplevel} {
 
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
     set pad [::deken::utilities::newwidget ${toplevel}.pad]
-    frame $pad
-    grid ${pad} -sticky ""   -row ${row} -column 1 -columnspan 2 -padx ${padx}  -pady ${pady}
+    frame $pad -relief groove -borderwidth 2 -width 2 -height 2
+    grid ${pad} -sticky ew -row ${row} -column 0 -columnspan 3 -padx ${padx}  -pady ${pady}
 }
 proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
     set mypad [::deken::utilities::newwidget ${toplevel}.pad]
