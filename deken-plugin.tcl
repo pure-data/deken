@@ -1403,6 +1403,8 @@ proc ::deken::search::puredata.info {term} {
         return {}
     }
     set contents [::http::data $token]
+    ::http::cleanup $token
+
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
     foreach ele $splitCont {
@@ -1429,7 +1431,6 @@ proc ::deken::search::puredata.info {term} {
             lappend searchresults $res
         }
     }
-    ::http::cleanup $token
     return [lsort -command ::deken::versioncompare -decreasing -index 5 $searchresults ]
 }
 
