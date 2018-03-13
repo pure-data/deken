@@ -697,6 +697,12 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
 }
 
 proc ::deken::preferences::create {mytoplevel} {
+    # urgh...we want to know when the window gets drawn,
+    # so we can query the size of the pathentries canvas
+    # in order to get the scrolling-region right!!!
+    # this seems to be so wrong...
+    bind $mytoplevel <Map> "::deken::preferences::mapped %W"
+
     set ::deken::preferences::installpath $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
     if { $::deken::userplatform == "" } {
@@ -775,8 +781,6 @@ proc ::deken::preferences::create {mytoplevel} {
 
     pack $pathsframe -fill x
     $mytoplevel.installdir.cnv create window 0 0 -anchor nw -window $pathsframe
-    #$mytoplevel.installdir.cnv configure -scrollregion [$mytoplevel.installdir.cnv bbox all]
-    $mytoplevel.installdir.cnv configure -scrollregion {0 0 0 1150}
 
     ## installation options
     labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
@@ -855,6 +859,18 @@ proc ::deken::preferences::create {mytoplevel} {
     button $mytoplevel.nb.buttonframe.ok -text [_ "OK"] \
         -command "::deken::preferences::ok $mytoplevel"
     pack $mytoplevel.nb.buttonframe.ok -side left -expand 1 -fill x -padx 15 -ipadx 10
+
+}
+
+proc ::deken::preferences::mapped {mytoplevel} {
+    set cnv $mytoplevel.installdir.cnv
+    catch {
+        #puts "bbox [$cnv bbox all]"
+        set bbox [$cnv bbox all]
+        if { "$bbox" != "" } {
+            $cnv configure -scrollregion $bbox
+        }
+    } stdout
 }
 
 proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
