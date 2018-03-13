@@ -625,13 +625,10 @@ proc ::deken::create_dialog {mytoplevel} {
     }
 }
 
-proc ::deken::preferences::create_pathpad {toplevel} {
-    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
-
-    frame $mypad
-    pack $mypad -padx 2 -pady 2 -expand 1 -fill y
-
-    return mypad
+proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
+    set pad [::deken::utilities::newwidget ${toplevel}.pad]
+    frame $pad
+    grid ${pad} -sticky ""   -row ${row} -column 1 -columnspan 2 -padx ${padx}  -pady ${pady}
 }
 proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
     set mypad [::deken::utilities::newwidget ${toplevel}.pad]
@@ -674,28 +671,29 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
     }
 }
 
-proc ::deken::preferences::create_pathentry {toplevel var path {generic false}} {
+proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
     # only add absolute paths to the pathentries
     if {! $generic} {
         if { [file pathtype $path] != "absolute" } { return }
     }
 
-    set w [::deken::utilities::newwidget ${toplevel}.frame]
+    set rdb [::deken::utilities::newwidget ${toplevel}.path]
+    set chk [::deken::utilities::newwidget ${toplevel}.doit]
+    set pad [::deken::utilities::newwidget ${toplevel}.pad]
 
-    frame $w
-    pack $w -anchor w -fill x
+    radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
+    frame ${pad}
+    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${path}"
 
-    radiobutton ${w}.path -value ${path} -text "${path}" -variable $var
-    pack ${w}.path -side left
-    frame ${w}.fill
-    pack ${w}.fill -side left -padx 12 -fill x -expand 1
-    button ${w}.doit -text "..." -command "::deken::preferences::path_doit ${w}.path ${w}.doit ${path}"
-    pack ${w}.doit -side right -fill y -anchor e -padx 5 -pady 0
+    grid ${rdb} -sticky w    -row ${row} -column 0
+    grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
+    grid ${chk} -sticky nsew -row ${row} -column 2
+
 
     if {! $generic} {
-        ::deken::preferences::path_doit ${w}.path ${w}.doit ${path} false
+        ::deken::preferences::path_doit ${rdb} ${chk} ${path} false
     }
-    return [list ${w}.path ${w}.doit]
+    return [list ${rdb} ${chk}]
 }
 
 proc ::deken::preferences::create {mytoplevel} {
@@ -736,9 +734,13 @@ proc ::deken::preferences::create {mytoplevel} {
     pack $mytoplevel.installdir -fill x
 
     set pathsframe [frame $mytoplevel.installdir.cnv.f]
+    grid columnconfigure ${pathsframe} 0 -weight 2
+    grid columnconfigure ${pathsframe} 1 -weight 0
+    set row 0
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
-    set pathdoit [::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath "USER" true]
+    set pathdoit [::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath "USER" true]
+    incr row
     [lindex $pathdoit 0] configure \
         -foreground blue \
         -value "USER" \
@@ -747,22 +749,28 @@ proc ::deken::preferences::create {mytoplevel} {
     [lindex $pathdoit 1] configure \
         -text "..." \
         -command "::deken::preferences::userpath_doit"
-    ::deken::preferences::create_pathpad ${pathsframe}
+    ::deken::preferences::create_pathpad ${pathsframe} ${row}
+    incr row
 
     ### dekenpath: default directories
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
         foreach p [::pd_docsdir::get_externals_path] {
-            ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+            ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+            incr row
         }
-        ::deken::preferences::create_pathpad ${pathsframe}
+        ::deken::preferences::create_pathpad ${pathsframe} ${row}
+        incr row
     }
     foreach p $::sys_staticpath {
-        ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+        incr row
     }
-    ::deken::preferences::create_pathpad ${pathsframe}
+    ::deken::preferences::create_pathpad ${pathsframe} ${row}
+    incr row
 
     foreach p $::sys_searchpath {
-        ::deken::preferences::create_pathentry ${pathsframe} ::deken::preferences::installpath $p
+        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+        incr row
     }
 
     pack $pathsframe -fill x
