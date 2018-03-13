@@ -337,8 +337,40 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
 
 set ::deken::backends [list]
 proc ::deken::register {fun} {
+    # register a searchfunction with deken.
+    # the searchfunction <fun> will be called with a <searchterm>,
+    # and must return a list of <result>.
+    # <searchterm> is a list of (whitespace separated) words.
+    # each word denotes a library or library-object to search for and may
+    # contain wildcards ("*").
+    # the <result> should be normalized via ::deken::search::normalize_result
+    # failing to do so, a <result> is a list <name> <cmd> <match> <comment> <status> <args...>
+    # - <title> non-empty name of the library (to be shown to the user as search-result)
+    # - <cmd>  the full command to run to install the library
+    # - <match> boolean value to indicate whether this entry matches the current architecture
+    # - <subtitle> additional text to be shown under the <name>
+    # - <status> additional text to be shown in the STATUS line if the mouse hovers over the result
+    # - <args>... additional args (ignored)
+    # the library <name> must be non-empty (and empty value is reserved for normalized results)
+
     set ::deken::backends [linsert $::deken::backends 0 $fun]
 }
+
+proc ::deken::normalize_result {title cmd {match 1} {subtitle ""} {statusline ""} args} {
+    ## normalize a search-result
+    # the function parameters are guaranteed to be a stable API (with the exception or args)
+    # but the value returned by this function is an implementation detail
+    # <title> the primary line displayed for the search-result
+    # - <cmd>  the full command to run to install the library
+    # - <match> boolean value to indicate whether this entry matches the current architecture
+    # - <subtitle> additional text to be shown under the <name>
+    # - <statusline> additional text to be shown in the STATUS line if the mouse hovers over the result
+    # - <args> RESERVED FOR FUTURE USE (do not use!)
+
+    return [list "" $title $cmd $match $subtitle $statusline]
+}
+
+
 proc ::deken::gettmpdir {} {
     proc _iswdir {d} { expr [file isdirectory $d] * [file writable $d] }
     set tmpdir ""
@@ -1260,7 +1292,20 @@ proc ::deken::search_for {term} {
 
     set result [list]
     foreach searcher $::deken::backends {
-        set result [concat $result [ $searcher $term ] ]
+        if {[catch {
+            foreach r [ $searcher $term ] {
+                if { "" eq [lindex $r 0] } {
+                    # data is already normalized
+                } {
+                    # legacy data format
+                    foreach {title cmd match comment status} $r {break}
+                    set r [::deken::normalize_result $title $cmd $match $comment $status]
+                }
+                lappend result [lrange $r 1 end]
+            }
+        } stdout] } {
+            ::pdwindow::debug "\[deken\] $searcher: $stdout"
+        }
     }
     return $result
 }
