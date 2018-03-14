@@ -504,6 +504,7 @@
         (if (binary-file? objfilename)
           []
           (readobjs objfilename))))]))
+  (setv dekfilename (% "%s.txt" dekfilename))
   (if (os.path.exists dekfilename)
     (do ;; already exists
      (log.info (% "objects file '%s' already exists" dekfilename))
