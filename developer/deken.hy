@@ -85,8 +85,7 @@
     ~@(if (runs? (nil? None)) []
          [`(defmacro nil? [x] `(= ~x None))])
     ;; in hy-0.12 'slice' has been replaced with 'cut'
-    ~@(if (runs? (slice [])) []
-         [`(defmacro slice [&rest args] `(cut ~@args))])
+    ~@(if (runs? (cut [])) [`(defmacro slice [&rest args] `(cut ~@args))])
     ;; apply has been removed from hy-0.14
     ~@(if (runs? (apply (fn []))) []
          [`(defmacro apply [f &optional (args []) (kwargs {})]
