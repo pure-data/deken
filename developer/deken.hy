@@ -1027,6 +1027,9 @@
                             (or (getattr args "destination")
                                 (get-config-value "destination" "")))
                           args.no-source-error)))
+   ;; search for externals
+   :find find
+   :search find
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
    :update upgrade
@@ -1065,6 +1068,7 @@
                                "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
+  (setv arg-find (arg-subparsers.add_parser "find" :aliases ["search"]))
   (apply arg-subparsers.add_parser ["install"])
   (arg-subparsers.add_parser "upgrade" :aliases ["update"])
 
@@ -1103,6 +1107,23 @@
          {"action" "store_true"
           "help" "Force-allow uploading of packages without sources."
           "required" False})
+
+  (apply arg-find.add_argument ["--search-url"]
+         {"help" "URL to query for deken-packages"
+          "default" ""
+          "required" False})
+  (apply arg-find.add_argument ["--libraries"]
+         {"action" "store_true"
+          "help" "Find libraries (DEFAULT: True)"
+          "required" False})
+  (apply arg-find.add_argument ["--objects"]
+         {"action" "store_true"
+          "help" "Find objects (DEFAULT: True)"
+          "required" False})
+  (apply arg-find.add_argument ["search"]
+         {"nargs" "*"
+          "metavar" "TERM"
+          "help" "libraries/objects to search for"})
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
