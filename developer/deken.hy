@@ -945,6 +945,10 @@
                                   [True "name"]) needles}))
   (if (= 200 r.status_code)
     (parse-data r.text (get r.headers "content-type"))))
+(defn sort-searchresults [data]
+  (sorted data
+          :reverse True
+          :key (fn [d] (% "%s/%s" (, (get d "package") (get d "version"))))))
 
 (defn find [&optional args]
   (defn print-result [result &optional index]
