@@ -912,7 +912,7 @@
 
 (defn search [searchurl needles &optional [libraries True] [objects True]]
   "searches needles in libraries (if True) and objects (if True)"
-  (defn parse-tsv [data]
+  (defn parse-tab-separated-values [data]
     (list-comp
      (.split line "\t")
      [line (.splitlines (getattr r "text"))]
@@ -920,7 +920,7 @@
     )
   (defn parse-data [data content-type]
     (cond
-     [(in "text/tab-separated-values" content-type) (parse-tsv data)]
+     [(in "text/tab-separated-values" content-type) (parse-tab-separated-values data)]
      [True None]))
   (import requests)
   (setv r (requests.get searchurl
