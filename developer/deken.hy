@@ -209,7 +209,6 @@
 (defn get-architecture-string [folder]
   "get architecture-string for all Pd-binaries in the folder"
   (defn _get_archs [archs]
-    (print "ARCHS: " archs)
     (if archs
        (+
         "("
