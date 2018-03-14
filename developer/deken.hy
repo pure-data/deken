@@ -947,14 +947,32 @@
     (parse-data r.text (get r.headers "content-type"))))
 
 (defn find [&optional args]
-  (print args)
-  (if (and (not args.libraries) (not args.objects))
-    (do
-     (setv args.libraries True)
-     (setv args.objects True)
-     )
-    )
-  (search (or args.search_url default-searchurl) args.search args.libraries args.objects)
+  (defn print-result [result &optional index]
+    (setv url (get result "URL"))
+    (setv description (get result "description"))
+    (print (% "%s/%s uploaded for %s by %s on %s"
+              (,
+               (get result "package")
+               (get result "version")
+               (get result "architectures")
+               (get result "uploader")
+               (get result "timestamp")
+               )))
+    (if (.endswith url description)
+      None
+      (print "\t" description))
+    (print "\t URL:" url)
+    (print "\t" (* "-" 65))
+    (print ""))
+
+  (setv both (= args.libraries args.objects))
+  (import pprint)
+  (list-comp
+   (print-result x)
+   [x (search (or args.search_url default-searchurl)
+                   args.search
+                   (or args.libraries both)
+                   (or args.objects both))])
   )
 
 ; instruct the user how to manually upgrade 'deken'
