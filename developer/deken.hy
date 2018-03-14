@@ -913,8 +913,20 @@
 (defn search [searchurl needles &optional [libraries True] [objects True]]
   "searches needles in libraries (if True) and objects (if True)"
   (defn parse-tab-separated-values [data]
+    (defn parse-tsv [description &optional
+                     [URL None]
+                     [uploader None]
+                     [date None]
+                     &rest args]
+      (dict-merge
+       {"description" description
+        "URL" URL
+        "uploader" uploader
+        "timestamp" date}
+       (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
+
     (list-comp
-     (.split line "\t")
+     (apply parse-tsv (.split line "\t"))
      [line (.splitlines (getattr r "text"))]
      line)
     )
