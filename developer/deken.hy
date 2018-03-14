@@ -69,7 +69,13 @@
 
 (setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
-(setv version (.get os.environ "DEKEN_VERSION" "<unknown.version>"))
+(setv version (or
+               (.get os.environ "DEKEN_VERSION" None)
+               (try (do
+                     (import subprocess)
+                     (.strip (.decode (subprocess.check_output ["git" "describe" "--always"]))))
+                     (except [e Exception] None))
+               "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 
 ;; check whether a form executes or not
