@@ -474,7 +474,9 @@
   (defn get-files-from-dir [directory &optional [recursive False]]
     (if recursive
       (list-comp f [f (chain.from_iterable (list-comp files [(, root dirs files) (os.walk directory)]))])
-      (list-comp x [x (os.listdir directory)] (os.path.isfile (os.path.join directory x)))))
+      (try
+       (list-comp x [x (os.listdir directory)] (os.path.isfile (os.path.join directory x)))
+       (except [e OSError] []))))
   (defn genobjs [input]
     (list-comp (% "%s\tDEKEN GENERATED\n" (slice (os.path.basename f) 0 -8)) [f input] (f.endswith "-help.pd")))
   (defn readobjs [input]
