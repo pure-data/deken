@@ -986,7 +986,7 @@
                           args.no-source-error)))
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
-   :update  upgrade
+   :update upgrade
    :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
