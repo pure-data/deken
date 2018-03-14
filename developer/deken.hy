@@ -1023,8 +1023,8 @@
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (apply arg-subparsers.add_parser ["install"])
-  (apply arg-subparsers.add_parser ["upgrade"])
-  (apply arg-subparsers.add_parser ["update"])
+  (arg-subparsers.add_parser "upgrade" :aliases ["update"])
+
   (apply arg-parser.add_argument ["-v" "--verbose"]
          {"help" "Raise verbosity"
           "action" "count"
