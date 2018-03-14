@@ -917,6 +917,10 @@
            {"help" "A library version number to insert into the package name (in case the package is created)."
             "default" None
             "required" False})
+    (apply parser.add_argument ["--objects"]
+           {"help" "Specify a tsv-file that lists all the objects of the library (DEFAULT: generate it)."
+            "default" None
+            "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
             "default" 1
