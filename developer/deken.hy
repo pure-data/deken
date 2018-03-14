@@ -92,6 +92,22 @@
             `(~f #* ~args #** ~kwargs))]))))
 (defcompat)
 
+(defn binary-file? [filename]
+  "checks if <filename> contains binary data"
+  ;; files that contain '\0' are considered binary
+  ;; UTF-16 can contain '\0'; but for our purposes, its a binary format :-)
+  (defn contains? [f &optional [needle "\0"]]
+    (setv data (f.read 1024))
+    (cond
+     [(not data) False]
+     [(in needle data) True]
+     [True (contains? f needle)]))
+  (try
+   (with [f (open filename "rb")]
+         (contains? f (str-to-bytes "\0")))
+   (except [e Exception]
+     (log.debug e))))
+
 (defn str-to-bytes [s]
   "convert a string into bytes"
   (try (bytes s) (except [e TypeError] (bytes s "utf-8"))))
