@@ -459,7 +459,7 @@
     "Please enter %s %s:: ")
       (, (name.upper) config-file-path name name forstring))))
 
-(defn make-objects-file [dekfilename objfile]
+(defn make-objects-file [dekfilename objfile &optional [warn-exists True]]
   "generate object-list for <filename> from <objfile>"
   ;; dekfilename exists: issue a warning, and don't overwrite it
   ;; objfile=='' don't create an objects-file
@@ -508,7 +508,8 @@
   (if (os.path.exists dekfilename)
     (do ;; already exists
      (log.info (% "objects file '%s' already exists" dekfilename))
-     (log.warn (% "delete '%s' to re-generate objects file" dekfilename))
+     (if warn-exists
+       (log.warn (% "WARNING: delete '%s' to re-generate objects file" dekfilename)))
      dekfilename)
     (do-make-objects-file dekfilename objfile)))
 
