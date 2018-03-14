@@ -460,6 +460,56 @@
     "Please enter %s %s:: ")
       (, (name.upper) config-file-path name name forstring))))
 
+(defn make-objects-file [dekfilename objfile1 objfile2]
+  "uses <objfile1> as an object-list <filename> or generate one from <objfile2>."
+  ;; dekfilename exists: issue a warning, and don't overwrite it
+  ;; objfile1=='' don't create an objects-file
+  ;; objfile1==None generate from <objfile2>
+  ;; objfile1==zip-file extract from zip-file
+  ;; objfile1==TSV-file use directly (actually, we only check whether the file seems to not be binary)
+  (defn get-files-from-zip [archive]
+    (import zipfile)
+    (try
+     (list-comp f [f (.namelist (zipfile.ZipFile archive "r"))])
+     (except [e Exception] (log.debug e))))
+  (defn get-files-from-dir [directory]
+    (list-comp
+     f
+     [f (chain.from_iterable (list-comp files [(, root dirs files) (os.walk directory)]))]))
+  (defn genobjs [input]
+    (list-comp (% "%s\tDEKEN GENERATED\n" (slice (os.path.basename f) 0 -8)) [f input] (f.endswith "-help.pd")))
+  (defn readobjs [input]
+    (try
+     (with [f (open input)] (.readlines f))
+     (except [e Exception] (log.debug e))))
+  (defn writeobjs [output data]
+    (if data
+      (try (do
+            (with [f (open output :mode "w")] (.write f (.join "" data)))
+            output)
+           (except [e Exception] (log.debug e)))))
+  (defn  do-make-objects-file [dekfilename objfilename]
+    (cond
+     [(not dekfilename) None]
+     [(not objfilename) None]
+     [(= dekfilename objfilename) dekfilename]
+     [True
+      (writeobjs
+       dekfilename
+       (or
+        (genobjs (or
+                  (get-files-from-zip objfilename)
+                  (get-files-from-dir objfilename)))
+        (if (binary-file? objfilename)
+          []
+          (readobjs objfilename))))]))
+  (if (os.path.exists dekfilename)
+    (do ;; already exists
+     (log.info (% "objects file '%s' already exists" dekfilename))
+     (log.warn (% "delete '%s' to re-generate objects file" dekfilename))
+     dekfilename)
+    (do-make-objects-file dekfilename (if (nil? objfile1) objfile2 objfile1))))
+
 ;; calculate the sha256 hash of a file
 (defn hash-file [file hashfn &optional [blocksize 65535]]
   "calculate the hash of a file"
