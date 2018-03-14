@@ -973,10 +973,10 @@
   (import pprint)
   (list-comp
    (print-result x)
-   [x (search (or args.search_url default-searchurl)
+   [x (sort-searchresults (search (or args.search_url default-searchurl)
                    args.search
                    (or args.libraries both)
-                   (or args.objects both))])
+                   (or args.objects both)))])
   )
 
 ; instruct the user how to manually upgrade 'deken'
