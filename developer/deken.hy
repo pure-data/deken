@@ -933,7 +933,7 @@
   (defn parse-data [data content-type]
     (cond
      [(in "text/tab-separated-values" content-type) (parse-tab-separated-values data)]
-     [True None]))
+     [True []]))
   (import requests)
   (setv r (requests.get searchurl
                         :headers {"user-agent" (user-agent)
