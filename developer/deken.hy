@@ -928,7 +928,8 @@
                         (make-archive-name
                           (os.path.normpath name)
                           args.version
-                          (int-dekformat args.dekformat))))
+                          (int-dekformat args.dekformat)))
+                      (if (nil? args.objects) name args.objects))
                     (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
    ;; upload packaged external to pure-data.info
