@@ -459,13 +459,13 @@
     "Please enter %s %s:: ")
       (, (name.upper) config-file-path name name forstring))))
 
-(defn make-objects-file [dekfilename objfile1 objfile2]
-  "uses <objfile1> as an object-list <filename> or generate one from <objfile2>."
+(defn make-objects-file [dekfilename objfile]
+  "generate object-list for <filename> from <objfile>"
   ;; dekfilename exists: issue a warning, and don't overwrite it
-  ;; objfile1=='' don't create an objects-file
-  ;; objfile1==None generate from <objfile2>
-  ;; objfile1==zip-file extract from zip-file
-  ;; objfile1==TSV-file use directly (actually, we only check whether the file seems to not be binary)
+  ;; objfile=='' don't create an objects-file
+  ;; objfile==None generate from <objfile2>
+  ;; objfile==zip-file extract from zip-file
+  ;; objfile==TSV-file use directly (actually, we only check whether the file seems to not be binary)
   (defn get-files-from-zip [archive]
     (import zipfile)
     (try
@@ -509,7 +509,7 @@
      (log.info (% "objects file '%s' already exists" dekfilename))
      (log.warn (% "delete '%s' to re-generate objects file" dekfilename))
      dekfilename)
-    (do-make-objects-file dekfilename (if (nil? objfile1) objfile2 objfile1))))
+    (do-make-objects-file dekfilename objfile)))
 
 ;; calculate the sha256 hash of a file
 (defn hash-file [file hashfn &optional [blocksize 65535]]
