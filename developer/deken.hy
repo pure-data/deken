@@ -799,10 +799,14 @@
 
 
 ;; create additional files besides archive: hash-file and gpg-signature
-(defn archive-extra [dekfile]
+(defn archive-extra [dekfile &optional [objects None]]
   "create additional files besides archive: hash-file and GPG-signature"
   (log.info (% "Packaging %s" dekfile))
   (hash-sum-file dekfile)
+  (if objects
+    (if (dekfile.endswith ".dek")
+      (make-objects-file dekfile objects)
+      (log.warn "object-file generation is only enabled for dekformat>=1...skipping!")))
   (gpg-sign-file dekfile)
   dekfile)
 
