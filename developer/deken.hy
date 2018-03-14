@@ -77,6 +77,7 @@
                      (except [e Exception] None))
                "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
+(setv default-searchurl "https://deken.puredata.info/search")
 
 ;; check whether a form executes or not
 (eval-when-compile
@@ -901,6 +902,48 @@
         (import getpass)
         (getpass.getpass (% "Please enter password for uploading as '%s': " username)))))
 
+(defn user-agent []
+  "get the user-agent string of this application"
+  ; "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
+  (% "Deken/%s (%s) Python/%s"
+     (, version
+        "<unknown>"
+        (get (.split sys.version) 0))))
+
+(defn search [searchurl needles &optional [libraries True] [objects True]]
+  "searches needles in libraries (if True) and objects (if True)"
+  (defn parse-tsv [data]
+    (list-comp
+     (.split line "\t")
+     [line (.splitlines (getattr r "text"))]
+     line)
+    )
+  (defn parse-data [data content-type]
+    (cond
+     [(in "text/tab-separated-values" content-type) (parse-tsv data)]
+     [True None]))
+  (import requests)
+  (setv r (requests.get searchurl
+                        :headers {"user-agent" (user-agent)
+                                  "accept" "tab-separated-values"}
+                        :params {(cond
+                                  [(and libraries objects) "name"]
+                                  [libraries "libraries"]
+                                  [objects "objects"]
+                                  [True "name"]) needles}))
+  (if (= 200 r.status_code)
+    (parse-data r.text (get r.headers "content-type"))))
+
+(defn find [&optional args]
+  (print args)
+  (if (and (not args.libraries) (not args.objects))
+    (do
+     (setv args.libraries True)
+     (setv args.objects True)
+     )
+    )
+  (search (or args.search_url default-searchurl) args.search args.libraries args.objects)
+  )
 
 ; instruct the user how to manually upgrade 'deken'
 (defn upgrade [&optional args]
