@@ -750,6 +750,7 @@
   (log.info (% "Uploading package '%s'" pkg))
   (upload-file (hash-sum-file pkg) destination username password)
   (upload-file pkg destination username password)
+  (upload-file (make-objects-file pkg None False) destination username password)
   (upload-file (gpg-sign-file pkg) destination username password)
   (, username password))
 ;; upload a list of archives (with aux files)
