@@ -1234,8 +1234,8 @@
           "default" ""
           "required" False})
   (apply arg-find.add_argument ["--architecture" "--arch"]
-         {"help" (% "Filter architectures; use '*' for all (DEFAULT: %s)"
-                    (, (arch-to-string (native-arch))))
+         {"help" (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
+                    (, (.join "-" (native-arch))))
           "action" "append"
           "required" False})
   (apply arg-find.add_argument ["--libraries"]
