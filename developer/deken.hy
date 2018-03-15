@@ -208,6 +208,10 @@
 
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
+(defn native-arch []
+  (import platform)
+  (, (platform.system) (platform.machine) 32))
+
 (defn sort-archs [archs]
   "alphabetically sort list of archs with 'Sources' always at the end"
   (+
