@@ -927,7 +927,9 @@
                      [date None]
                      &rest args]
       (defn split-archs [archs]
-        (list-comp (tuple (.split x "-")) [x (re.findall r"\(([^()]*)\)" archs)]))
+        (if archs
+            (list-comp (tuple (.split x "-")) [x (re.findall r"\(([^()]*)\)" archs)])
+            []))
       (setv result
             (dict-merge
               {"description" description
