@@ -225,8 +225,9 @@
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
 (defn native-arch []
+  (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
   (import platform)
-  (, (platform.system) (platform.machine) "32"))
+  (, (platform.system) (amd64? (platform.machine)) "32"))
 
 (defn compatible-arch? [need-arch have-archs]
   "check whether <have-archs> contains an architecture that is compatible with <need-arch>"
