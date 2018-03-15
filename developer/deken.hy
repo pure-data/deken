@@ -1189,9 +1189,10 @@
                                "metavar" "{package,upload}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
-  (setv arg-find (arg-subparsers.add_parser "find" :aliases ["search"]))
+  (setv arg-find (arg-subparsers.add_parser "find"))
   (apply arg-subparsers.add_parser ["install"])
-  (arg-subparsers.add_parser "upgrade" :aliases ["update"])
+  (arg-subparsers.add_parser "upgrade")
+  (arg-subparsers.add_parser "update")
 
   (apply arg-parser.add_argument ["-v" "--verbose"]
          {"help" "Raise verbosity"
