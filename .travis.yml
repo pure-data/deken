@@ -26,6 +26,10 @@ script:
   - ~/bin/deken upgrade
   - ~/bin/deken package -v000.dekenci tmp/deken-test
   - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
+  - ~/bin/deken --version
+  - ~/bin/deken --platform
+  - ~/bin/deken search zexy
+  - ~/bin/deken search --architecture "*" zexy
 
 after_script:
   - ls -l
