@@ -71,10 +71,14 @@
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (setv version (or
                (.get os.environ "DEKEN_VERSION" None)
-               (try (do
-                     (import subprocess)
-                     (.strip (.decode (subprocess.check_output ["git" "describe" "--always"]))))
-                     (except [e Exception] None))
+               (if (os.path.exists
+                     (os.path.join
+                       (os.path.dirname (os.path.dirname
+                                          (os.path.abspath __file__))) ".git"))
+                   (try (do
+                          (import subprocess)
+                          (.strip (.decode (subprocess.check_output ["git" "describe" "--always"]))))
+                        (except [e Exception] None)))
                "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 (setv default-searchurl "https://deken.puredata.info/search")
