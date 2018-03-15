@@ -226,7 +226,7 @@
 
 (defn native-arch []
   (import platform)
-  (, (platform.system) (platform.machine) 32))
+  (, (platform.system) (platform.machine) "32"))
 
 (defn compatible-arch? [need-arch have-archs]
   "check whether <have-archs> contains an architecture that is compatible with <need-arch>"
