@@ -28,8 +28,8 @@ script:
   - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken --version
   - ~/bin/deken --platform
-  - ~/bin/deken search zexy
-  - ~/bin/deken search --architecture "*" zexy
+  - ~/bin/deken find zexy
+  - ~/bin/deken find --architecture "*" zexy
 
 after_script:
   - ls -l

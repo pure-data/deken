@@ -49,8 +49,8 @@ build_script:
   - dist\deken package -v 000 tmp/deken-test
   - dist\deken --version
   - dist\deken --platform
-  - dist\deken search zexy
-  - dist\deken search --architecture "*" zexy
+  - dist\deken find zexy
+  - dist\deken find --architecture "*" zexy
 
 on_finish:
   - dir
