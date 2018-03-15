@@ -82,6 +82,17 @@
                "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 (setv default-searchurl "https://deken.puredata.info/search")
+(setv architecture-substitutes
+      {
+       "x86_64" ["amd64"]
+       "amd64" ["x64_64"]
+       "i686" ["i586" "i386"]
+       "i586" ["i386"]
+       "armv6l" [ "armv6" "arm"]
+       "armv7l" [ "armv7" "armv6l" "armv6" "arm"]
+       "PowerPC" [ "ppc"]
+       "ppc" [ "PowerPC"]
+       })
 
 ;; check whether a form executes or not
 (eval-when-compile
@@ -118,6 +129,11 @@
          (contains? f (str-to-bytes "\0")))
    (except [e Exception]
      (log.debug e))))
+
+(defn stringify-tuple [t]
+  (if t
+      (tuple (list-comp (if (nil? x) "" (.lower (str x))) [x t]))
+      ()))
 
 (defn str-to-bytes [s]
   "convert a string into bytes"
@@ -212,6 +228,42 @@
   (import platform)
   (, (platform.system) (platform.machine) 32))
 
+(defn compatible-arch? [need-arch have-archs]
+  "check whether <have-archs> contains an architecture that is compatible with <need-arch>"
+  (defn simple-compat [need have]
+    (or
+      (= need have)
+      (= need "*")))
+  (defn cpu-compat [need have]
+    ;; is <a> a subset of <b>?
+    (or
+      (simple-compat need have)
+      (in have (or (try-get architecture-substitutes need) []))))
+  (defn compat? [need-arch have-arch]
+    (try
+      (or
+        (= have-arch need-arch)
+        (and
+          ;; OS = OS
+          (simple-compat (get need-arch 0) (get have-arch 0))
+          ;; CPU = CPU
+          (cpu-compat (get need-arch 1) (get have-arch 1))
+          ;; floatsize = floatsize
+          (simple-compat (get need-arch 2) (get have-arch 2))))
+      (except [e Exception] (log.error (% "%s != %s" (, need-arch have-arch))))))
+  (defn compat-generator [need-arch have-archs]
+    (setv na (stringify-tuple need-arch))
+    (for [ha have-archs] (yield (compat? na (stringify-tuple ha)))))
+  (cond
+    [(not have-archs) True] ; archs is 'all' which matches any architecture
+    [(= need-arch "*") True] ; we don't care
+    [True (any (compat-generator need-arch have-archs))]))
+
+(defn compatible-archs? [need-archs have-archs]
+  (defn compat-generator [need-archs have-archs]
+    (for [na need-archs] (yield (compatible-arch? na have-archs))))
+  (any (compat-generator need-archs have-archs)))
+
 (defn sort-archs [archs]
   "alphabetically sort list of archs with 'Sources' always at the end"
   (+
@@ -219,6 +271,21 @@
    (if (in "Sources" archs)
      ["Sources"]
      [])))
+
+(defn split-archstring [archstring &optional [fixdek0 False]]
+  "splits an archstring like '(Linux-amd64-32)(Windows-i686-32)' into a list of arch-tuples"
+                                ; if fixdek0 is True, this forces the floatsize to "32"
+  (defn split-arch [arch fixdek0]
+    (setv t (.split arch "-"))
+    (if (and fixdek0 (> (len t) 2))
+        (assoc t 2 "32"))
+    (tuple t))
+  (if archstring
+      (list-comp (split-arch x fixdek0) [x (re.findall r"\(([^()]*)\)" archstring)])
+      []))
+(defn arch-to-string [arch]
+  "convert an architecture-tuple into a string"
+  (.join "-" (stringify-tuple arch)))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder]
@@ -926,10 +993,6 @@
                      [uploader None]
                      [date None]
                      &rest args]
-      (defn split-archs [archs]
-        (if archs
-            (list-comp (tuple (.split x "-")) [x (re.findall r"\(([^()]*)\)" archs)])
-            []))
       (setv result
             (dict-merge
               {"description" description
@@ -939,7 +1002,9 @@
               (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
       (assoc result
              "architectures"
-             (split-archs (get result "architectures")))
+             (split-archstring
+               (get result "architectures")
+               (not (.endswith URL ".dek"))))
       result)
     (list-comp
      (apply parse-tsv (.split line "\t"))
@@ -987,14 +1052,19 @@
     (print ""))
 
   (setv both (= args.libraries args.objects))
-  (import pprint)
   (list-comp
    (print-result x)
    [x (sort-searchresults (search (or args.search_url default-searchurl)
                    args.search
                    (or args.libraries both)
-                   (or args.objects both)))])
-  )
+                   (or args.objects both)))]
+   (compatible-archs?
+     (if args.architecture
+         (if (in "*" args.architecture)
+             ["*"]
+             (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
+         [(native-arch)])
+     (get x "architectures"))))
 
 ; instruct the user how to manually upgrade 'deken'
 (defn upgrade [&optional args]
@@ -1162,6 +1232,11 @@
   (apply arg-find.add_argument ["--search-url"]
          {"help" "URL to query for deken-packages"
           "default" ""
+          "required" False})
+  (apply arg-find.add_argument ["--architecture" "--arch"]
+         {"help" (% "Filter architectures; use '*' for all (DEFAULT: %s)"
+                    (, (arch-to-string (native-arch))))
+          "action" "append"
           "required" False})
   (apply arg-find.add_argument ["--libraries"]
          {"action" "store_true"
