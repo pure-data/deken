@@ -922,13 +922,19 @@
                      [uploader None]
                      [date None]
                      &rest args]
-      (dict-merge
-       {"description" description
-        "URL" URL
-        "uploader" uploader
-        "timestamp" date}
-       (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
-
+      (defn split-archs [archs]
+        (list-comp (tuple (.split x "-")) [x (re.findall r"\(([^()]*)\)" archs)]))
+      (setv result
+            (dict-merge
+              {"description" description
+               "URL" URL
+               "uploader" uploader
+               "timestamp" date}
+              (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
+      (assoc result
+             "architectures"
+             (split-archs (get result "architectures")))
+      result)
     (list-comp
      (apply parse-tsv (.split line "\t"))
      [line (.splitlines (getattr r "text"))]
