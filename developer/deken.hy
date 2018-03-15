@@ -1205,6 +1205,11 @@
          {"action" "version"
           "version" version
           "help" "Outputs the version number of Deken."})
+  (apply arg-parser.add_argument ["--platform"]
+         {"action" "version"
+          "version" (.join "-" (native-arch))
+          "help" "Outputs a guess of the current architecture."})
+
   (apply arg-package.add_argument ["source"]
          {"nargs" "+"
           "metavar" "SOURCE"
