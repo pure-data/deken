@@ -964,13 +964,13 @@
   (defn print-result [result &optional index]
     (setv url (get result "URL"))
     (setv description (get result "description"))
-    (print (% "%s/%s uploaded for %s by %s on %s"
+    (print (% "%s/%s uploaded by %s on %s for %s"
               (,
                (get result "package")
                (get result "version")
-               (get result "architectures")
                (get result "uploader")
                (get result "timestamp")
+               (.join "/" (list-comp (.join "-" x) [x (get result "architectures")]))
                )))
     (if (.endswith url description)
       None
