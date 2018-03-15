@@ -85,7 +85,7 @@
 (setv architecture-substitutes
       {
        "x86_64" ["amd64"]
-       "amd64" ["x64_64"]
+       "amd64" ["x86_64"]
        "i686" ["i586" "i386"]
        "i586" ["i386"]
        "armv6l" [ "armv6" "arm"]
