@@ -976,8 +976,9 @@
                (get result "version")
                (get result "uploader")
                (get result "timestamp")
-               (.join "/" (list-comp (.join "-" x) [x (get result "architectures")]))
-               )))
+               (or
+                 (.join "/" (list-comp (.join "-" x) [x (get result "architectures")]))
+                 "all architectures"))))
     (if (.endswith url description)
       None
       (print "\t" description))
