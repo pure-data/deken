@@ -630,20 +630,21 @@
                      (% "Unable to GPG sign '%s'\n" filename)
                      "'gnupg' module not loaded"))))
      (else
+      (do
+       (defn --gpg-unavail-error-- [state &optional ex]
+         (log.warn (% "GPG %s failed:" state))
+         (if ex (log.warn ex))
+         (log.warn "Do you have 'gpg' installed?")
+         (log.warn "- If you've received numerous errors during the initial installation,")
+         (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+         (log.warn "  and re-run `deken install`")
+         (log.warn "- On OSX you might want to install the 'GPG Suite'")
+         (log.warn "Signing your package with GPG is optional.")
+         (log.warn " You can safely ignore this warning if you don't want to sign your package"))
+
       ;; generate a GPG signature for a particular file
       (defn gpg-sign-file [filename]
         "sign a file with GPG (if the gnupg module is installed)"
-
-        (defn gpg-unavail-error [state &optional ex]
-          (log.warn (% "GPG %s failed:" state))
-          (if ex (log.warn ex))
-          (log.warn "Do you have 'gpg' installed?")
-          (log.warn "- If you've received numerous errors during the initial installation,")
-          (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
-          (log.warn "  and re-run `deken install`")
-          (log.warn "- On OSX you might want to install the 'GPG Suite'")
-          (log.warn "Signing your package with GPG is optional.")
-          (log.warn " You can safely ignore this warning if you don't want to sign your package"))
         (defn gpg-get-config [gpg id]
           (try
             (get
@@ -659,7 +660,6 @@
                     ))]
                 (.startswith (.lstrip x) (.strip id) )) -1)
             (except [e [IOError IndexError]] None)))
-
         ;; get the GPG key for signing
         (defn gpg-get-key [gpg]
           (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
@@ -680,7 +680,7 @@
                           (if gnupghome {"gnupghome" gnupghome} {})
                           (if use-agent {"use_agent" True} {})))
                   "decode_errors" "replace")
-                 (except [e OSError] (gpg-unavail-error "init" e))))
+                 (except [e OSError] (--gpg-unavail-error-- "init" e))))
           (if gpg (do
                    (setv gpg.encoding "utf-8")
                    (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
@@ -708,7 +708,7 @@
                        (do
                         (with [f (open signfile "w")] (f.write (str sig)))
                         signfile)))
-                    (except [e OSError] (gpg-unavail-error "signing" e))))))
+                    (except [e OSError] (--gpg-unavail-error-- "signing" e))))))
 
         ;; sign a file if it is not already signed
         (setv signfile (+ filename ".asc"))
@@ -719,7 +719,7 @@
             (log.info (% "not GPG-signing already signed file '%s'" filename))
             (log.info (% "delete '%s' to re-sign" signfile))
             signfile)
-          (do-gpg-sign-file filename signfile gpghome gpgagent)))))
+          (do-gpg-sign-file filename signfile gpghome gpgagent))))))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
