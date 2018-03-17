@@ -1112,6 +1112,25 @@
   (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
   (sys.exit "'upgrade' not implemented for this platform!"))
 
+; verifies a filename by checking it's GPG-signature (if possible) the SHA256
+(defn verify [filename &optional [gpg True] [hash True]]
+  (defn verify-gpg [filename gpg]
+    (print gpg)
+    ;; gpg=True: fail on any error
+    ;; gpg=False: never fail
+    ;; gpg=None: only fail on verification errors
+    (setv result (gpg-verify-file filename (+ filename ".asc")))
+    ;; result==True: OK
+    ;; result==False: KO
+    ;; result==None: verification failed (no signature file,...)
+    (if (and (not result) (!= gpg False))
+      False
+      (or (not gpg) result)))
+  (defn verify-hash [filename hash]
+    (print "TODO: verify hash")
+    True)
+  (and (verify-gpg filename gpg)
+       (verify-hash filename hash)))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
@@ -1183,6 +1202,15 @@
    ;; search for externals
    :find find
    :search find
+   ;; verify downloaded files
+   :verify (fn [args]
+             (for [p args.dekfile]
+               (if (os.path.isfile p)
+                 (if (not (verify
+                           p
+                           (and (not args.ignore-gpg) (if args.allow-nogpg None True))
+                           None))
+                   (fatal (% "verification of '%s' failed" (, p)))))))
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
    :update upgrade
@@ -1222,6 +1250,21 @@
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (setv arg-find (arg-subparsers.add_parser "find"))
+
+  ;; verify a downloaded package (both SHA256 and (if available GPG))
+  (setv arg-verify (arg-subparsers.add_parser "verify"))
+
+  ;; download a package from the internet
+  (setv arg-download (arg-subparsers.add_parser "download"))
+
+  ;; install a package from the internet
+  ;; - package can be either an URL, a local file or a search string
+  ;; - packages are verified (SHA256/GPG)
+  ;; - search is similar to "find", but requires an "exact match"
+  ;;   and installs only the first match (with the highest version number)
+  (setv arg-install (arg-subparsers.add_parser "install"))
+
+
   (apply arg-subparsers.add_parser ["install"])
   (arg-subparsers.add_parser "upgrade")
   (arg-subparsers.add_parser "update")
@@ -1288,6 +1331,19 @@
          {"nargs" "*"
           "metavar" "TERM"
           "help" "libraries/objects to search for"})
+
+  (apply arg-verify.add_argument ["--allow-nogpg"]
+         {"action" "store_true"
+          "help" "Don't fail if there is no GPG-signature"
+          "required" False})
+  (apply arg-verify.add_argument ["--ignore-gpg"]
+         {"action" "store_true"
+          "help" "Ignore (but report) an unverifiable (or no) GPG-signature"
+          "required" False})
+  (apply arg-verify.add_argument ["dekfile"]
+         {"nargs" "*"
+          "help" "deken package to verify"})
+
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
