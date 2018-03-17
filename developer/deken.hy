@@ -624,11 +624,18 @@
 (try (import gnupg)
      ;; read a value from the gpg config
      (except [e ImportError]
-       (defn gpg-sign-file [filename]
-         "sign a file with GPG (if the gnupg module is installed)"
-         (log.warn (+
+       (do
+        (defn gpg-sign-file [filename]
+          "sign a file with GPG (if the gnupg module is installed)"
+          (log.warn (+
                      (% "Unable to GPG sign '%s'\n" filename)
-                     "'gnupg' module not loaded"))))
+                     "'gnupg' module not loaded")))
+        (defn gpg-verify-file [signedfile signaturefile]
+          "verify a file with a detached GPG signature"
+          (log.warn (.join "\n" (list
+                                 (% "Unable to GPG verify '%s'" (, signedfile))
+                                 "'gnupg' module not loaded")))
+                                 )))
      (else
       (do
        (defn --gpg-unavail-error-- [state &optional ex]
