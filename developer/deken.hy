@@ -650,6 +650,30 @@
          (log.warn " You can safely ignore this warning if you don't want to sign your package"))
 
       ;; generate a GPG signature for a particular file
+      (defn gpg-verify-file [signedfile signaturefile]
+        "verify a file with a detached GPG signature"
+        (defn get-gpg []
+          (setv gnupghome (get-config-value "gpg_home"))
+          (setv gpg
+                (try
+                 (set-attr
+                  (apply gnupg.GPG []
+                         (if gnupghome {"gnupghome" gnupghome} {}))
+                  "decode_errors" "replace")
+                 (except [e OSError] (--gpg-unavail-error-- "init" e))))
+          (if gpg (setv gpg.encoding "utf-8"))
+          gpg)
+        (defn do-verify [data sigfile]
+          (setv result (gpg.verify_data signaturefile data))
+          (if (not result) (log.warn result.stderr))
+          (bool result))
+        (setv gpg (get-gpg))
+        (if gpg (do
+                 (setv data (try (with [f (open signedfile "rb")] (f.read)) (except [e OSError] None)))
+                 (if (and
+                      data
+                      (os.path.exists signaturefile))
+                   (do-verify data signaturefile)))))
       (defn gpg-sign-file [filename]
         "sign a file with GPG (if the gnupg module is installed)"
         (defn gpg-get-config [gpg id]
