@@ -21,7 +21,11 @@ error() {
     echo "$@" 1>&2
 }
 
-if test $# -eq 1 && test "x$1" = "x--version"; then
+onecmd=""
+if test $# -eq 1; then
+ onecmd="$1"
+fi
+if test "x${onecmd}" = "x--version"; then
   echo "${DEKEN_VERSION}"
   exit
 fi
@@ -173,7 +177,7 @@ tryrun_deken() {
 [ -d "$DEKEN_HOME" ] || bail_install;
 
 # catch the special "upgrade" command
-case "$1" in
+case "${onecmd}" in
   upgrade|update)
     # run the upgrade command instead
     upgrade_deken
