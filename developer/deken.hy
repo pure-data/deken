@@ -1144,7 +1144,7 @@
 (defn sort-searchresults [data]
   "sort <data> (list of dictionaries)"
   (sorted data
-          :reverse True
+          :reverse False
           :key (fn [d] (, (get d "package") (get d "version") (get d "timestamp")))))
 
 (defn find [&optional args]
