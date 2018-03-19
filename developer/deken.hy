@@ -56,7 +56,7 @@
 (log.addHandler (logging.StreamHandler))
 
 ;; do nothing
-(defn nop [&rest args] "do nothing" None)
+(defn nop [&rest args] "does nothing; returns None" None)
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] "print the argument and return it" (log.debug x) x)
@@ -219,12 +219,14 @@
 
 ;; read in the config file if present
 (defn read-config [configstring &optional [config-file (SafeConfigParser)]]
+  "reads the configuration into a dictionary"
   (config-file.readfp (StringIO configstring))
   (dict (config-file.items "default")))
 
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 
 (defn native-arch []
+  "guesstimate on the native architecture"
   (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
   (import platform)
   (, (platform.system) (amd64? (platform.machine)) "32"))
@@ -261,6 +263,7 @@
     [True (any (compat-generator need-arch have-archs))]))
 
 (defn compatible-archs? [need-archs have-archs]
+  "checks whether <have-archs> contains *any* of the architectures listed in <need-archs>"
   (defn compat-generator [need-archs have-archs]
     (for [na need-archs] (yield (compatible-arch? na have-archs))))
   (any (compat-generator need-archs have-archs)))
@@ -812,6 +815,7 @@
 
 ;; download a file
 (defn download-file [url &optional filename]
+  "downloads a file from <url>, saves it as <filename> (or a sane default); returns the filename or None; makes sure that no file gets overwritten"
   (defn unique-filename [filename]
     (defn unique-filename-number [filename number]
       (setv filename0 (% "%s.%s" (, filename number)))
@@ -1090,12 +1094,15 @@
                                   [True "name"]) needles}))
   (if (= 200 r.status_code)
     (parse-data r.text (get r.headers "content-type"))))
+
 (defn sort-searchresults [data]
+  "sort <data> (list of dictionaries)"
   (sorted data
           :reverse True
           :key (fn [d] (% "%s/%s" (, (get d "package") (get d "version"))))))
 
 (defn find [&optional args]
+  "searches the server for deken-packages and prints the results"
   (defn print-result [result &optional index]
     (setv url (get result "URL"))
     (setv description (get result "description"))
