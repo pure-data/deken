@@ -1300,6 +1300,7 @@
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (setv arg-find (arg-subparsers.add_parser "find"))
+  (setv arg-download (apply arg-subparsers.add_parser ["download"]))
 
   ;; verify a downloaded package (both SHA256 and (if available GPG))
   (setv arg-verify (arg-subparsers.add_parser "verify"))
@@ -1394,6 +1395,12 @@
          {"nargs" "*"
           "help" "deken package to verify"})
 
+  (apply arg-download.add_argument ["--no-verify"]
+         {"action" "store_true"
+          "help" "Don't abort download on verification errors"})
+  (apply arg-download.add_argument ["package"]
+         {"nargs" "+"
+          "help" "package specifier or URL to download"})
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
