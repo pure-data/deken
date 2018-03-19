@@ -188,6 +188,16 @@
   "replace multiple words (given as pairs in <repls>) in a string <s>"
   (reduce (fn [a kv] (apply a.replace kv)) repls s))
 
+;; execute a command inside a directory
+(defn in-dir [destination f &rest args]
+  "execute a command f(args) inside a directory"
+  (setv last-dir (os.getcwd))
+  (os.chdir destination)
+  (setv result (apply f args))
+  (os.chdir last-dir)
+  result)
+
+
 (defn fix-easywebdav2 [pkg &optional
                        [broken "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"]
                        [fixed "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir_, safe=True, **kwargs)"]]
@@ -224,6 +234,28 @@
   (dict (config-file.items "default")))
 
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
+;; try to obtain a value from environment, then config file, then prompt user
+
+(defn get-config-value [name &rest default]
+  "tries to get a value first from the envvars, then from the config-file and finally falls back to a default"
+  (first (filter (fn [x] (not (nil? x)))
+                 [
+                  ;; try to get the value from an environment variable
+                  (os.environ.get (+ "DEKEN_" (name.upper)))
+                  ;; try to get the value from the config file
+                  (config.get name)
+                  ;; finally, try the default
+                  (first default)])))
+
+;; prompt for a particular config value for externals host upload
+(defn prompt-for-value [name &optional [forstring ""]]
+  "prompt the user for a particular config value (with an explanatory text)"
+  ((try raw_input (except [e NameError] input))
+    (% (+
+    "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
+    "To avoid this prompt in future please add a setting to the config or environment.\n"
+    "Please enter %s %s:: ")
+      (, (name.upper) config-file-path name name forstring))))
 
 (defn native-arch []
   "guesstimate on the native architecture"
@@ -523,28 +555,6 @@
        (except [e Exception] (list))))
 
 
-;; try to obtain a value from environment, then config file, then prompt user
-(defn get-config-value [name &rest default]
-  "tries to get a value first from the envvars, then from the config-file and finally falls back to a default"
-  (first (filter (fn [x] (not (nil? x)))
-                 [
-                  ;; try to get the value from an environment variable
-                  (os.environ.get (+ "DEKEN_" (name.upper)))
-                  ;; try to get the value from the config file
-                  (config.get name)
-                  ;; finally, try the default
-                  (first default)])))
-
-;; prompt for a particular config value for externals host upload
-(defn prompt-for-value [name &optional [forstring ""]]
-  "prompt the user for a particular config value (with an explanatory text)"
-  ((try raw_input (except [e NameError] input))
-    (% (+
-    "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
-    "To avoid this prompt in future please add a setting to the config or environment.\n"
-    "Please enter %s %s:: ")
-      (, (name.upper) config-file-path name name forstring))))
-
 (defn make-objects-file [dekfilename objfile &optional [warn-exists True]]
   "generate object-list for <filename> from <objfile>"
   ;; dekfilename exists: issue a warning, and don't overwrite it
@@ -769,14 +779,6 @@
             signfile)
           (do-gpg-sign-file filename signfile gpghome gpgagent))))))
 
-;; execute a command inside a directory
-(defn in-dir [destination f &rest args]
-  "execute a command f(args) inside a directory"
-  (setv last-dir (os.getcwd))
-  (os.chdir destination)
-  (setv result (apply f args))
-  (os.chdir last-dir)
-  result)
 
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
