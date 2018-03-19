@@ -623,6 +623,20 @@
                 (.get hashlib.__dict__ algorithm)
                 blocksize))
 
+(defn hash-verify-file [filename &optional hashfilename [blocksize 65535]]
+  "verify that the hash if the <filename> file is the same as stored in the <hashfilename>"
+  (import hashlib)
+  (defn filename2algo [filename]
+    (slice (get (os.path.splitext filename) 1) 1 None))
+  (setv hashfilename (or hashfilename (+ filename ".sha256")))
+  (try
+   (= (hash-file (open filename :mode "rb")
+                 ((.get hashlib.__dict__ (filename2algo hashfilename)))
+                 blocksize)
+      (.read (open hashfilename "r")))
+   (except [e OSError] None)
+   (except [e TypeError] None)))
+
 ;; handling GPG signatures
 (try (import gnupg)
      ;; read a value from the gpg config
