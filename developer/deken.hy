@@ -1167,17 +1167,24 @@
 
 ; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
 (defn verify [dekfile &optional gpgfile hashfile [gpg True] [hash True]]
-  (defn verify-gpg [dekfile gpgfile dogpg]
-    ;; gpg=True: fail on any error
-    ;; gpg=False: never fail
-    ;; gpg=None: only fail on verification errors
-    (setv result (gpg-verify-file dekfile gpgfile))
+  "verifies a dekfile by checking it's GPG-signature (if possible) the SHA256; if gpg/hash is False, verification failure is non-lethal, if its None the reference file is allowed to miss"
+  (defn verify-result [result force errstring]
     ;; result==True: OK
     ;; result==False: KO
     ;; result==None: verification failed (no signature file,...)
-    (if (and (not result) (!= dogpg False))
-      False
-      (or (not dogpg) result)))
+    ;; force==True: fail on any error
+    ;; force==False: never fail
+    ;; force==None: only fail on verification errors
+    (if (not result)
+      (cond
+       [force (fatal (+ errstring "!"))]
+       [(and (= result False) (nil? force)) (fatal errstring)]
+       [True result])
+      result))
+  (defn verify-gpg [dekfile gpgfile dogpg]
+    (verify-result (gpg-verify-file dekfile gpgfile)
+                   dogpg
+                   (% "GPG-verification failed for '%s'" (, dekfile))))
   (defn verify-hash [dekfile hashfile dohash]
     (print "TODO: verify hash")
     True)
