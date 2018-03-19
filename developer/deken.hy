@@ -1244,6 +1244,12 @@
                    (fatal (% "verification of '%s' failed" (, p)))))))
    ;; download a package (but don't install it)
    :download (fn [args]
+               (defn try-remove [filename]
+                 (if filename
+                   (try
+                    (os.remove filename)
+                    (except [e Exception] (log.debug e))))
+                 None)
                (for [p args.package]
                  (do
                   (setv pkg (download-file p))
