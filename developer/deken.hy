@@ -1259,11 +1259,9 @@
                        (not (verify pkg gpg hsh (not args.no_verify) (not args.no_verify)))
                        (not args.no_verify))
                     (do
-                     (print "remove" pkg)
-                     (os.remove pkg)
-                     (os.remove gpg)
-                     (os.remove hsh)
-                     None)
+                     (try-remove pkg)
+                     (try-remove gpg)
+                     (try-remove hsh))
                     (log.info (% "Downloaded: %s" (, pkg))))
                   )))
 
