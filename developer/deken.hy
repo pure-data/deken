@@ -1145,7 +1145,10 @@
   "sort <data> (list of dictionaries)"
   (sorted data
           :reverse False
-          :key (fn [d] (, (get d "package") (get d "version") (get d "timestamp")))))
+          :key (fn [d] (,
+                        (or (get d "package") "")
+                        (or (get d "version") "")
+                        (or (get d "timestamp") "")))))
 
 (defn find [&optional args]
   "searches the server for deken-packages and prints the results"
