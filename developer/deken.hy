@@ -1140,9 +1140,9 @@
   (list-comp
    (print-result x)
    [x (sort-searchresults (search (or args.search_url default-searchurl)
-                   args.search
-                   (or args.libraries both)
-                   (or args.objects both)))]
+                                  args.search
+                                  (or args.libraries both)
+                                  (or args.objects both)))]
    (compatible-archs?
      (if args.architecture
          (if (in "*" args.architecture)
