@@ -1186,8 +1186,9 @@
                    dogpg
                    (% "GPG-verification failed for '%s'" (, dekfile))))
   (defn verify-hash [dekfile hashfile dohash]
-    (print "TODO: verify hash")
-    True)
+    (verify-result (hash-verify-file dekfile hashfile)
+                   dohash
+                   (% "hashsum mismatch for '%s'" (, dekfile))))
   (and (verify-gpg dekfile (or gpgfile (+ dekfile ".asc")) gpg)
        (verify-hash dekfile (or hashfile (+ dekfile ".sha256")) hash)))
 
