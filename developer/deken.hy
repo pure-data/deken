@@ -1276,8 +1276,8 @@
                  (if (= False
                         (verify
                          p
-                         :gpg (and (not args.ignore-gpg) (if args.ignore-missing-gpg None True))
-                         :hash (and (not args.ignore-hash) (if args.ignore-missing-hash None True))))
+                         :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
+                         :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
                    (log.error (% "verification of '%s' failed" (, p)))))))
    ;; download a package (but don't install it)
    :download (fn [args]
@@ -1424,6 +1424,10 @@
           "metavar" "TERM"
           "help" "libraries/objects to search for"})
 
+  (apply arg-verify.add_argument ["--ignore-missing"]
+         {"action" "store_true"
+          "help" "Don't fail if detached verification files are missing"
+          "required" False})
   (apply arg-verify.add_argument ["--ignore-missing-gpg"]
          {"action" "store_true"
           "help" "Don't fail if there is no GPG-signature"
