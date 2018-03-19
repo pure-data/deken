@@ -1179,18 +1179,25 @@
       (cond
        [force (fatal (+ errstring "!"))]
        [(and (= result False) (nil? force)) (fatal errstring)]
+       [(and (not result) (= force False)) None]
        [True result])
       result))
-  (defn verify-gpg [dekfile gpgfile dogpg]
-    (verify-result (gpg-verify-file dekfile gpgfile)
-                   dogpg
-                   (% "GPG-verification failed for '%s'" (, dekfile))))
-  (defn verify-hash [dekfile hashfile dohash]
-    (verify-result (hash-verify-file dekfile hashfile)
-                   dohash
-                   (% "hashsum mismatch for '%s'" (, dekfile))))
-  (and (verify-gpg dekfile (or gpgfile (+ dekfile ".asc")) gpg)
-       (verify-hash dekfile (or hashfile (+ dekfile ".sha256")) hash)))
+  (defn do-verify [verifun
+                   dekfile
+                   reffile
+                   extension
+                   force
+                   &optional [errstring "verification of '%s' failed"]]
+    (print "verifying" dekfile "via" extension)
+    (verify-result (verifun dekfile
+                            (or reffile (+ dekfile extension)))
+                   force
+                   (% errstring (, dekfile))))
+  (setv vgpg  (do-verify gpg-verify-file  dekfile gpgfile  ".asc"    gpg  "GPG-verification failed for '%s'"))
+  (setv vhash (do-verify hash-verify-file dekfile hashfile ".sha256" hash "hashsum mismatch for '%s'"))
+  (log.debug (% "GPG-verification : %s" (, vgpg)))
+  (log.debug (% "hash-verification: %s" (, vhash)))
+  (and vgpg vhash))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
