@@ -665,7 +665,7 @@
           gpg)
         (defn do-verify [data sigfile]
           (setv result (gpg.verify_data signaturefile data))
-          (if (not result) (log.warn result.stderr))
+          (if (not result) (log.debug result.stderr))
           (bool result))
         (setv gpg (get-gpg))
         (if gpg (do
@@ -1147,7 +1147,6 @@
 ; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
 (defn verify [dekfile &optional gpgfile hashfile [gpg True] [hash True]]
   (defn verify-gpg [dekfile gpgfile dogpg]
-    (print dogpg)
     ;; gpg=True: fail on any error
     ;; gpg=False: never fail
     ;; gpg=None: only fail on verification errors
