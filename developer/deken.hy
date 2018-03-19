@@ -1239,8 +1239,8 @@
                (if (os.path.isfile p)
                  (if (not (verify
                            p
-                           (and (not args.ignore-gpg) (if args.allow-nogpg None True))
-                           None))
+                           :gpg (and (not args.ignore-gpg) (if args.allow-nogpg None True))
+                           :hash None))
                    (fatal (% "verification of '%s' failed" (, p)))))))
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
