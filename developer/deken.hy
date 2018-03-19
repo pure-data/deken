@@ -810,6 +810,38 @@
   "(naive) check if the given filename is a (known) archive: just check the file extension"
   (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
 
+;; download a file
+(defn download-file [url &optional filename]
+  (defn unique-filename [filename]
+    (defn unique-filename-number [filename number]
+      (setv filename0 (% "%s.%s" (, filename number)))
+      (if (not (os.path.exists filename0))
+        filename0
+        (unique-filename-number filename (+ number 1))))
+    (if (os.path.exists filename)
+      (unique-filename-number filename 1)
+      filename))
+  (defn save-data [outfile content]
+    (try
+     (do
+      (with [f (open outfile "wb")] (.write f content))
+      outfile)
+     (except [e OSError] (log.warn (% "Unable to download file: %s" (, e))))))
+  (import requests)
+  (setv r (requests.get url))
+  (if (= 200 r.status_code)
+    (save-data
+     (unique-filename
+      (or
+       filename
+       (try
+        (.strip (first (re.findall "filename=(.+)" (try-get r.headers "content-disposition" ""))) "\"")
+        (except [e AttributeError] None))
+       (os.path.basename url)
+       "downloaded_file"))
+     r.content)
+    (log.warn (% "Downloading failed with '%s'" (, r.status_code)))))
+
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
   "upload a file to a destination via webdav, using username/password"
