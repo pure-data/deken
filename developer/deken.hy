@@ -1144,25 +1144,25 @@
   (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
   (sys.exit "'upgrade' not implemented for this platform!"))
 
-; verifies a filename by checking it's GPG-signature (if possible) the SHA256
-(defn verify [filename &optional [gpg True] [hash True]]
-  (defn verify-gpg [filename gpg]
-    (print gpg)
+; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
+(defn verify [dekfile &optional gpgfile hashfile [gpg True] [hash True]]
+  (defn verify-gpg [dekfile gpgfile dogpg]
+    (print dogpg)
     ;; gpg=True: fail on any error
     ;; gpg=False: never fail
     ;; gpg=None: only fail on verification errors
-    (setv result (gpg-verify-file filename (+ filename ".asc")))
+    (setv result (gpg-verify-file dekfile gpgfile))
     ;; result==True: OK
     ;; result==False: KO
     ;; result==None: verification failed (no signature file,...)
-    (if (and (not result) (!= gpg False))
+    (if (and (not result) (!= dogpg False))
       False
-      (or (not gpg) result)))
-  (defn verify-hash [filename hash]
+      (or (not dogpg) result)))
+  (defn verify-hash [dekfile hashfile dohash]
     (print "TODO: verify hash")
     True)
-  (and (verify-gpg filename gpg)
-       (verify-hash filename hash)))
+  (and (verify-gpg dekfile (or gpgfile (+ dekfile ".asc")) gpg)
+       (verify-hash dekfile (or hashfile (+ dekfile ".sha256")) hash)))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
