@@ -1434,7 +1434,7 @@
           "required" False})
   (apply arg-verify.add_argument ["--ignore-gpg"]
          {"action" "store_true"
-          "help" "Ignore (but report) an unverifiable (or no) GPG-signature"
+          "help" "Ignore an unverifiable (or no) GPG-signature"
           "required" False})
   (apply arg-verify.add_argument ["--ignore-missing-hash"]
          {"action" "store_true"
