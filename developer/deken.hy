@@ -1242,6 +1242,25 @@
                            :gpg (and (not args.ignore-gpg) (if args.allow-nogpg None True))
                            :hash None))
                    (fatal (% "verification of '%s' failed" (, p)))))))
+   ;; download a package (but don't install it)
+   :download (fn [args]
+               (for [p args.package]
+                 (do
+                  (setv pkg (download-file p))
+                  (setv gpg (download-file (+ p ".asc")))
+                  (setv hsh (download-file (+ p ".sha256")))
+                  (if (and
+                       (not (verify pkg gpg hsh (not args.no_verify) (not args.no_verify)))
+                       (not args.no_verify))
+                    (do
+                     (print "remove" pkg)
+                     (os.remove pkg)
+                     (os.remove gpg)
+                     (os.remove hsh)
+                     None)
+                    (log.info (% "Downloaded: %s" (, pkg))))
+                  )))
+
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
    :update upgrade
