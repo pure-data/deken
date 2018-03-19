@@ -780,6 +780,36 @@
           (do-gpg-sign-file filename signfile gpghome gpgagent))))))
 
 
+(defn parse-requirement [spec]
+  "parse a requirement-string "
+  ;; spec can be a library, or a library with version, e.g. "library==0.2.1" or "library>=1.2.3"
+  ;; currently the only valid compatrators are ">=" and "=="
+  ;; returns a tuple (library, version, comparator)
+  (setv result (try (get-values (re.split "(.+)([>=]=)(.+)" spec) [1 3 2])
+                    (except [e IndexError] [spec None None])))
+  (assoc result 2 (try-get {"==" = ">=" >=} (get result 2) None))
+  (tuple result))
+
+(defn make-requirement-matcher [spec]
+  "create a boolean function to check whether a given package-dict matches a requirement"
+  ;; spec can be a library, or a library with version, e.g. "library==0.2.1" or "library>=1.2.3"
+  ;; currently the only valid compatrators are ">=" and "=="
+  ;; returns a tuple (library, version, comparator)
+  (setv parsed (parse-requirement spec))
+  (setv package (get parsed 0))
+  (setv version (get parsed 1))
+  (setv compare (get parsed 2))
+  (fn [libdict]
+    (and
+     (= (get libdict "package") package)
+     (compare (get libdict "version") version))))
+
+(defn make-requirements-matcher [specs]
+  "creates a boolean function to check whether a given package-dict matches any of the given requirements"
+  (setv matchers (list-comp (make-requirement-matcher spec) [spec specs] spec))
+  (fn [libdict] (any (list-comp (match libdict) [match matchers]))))
+
+
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-file [filename]
