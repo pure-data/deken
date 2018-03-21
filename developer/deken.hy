@@ -1130,7 +1130,7 @@
    "urls" (sorted urls)}
   )
 
-(defn search [searchurl needles &optional [libraries True] [objects True]]
+(defn search [searchurl libraries objects]
   "searches needles in libraries (if True) and objects (if True)"
   (defn parse-tab-separated-values [data]
     (defn parse-tsv [description &optional
@@ -1164,11 +1164,8 @@
   (setv r (requests.get searchurl
                         :headers {"user-agent" (user-agent)
                                   "accept" "tab-separated-values"}
-                        :params {(cond
-                                  [(and libraries objects) "name"]
-                                  [libraries "libraries"]
-                                  [objects "objects"]
-                                  [True "name"]) needles}))
+                        :params {"libraries" libraries
+                                 "objects" objects}))
   (if (= 200 r.status_code)
     (parse-data r.text (get r.headers "content-type"))))
 
