@@ -800,9 +800,12 @@
   (setv version (get parsedspec 1))
   (setv compare (get parsedspec 2))
   (fn [libdict]
-    (and
-     (= (get libdict "package") package)
-     (compare (get libdict "version") version))))
+   (try
+     (and
+      (= (get libdict "package") package)
+      (compare (get libdict "version") version))
+     (except [e TypeError] None)
+     (except [e KeyError] None))))
 
 (defn make-requirements-matcher [specs]
   "creates a boolean function to check whether a given package-dict matches any of the given requirements"
