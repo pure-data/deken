@@ -1507,6 +1507,15 @@
                     (, (.join "-" (native-arch))))
           "action" "append"
           "required" False})
+  (apply arg-find.add_argument ["--depth"]
+         {"help" "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
+                 "default" 1
+                 "type" int
+                 "required" False})
+  (apply arg-find.add_argument ["--reverse"]
+         {"action" "store_true"
+          "help" "Reverse search result sorting"
+          "required" False})
   (apply arg-find.add_argument ["--libraries"]
          {"action" "store_true"
           "help" "Find libraries (DEFAULT: True)"
