@@ -790,15 +790,15 @@
   (assoc result 2 (try-get {"==" = ">=" >=} (get result 2) (fn [a b] True)))
   (tuple result))
 
-(defn make-requirement-matcher [spec]
+(defn make-requirement-matcher [parsedspec]
   "create a boolean function to check whether a given package-dict matches a requirement"
-  ;; spec can be a library, or a library with version, e.g. "library==0.2.1" or "library>=1.2.3"
+  ;; <parsedspec> is the output of (parse-requirement): a (library, version, comparator) tuple
   ;; currently the only valid compatrators are ">=" and "=="
   ;; returns a tuple (library, version, comparator)
-  (setv parsed (parse-requirement spec))
-  (setv package (get parsed 0))
-  (setv version (get parsed 1))
-  (setv compare (get parsed 2))
+  ;(setv parsedspec (parse-requirement spec))
+  (setv package (get parsedspec 0))
+  (setv version (get parsedspec 1))
+  (setv compare (get parsedspec 2))
   (fn [libdict]
     (and
      (= (get libdict "package") package)
