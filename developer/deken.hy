@@ -787,7 +787,7 @@
   ;; returns a tuple (library, version, comparator)
   (setv result (try (get-values (re.split "(.+)([>=]=)(.+)" spec) [1 3 2])
                     (except [e IndexError] [spec None None])))
-  (assoc result 2 (try-get {"==" = ">=" >=} (get result 2) (fn [a b] True)))
+  (assoc result 2 (try-get {"==" str.startswith ">=" >=} (get result 2) (fn [a b] True)))
   (tuple result))
 
 (defn make-requirement-matcher [parsedspec]
