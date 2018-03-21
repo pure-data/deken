@@ -1099,6 +1099,37 @@
         "<unknown>"
         (get (.split sys.version) 0))))
 
+(defn categorize-search-terms [terms &optional [libraries True] [objects True]]
+  "splits the <terms> into objects, libraries and versioned-libraries; returns a dict"
+  ;; versioned requirements (e.g. 'foo>=3.14') are always libraries, and go into 'libraries' (without the version) and 'versioned-libraries' (as tuples)
+  ;; unversioned terms will show up in 'libraries' and/or 'objects', depending on which flag is True
+  ;; a term that looks like an URL, will appear (only) in 'urls'
+  (setv libs (set))
+  (setv objs (set))
+  (setv vlibs (set))
+  (setv urls (set))
+  (for [t terms]
+    (do
+     (setv vlib (parse-requirement t))
+     (if (getattr (urlparse t) "scheme")
+       (urls.add t)
+       (do
+        (if libraries
+          (if (get vlib 1)
+            (do
+             (vlibs.add vlib)
+             (libs.add (get vlib 0)))
+            (libs.add t)))
+        (if objects
+          (if (get vlib 1)
+            None
+            (objs.add t)))))))
+  {"libraries" (sorted libs)
+   "objects" (sorted objs)
+   "versioned-libraries" (sorted vlibs)
+   "urls" (sorted urls)}
+  )
+
 (defn search [searchurl needles &optional [libraries True] [objects True]]
   "searches needles in libraries (if True) and objects (if True)"
   (defn parse-tab-separated-values [data]
