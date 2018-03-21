@@ -1207,18 +1207,21 @@
 
   (setv both (= args.libraries args.objects))
   (setv searchterms (categorize-search-terms args.search (or both args.libraries) (or both args.objects)))
+  (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (list-comp
    (print-result x)
    [x (sort-searchresults (search (or args.search_url default-searchurl)
                                   (try-get searchterms "libraries" [])
                                   (try-get searchterms "objects" [])))]
-   (compatible-archs?
+   (and
+    (version-match? x)
+    (compatible-archs?
      (if args.architecture
-         (if (in "*" args.architecture)
-             ["*"]
-             (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
-         [(native-arch)])
-     (get x "architectures"))))
+       (if (in "*" args.architecture)
+         ["*"]
+         (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
+       [(native-arch)])
+     (get x "architectures")))))
 
 ; instruct the user how to manually upgrade 'deken'
 (defn upgrade [&optional args]
