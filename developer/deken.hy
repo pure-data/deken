@@ -816,6 +816,15 @@
                     [match (list-comp (make-requirement-matcher spec) [spec specs] spec)])))
     (fn [libdict] True)))
 
+
+(defn sort-searchresults [libdicts &optional [reverse False]]
+  "sort <libdicts> (list of dictionaries)"
+  (sorted libdicts
+          :reverse reverse
+          :key (fn [d] (,
+                        (.lower (or (get d "package") ""))
+                        (.lower (or (get d "version") ""))
+                        (.lower (or (get d "timestamp") ""))))))
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-file [filename]
@@ -1174,15 +1183,6 @@
                                  "objects" objects}))
   (if (= 200 r.status_code)
     (parse-data r.text (get r.headers "content-type"))))
-
-(defn sort-searchresults [data]
-  "sort <data> (list of dictionaries)"
-  (sorted data
-          :reverse False
-          :key (fn [d] (,
-                        (or (get d "package") "")
-                        (or (get d "version") "")
-                        (or (get d "timestamp") "")))))
 
 (defn find [&optional args]
   "searches the server for deken-packages and prints the results"
