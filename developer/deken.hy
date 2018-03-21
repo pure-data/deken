@@ -809,9 +809,12 @@
 
 (defn make-requirements-matcher [specs]
   "creates a boolean function to check whether a given package-dict matches any of the given requirements"
-  (setv matchers (list-comp (make-requirement-matcher spec) [spec specs] spec))
-  (fn [libdict] (any (list-comp (match libdict) [match matchers]))))
-
+  (if specs
+    (fn [libdict] (any
+                   (list-comp
+                    (match libdict)
+                    [match (list-comp (make-requirement-matcher spec) [spec specs] spec)])))
+    (fn [libdict] True)))
 
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
