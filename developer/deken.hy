@@ -825,6 +825,32 @@
                         (.lower (or (get d "package") ""))
                         (.lower (or (get d "version") ""))
                         (.lower (or (get d "timestamp") ""))))))
+
+(defn filter-older-versions [libdicts &optional [depth 1]]
+  "for each library (with a unique 'package' key) in <libdicts> leave only the latest <depth> versions"
+  (defn doit [libdicts depth]
+    ;; create a dict with <package> keys, and the values being <libdict> lists
+    (setv pkgdict {})
+    (for [lib libdicts]
+      (do
+       (setv pkgname (get lib "package"))
+       (if (not (in pkgname pkgdict))
+         (assoc pkgdict pkgname []))
+       (setv l (get pkgdict pkgname))
+       (l.append lib)))
+    ;; sort and truncate each dictvalue
+    (setv result [])
+    (for [key pkgdict]
+       (setv result
+             (+ result (slice (sorted (get pkgdict key)
+                                      :reverse True
+                                      :key (fn [d] (, (or (get d "version")) (or (get d "timestamp")))))
+                              0 depth))))
+    result)
+  (if depth
+    (doit libdicts depth)
+    libdicts))
+
 ;; zip up a single directory
 ;; http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 (defn zip-file [filename]
