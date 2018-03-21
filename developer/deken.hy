@@ -1200,12 +1200,12 @@
     (print ""))
 
   (setv both (= args.libraries args.objects))
+  (setv searchterms (categorize-search-terms args.search (or both args.libraries) (or both args.objects)))
   (list-comp
    (print-result x)
    [x (sort-searchresults (search (or args.search_url default-searchurl)
-                                  args.search
-                                  (or args.libraries both)
-                                  (or args.objects both)))]
+                                  (try-get searchterms "libraries" [])
+                                  (try-get searchterms "objects" [])))]
    (compatible-archs?
      (if args.architecture
          (if (in "*" args.architecture)
