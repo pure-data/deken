@@ -1428,8 +1428,6 @@
   ;;   and installs only the first match (with the highest version number)
   (setv arg-install (arg-subparsers.add_parser "install"))
 
-
-  (apply arg-subparsers.add_parser ["install"])
   (arg-subparsers.add_parser "upgrade")
   (arg-subparsers.add_parser "update")
 
@@ -1526,6 +1524,11 @@
   (apply arg-download.add_argument ["package"]
          {"nargs" "+"
           "help" "package specifier or URL to download"})
+
+  (apply arg-install.add_argument ["package"]
+         {"nargs" "+"
+          "help" "package specifier or URL to install"})
+
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
