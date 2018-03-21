@@ -1242,13 +1242,16 @@
            [x (search (or args.search_url default-searchurl)
                       (try-get searchterms "libraries" [])
                       (try-get searchterms "objects" []))]
-           (compatible-archs?
-            (if args.architecture
-              (if (in "*" args.architecture)
-                ["*"]
-                (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
-              [(native-arch)])
-            (get x "architectures")))
+           (and
+            (version-match? x)
+            (compatible-archs?
+             (if args.architecture
+               (if (in "*" args.architecture)
+                 ["*"]
+                 (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
+               [(native-arch)])
+             (get x "architectures")))
+           )
           args.depth)
          args.reverse)]
     (print-result result)))
