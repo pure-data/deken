@@ -931,7 +931,7 @@
        (os.path.basename url)
        "downloaded_file"))
      r.content)
-    (log.warn (% "Downloading failed with '%s'" (, r.status_code)))))
+    (log.warn (% "Downloading '%s' failed with '%s'" (, url r.status_code)))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
