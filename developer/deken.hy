@@ -257,7 +257,7 @@
     "Please enter %s %s:: ")
       (, (name.upper) config-file-path name name forstring))))
 
-(defn package-uri? [URL]
+(defn package-uri? [URI]
   "naive check whether the given URI seems to be a deken-package"
   (or
    (.endswith URI ".dek")
