@@ -1453,7 +1453,7 @@
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
   "run deken"
-  (defn add-package-args [parser]
+  (defn add-package-flags [parser]
     (apply parser.add_argument ["--version" "-v"]
            {"help" "A library version number to insert into the package name (in case the package is created)."
             "default" None
@@ -1523,12 +1523,12 @@
          {"nargs" "+"
           "metavar" "SOURCE"
           "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
-  (add-package-args arg-package)
+  (add-package-flags arg-package)
   (apply arg-upload.add_argument ["source"]
          {"nargs" "+"
           "metavar" "PACKAGE"
           "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
-  (add-package-args arg-upload)
+  (add-package-flags arg-upload)
   (apply arg-upload.add_argument ["--destination" "-d"]
          {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
           "default" ""
