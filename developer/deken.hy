@@ -1210,6 +1210,27 @@
   (if (= 200 r.status_code)
     (parse-data r.text (get r.headers "content-type"))))
 
+(defn find-packages [searchterms ;; as returned by categorize-search-terms
+                     &key {
+                           "architectures" [] ;; defaults to 'native'; use '*' for any architecture
+                           "versioncount" 0   ;; how many versions of a given library should be returned
+                           "searchurl" default-searchurl ;; where to search
+                           }]
+  "finds packages and filters them according to architecture, requirements and versioncount"
+  (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
+  (filter-older-versions
+   (list-comp
+    x
+    [x (search (or searchurl default-searchurl)
+               (try-get searchterms "libraries" [])
+               (try-get searchterms "objects" []))]
+    (and
+     (version-match? x)
+     (compatible-archs? (or architectures [(native-arch)]) (get x "architectures")))
+    )
+   versioncount)
+  )
+
 (defn find [&optional args]
   "searches the server for deken-packages and prints the results"
   (defn print-result [result &optional index]
