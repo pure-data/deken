@@ -1572,9 +1572,29 @@
          {"nargs" "*"
           "help" "deken package to verify"})
 
+  (apply arg-download.add_argument ["--search-url"]
+         {"help" "URL to query for deken-packages"
+          "default" ""
+          "required" False})
   (apply arg-download.add_argument ["--no-verify"]
          {"action" "store_true"
           "help" "Don't abort download on verification errors"})
+  (apply arg-download.add_argument ["--ignore-missing-gpg"]
+         {"action" "store_true"
+          "help" "Don't fail if there is no GPG-signature"
+          "required" False})
+  (apply arg-download.add_argument ["--ignore-gpg"]
+         {"action" "store_true"
+          "help" "Ignore an unverifiable (or no) GPG-signature"
+          "required" False})
+  (apply arg-download.add_argument ["--ignore-missing-hash"]
+         {"action" "store_true"
+          "help" "Don't fail if there is no hashsum file"
+          "required" False})
+  (apply arg-download.add_argument ["--ignore-hash"]
+         {"action" "store_true"
+          "help" "Ignore an unverifiable hashsum"
+          "required" False})
   (apply arg-download.add_argument ["package"]
          {"nargs" "+"
           "help" "package specifier or URL to download"})
