@@ -1466,6 +1466,27 @@
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
             "default" 1
             "required" False}))
+  (defn add-noverify-flags [parser]
+    (apply parser.add_argument ["--ignore-missing"]
+           {"action" "store_true"
+            "help" "Don't fail if detached verification files are missing"
+            "required" False})
+    (apply parser.add_argument ["--ignore-missing-gpg"]
+           {"action" "store_true"
+            "help" "Don't fail if there is no GPG-signature"
+            "required" False})
+    (apply parser.add_argument ["--ignore-gpg"]
+           {"action" "store_true"
+            "help" "Ignore an unverifiable (or no) GPG-signature"
+            "required" False})
+    (apply parser.add_argument ["--ignore-missing-hash"]
+           {"action" "store_true"
+            "help" "Don't fail if there is no hashsum file"
+            "required" False})
+    (apply parser.add_argument ["--ignore-hash"]
+           {"action" "store_true"
+            "help" "Ignore an unverifiable hashsum"
+            "required" False}))
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
@@ -1574,26 +1595,8 @@
           "metavar" "TERM"
           "help" "libraries/objects to search for"})
 
-  (apply arg-verify.add_argument ["--ignore-missing"]
-         {"action" "store_true"
-          "help" "Don't fail if detached verification files are missing"
-          "required" False})
-  (apply arg-verify.add_argument ["--ignore-missing-gpg"]
-         {"action" "store_true"
-          "help" "Don't fail if there is no GPG-signature"
-          "required" False})
-  (apply arg-verify.add_argument ["--ignore-gpg"]
-         {"action" "store_true"
-          "help" "Ignore an unverifiable (or no) GPG-signature"
-          "required" False})
-  (apply arg-verify.add_argument ["--ignore-missing-hash"]
-         {"action" "store_true"
-          "help" "Don't fail if there is no hashsum file"
-          "required" False})
-  (apply arg-verify.add_argument ["--ignore-hash"]
-         {"action" "store_true"
-          "help" "Ignore an unverifiable hashsum"
-          "required" False})
+  (add-noverify-flags arg-verify)
+
   (apply arg-verify.add_argument ["dekfile"]
          {"nargs" "*"
           "help" "deken package to verify"})
@@ -1605,22 +1608,7 @@
   (apply arg-download.add_argument ["--no-verify"]
          {"action" "store_true"
           "help" "Don't abort download on verification errors"})
-  (apply arg-download.add_argument ["--ignore-missing-gpg"]
-         {"action" "store_true"
-          "help" "Don't fail if there is no GPG-signature"
-          "required" False})
-  (apply arg-download.add_argument ["--ignore-gpg"]
-         {"action" "store_true"
-          "help" "Ignore an unverifiable (or no) GPG-signature"
-          "required" False})
-  (apply arg-download.add_argument ["--ignore-missing-hash"]
-         {"action" "store_true"
-          "help" "Don't fail if there is no hashsum file"
-          "required" False})
-  (apply arg-download.add_argument ["--ignore-hash"]
-         {"action" "store_true"
-          "help" "Ignore an unverifiable hashsum"
-          "required" False})
+  (add-noverify-flags arg-download)
   (apply arg-download.add_argument ["package"]
          {"nargs" "+"
           "help" "package specifier or URL to download"})
