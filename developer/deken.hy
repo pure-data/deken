@@ -374,7 +374,7 @@
     [f (os.listdir folder)]
     (os.path.exists (os.path.join folder f)))) []))
 
-; class_new -> t_float=float; class_new64 -> t_float=double
+;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --classnew-to-floatsize-- [function-names]
   "detect Pd-floatsize based on the list of <function-names> used in the binary"
   (if (in function-names ["_class_new64" "class_new64"])
@@ -1277,7 +1277,7 @@
          args.reverse)]
     (print-result result)))
 
-; instruct the user how to manually upgrade 'deken'
+;; instruct the user how to manually upgrade 'deken'
 (defn upgrade [&optional args]
   "print a big fat notice about manually upgrading via the webpage"
   (defn open-webpage [page]
@@ -1291,7 +1291,9 @@
   (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
   (sys.exit "'upgrade' not implemented for this platform!"))
 
-; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
+;; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
+;; this require more thought: the verify function should never exit the program
+;; (e.g. we want to remove downloaded files first)
 (defn verify [dekfile &optional gpgfile hashfile [gpg True] [hash True]]
   "verifies a dekfile by checking it's GPG-signature (if possible) the SHA256; if gpg/hash is False, verification failure is non-lethal, if its None the reference file is allowed to miss"
   (defn verify-result [result force errstring]
