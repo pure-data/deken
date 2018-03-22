@@ -1436,7 +1436,10 @@
                   (setv gpg (download-file (+ p ".asc")))
                   (setv hsh (download-file (+ p ".sha256")))
                   (if (and
-                       (not (verify pkg gpg hsh (not args.no_verify) (not args.no_verify)))
+                       (not (verify
+                             pkg gpg hsh
+                             :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
+                             :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
                        (not args.no_verify))
                     (do
                      (try-remove pkg)
