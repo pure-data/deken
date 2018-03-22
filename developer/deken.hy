@@ -257,6 +257,15 @@
     "Please enter %s %s:: ")
       (, (name.upper) config-file-path name name forstring))))
 
+(defn package-uri? [URL]
+  "naive check whether the given URI seems to be a deken-package"
+  (or
+   (.endswith URI ".dek")
+   (.endswith URI "-externals.zip")
+   (.endswith URI "-externals.tgz")
+   (.endswith URI "-externals.tar.gz")))
+
+
 (defn native-arch []
   "guesstimate on the native architecture"
   (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
@@ -1404,12 +1413,6 @@
                     (os.remove filename)
                     (except [e Exception] (log.debug e))))
                  None)
-               (defn package? [URL]
-                 (or
-                  (.endswith URL ".dek")
-                  (.endswith URL "-externals.zip")
-                  (.endswith URL "-externals.tgz")
-                  (.endswith URL "-externals.tar.gz")))
                ;; parse package specifiers
                (setv searchterms (categorize-search-terms args.package True False))
                (setv foundurls
@@ -1419,13 +1422,13 @@
                                         :architectures None
                                         :versioncount 1
                                         :searchurl args.search-url)]
-                       (package? (try-get x "URL" ""))))
+                       (package-uri? (try-get x "URL" ""))))
                (setv urls
                      (list-comp
                       x
                       [x (+ foundurls (try-get searchterms "urls" []))]
                       (or
-                       (package? x)
+                       (package-uri? x)
                        (log.info (+ "Skipping non-package URL" x)))))
                (for [p urls]
                  (do
