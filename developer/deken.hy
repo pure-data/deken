@@ -652,7 +652,7 @@
    (= (hash-file (open filename :mode "rb")
                  ((.get hashlib.__dict__ (filename2algo hashfilename)))
                  blocksize)
-      (.read (open hashfilename "r")))
+      (.strip (get (.split (.read (open hashfilename "r"))) 0)))
    (except [e OSError] None)
    (except [e TypeError] None)))
 
