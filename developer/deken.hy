@@ -1414,12 +1414,12 @@
    :verify (fn [args]
              (for [p args.dekfile]
                (if (os.path.isfile p)
-                 (if (= False
+                 (if (not
                         (verify
                          p
                          :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                          :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                   (log.error (% "verification of '%s' failed" (, p)))))))
+                   (fatal (% "verification of '%s' failed" (, p)))))))
    ;; download a package (but don't install it)
    :download (fn [args]
                (defn try-remove [filename]
