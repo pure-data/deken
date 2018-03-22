@@ -1294,35 +1294,48 @@
 ;; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
 ;; this require more thought: the verify function should never exit the program
 ;; (e.g. we want to remove downloaded files first)
+;; return: True verification succeeded
+;;         None verification failed non-fatally (e.g. GPG-signature missing)
+;;         False verification failed (e.g. GPG-signature mismatch)
+;; the 'gpg/hash' arg can modify the result: False: always return True
+;;                                           None: return True if None
 (defn verify [dekfile &optional gpgfile hashfile [gpg True] [hash True]]
-  "verifies a dekfile by checking it's GPG-signature (if possible) the SHA256; if gpg/hash is False, verification failure is non-lethal, if its None the reference file is allowed to miss"
-  (defn verify-result [result force errstring]
+  "verifies a dekfile by checking it's GPG-signature (if possible) the SHA256; if gpg/hash is False, verification failure is ignored, if its None the reference file is allowed to miss"
+  (defn verify-result [result fail errstring missstring]
     ;; result==True: OK
     ;; result==False: KO
     ;; result==None: verification failed (no signature file,...)
-    ;; force==True: fail on any error
-    ;; force==False: never fail
-    ;; force==None: only fail on verification errors
-    (if (not result)
-      (cond
-       [force (fatal (+ errstring "!"))]
-       [(and (= result False) (nil? force)) (fatal errstring)]
-       [(and (not result) (= force False)) None]
-       [True result])
-      result))
+    ;; fail==True: fail on any error
+    ;; fail==False: never fail
+    ;; fail==None: only fail on verification errors
+    (cond
+     [(nil? result)(log.fatal missstring)]
+     [(not result)(log.fatal errstring)])
+    (cond
+     [(= fail False) True]
+     [(and (nil? fail) (nil? result)) True]
+     [True result]))
   (defn do-verify [verifun
                    dekfile
                    reffile
                    extension
-                   force
-                   &optional [errstring "verification of '%s' failed"]]
-    (print "verifying" dekfile "via" extension)
+                   fail
+                   &optional
+                   [errstring "verification of '%s' failed"]
+                   [missstring "verification file of '%s' missing"]]
     (verify-result (verifun dekfile
                             (or reffile (+ dekfile extension)))
-                   force
-                   (% errstring (, dekfile))))
-  (setv vgpg  (do-verify gpg-verify-file  dekfile gpgfile  ".asc"    gpg  "GPG-verification failed for '%s'"))
-  (setv vhash (do-verify hash-verify-file dekfile hashfile ".sha256" hash "hashsum mismatch for '%s'"))
+                   fail
+                   (% errstring (, dekfile))
+                   (% missstring (, dekfile))))
+  (setv vgpg  (do-verify gpg-verify-file  dekfile gpgfile
+                         ".asc"    gpg
+                         "GPG-verification failed for '%s'"
+                         "GPG-signature missing for '%s'"))
+  (setv vhash (do-verify hash-verify-file dekfile hashfile
+                         ".sha256" hash
+                         "hashsum mismatch for '%s'"
+                         "hash file missing for '%s'"))
   (log.debug (% "GPG-verification : %s" (, vgpg)))
   (log.debug (% "hash-verification: %s" (, vhash)))
   (and vgpg vhash))
