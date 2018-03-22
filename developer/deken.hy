@@ -1404,7 +1404,30 @@
                     (os.remove filename)
                     (except [e Exception] (log.debug e))))
                  None)
-               (for [p args.package]
+               (defn package? [URL]
+                 (or
+                  (.endswith URL ".dek")
+                  (.endswith URL "-externals.zip")
+                  (.endswith URL "-externals.tgz")
+                  (.endswith URL "-externals.tar.gz")))
+               ;; parse package specifiers
+               (setv searchterms (categorize-search-terms args.package True False))
+               (setv foundurls
+                     (list-comp
+                      (get x "URL")
+                      [x (find-packages searchterms
+                                        :architectures None
+                                        :versioncount 1
+                                        :searchurl args.search-url)]
+                       (package? (try-get x "URL" ""))))
+               (setv urls
+                     (list-comp
+                      x
+                      [x (+ foundurls (try-get searchterms "urls" []))]
+                      (or
+                       (package? x)
+                       (log.info (+ "Skipping non-package URL" x)))))
+               (for [p urls]
                  (do
                   (setv pkg (download-file p))
                   (setv gpg (download-file (+ p ".asc")))
