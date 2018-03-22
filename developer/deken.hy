@@ -1257,23 +1257,14 @@
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (for [result
         (sort-searchresults
-         (filter-older-versions
-          (list-comp
-           x
-           [x (search (or args.search_url default-searchurl)
-                      (try-get searchterms "libraries" [])
-                      (try-get searchterms "objects" []))]
-           (and
-            (version-match? x)
-            (compatible-archs?
-             (if args.architecture
-               (if (in "*" args.architecture)
-                 ["*"]
-                 (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
-               [(native-arch)])
-             (get x "architectures")))
-           )
-          args.depth)
+         (find-packages searchterms
+                        :architectures (if args.architecture
+                                         (if (in "*" args.architecture)
+                                           ["*"]
+                                           (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
+                                         [(native-arch)])
+                        :versioncount args.depth
+                        :searchurl (or args.search_url default-searchurl))
          args.reverse)]
     (print-result result)))
 
