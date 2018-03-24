@@ -1353,6 +1353,24 @@
        (os.remove filename)
        (except [e Exception] (log.debug e))))
     None)
+  (defn try-download [url]
+    (setv pkg (download-file url))
+    (setv gpg (download-file (+ url ".asc")))
+    (setv hsh (download-file (+ url ".sha256")))
+    (if (and
+         (not (verify
+               pkg gpg hsh
+               :gpg verify-gpg
+               :hash verify-hash))
+         (not verify-none))
+      (do
+       (try-remove pkg)
+       (try-remove gpg)
+       (try-remove hsh)
+       None)
+      (do
+       (log.info (% "Downloaded: %s" (, pkg)))
+       pkg)))
   (setv foundurls
         (list-comp
          (get x "URL")
@@ -1368,22 +1386,11 @@
          (or
           (package-uri? x)
           (log.info (+ "Skipping non-package URL" x)))))
-  (for [p urls]
-    (do
-     (setv pkg (download-file p))
-     (setv gpg (download-file (+ p ".asc")))
-     (setv hsh (download-file (+ p ".sha256")))
-     (if (and
-          (not (verify
-                pkg gpg hsh
-                :gpg verify-gpg
-                :hash verify-hash))
-          (not verify-none))
-       (do
-        (try-remove pkg)
-        (try-remove gpg)
-        (try-remove hsh))
-       (log.info (% "Downloaded: %s" (, pkg)))))))
+  ;; return a list of successfully downloaded (and verified) files
+  (list-comp
+   x
+   [x (list-comp (try-download url) [url urls])]
+   x))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
