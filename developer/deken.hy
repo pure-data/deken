@@ -1505,6 +1505,16 @@
            {"action" "store_true"
             "help" "Ignore an unverifiable hashsum"
             "required" False}))
+  (defn add-search-flags [parser]
+    (apply parser.add_argument ["--search-url"]
+           {"help" "URL to query for deken-packages"
+            "default" ""
+            "required" False})
+    (apply parser.add_argument ["--architecture" "--arch"]
+           {"help" (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
+                      (, (.join "-" (native-arch))))
+            "action" "append"
+            "required" False}))
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
@@ -1582,15 +1592,7 @@
           "help" "Force-allow uploading of packages without sources."
           "required" False})
 
-  (apply arg-find.add_argument ["--search-url"]
-         {"help" "URL to query for deken-packages"
-          "default" ""
-          "required" False})
-  (apply arg-find.add_argument ["--architecture" "--arch"]
-         {"help" (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
-                    (, (.join "-" (native-arch))))
-          "action" "append"
-          "required" False})
+  (add-search-flags arg-find)
   (apply arg-find.add_argument ["--depth"]
          {"help" "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
                  "default" 1
@@ -1618,11 +1620,7 @@
   (apply arg-verify.add_argument ["dekfile"]
          {"nargs" "*"
           "help" "deken package to verify"})
-
-  (apply arg-download.add_argument ["--search-url"]
-         {"help" "URL to query for deken-packages"
-          "default" ""
-          "required" False})
+  (add-search-flags arg-download)
   (apply arg-download.add_argument ["--no-verify"]
          {"action" "store_true"
           "help" "Don't abort download on verification errors"})
