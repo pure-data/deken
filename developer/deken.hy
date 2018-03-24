@@ -1516,10 +1516,46 @@
       :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
       :verify-none args.no-verify
       :search-url  args.search-url))
+   :install (fn [args] None
+              (if (not args.package)
+                (fatal "self-'install' not implemented for this platform!"))
+              (defn install-pkgs [pkgs installdir]
+                (if pkgs
+                  (do
+                   (try
+                    (os.makedirs installdir)
+                    (except [e Exception]
+                      (if (not (os.path.isdir installdir)) (raise e))))
+                   (list-comp
+                    (install-package pkg installdir)
+                    [pkg pkgs]
+                    (or
+                     (os.path.isfile pkg)
+                     (log.warn (% "skipping non-existing file '%s'" (, pkg))))))))
+              (setv pkgs (set args.package))
+              ;; those search-terms that refer to local files
+              (setv file-pkgs (set (list-comp x
+                                              [x pkgs]
+                                              (and
+                                               (package-uri? x)
+                                               (os.path.exists x)))))
+              ;; search/download/verify the rest
+              (setv pkgs (.difference pkgs (set file-pkgs)))
+              (setv downloaded-pkgs
+                    (if pkgs
+                      (set (download-verified
+                            (categorize-search-terms (.difference pkgs (set file-pkgs)) True False)
+                            :architecture (or args.architecture None)
+                            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
+                            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
+                            :verify-none args.no-verify
+                            :search-url args.search-url))
+                      (set [])))
+              (install-pkgs (.union file-pkgs downloaded-pkgs) args.installdir)
+              )
    ;; the rest should have been caught by the wrapper script
-   :upgrade upgrade
    :update upgrade
-   :install (fn [args] (sys.exit "'install' not implemented for this platform!"))})
+   :upgrade upgrade})
 
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
