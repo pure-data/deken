@@ -1365,6 +1365,7 @@
                          [verify-hash True]
                          [verify-none False]
                          [search-url None]]
+  "search for files using the <searchterms>, download any results and verify them. returns a list of verified files; unverified files are removed (pendig the verify-... flags)"
   (defn try-remove [filename]
     (if filename
       (try
