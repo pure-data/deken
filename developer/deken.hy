@@ -1682,6 +1682,15 @@
          {"nargs" "+"
           "help" "package specifier or URL to download"})
 
+  (add-search-flags arg-install)
+  (apply arg-install.add_argument ["--no-verify"]
+         {"action" "store_true"
+          "help" "Don't abort download on verification errors"})
+  (add-noverify-flags arg-install)
+  (apply arg-install.add_argument ["--installdir"]
+         {"default" default-installpath
+          "help" (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath))})
+
   (apply arg-install.add_argument ["package"]
          {"nargs" "+"
           "help" "package specifier or URL to install"})
