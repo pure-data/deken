@@ -1460,8 +1460,7 @@
                      (try-remove pkg)
                      (try-remove gpg)
                      (try-remove hsh))
-                    (log.info (% "Downloaded: %s" (, pkg))))
-                  )))
+                    (log.info (% "Downloaded: %s" (, pkg)))))))
 
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
