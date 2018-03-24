@@ -1340,6 +1340,51 @@
   (log.debug (% "hash-verification: %s" (, vhash)))
   (and vgpg vhash))
 
+(defn download-verified [searchterms
+                         &optional
+                         [architecture None]
+                         [verify-gpg True]
+                         [verify-hash True]
+                         [verify-none False]
+                         [search-url None]]
+  (defn try-remove [filename]
+    (if filename
+      (try
+       (os.remove filename)
+       (except [e Exception] (log.debug e))))
+    None)
+  (setv foundurls
+        (list-comp
+         (get x "URL")
+         [x (find-packages searchterms
+                           :architectures architecture
+                           :versioncount 1
+                           :searchurl search-url)]
+         (package-uri? (try-get x "URL" ""))))
+  (setv urls
+        (list-comp
+         x
+         [x (+ foundurls (try-get searchterms "urls" []))]
+         (or
+          (package-uri? x)
+          (log.info (+ "Skipping non-package URL" x)))))
+  (for [p urls]
+    (do
+     (setv pkg (download-file p))
+     (setv gpg (download-file (+ p ".asc")))
+     (setv hsh (download-file (+ p ".sha256")))
+     (if (and
+          (not (verify
+                pkg gpg hsh
+                :gpg verify-gpg
+                :hash verify-hash))
+          (not verify-none))
+       (do
+        (try-remove pkg)
+        (try-remove gpg)
+        (try-remove hsh))
+       (log.info (% "Downloaded: %s" (, pkg)))))))
+
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
   {
@@ -1421,47 +1466,16 @@
                          :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
                    (fatal (% "verification of '%s' failed" (, p)))))))
    ;; download a package (but don't install it)
-   :download (fn [args]
-               (defn try-remove [filename]
-                 (if filename
-                   (try
-                    (os.remove filename)
-                    (except [e Exception] (log.debug e))))
-                 None)
+   :download
+   (fn [args]
+     (download-verified
                ;; parse package specifiers
-               (setv searchterms (categorize-search-terms args.package True False))
-               (setv foundurls
-                     (list-comp
-                      (get x "URL")
-                      [x (find-packages searchterms
-                                        :architectures (or args.architecture None)
-                                        :versioncount 1
-                                        :searchurl args.search-url)]
-                       (package-uri? (try-get x "URL" ""))))
-               (setv urls
-                     (list-comp
-                      x
-                      [x (+ foundurls (try-get searchterms "urls" []))]
-                      (or
-                       (package-uri? x)
-                       (log.info (+ "Skipping non-package URL" x)))))
-               (for [p urls]
-                 (do
-                  (setv pkg (download-file p))
-                  (setv gpg (download-file (+ p ".asc")))
-                  (setv hsh (download-file (+ p ".sha256")))
-                  (if (and
-                       (not (verify
-                             pkg gpg hsh
-                             :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
-                             :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                       (not args.no_verify))
-                    (do
-                     (try-remove pkg)
-                     (try-remove gpg)
-                     (try-remove hsh))
-                    (log.info (% "Downloaded: %s" (, pkg)))))))
-
+      (categorize-search-terms args.package True False)
+      :architecture (or args.architecture None)
+      :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
+      :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
+      :verify-none args.no-verify
+      :search-url  args.search-url))
    ;; the rest should have been caught by the wrapper script
    :upgrade upgrade
    :update upgrade
