@@ -876,6 +876,15 @@
             (if (os.path.exists file-path)
               (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
+(defn unzip-file [archive-file &optional [targetdir "."]]
+  "extract all members of the zip archive into targetdir"
+  (print archive-file)
+  (try (do
+        (import zipfile)
+        (with [f (zipfile.ZipFile archive-file)]
+              (f.extractall :path targetdir))
+        True)
+       (except [e Exception] (or (log.debug (% "unzipping '%s' failed" (, archive-file))) False))))
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file &optional [extension ".tar.gz"]]
@@ -888,6 +897,15 @@
   (with [f (tarfile.open tar-file "w:gz")]
         (f.add directory-to-tar :filter tarfilter))
   tar-file)
+
+(defn untar-file [archive-file &optional [targetdir "."]]
+  "extract all members of the tar archive into targetdir"
+  (try (do
+        (import tarfile)
+        (with [f (tarfile.open archive-file "r")]
+              (f.extractall :path targetdir))
+        True)
+       (except [e Exception] (or (log.debug (% "untaring '%s' failed" (, archive-file))) False))))
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
@@ -1391,6 +1409,13 @@
    x
    [x (list-comp (try-download url) [url urls])]
    x))
+
+(defn install-package [pkgfile installdir]
+  "unpack a <pkgfile> into <installdir>"
+  (or
+   (unzip-file pkgfile installdir)
+   (untar-file pkgfile installdir)))
+
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
