@@ -1434,7 +1434,7 @@
                      (list-comp
                       (get x "URL")
                       [x (find-packages searchterms
-                                        :architectures None
+                                        :architectures (or args.architecture None)
                                         :versioncount 1
                                         :searchurl args.search-url)]
                        (package-uri? (try-get x "URL" ""))))
