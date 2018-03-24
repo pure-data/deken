@@ -82,6 +82,13 @@
                "<unknown.version>"))
 (setv default-destination (urlparse "https://puredata.info/Members/%u/software/%p/%v"))
 (setv default-searchurl "https://deken.puredata.info/search")
+(setv default-installpath
+      (os.path.expandvars (os.path.expanduser
+                           (cond
+                            [(= sys.platform "darwin") "~/Library/Pd"]
+                            [(= sys.platform "win32") "%AppData%/Pd"]
+                            [True "~/.local/lib/pd/extra/"]))))
+
 (setv architecture-substitutes
       {
        "x86_64" ["amd64"]
