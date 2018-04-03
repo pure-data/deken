@@ -1463,13 +1463,13 @@ proc ::deken::search::puredata.info {term} {
                            [_ "Copy URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
                           ]
-            set res [list $filename $name $cmd $match $comment $status $menus]
+            set res [list $sortname $filename $name $cmd $match $comment $status $menus]
             lappend searchresults $res
         }
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {_ title cmd match comment status menus} $r {
+        foreach {_ _ title cmd match comment status menus} $r {
             lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus]
             break
         }
