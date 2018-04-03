@@ -1460,8 +1460,10 @@ proc ::deken::search::puredata.info {term} {
             set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
             set menus [list \
                            [_ "Install package" ] $cmd \
-                           [_ "Copy URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
+                           [_ "Copy URL" ] "clipboard clear; clipboard append $saveURL" \
+                           [_ "Copy URL to SHA256 checksum" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
+                           [_ "Copy URL to OpenGPG signature" ] "clipboard clear; clipboard append ${saveURL}.asc" \
                           ]
             set res [list $sortname $filename $name $cmd $match $comment $status $menus]
             lappend searchresults $res
