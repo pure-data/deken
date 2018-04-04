@@ -1618,7 +1618,7 @@
   (setv arg-subparsers (apply arg-parser.add_subparsers []
                               {"help" "-h for help."
                                "dest" "command"
-                               "metavar" "{package,upload}"}))
+                               "metavar" "{package,upload,find,download,verify,install}"}))
   (setv arg-package (apply arg-subparsers.add_parser ["package"]))
   (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
   (setv arg-find (arg-subparsers.add_parser "find"))
