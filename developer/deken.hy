@@ -1723,6 +1723,9 @@
          {"action" "store_true"
           "help" "Don't abort download on verification errors"})
   (add-noverify-flags arg-install)
+  (apply arg-install.add_argument ["--requirement" "-r"]
+         {"action" "append"
+          "help" "Install from the given requirements file. This option can be used multiple times."})
   (apply arg-install.add_argument ["--installdir"]
          {"default" default-installpath
           "help" (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath))})
