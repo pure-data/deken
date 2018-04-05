@@ -100,7 +100,7 @@ if { [::deken::versioncheck 0.4.0] } {
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
 set ::deken::userplatform {}
-set ::deken::hideforeignarch 0
+set ::deken::hideforeignarch 1
 set ::deken::show_readme 1
 set ::deken::remove_on_install 0
 set ::deken::add_to_path 0
@@ -314,7 +314,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
     # user requested platform (empty = DEFAULT)
     set ::deken::userplatform [::pd_guiprefs::read deken_platform]
-    set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] ]
+    set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] 1]
     proc ::deken::set_platform_options {platform hide} {
         set ::deken::userplatform $platform
         set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
