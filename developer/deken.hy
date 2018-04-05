@@ -1517,7 +1517,7 @@
       :verify-none args.no-verify
       :search-url  args.search-url))
    :install (fn [args] None
-              (if (not args.package)
+              (if (and (not args.package) (not args.requirement))
                 (fatal "self-'install' not implemented for this platform!"))
               (defn install-pkgs [pkgs installdir]
                 (if pkgs
