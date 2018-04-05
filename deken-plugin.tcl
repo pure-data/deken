@@ -102,7 +102,7 @@ set ::deken::installpath {}
 set ::deken::userplatform {}
 set ::deken::hideforeignarch 1
 set ::deken::show_readme 1
-set ::deken::remove_on_install 0
+set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
@@ -321,7 +321,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write deken_platform "$platform"
         ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
     }
-    set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] ]
+    set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] 1]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
     set ::deken::add_to_path [::deken::utilities::tristate [::pd_guiprefs::read deken_add_to_path] ]
 
