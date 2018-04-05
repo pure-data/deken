@@ -1728,7 +1728,7 @@
           "help" (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath))})
 
   (apply arg-install.add_argument ["package"]
-         {"nargs" "+"
+         {"nargs" "*"
           "help" "package specifier or URL to install"})
 
 
