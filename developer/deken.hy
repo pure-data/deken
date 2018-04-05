@@ -1532,7 +1532,15 @@
                     (or
                      (os.path.isfile pkg)
                      (log.warn (% "skipping non-existing file '%s'" (, pkg))))))))
-              (setv pkgs (set args.package))
+              (defn req2pkg [req]
+                (try
+                 (with [f (open req "r")]
+                       (list-comp (.strip line) [line (.readlines f)]))
+                 (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
+              (defn reqs2pkgs [reqs]
+                (chain.from-iterable (list-comp (req2pkg f) [f reqs])))
+              (setv pkgs (.union (set args.package) (reqs2pkgs args.requirement)))
+
               ;; those search-terms that refer to local files
               (setv file-pkgs (set (list-comp x
                                               [x pkgs]
