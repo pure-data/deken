@@ -103,9 +103,16 @@ be optimally searchable on [puredata.info](http://puredata.info/);
    this archive).
    It is either "Sources" (see [below](#sourceful-uploads) or `OS-MARCH-BIT`,
    with:
-   - OS being the Operating System (`Linux`, `Darwin`, `W32`,...)
-   - MARCH is the machine architecture (e.g. `x86_64`)
-   - BIT is the size of Pd's numbers in bits (usually `32`; for double-precision it is `64`)
+   - OS being the Operating System. Typical values are:
+     - `Linux`
+     - `Darwin`
+     - `Windows`
+   - MARCH is the machine architecture, e.g.:
+     - `i386` (32bit Intel/AMD-compatible CPUs)
+     - `amd64` (64bit Intel/AMD-compatible CPUs; synonymous for `x86_64`, though `amd64` is the preferred form)
+     - `ppc` (the `PowerPC` architecture popular in old Apple computers)
+     - `armv7l` (little-endian 32bit ARM CPUs as found in the *Raspberry Pi 3*)
+   - BIT is the size of Pd's numbers in bits (usually `32`; for double-precision it will be `64`)
 
 Note that the archive should contain a single directory at the top level with
 NAME the same as the externals package itself. For example a freeverb~ externals
