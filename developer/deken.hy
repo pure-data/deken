@@ -357,7 +357,7 @@
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
   "check if filename has one of the extensions in the set"
-  (len (list-comp e [e extensions] (filename.endswith e))))
+  (len (list-comp e [e extensions] (.endswith (.lower filename) e))))
 
 ;; check for a particular file in a directory, recursively
 (defn test-filename-under-dir [pred dir]
