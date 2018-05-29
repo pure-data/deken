@@ -380,7 +380,7 @@
       (list-comp (os.path.join dp f) [(, dp dn fn) (os.walk folder) f fn])
       (list-comp (os.path.join folder f) [f (os.listdir folder)])))
   (sum (+
-    (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
+    (if (test-extensions-under-dir folder [".c" ".cpp" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
                 [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
