@@ -1449,7 +1449,8 @@
                         (make-archive-name
                           (os.path.normpath name)
                           args.version
-                          (int-dekformat args.dekformat)))
+                          (int-dekformat args.dekformat)
+                          args.search-subdirs))
                       (if (nil? args.objects) name args.objects))
                     (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
@@ -1581,6 +1582,10 @@
     (apply parser.add_argument ["--objects"]
            {"help" "Specify a tsv-file that lists all the objects of the library (DEFAULT: generate it)."
             "default" None
+            "required" False})
+    (apply parser.add_argument ["--search-subdirs"]
+           {"help" "Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
+            "action" "store_true"
             "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
