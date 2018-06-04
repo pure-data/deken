@@ -367,7 +367,10 @@
    (fn [filename] (test-extensions filename extensions)) dir))
 
 ;; examine a folder for externals and return the architectures of those found
-(defn get-externals-architectures [folder &optional [recurse-subdirs False]]
+(defn get-externals-architectures [folder
+                                   &optional
+                                   [extra-files []]
+                                   [recurse-subdirs False]]
   "examine a folder for external binaries (and sources) and return the architectures of those found"
   (defn listdir [folder &optional [recurse-subdirs True]]
     (if recurse-subdirs
@@ -382,7 +385,7 @@
                 [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs f)]
                 [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
                 [True []])
-               [f (listdir folder recurse-subdirs)]
+               [f (+ (listdir folder recurse-subdirs) extra-files)]
                (os.path.exists f)))
        []))
 
