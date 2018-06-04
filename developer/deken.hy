@@ -340,7 +340,7 @@
   (.join "-" (stringify-tuple arch)))
 
 ;; takes the externals architectures and turns them into a string)
-(defn get-architecture-string [folder]
+(defn get-architecture-string [folder &optional [recurse-subdirs False]]
   "get architecture-string for all Pd-binaries in the folder"
   (defn _get_archs [archs]
     (if archs
@@ -349,7 +349,7 @@
         (.join ")(" (list-comp a [a (sort-archs archs)]))
         ")")
        ""))
-   (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder)])))
+   (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder recurse-subdirs)])))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
@@ -367,7 +367,7 @@
    (fn [filename] (test-extensions filename extensions)) dir))
 
 ;; examine a folder for externals and return the architectures of those found
-(defn get-externals-architectures [folder]
+(defn get-externals-architectures [folder &optional [recurse-subdirs False]]
   "examine a folder for external binaries (and sources) and return the architectures of those found"
   (defn listdir [folder &optional [recurse-subdirs True]]
     (if recurse-subdirs
@@ -377,13 +377,14 @@
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
     (list-comp (cond
-      [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "Linux")]
-      [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs (os.path.join folder f) "FreeBSD")]
-      [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs (os.path.join folder f))]
-      [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs (os.path.join folder f))]
-      [True []])
-    [f (os.listdir folder)]
-    (os.path.exists (os.path.join folder f)))) []))
+                [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
+                [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")]
+                [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs f)]
+                [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
+                [True []])
+               [f (listdir folder recurse-subdirs)]
+               (os.path.exists f)))
+       []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --classnew-to-floatsize-- [function-names]
