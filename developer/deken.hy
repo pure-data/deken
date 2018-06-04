@@ -340,7 +340,7 @@
   (.join "-" (stringify-tuple arch)))
 
 ;; takes the externals architectures and turns them into a string)
-(defn get-architecture-string [folder &optional [recurse-subdirs False]]
+(defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
   "get architecture-string for all Pd-binaries in the folder"
   (defn _get_archs [archs]
     (if archs
@@ -349,7 +349,10 @@
         (.join ")(" (list-comp a [a (sort-archs archs)]))
         ")")
        ""))
-   (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures folder recurse-subdirs)])))
+  (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures
+                                                                                 folder
+                                                                                 :extra-files extra-files
+                                                                                 :recurse-subdirs recurse-subdirs)])))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
@@ -1051,7 +1054,11 @@
 ;; compute the archive filename for a particular external on this platform
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
 ;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
-(defn make-archive-name [folder version &optional [filenameversion 1] [recurse-subdirs False]]
+(defn make-archive-name [folder version
+                         &optional
+                         [filenameversion 1]
+                         [recurse-subdirs False]
+                         [extra-arch-files []]]
   "calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
@@ -1075,7 +1082,7 @@
                  (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
                     (.strftime (datetime.date.today) "%Y%m%d"))))]
          [version version])
-   (get-architecture-string folder :recurse-subdirs recurse-subdirs)
+   (get-architecture-string folder :recurse-subdirs recurse-subdirs :extra-files extra-arch-files)
    filenameversion))
 
 
@@ -1453,7 +1460,8 @@
                           (os.path.normpath name)
                           args.version
                           (int-dekformat args.dekformat)
-                          args.search-subdirs))
+                          :recurse-subdirs args.search-subdirs
+                          :extra-arch-files args.extra-arch-files))
                       (if (nil? args.objects) name args.objects))
                     (fatal (% "Not a directory '%s'!" name)))
                 (name args.source)))
@@ -1589,6 +1597,10 @@
     (apply parser.add_argument ["--search-subdirs"]
            {"help" "Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
             "action" "store_true"
+            "required" False})
+    (apply parser.add_argument ["--extra-arch-files"]
+           {"help" "Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
+            "nargs" "*"
             "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
