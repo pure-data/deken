@@ -1264,7 +1264,7 @@ proc ::deken::parse_filename {filename} {
         set baselist [split $basename () ]
         # get pkgname + version
         set pkgver [lindex $baselist 0]
-        if { ! [ regexp "(.*)-(v.*)-" $pkgver _ pkgname version ] } {
+        if { ! [ regexp "(.*)-v(.*)-" $pkgver _ pkgname version ] } {
             set pkgname $pkgver
             set $version ""
         }
@@ -1277,7 +1277,7 @@ proc ::deken::parse_filename {filename} {
         }
         if { "x$archs$version" == "x" } {
             # try again as <pkgname>-v<version>
-            if { ! [ regexp "(.*)-(v.*)" $pkgver _ pkgname version ] } {
+            if { ! [ regexp "(.*)-v(.*)" $pkgver _ pkgname version ] } {
                 set pkgname $pkgver
                 set $version ""
             }
