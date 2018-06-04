@@ -1578,7 +1578,7 @@
             "default" None
             "required" False})
     (apply parser.add_argument ["--dekformat"]
-           {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 0)."
+           {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
             "default" 1
             "required" False}))
   (defn add-noverify-flags [parser]
