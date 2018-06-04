@@ -1252,7 +1252,8 @@ proc ::deken::parse_filename {filename} {
         foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
             if {![string first v ${o}]} {
                 set version [string range $o 1 end]
-            } { # ignoring unknown option... }
+            } { # ignoring unknown option...
+            }
         }
         foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
     } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
