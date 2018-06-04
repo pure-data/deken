@@ -369,6 +369,10 @@
 ;; examine a folder for externals and return the architectures of those found
 (defn get-externals-architectures [folder]
   "examine a folder for external binaries (and sources) and return the architectures of those found"
+  (defn listdir [folder &optional [recurse-subdirs True]]
+    (if recurse-subdirs
+      (list-comp (os.path.join dp f) [(, dp dn fn) (os.walk folder) f fn])
+      (list-comp (os.path.join folder f) [f (os.listdir folder)])))
   (sum (+
     (if (test-extensions-under-dir folder [".c" ".cpp" ".C" ".cxx" ".cc"])
         [[["Sources"]]] [])
