@@ -1048,7 +1048,7 @@
 ;; compute the archive filename for a particular external on this platform
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
 ;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
-(defn make-archive-name [folder version &optional [filenameversion 1]]
+(defn make-archive-name [folder version &optional [filenameversion 1] [recurse-subdirs False]]
   "calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
@@ -1072,7 +1072,7 @@
                  (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
                     (.strftime (datetime.date.today) "%Y%m%d"))))]
          [version version])
-   (get-architecture-string folder)
+   (get-architecture-string folder :recurse-subdirs recurse-subdirs)
    filenameversion))
 
 
