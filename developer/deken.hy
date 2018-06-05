@@ -1619,11 +1619,11 @@
             "default" None
             "required" False})
     (apply parser.add_argument ["--search-subdirs"]
-           {"help" "Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
+           {"help" "EXPERT: Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
             "action" "store_true"
             "required" False})
     (apply parser.add_argument ["--extra-arch-files"]
-           {"help" "Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
+           {"help" "EXPERT: Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
             "default" []
             "nargs" "*"
             "required" False})
