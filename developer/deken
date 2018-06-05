@@ -112,6 +112,7 @@ install_virtualenv() {
 }
 
 install_deken() {
+    mkdir -p "${DEKEN_HOME}"
     which "${PYTHON_BIN}" >/dev/null || \
         bail_install_msg "Oops, no Python found! You need Python to run Deken: ${PYTHON_BIN}
 You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
@@ -121,7 +122,6 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     error "I'm going to install myself and my dependencies into ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
     sleep 3;
-    [ -d "$DEKEN_HOME" ] || mkdir -p $DEKEN_HOME;
     [ -e "$DEKEN_HOME/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
         $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || bail_install)
