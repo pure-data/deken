@@ -576,9 +576,8 @@
         (in (str-to-bytes "class_new") imp.name))
        [entry pef.DIRECTORY_ENTRY_IMPORT]))))
   (try (do
-        (import pefile)
-        (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE)
-        )
+         (import pefile)
+         (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
        (except [e Exception] (list))))
 
 
