@@ -72,7 +72,22 @@ if $cygwin; then
     export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
 fi
 
-DEKENHY="${DEKEN_HOME}/deken.hy"
+if test -z "${systeminstalled}"; then
+ # if this script resides in /usr/ and there's a deken.hy relative to it in the
+ # share/ folder, we consider it system-installed
+ if test -z "${0##/usr/*}" && test -e "${0%/*}/../share/deken/deken.hy"; then
+   systeminstalled=true
+ else
+   systeminstalled=false
+ fi
+fi
+
+if ${systeminstalled}; then
+    DEKENHY="${0%/*}/../share/deken/deken.hy"
+else
+    DEKENHY="${DEKEN_HOME}/deken.hy"
+fi
+
 bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
@@ -114,6 +129,12 @@ install_virtualenv() {
 
 install_deken() {
     mkdir -p "${DEKEN_HOME}"
+
+    if ${systeminstalled}; then
+       # on Debian, we can skip installation
+       return
+    fi
+
     which "${PYTHON_BIN}" >/dev/null || \
         bail_install_msg "Oops, no Python found! You need Python to run Deken: ${PYTHON_BIN}
 You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
@@ -141,6 +162,12 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
 }
 
 upgrade_deken() {
+    if ${systeminstalled}; then
+      # on Debian we disallow upgrading
+      error "Direct upgrading is disabled for system-provided deken!"
+      error "Instead, use your package manager to install newer versions."
+      exit 1
+    fi
     # first upgrade this script itself
     echo "Upgrading $0."
     $HTTP_CLIENT $0 $DEKEN_BASE_URL/deken
@@ -157,6 +184,10 @@ upgrade_deken() {
 }
 
 tryrun_deken() {
+    if ${systeminstalled}; then
+       hy3 "${DEKENHY}" "$@"
+       exit $?
+    fi
     if [ ! -x "$DEKEN_HOME/virtualenv/bin/hy" ]; then
        error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
        error "Try running '$0 install' or '$0 upgrade'"
