@@ -1298,6 +1298,8 @@ proc ::deken::architecture_match {archs} {
         ## FIXXME what if the user-supplied input isn't valid?
         regexp -- {(.*)-(.*)-(.*)} $::deken::userplatform _ OS MACHINE FLOATSIZE
     }
+    # strip the little-endian indicator from arm-archs, it's the default
+    regexp -- {(armv[0-9]*)[lL]} $MACHINE _ MACHINE
 
     # check each architecture in our list against the current one
     foreach arch $archs {
