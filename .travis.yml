@@ -17,7 +17,6 @@ before_install:
 install:
   - mkdir -p ~/bin
   - mkdir -p tmp
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then curl https://bootstrap.pypa.io/get-pip.py | python; fi
   - cp developer/deken ~/bin/deken
   - chmod u+x ~/bin/deken
   - curl -fsSL -o tmp/deken-test.zip "https://puredata.info/Members/zmoelnig/tests/deken-test.zip"
