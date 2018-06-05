@@ -72,6 +72,7 @@ if $cygwin; then
     export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
 fi
 
+DEKENHY="${DEKEN_HOME}/deken.hy"
 bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
@@ -126,10 +127,10 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
         $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || bail_install)
     [ -e "$DEKEN_HOME/requirements.txt" ] || bail_install
-    [ -e "$DEKEN_HOME/deken.hy" ] || (\
+    [ -e "${DEKENHY}" ] || (\
         ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
-        $HTTP_CLIENT $DEKEN_HOME/deken.hy $DEKEN_BASE_URL/deken.hy ) || bail_install)
-    [ -e "$DEKEN_HOME/deken.hy" ] || bail_install
+        $HTTP_CLIENT ${DEKENHY} $DEKEN_BASE_URL/deken.hy ) || bail_install)
+    [ -e "${DEKENHY}" ] || bail_install
     [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv;
     [ -d "$DEKEN_HOME/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
@@ -161,10 +162,10 @@ tryrun_deken() {
        error "Try running '$0 install' or '$0 upgrade'"
        exit 1
     fi
-    if [ -e $DEKEN_HOME/deken.hy ]; then
-       $DEKEN_HOME/virtualenv/bin/hy $DEKEN_HOME/deken.hy "$@"
+    if [ -e ${DEKENHY} ]; then
+       $DEKEN_HOME/virtualenv/bin/hy ${DEKENHY} "$@"
     else
-       error "Unable to find '${DEKEN_HOME}/deken.hy'"
+       error "Unable to find '${DEKENHY}'"
        error "Try running '$0 install' or '$0 upgrade'"
        exit 1
     fi
