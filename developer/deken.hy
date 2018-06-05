@@ -526,7 +526,7 @@
                 (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
                 (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
                 floatsize)
-               [floatsize (get-elf-floatsizes elffile)]
+               [floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])]
                floatsize))
   (try (do
          (import [elftools.elf.elffile [ELFFile]])
@@ -566,7 +566,7 @@
     (defn get-macho-headerarchs [header]
       (list-comp
        (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)
-       [floatsize (get-macho-floatsizes header)]))
+       [floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])]))
     (list (chain.from_iterable
            (list-comp (get-macho-headerarchs hdr) [hdr macho.headers]))))
   (try (do
@@ -578,7 +578,9 @@
 (defn get-windows-archs [filename]
   "guess OS/CPU/floatsize for PE (Windows) binaries"
   (defn get-pe-sectionarchs [cpu symbols]
-    (list-comp (, "Windows" cpu (--classnew-to-floatsize-- fun)) [fun symbols]))
+    (if symbols
+        (list-comp (, "Windows" cpu (--classnew-to-floatsize-- fun)) [fun symbols])
+        [(, "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
     (get-pe-sectionarchs
