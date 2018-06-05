@@ -1466,6 +1466,14 @@
                 (try (int value)
                      (except [e ValueError]
                        (fatal (% "Illegal dekformat '%s'" value)))))
+              (defn set-default-floatsize [value &optional [valid [None 0 32 64]]]
+                (if (in value valid)
+                    (do
+                      (global default-floatsize)
+                      (setv default-floatsize args.default-floatsize))
+                    (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
+                              (, value (.join ", " (list-comp (str x) [x valid] x)))))))
+              (set-default-floatsize args.default-floatsize)
               (list-comp
                 (if (os.path.isdir name)
                     ;; if asking for a directory just package it up
@@ -1618,6 +1626,11 @@
            {"help" "Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
             "default" []
             "nargs" "*"
+            "required" False})
+    (apply parser.add_argument ["--default-floatsize"]
+           {"help" "EXPERT: Use the given float-size if it cannot be determined automatically. Use with care! (DEFAULT: None)."
+            "default" None
+            "type" int
             "required" False})
     (apply parser.add_argument ["--dekformat"]
            {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
