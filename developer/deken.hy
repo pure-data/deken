@@ -1599,6 +1599,7 @@
             "required" False})
     (apply parser.add_argument ["--extra-arch-files"]
            {"help" "Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
+            "default" []
             "nargs" "*"
             "required" False})
     (apply parser.add_argument ["--dekformat"]
