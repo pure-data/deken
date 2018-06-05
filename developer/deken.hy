@@ -101,6 +101,8 @@
        "ppc" [ "PowerPC"]
        })
 
+(setv default-floatsize None)
+
 ;; check whether a form executes or not
 (eval-when-compile
   (defmacro runs? [exp]
@@ -338,6 +340,19 @@
 (defn arch-to-string [arch]
   "convert an architecture-tuple into a string"
   (.join "-" (stringify-tuple arch)))
+
+(defn --archs-default-floatsize-- [&optional [filename None]]
+  (defn doit [floatsize filename]
+    (log.warn
+      (if filename
+          (% "'%s' has no relevant symbols!...assuming floatsize=%s"
+             (, filename floatsize))
+          (% "No relevant symbols found!...assuming floatsize=%s"
+             (, filename))))
+    floatsize)
+  (if default-floatsize
+      (doit default-floatsize filename)
+      None))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
