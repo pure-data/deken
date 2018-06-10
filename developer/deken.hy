@@ -1065,6 +1065,10 @@
     (if (get (parse-filename pkg) 0)
       (upload-package pkg destination username password)
       (log.warn (% "Skipping '%s', it is not a valid deken package" pkg))))
+  (log.warn "Your upload was successful.")
+  (log.warn "Please note that it can take up to 24 hours before the package will appear")
+  (log.warn "in deken-searches that allow others to download your package from the")
+  (log.warn "Pd package repository.")
   (, username password))
 
 ;; compute the archive filename for a particular external on this platform
