@@ -714,14 +714,14 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
     ${rdb} configure -state disabled
 
     if { [file exists ${path}] } { } {
-        ${ckb} configure -text "Create"
+        ${ckb} configure -text [_ "Create"]
         if { $mkdir } {
             catch { file mkdir $path }
         }
     }
 
     if { [file exists ${path}] } {
-        ${ckb} configure -text "Check"
+        ${ckb} configure -text [_ "Check"]
     }
 
     if { [::deken::utilities::is_writable_dir ${path} ] } {
