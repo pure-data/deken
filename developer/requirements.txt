@@ -7,4 +7,4 @@ python-gnupg==0.4.1
 keyring==10.6.0
 ndg_httpsclient==0.4.3
 pyasn1==0.1.9
-pyOpenSSL==16.2.0
+pyopenssl==17.5.0
