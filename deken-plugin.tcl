@@ -164,7 +164,7 @@ proc ::deken::utilities::is_writable_dir {path} {
 if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
-    if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
+    if {$::tcl_platform(platform) eq "windows"} { } { return 0 }
     if { "" eq $::deken::_vbsunzip } {
         set ::deken::_vbsunzip [ file join [::deken::gettmpdir] deken_unzip.vbs ]
     }
