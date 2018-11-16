@@ -279,7 +279,7 @@ proc ::deken::utilities::uninstall {path library} {
             file delete -force "${fullpath}"
         } stdout ] } {
             ::pdwindow::debug [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
-            ::pdwindow::debug $stdout
+            ::pdwindow::debug " $stdout"
             ::pdwindow::debug "\n"
         }
     }
