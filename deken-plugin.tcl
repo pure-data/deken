@@ -1152,11 +1152,44 @@ proc ::deken::clicked_link {URL filename} {
         return
     }
     ::pdwindow::debug "\n"
+    set deldir ""
     if { "$::deken::remove_on_install" } {
-        ::deken::utilities::uninstall $installdir $extname
+        if { [::deken::utilities::uninstall $installdir $extname] } {
+        } {
+            # ouch uninstalling failed.
+            # on msw, lets assume this is because some of the files in the folder are locked.
+            # so move the folder out of the way and proceed
+            set deldir [::deken::get_tmpfilename $installdir]
+            if { [ catch {
+                file mkdir $deldir
+                file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
+            } ] } {
+                ::pdwindow::debug "\[deken\]: "
+                ::pdwindow::debug [format [_ "temporarily moving %1\$s into %2\$s failed." ] $extname $deldir ]
+                ::pdwindow::debug "\n"
+                set deldir ""
+            }
+        }
     }
 
     ::deken::utilities::extract $installdir $filename $fullpkgfile
+
+    if { "$deldir" != "" } {
+        # try getting rid of the directory to be deleted
+        # we already tried once (and failed), so this time we iterate over each file
+        set rmerrors [::deken::utilities::rmrecursive $deldir]
+        # and if there are still files around, ask the user to delete them.
+        if { $rmerrors > 0 } {
+            set msg [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ]
+            set _args "-message \"[format $msg $extname $deldir]\" -type okcancel -default ok -icon warning -parent .externals_searchui"
+            switch -- [eval tk_messageBox ${_args}] {
+                ok {
+                    ::pd_menucommands::menu_openfile $deldir
+                }
+            }
+        }
+        set $deldir ""
+    }
 
     if { "$::deken::show_readme" } {
         foreach ext {pd html txt} {
