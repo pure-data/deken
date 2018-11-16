@@ -287,6 +287,29 @@ proc ::deken::utilities::uninstall {path library} {
     return 1
 }
 
+proc ::deken::utilities::rmrecursive {path} {
+    # recursively remove ${path} if it exists, traversing into each directory
+    # to delete single items (rather than just unlinking the parent directory)
+    set errors 0
+    set myname [lindex [info level 0] 0]
+    set children [glob -nocomplain -directory $path -types hidden *]
+    lappend children {*}[glob -nocomplain -directory $path *]
+    foreach child $children[set children {}] {
+        if {[file tail $child] in {. ..}} {
+            continue
+        }
+        if {[file isdirectory $child]} {
+            if {[file type $child] ne "link"} {
+                incr errors [$myname $child]
+            }
+        }
+        if { [ catch { file delete -force $child } ] } {
+            incr errors
+        }
+    }
+    return $errors
+}
+
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
