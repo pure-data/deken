@@ -281,8 +281,10 @@ proc ::deken::utilities::uninstall {path library} {
             ::pdwindow::debug [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
             ::pdwindow::debug " $stdout"
             ::pdwindow::debug "\n"
+            return 0
         }
     }
+    return 1
 }
 
 proc ::deken::utilities::newwidget {basename} {
