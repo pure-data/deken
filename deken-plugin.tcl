@@ -516,7 +516,17 @@ proc ::deken::versioncompare {a b} {
     foreach x [regexp -all -inline {\d+|\D+} [string map {~ \t} $a]] y [regexp -all -inline {\d+|\D+} [string map {~ \t} $b]] {
         if { "$x" == "" } { set x " " }
         if { "$y" == "" } { set y " " }
-        set c [dict get {1 0 {0 1} -1 {1 0} 1} [lsort -indices -dictionary -unique [list $x $y]]]
+        if { [catch {
+           set c [dict get {1 0 {0 1} -1 {1 0} 1} [lsort -indices -dictionary -unique [list $x $y]]]
+        } stdout ] } {
+          # Tcl<8.5 (as found the PowerPC builds) lacks 'dict' and 'lsort -indices'
+          if { [catch {
+            # "string compare" does not sort numerically
+            set c [expr 2 * ($x > $y) + ($x == $y) - 1]
+          } stdout] } {
+            set c [string compare $x $y]
+          }
+        }
         if { $c != "0" } {return $c}
     }
     return 0
