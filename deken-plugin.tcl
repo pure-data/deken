@@ -509,7 +509,7 @@ proc ::deken::set_platform {os machine bits floatsize} {
 }
 
 proc ::deken::versioncompare {a b} {
-    # compares to versions, the Debian way
+    # compares two versions, the Debian way
     # each version string is split into numeric and non-numeric elements
     # the elements are compared pairwise
     # "~" sorts before everything else
