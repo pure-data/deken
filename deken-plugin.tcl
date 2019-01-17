@@ -95,7 +95,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.5.0] } {
+if { [::deken::versioncheck 0.5.1] } {
 
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::installpath {}
@@ -164,7 +164,7 @@ proc ::deken::utilities::is_writable_dir {path} {
 if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
-    if { "Windows" eq "$::deken::platform(os)" } { } { return 0 }
+    if {$::tcl_platform(platform) eq "windows"} { } { return 0 }
     if { "" eq $::deken::_vbsunzip } {
         set ::deken::_vbsunzip [ file join [::deken::gettmpdir] deken_unzip.vbs ]
     }
@@ -279,11 +279,34 @@ proc ::deken::utilities::uninstall {path library} {
             file delete -force "${fullpath}"
         } stdout ] } {
             ::pdwindow::debug [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
-            ::pdwindow::debug "\n    "
-            ::pdwindow::debug $stdout
-            ::pdwindow::debug "\n"
+            ::pdwindow::debug "\n    $stdout\n"
+            return 0
         }
     }
+    return 1
+}
+
+proc ::deken::utilities::rmrecursive {path} {
+    # recursively remove ${path} if it exists, traversing into each directory
+    # to delete single items (rather than just unlinking the parent directory)
+    set errors 0
+    set myname [lindex [info level 0] 0]
+    set children [glob -nocomplain -directory $path -types hidden *]
+    lappend children {*}[glob -nocomplain -directory $path *]
+    foreach child $children[set children {}] {
+        if {[file tail $child] in {. ..}} {
+            continue
+        }
+        if {[file isdirectory $child]} {
+            if {[file type $child] ne "link"} {
+                incr errors [$myname $child]
+            }
+        }
+        if { [ catch { file delete -force $child } ] } {
+            incr errors
+        }
+    }
+    return $errors
 }
 
 proc ::deken::utilities::newwidget {basename} {
@@ -1141,11 +1164,44 @@ proc ::deken::clicked_link {URL filename} {
         return
     }
     ::pdwindow::debug "\n"
+    set deldir ""
     if { "$::deken::remove_on_install" } {
-        ::deken::utilities::uninstall $installdir $extname
+        if { [::deken::utilities::uninstall $installdir $extname] } {
+        } {
+            # ouch uninstalling failed.
+            # on msw, lets assume this is because some of the files in the folder are locked.
+            # so move the folder out of the way and proceed
+            set deldir [::deken::get_tmpfilename $installdir]
+            if { [ catch {
+                file mkdir $deldir
+                file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
+            } ] } {
+                ::pdwindow::debug "\[deken\]: "
+                ::pdwindow::debug [format [_ "temporarily moving %1\$s into %2\$s failed." ] $extname $deldir ]
+                ::pdwindow::debug "\n"
+                set deldir ""
+            }
+        }
     }
 
     ::deken::utilities::extract $installdir $filename $fullpkgfile
+
+    if { "$deldir" != "" } {
+        # try getting rid of the directory to be deleted
+        # we already tried once (and failed), so this time we iterate over each file
+        set rmerrors [::deken::utilities::rmrecursive $deldir]
+        # and if there are still files around, ask the user to delete them.
+        if { $rmerrors > 0 } {
+            set msg [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ]
+            set _args "-message \"[format $msg $extname $deldir]\" -type okcancel -default ok -icon warning -parent .externals_searchui"
+            switch -- [eval tk_messageBox ${_args}] {
+                ok {
+                    ::pd_menucommands::menu_openfile $deldir
+                }
+            }
+        }
+        set $deldir ""
+    }
 
     if { "$::deken::show_readme" } {
         foreach ext {pd html txt} {
