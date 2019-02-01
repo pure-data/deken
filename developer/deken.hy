@@ -410,10 +410,6 @@
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --classnew-to-floatsize-- [function-names]
   "detect Pd-floatsize based on the list of <function-names> used in the binary"
-  (if (in function-names ["_class_new64" "class_new64"])
-      (do
-        (log.warning "Detection of double-precision is experimental and requires")
-        (log.warning "https://github.com/pure-data/pure-data/pull/300 to be accepted into Pd")))
   (cond
    [(in function-names ["_class_new" "class_new"]) 32]
    [(in function-names ["_class_new64" "class_new64"]) 64]
