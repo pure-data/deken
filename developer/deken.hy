@@ -343,7 +343,7 @@
 
 (defn --archs-default-floatsize-- [&optional [filename None]]
   (defn doit [floatsize filename]
-    (log.warn
+    (log.warning
       (if filename
           (% "'%s' has no relevant symbols!...assuming floatsize=%s"
              (, filename floatsize))
@@ -412,8 +412,8 @@
   "detect Pd-floatsize based on the list of <function-names> used in the binary"
   (if (in function-names ["_class_new64" "class_new64"])
       (do
-        (log.warn "Detection of double-precision is experimental and requires")
-        (log.warn "https://github.com/pure-data/pure-data/pull/300 to be accepted into Pd")))
+        (log.warning "Detection of double-precision is experimental and requires")
+        (log.warning "https://github.com/pure-data/pure-data/pull/300 to be accepted into Pd")))
   (cond
    [(in function-names ["_class_new" "class_new"]) 32]
    [(in function-names ["_class_new64" "class_new64"]) 64]
@@ -648,7 +648,7 @@
     (do ;; already exists
      (log.info (% "objects file '%s' already exists" dekfilename))
      (if warn-exists
-       (log.warn (% "WARNING: delete '%s' to re-generate objects file" dekfilename)))
+       (log.warning (% "WARNING: delete '%s' to re-generate objects file" dekfilename)))
      dekfilename)
     (do-make-objects-file dekfilename objfile)))
 
@@ -697,27 +697,27 @@
        (do
         (defn gpg-sign-file [filename]
           "sign a file with GPG (if the gnupg module is installed)"
-          (log.warn (+
+          (log.warning (+
                      (% "Unable to GPG sign '%s'\n" filename)
                      "'gnupg' module not loaded")))
         (defn gpg-verify-file [signedfile signaturefile]
           "verify a file with a detached GPG signature"
-          (log.warn (.join "\n" (list
+          (log.warning (.join "\n" (list
                                  (% "Unable to GPG verify '%s'" (, signedfile))
                                  "'gnupg' module not loaded")))
                                  )))
      (else
       (do
        (defn --gpg-unavail-error-- [state &optional ex]
-         (log.warn (% "GPG %s failed:" state))
-         (if ex (log.warn ex))
-         (log.warn "Do you have 'gpg' installed?")
-         (log.warn "- If you've received numerous errors during the initial installation,")
-         (log.warn "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
-         (log.warn "  and re-run `deken install`")
-         (log.warn "- On OSX you might want to install the 'GPG Suite'")
-         (log.warn "Signing your package with GPG is optional.")
-         (log.warn " You can safely ignore this warning if you don't want to sign your package"))
+         (log.warning (% "GPG %s failed:" state))
+         (if ex (log.warning ex))
+         (log.warning "Do you have 'gpg' installed?")
+         (log.warning "- If you've received numerous errors during the initial installation,")
+         (log.warning "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
+         (log.warning "  and re-run `deken install`")
+         (log.warning "- On OSX you might want to install the 'GPG Suite'")
+         (log.warning "Signing your package with GPG is optional.")
+         (log.warning " You can safely ignore this warning if you don't want to sign your package"))
 
       ;; generate a GPG signature for a particular file
       (defn gpg-verify-file [signedfile signaturefile]
@@ -805,7 +805,7 @@
                      (if (hasattr sig "stderr")
                        (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
                      (if (not sig)
-                       (log.warn "Could not GPG sign the package.")
+                       (log.warning "Could not GPG sign the package.")
                        (do
                         (with [f (open signfile "w")] (f.write (str sig)))
                         signfile)))
@@ -978,7 +978,7 @@
      (do
       (with [f (open outfile "wb")] (.write f content))
       outfile)
-     (except [e OSError] (log.warn (% "Unable to download file: %s" (, e))))))
+     (except [e OSError] (log.warning (% "Unable to download file: %s" (, e))))))
   (import requests)
   (setv r (requests.get url))
   (if (= 200 r.status_code)
@@ -992,7 +992,7 @@
        (os.path.basename url)
        "downloaded_file"))
      r.content)
-    (log.warn (% "Downloading '%s' failed with '%s'" (, url r.status_code)))))
+    (log.warning (% "Downloading '%s' failed with '%s'" (, url r.status_code)))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
@@ -1064,11 +1064,11 @@
   (for [pkg pkgs]
     (if (get (parse-filename pkg) 0)
       (upload-package pkg destination username password)
-      (log.warn (% "Skipping '%s', it is not a valid deken package" pkg))))
-  (log.warn "Your upload was successful.")
-  (log.warn "Please note that it can take up to 24 hours before the package will appear")
-  (log.warn "in deken-searches that allow others to download your package from the")
-  (log.warn "Pd package repository.")
+      (log.warning (% "Skipping '%s', it is not a valid deken package" pkg))))
+  (log.warning "Your upload was successful.")
+  (log.warning "Please note that it can take up to 24 hours before the package will appear")
+  (log.warning "in deken-searches that allow others to download your package from the")
+  (log.warning "Pd package repository.")
   (, username password))
 
 ;; compute the archive filename for a particular external on this platform
@@ -1114,7 +1114,7 @@
   (if objects
     (if (dekfile.endswith ".dek")
       (make-objects-file dekfile objects)
-      (log.warn "object-file generation is only enabled for dekformat>=1...skipping!")))
+      (log.warning "object-file generation is only enabled for dekformat>=1...skipping!")))
   (gpg-sign-file dekfile)
   dekfile)
 
@@ -1195,7 +1195,7 @@
                       (import keyring)
                       (keyring.get_password "deken" username))
                    (except [e RuntimeError] (log.debug e))
-                   (except [e Exception] (log.warn e)))
+                   (except [e Exception] (log.warning e)))
               (get-config-value "password")))
       (do
         (import getpass)
@@ -1341,7 +1341,7 @@
 (defn upgrade [&optional args]
   "print a big fat notice about manually upgrading via the webpage"
   (defn open-webpage [page]
-    (log.warn
+    (log.warning
       (% "Please manually check for updates on: %s" page))
     (try (do
            (import webbrowser)
@@ -1500,7 +1500,7 @@
                    (try (do
                           (import keyring)
                           (keyring.set_password "deken" username password))
-                        (except [e Exception] (log.warn e)))))
+                        (except [e Exception] (log.warning e)))))
              (defn mk-pkg-ifneeded [x]
                (cond [(os.path.isfile x)
                       (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
@@ -1576,7 +1576,7 @@
                     [pkg pkgs]
                     (or
                      (os.path.isfile pkg)
-                     (log.warn (% "skipping non-existing file '%s'" (, pkg))))))))
+                     (log.warning (% "skipping non-existing file '%s'" (, pkg))))))))
               (defn req2pkg [req]
                 (try
                  (with [f (open req "r")]
@@ -1811,4 +1811,4 @@
 (if (= __name__ "__main__")
   (try
    (main)
-   (except [e KeyboardInterrupt] (log.warn "\n[interrupted by user]"))))
+   (except [e KeyboardInterrupt] (log.warning "\n[interrupted by user]"))))
