@@ -10,6 +10,7 @@ files yourself. See the "Filename format" section below.
 
 ## Get started ##
 
+	$ mkdir -p ~/bin/
 	$ curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
 	$ chmod 755 ~/bin/deken
 	$ deken
@@ -18,7 +19,15 @@ files yourself. See the "Filename format" section below.
 	Feel free to ctrl-C now if you don't want to do this.
 	...
 
+
 See [config.md](./config.md) for deken's configuration file format.
+
+
+If you get an error like
+
+> -bash: deken: command not found
+
+then make sure that [`~/bin` is in your `PATH`](https://apple.stackexchange.com/a/99838).
 
 ### Pre-built binaries for Windows
 
