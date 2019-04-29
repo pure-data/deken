@@ -174,6 +174,7 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
     if {[file exists $::deken::_vbsunzip]} {} {
         ## no script yet, create one
         set script {
+On Error Resume Next
 Set fso = CreateObject("Scripting.FileSystemObject")
 
 'The location of the zip file.
@@ -190,6 +191,12 @@ End If
 set objShell = CreateObject("Shell.Application")
 set FilesInZip=objShell.NameSpace(ZipFile).items
 objShell.NameSpace(ExtractTo).CopyHere(FilesInZip)
+'In case of an error, exit
+If Err.Number <> 0 Then
+  Err.Clear
+  WScript.Quit 1
+End If
+
 Set fso = Nothing
 Set objShell = Nothing
 }
