@@ -219,7 +219,7 @@ Set objShell = Nothing
     } stdout ]
      } {
         catch { file rename ${zipfilezip} ${zipfile} }
-        ::pdwindow::debug "\[deken\] VBS-unzip: $::deken::_vbsunzip\n$stdout\n"
+        ::pdwindow::debug "\[deken\] VBS-unzip($vbsscript): $stdout\n"
         return 0
     }
     return 1
