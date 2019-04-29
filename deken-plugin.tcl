@@ -167,10 +167,9 @@ if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
     if {$::tcl_platform(platform) eq "windows"} { } { return 0 }
-    set vbsscript [::deken::get_tmpfilename [::deken::gettmpdir] ".vbs" ]
-    ::pdwindow::error "VBS-unzip ${vbsscript}"
 
     ## create script-file
+    set vbsscript [::deken::get_tmpfilename [::deken::gettmpdir] ".vbs" ]
     set script {
 On Error Resume Next
 Set fso = CreateObject("Scripting.FileSystemObject")
