@@ -276,6 +276,8 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         ::pdwindow::post [_ "Please perform the following steps manually:" ]
         ::pdwindow::post "\n"
         ::pdwindow::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
+        ::pdwindow::post "\n  "
+        ::pdwindow::post [_ "You might need to change the file-extension from .dek to .zip" ]
         ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $fullpkgfile
         ::pdwindow::post [format [_ "2. Copy the contents into %s." ] $installdir]
