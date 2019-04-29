@@ -167,13 +167,11 @@ if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
     if {$::tcl_platform(platform) eq "windows"} { } { return 0 }
-    if { "" eq $::deken::_vbsunzip } {
-        set ::deken::_vbsunzip [ file join [::deken::gettmpdir] deken_unzip.vbs ]
-    }
+    set vbsscript [::deken::get_tmpfilename [::deken::gettmpdir] ".vbs" ]
+    ::pdwindow::error "VBS-unzip ${vbsscript}"
 
-    if {[file exists $::deken::_vbsunzip]} {} {
-        ## no script yet, create one
-        set script {
+    ## create script-file
+    set script {
 On Error Resume Next
 Set fso = CreateObject("Scripting.FileSystemObject")
 
@@ -200,12 +198,12 @@ End If
 Set fso = Nothing
 Set objShell = Nothing
 }
-        if {![catch {set fileId [open $::deken::_vbsunzip "w"]}]} {
+        if {![catch {set fileId [open $vbsscript "w"]}]} {
             puts $fileId $script
             close $fileId
         }
-    }
-    if {[file exists $::deken::_vbsunzip]} {} {
+
+    if {[file exists $vbsscript]} {} {
         ## still no script, give up
         return 0
     }
@@ -214,14 +212,16 @@ Set objShell = Nothing
     if { [ catch {
 	set zipfilezip ${zipfile}.zip
 	file rename ${zipfile} ${zipfilezip}
-	exec cscript $::deken::_vbsunzip "${zipfilezip}" .
+	exec cscript "${vbsscript}" "${zipfilezip}" .
 	file rename ${zipfilezip} ${zipfile}
     } stdout ]
      } {
         catch { file rename ${zipfilezip} ${zipfile} }
+        catch { file delete "${vbsscript}" }
         ::pdwindow::debug "\[deken\] VBS-unzip($vbsscript): $stdout\n"
         return 0
     }
+    catch { file delete "${vbsscript}" }
     return 1
 }
 } { # successfully imported zipfile::decode
