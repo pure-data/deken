@@ -437,9 +437,9 @@ proc ::deken::gettmpdir {} {
     if {[_iswdir $tmpdir]} {return $tmpdir}
 }
 
-proc ::deken::get_tmpfilename {{path ""}} {
+proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
     for {set i 0} {true} {incr i} {
-        set tmpfile [file join ${path} dekentmp.${i}]
+        set tmpfile [file join ${path} dekentmp.${i}${ext}]
         if {![file exists $tmpfile]} {
             return $tmpfile
         }
