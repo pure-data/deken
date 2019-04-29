@@ -281,6 +281,8 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         pd_menucommands::menu_openfile $fullpkgfile
         ::pdwindow::post [format [_ "2. Copy the contents into %s." ] $installdir]
         ::pdwindow::post "\n"
+        ::pdwindow::post [format [_ "3. Remove %s. (optional)" ]  $fullpkgfile ]
+        ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $installdir
     }
 }
