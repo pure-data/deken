@@ -260,11 +260,14 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
         ::pdwindow::error [_ "\[deken\] Unable to extract package automatically." ]
+        ::pdwindow::error "\n"
         ::pdwindow::post [_ "Please perform the following steps manually:" ]
+        ::pdwindow::post "\n"
         ::pdwindow::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
+        ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $fullpkgfile
         ::pdwindow::post [format [_ "2. Copy the contents into %s." ] $installdir]
-        ::pdwindow::post ""
+        ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $installdir
     }
 }
