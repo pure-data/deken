@@ -104,6 +104,7 @@ set ::deken::hideforeignarch 1
 set ::deken::show_readme 1
 set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
+set ::deken::keep_package 0
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
@@ -113,6 +114,7 @@ set ::deken::preferences::show_readme {}
 set ::deken::preferences::remove_on_install {}
 set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
+set ::deken::preferences::keep_package {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -255,7 +257,9 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         ::pdwindow::debug [_ "\[deken\] " ]
         ::pdwindow::debug [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
         ::pdwindow::debug "\n"
-        catch { file delete $fullpkgfile }
+        if { "$::deken::keep_package" } { } {
+            catch { file delete $fullpkgfile }
+        }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
@@ -332,6 +336,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
         set ::deken::add_to_path [::deken::utilities::tristate $add 0 0]
+        set ::deken::keep_package [::deken::utilities::bool $keep]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -350,15 +355,18 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
     set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] 1]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
+    set ::deken::keep_package [::deken::utilities::bool [::pd_guiprefs::read deken_keep_package] 0]
     set ::deken::add_to_path [::deken::utilities::tristate [::pd_guiprefs::read deken_add_to_path] ]
 
-    proc ::deken::set_install_options {remove readme path} {
+    proc ::deken::set_install_options {remove readme path keep} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
         set ::deken::add_to_path [::deken::utilities::tristate $path]
+        set ::deken::keep_package [::deken::utilities::bool $keep]
         ::pd_guiprefs::write deken_remove_on_install "$::deken::remove_on_install"
         ::pd_guiprefs::write deken_show_readme "$::deken::show_readme"
         ::pd_guiprefs::write deken_add_to_path "$::deken::add_to_path"
+        ::pd_guiprefs::write deken_keep_package "$::deken::keep_package"
     }
 }
 
@@ -815,6 +823,7 @@ proc ::deken::preferences::create {mytoplevel} {
     set ::deken::preferences::userinstallpath $::deken::installpath
 
     set ::deken::preferences::show_readme $::deken::show_readme
+    set ::deken::preferences::keep_package $::deken::keep_package
     set ::deken::preferences::remove_on_install $::deken::remove_on_install
     set ::deken::preferences::add_to_path $::deken::add_to_path
     set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
@@ -898,6 +907,11 @@ proc ::deken::preferences::create {mytoplevel} {
     checkbutton $mytoplevel.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
         -variable ::deken::preferences::show_readme
     pack $mytoplevel.install.readme -anchor w
+
+    checkbutton $mytoplevel.install.keeppackage -text [_ "Keep package files after installation?"] \
+        -variable ::deken::preferences::keep_package
+    pack $mytoplevel.install.keeppackage -anchor w
+
 
     checkbutton $mytoplevel.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
         -variable ::deken::preferences::add_to_path
@@ -1008,7 +1022,8 @@ proc ::deken::preferences::apply {mytoplevel} {
     ::deken::set_install_options \
         "${::deken::preferences::remove_on_install}" \
         "${::deken::preferences::show_readme}" \
-        "${::deken::preferences::add_to_path}"
+        "${::deken::preferences::add_to_path}" \
+        "${::deken::preferences::keep_package}"
 }
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
