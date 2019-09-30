@@ -262,6 +262,17 @@
     (.endswith URI "-externals.tar.gz")))
 
 
+(defn --packages-from-args-- [packages requirement-files]
+  """return a set of packages specified either directly (<packages>) or indirectly (<requirement-files>)"""
+  (defn req2pkg [req]
+    (try
+      (with [f (open req "r")]
+        (lfor line (.readlines f) (.strip line)))
+      (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
+  (defn reqs2pkgs [reqs]
+    (chain.from-iterable (lfor f reqs (req2pkg f))))
+  (.union (set packages) (reqs2pkgs requirement-files)))
+
 (defn native-arch []
   "guesstimate on the native architecture"
   (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
@@ -1538,14 +1549,7 @@
                                       (os.path.isfile pkg)
                                       (log.warning (% "skipping non-existing file '%s'" (, pkg))))
                                 (install-package pkg installdir)))))
-                  (defn req2pkg [req]
-                    (try
-                      (with [f (open req "r")]
-                        (lfor line (.readlines f) (.strip line)))
-                      (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
-                  (defn reqs2pkgs [reqs]
-                    (chain.from-iterable (lfor f reqs (req2pkg f))))
-                  (setv pkgs (.union (set args.package) (reqs2pkgs args.requirement)))
+                  (setv pkgs (--packages-from-args-- args.package args.requirement))
 
                   ;; those search-terms that refer to local files
                   (setv file-pkgs (sfor x pkgs
