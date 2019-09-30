@@ -21,9 +21,20 @@ error() {
     echo "$@" 1>&2
 }
 
+uninstall_deken() {
+    error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
+    error "Feel free to ctrl-C now if you don't want to do this."
+    sleep 3;
+    rm -rf "${DEKEN_HOME}" "$0"
+    exit 0
+}
+
 onecmd=""
 if test $# -eq 1; then
  onecmd="$1"
+fi
+if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
+  uninstall_deken
 fi
 if test "x${onecmd}" = "x--version"; then
   echo "${DEKEN_VERSION}"
