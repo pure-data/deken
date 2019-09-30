@@ -43,7 +43,7 @@
 (import logging)
 
 (try (import [ConfigParser [SafeConfigParser]])
- (except [e ImportError] (import [configparser [SafeConfigParser]])))
+ (except [e ImportError] (import [configparser [ConfigParser :as SafeConfigParser]])))
 (try (import [StringIO [StringIO]])
  (except [e ImportError] (import [io [StringIO]])))
 (try (import [urlparse [urlparse]])
@@ -225,7 +225,8 @@
 ;; read in the config file if present
 (defn read-config [configstring &optional [config-file (SafeConfigParser)]]
   "reads the configuration into a dictionary"
-  (config-file.readfp (StringIO configstring))
+  (try (config-file.read_file (StringIO configstring))
+       (except [e AttributeError] (config-file.readfp (StringIO configstring))))
   (dict (config-file.items "default")))
 
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
