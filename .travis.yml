@@ -4,9 +4,15 @@ matrix:
   include:
     - language: generic
       os: osx
+      env: PIP=python3 -m pip
+    - python: "3.7"
       env: PIP=pip
-    - python: "3.6"
-      env: PIP=pip
+
+addons:
+  homebrew:
+    update: true
+    packages:
+      - python3
 
 before_install:
   - export DEKEN_BASE_URL=https://raw.githubusercontent.com/${TRAVIS_PULL_REQUEST_SLUG:-$TRAVIS_REPO_SLUG}/${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}/developer
