@@ -361,7 +361,7 @@
     (if archs
        (+
         "("
-        (.join ")(" (list-comp a [a (sort-archs archs)]))
+        (.join ")(" (list (sort-archs archs)))
         ")")
        ""))
   (_get_archs (lfor arch (get-externals-architectures
@@ -1457,7 +1457,7 @@
                       (global default-floatsize)
                       (setv default-floatsize args.default-floatsize))
                     (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
-                              (, value (.join ", " (list-comp (str x) [x valid] x)))))))
+                              (, value (join-nonempty ", " valid))))))
               (set-default-floatsize args.default-floatsize)
               (lfor name args.source
                     (if (os.path.isdir name)
