@@ -1785,6 +1785,7 @@
   (arg-install.add_argument
     "--requirement" "-r"
     :action "append"
+    :default []
     :help "Install from the given requirements file. This option can be used multiple times.")
   (arg-install.add_argument
     "--installdir"
