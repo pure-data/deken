@@ -29,9 +29,31 @@ If you get an error like
 
 then make sure that [`~/bin` is in your `PATH`](https://apple.stackexchange.com/a/99838).
 
-### Pre-built binaries for Windows
+### Prerequisites
 
-If you don't want to install Python, bash (MSYS),... on your Windows machine, you can download
+`deken` requires Python3 to be installed on your computer (and available from the cmdline).
+You can test whether python3 is installed, by opening a terminal and running `python3 --version`.
+
+
+#### macOS
+On macOS, you can install missing dependencies with [brew](https://brew.sh/).
+Once you have installed `brew`, run the following in your terminal:
+
+~~~sh
+brew install python3
+~~~
+
+### Windows
+
+On Windows you might need to install [MSYS2/MinGW64](https://www.msys2.org/),
+which comes with `pacman` as a package manager to install missing dependencies.
+Once you have installed `pacman`, run the following in your terminal:
+
+~~~sh
+pacman -Suy python3
+~~~
+
+If you don't want to install Python3, bash (MSYS),... on your Windows machine, you can also download
 self-contained binaries from our Continuous Integration setup:
 
 - [Windows 32bit](https://ci.appveyor.com/api/projects/umlaeute/deken/artifacts/developer/dist/deken.exe?job=Environment%3A%20PYTHON%3DC%3A%5CPython36%2C%20PYTHON_VERSION%3D3.6%2C%20PYTHON_ARCH%3D32&branch=master)
