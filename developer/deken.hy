@@ -1534,6 +1534,20 @@
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
            :verify-none args.no-verify
            :search-url  args.search-url))
+       :uninstall (fn [args] None
+                    (if args.self
+                        (fatal "self-'uninstall' not implemented for this platform!"))
+                    (defn uninstall-pkgs [pkgs installdir]
+                      (import shutil)
+                      (for [pkg pkgs :if pkg]
+                        (setv pkgdir (os.path.join installdir pkg))
+                        (if (os.path.isdir pkgdir)
+                            (do
+                              (log.info (% "removing package directory '%s'" (, pkgdir)))
+                              (shutil.rmtree pkgdir True))
+                            (log.warning (% "skipping non-existant directory '%s'" (, pkgdir))))))
+                    (setv pkgs (--packages-from-args-- args.package args.requirement))
+                    (uninstall-pkgs pkgs args.installdir))
        :install (fn [args] None
                   (if (and (not args.package) (not args.requirement))
                       (fatal "self-'install' not implemented for this platform!"))
@@ -1663,7 +1677,7 @@
   (setv arg-subparsers (arg-parser.add_subparsers
                          :help "-h for help."
                          :dest "command"
-                         :metavar "{package,upload,find,download,verify,install}"))
+                         :metavar "{package,upload,find,download,verify,install,uninstall}"))
   (setv arg-package (arg-subparsers.add_parser "package"))
   (setv arg-upload (arg-subparsers.add_parser "upload"))
   (setv arg-find (arg-subparsers.add_parser "find"))
@@ -1681,6 +1695,8 @@
   ;; - search is similar to "find", but requires an "exact match"
   ;;   and installs only the first match (with the highest version number)
   (setv arg-install (arg-subparsers.add_parser "install"))
+
+  (setv arg-uninstall (arg-subparsers.add_parser "uninstall"))
 
   (arg-subparsers.add_parser "upgrade")
   (arg-subparsers.add_parser "update")
@@ -1800,6 +1816,26 @@
     "package"
     :nargs "*"
     :help "package specifier or URL to install")
+
+  (arg-uninstall.add_argument
+    "--self"
+    :action "store_true"
+    :help "Remove the 'deken' cmdline-utility (and dependencies) itself")
+
+  (arg-uninstall.add_argument
+    "--requirement" "-r"
+    :action "append"
+    :default []
+    :help "Uninstall packages specified in the given requirements file. This option can be used multiple times.")
+  (arg-uninstall.add_argument
+    "--installdir"
+    :default default-installpath
+    :help (% "Directory to find installed packages (DEFAULT: %s)" (, default-installpath)))
+
+  (arg-uninstall.add_argument
+    "package"
+    :nargs "*"
+    :help "package to uninstall")
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
