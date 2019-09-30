@@ -142,7 +142,7 @@
 (defn stringify-tuple [t]
   (if t
       (tuple (list-comp (if (nil? x) "" (.lower (str x))) [x t]))
-      ()))
+      (tuple)))
 
 (defn str-to-bytes [s]
   "convert a string into bytes"
