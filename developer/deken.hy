@@ -150,7 +150,7 @@
 
 (defn str-to-bool [s]
   "convert a string into a bool, based on its value"
-  (and (not (nil? s)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
+  (and (not (is s None)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
 (defn byte-to-int [b]
   "convert a single byte (e.g. an element of bytes()) into an interger"
@@ -247,7 +247,7 @@
 
 (defn get-config-value [name &rest default]
   "tries to get a value first from the envvars, then from the config-file and finally falls back to a default"
-  (first (filter (fn [x] (not (nil? x)))
+  (first (filter (fn [x] (not (is x None)))
                  [
                   ;; try to get the value from an environment variable
                   (os.environ.get (+ "DEKEN_" (name.upper)))
@@ -1090,7 +1090,7 @@
      [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
   (do-make-name
    (os.path.basename folder)
-   (cond [(nil? version)
+   (cond [(is version None)
           (fatal
               (+ (% "No version for '%s'!\n" folder)
                  " Please provide the version-number via the '--version' flag.\n"
@@ -1365,11 +1365,11 @@
     ;; fail==False: never fail
     ;; fail==None: only fail on verification errors
     (cond
-     [(nil? result)(log.fatal missstring)]
+     [(is result None)(log.fatal missstring)]
      [(not result)(log.fatal errstring)])
     (cond
      [(= fail False) True]
-     [(and (nil? fail) (nil? result)) True]
+     [(and (is fail None) (is result None)) True]
      [True result]))
   (defn do-verify [verifun
                    dekfile
