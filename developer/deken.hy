@@ -512,7 +512,7 @@
         (defn armcpu-from-aeabi-helper [data]
           (if data
             (get elf-armcpu (byte-to-int (get (get (.split
-                                                    (slice data 7 None)
+                                                    (cut data 7)
                                                     (str-to-bytes "\x00") 1) 1) 1)))))
         (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
       (or
@@ -612,7 +612,7 @@
   (defn genobjs [input]
     (lfor f input
           :if (f.endswith "-help.pd")
-          (% "%s\tDEKEN GENERATED\n" (slice (os.path.basename f) 0 -8))))
+          (% "%s\tDEKEN GENERATED\n" (cut (os.path.basename f) 0 -8))))
   (defn readobjs [input]
     (try
      (with [f (open input)] (.readlines f))
@@ -675,7 +675,7 @@
   "verify that the hash if the <filename> file is the same as stored in the <hashfilename>"
   (import hashlib)
   (defn filename2algo [filename]
-    (slice (get (os.path.splitext filename) 1) 1 None))
+    (cut (get (os.path.splitext filename) 1) 1))
   (setv hashfilename (or hashfilename (+ filename ".sha256")))
   (try
    (= (hash-file (open filename :mode "rb")
@@ -875,7 +875,7 @@
     (setv result [])
     (for [key pkgdict]
        (setv result
-             (+ result (slice (sorted (get pkgdict key)
+             (+ result (cut (sorted (get pkgdict key)
                                       :reverse True
                                       :key (fn [d] (, (or (get d "version")) (or (get d "timestamp")))))
                               0 depth))))
