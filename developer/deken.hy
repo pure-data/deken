@@ -195,14 +195,14 @@
 ;; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls]
   "replace multiple words (given as pairs in <repls>) in a string <s>"
-  (reduce (fn [a kv] (apply a.replace kv)) repls s))
+  (reduce (fn [a kv] (a.replace #* kv)) repls s))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f &rest args]
   "execute a command f(args) inside a directory"
   (setv last-dir (os.getcwd))
   (os.chdir destination)
-  (setv result (apply f args))
+  (setv result (f #* args))
   (os.chdir last-dir)
   result)
 
@@ -721,8 +721,7 @@
           (setv gpg
                 (try
                  (set-attr
-                  (apply gnupg.GPG []
-                         (if gnupghome {"gnupghome" gnupghome} {}))
+                  (gnupg.GPG #** (if gnupghome {"gnupghome" gnupghome} {}))
                   "decode_errors" "replace")
                  (except [e OSError] (--gpg-unavail-error-- "init" e))))
           (if gpg (setv gpg.encoding "utf-8"))
@@ -765,13 +764,12 @@
           (log.info (% "Attempting to GPG sign '%s'" filename))
           (setv gpg
                 (try
-                 (set-attr
-                  (apply gnupg.GPG []
-                         (dict-merge
-                          (if gnupghome {"gnupghome" gnupghome} {})
-                          (if use-agent {"use_agent" True} {})))
-                  "decode_errors" "replace")
-                 (except [e OSError] (--gpg-unavail-error-- "init" e))))
+                  (set-attr
+                    (gnupg.GPG #** (dict-merge
+                                     (if gnupghome {"gnupghome" gnupghome} {})
+                                     (if use-agent {"use_agent" True} {})))
+                    "decode_errors" "replace")
+                  (except [e OSError] (--gpg-unavail-error-- "init" e))))
           (if gpg (do
                    (setv gpg.encoding "utf-8")
                    (setv [keyid uid] (lfor _ ["keyid" "uids"] (try-get (gpg-get-key gpg) _ None)))
@@ -791,7 +789,7 @@
                      (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
                    (try
                     (do
-                     (setv sig (if gpg (apply gpg.sign_file [(open filename "rb")] signconfig)))
+                     (setv sig (if gpg (gpg.sign_file (open filename "rb") #** signconfig)))
                      (if (hasattr sig "stderr")
                        (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
                      (if (not sig)
@@ -1025,9 +1023,9 @@
              (or (.rstrip destination.path "/") default-destination.path)
              (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
      (do-upload-file
-       (apply easywebdav.connect [host] {"username" username
-                                         "password" password
-                                         "protocol" proto})
+       (easywebdav.connect host #** {"username" username
+                                     "password" password
+                                     "protocol" proto})
        path
        filename
        (+ proto "://" host path)
@@ -1510,7 +1508,7 @@
                                    check-sources?))
              ;; do-upload returns the username (on success)...
              ;; so let's try storing the (non-empty) password in the keyring
-             (apply set-nonempty-password
+             (set-nonempty-password #*
                                     (do-upload (lfor x args.source (mk-pkg-ifneeded x))
                                                (urlparse
                                                  (or (getattr args "destination")
@@ -1592,63 +1590,76 @@
 (defn main []
   "run deken"
   (defn add-package-flags [parser]
-    (apply parser.add_argument ["--version" "-v"]
-           {"help" "A library version number to insert into the package name (in case the package is created)."
-            "default" None
-            "required" False})
-    (apply parser.add_argument ["--objects"]
-           {"help" "Specify a tsv-file that lists all the objects of the library (DEFAULT: generate it)."
-            "default" None
-            "required" False})
-    (apply parser.add_argument ["--search-subdirs"]
-           {"help" "EXPERT: Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
-            "action" "store_true"
-            "required" False})
-    (apply parser.add_argument ["--extra-arch-files"]
-           {"help" "EXPERT: Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
-            "default" []
-            "nargs" "*"
-            "required" False})
-    (apply parser.add_argument ["--default-floatsize"]
-           {"help" "EXPERT: Use the given float-size if it cannot be determined automatically. Use with care! (DEFAULT: None)."
-            "default" None
-            "type" int
-            "required" False})
-    (apply parser.add_argument ["--dekformat"]
-           {"help" "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
-            "default" 1
-            "required" False}))
+    (parser.add_argument
+      "--version" "-v"
+      :help "A library version number to insert into the package name (in case the package is created)."
+      :default None
+      :required False)
+    (parser.add_argument
+      "--objects"
+      :help "Specify a tsv-file that lists all the objects of the library (DEFAULT: generate it)."
+      :default None
+      :required False)
+    (parser.add_argument
+      "--search-subdirs"
+      :help "EXPERT: Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
+      :action "store_true"
+      :required False)
+    (parser.add_argument
+      "--extra-arch-files"
+      :help "EXPERT: Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
+      :default []
+      :nargs "*"
+      :required False)
+    (parser.add_argument
+      "--default-floatsize"
+      :help "EXPERT: Use the given float-size if it cannot be determined automatically. Use with care! (DEFAULT: None)."
+      :default None
+      :type int
+      :required False)
+    (parser.add_argument
+      "--dekformat"
+      :help "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
+      :default 1
+      :required False))
   (defn add-noverify-flags [parser]
-    (apply parser.add_argument ["--ignore-missing"]
-           {"action" "store_true"
-            "help" "Don't fail if detached verification files are missing"
-            "required" False})
-    (apply parser.add_argument ["--ignore-missing-gpg"]
-           {"action" "store_true"
-            "help" "Don't fail if there is no GPG-signature"
-            "required" False})
-    (apply parser.add_argument ["--ignore-gpg"]
-           {"action" "store_true"
-            "help" "Ignore an unverifiable (or no) GPG-signature"
-            "required" False})
-    (apply parser.add_argument ["--ignore-missing-hash"]
-           {"action" "store_true"
-            "help" "Don't fail if there is no hashsum file"
-            "required" False})
-    (apply parser.add_argument ["--ignore-hash"]
-           {"action" "store_true"
-            "help" "Ignore an unverifiable hashsum"
-            "required" False}))
+    (parser.add_argument
+           "--ignore-missing"
+           :action "store_true"
+           :help "Don't fail if detached verification files are missing"
+           :required False)
+    (parser.add_argument
+           "--ignore-missing-gpg"
+           :action "store_true"
+           :help "Don't fail if there is no GPG-signature"
+           :required False)
+    (parser.add_argument
+           "--ignore-gpg"
+           :action "store_true"
+           :help "Ignore an unverifiable (or no) GPG-signature"
+           :required False)
+    (parser.add_argument
+           "--ignore-missing-hash"
+           :action "store_true"
+           :help "Don't fail if there is no hashsum file"
+           :required False)
+    (parser.add_argument
+           "--ignore-hash"
+           :action "store_true"
+           :help "Ignore an unverifiable hashsum"
+           :required False))
   (defn add-search-flags [parser]
-    (apply parser.add_argument ["--search-url"]
-           {"help" "URL to query for deken-packages"
-            "default" ""
-            "required" False})
-    (apply parser.add_argument ["--architecture" "--arch"]
-           {"help" (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
-                      (, (.join "-" (native-arch))))
-            "action" "append"
-            "required" False}))
+    (parser.add_argument
+           "--search-url"
+           :help "URL to query for deken-packages"
+           :default ""
+           :required False)
+    (parser.add_argument
+           "--architecture" "--arch"
+           :help (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
+                    (, (.join "-" (native-arch))))
+           :action "append"
+           :required False))
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
@@ -1657,17 +1668,17 @@
     args)
 
   (setv arg-parser
-        (apply argparse.ArgumentParser []
-               {"prog" "deken"
-                "description" "Deken is a build tool for Pure Data externals."}))
-  (setv arg-subparsers (apply arg-parser.add_subparsers []
-                              {"help" "-h for help."
-                               "dest" "command"
-                               "metavar" "{package,upload,find,download,verify,install}"}))
-  (setv arg-package (apply arg-subparsers.add_parser ["package"]))
-  (setv arg-upload (apply arg-subparsers.add_parser ["upload"]))
+        (argparse.ArgumentParser
+          :prog "deken"
+          :description "Deken is a build tool for Pure Data externals."))
+  (setv arg-subparsers (arg-parser.add_subparsers
+                         :help "-h for help."
+                         :dest "command"
+                         :metavar "{package,upload,find,download,verify,install}"))
+  (setv arg-package (arg-subparsers.add_parser "package"))
+  (setv arg-upload (arg-subparsers.add_parser "upload"))
   (setv arg-find (arg-subparsers.add_parser "find"))
-  (setv arg-download (apply arg-subparsers.add_parser ["download"]))
+  (setv arg-download (arg-subparsers.add_parser "download"))
 
   ;; verify a downloaded package (both SHA256 and (if available GPG))
   (setv arg-verify (arg-subparsers.add_parser "verify"))
@@ -1685,100 +1696,120 @@
   (arg-subparsers.add_parser "upgrade")
   (arg-subparsers.add_parser "update")
 
-  (apply arg-parser.add_argument ["-v" "--verbose"]
-         {"help" "Raise verbosity"
-          "action" "count"
-          "default" 0})
-  (apply arg-parser.add_argument ["-q" "--quiet"]
-         {"help" "Lower verbosity"
-          "action" "count"
-          "default" 0})
-  (apply arg-parser.add_argument ["--version"]
-         {"action" "version"
-          "version" version
-          "help" "Outputs the version number of Deken."})
-  (apply arg-parser.add_argument ["--platform"]
-         {"action" "version"
-          "version" (.join "-" (native-arch))
-          "help" "Outputs a guess of the current architecture."})
+  (arg-parser.add_argument
+    "-v" "--verbose"
+    :help "Raise verbosity"
+    :action "count"
+    :default 0)
+  (arg-parser.add_argument
+    "-q" "--quiet"
+    :help "Lower verbosity"
+    :action "count"
+    :default 0)
+  (arg-parser.add_argument
+    "--version"
+    :action "version"
+    :version version
+    :help "Outputs the version number of Deken.")
+  (arg-parser.add_argument
+    "--platform"
+    :action "version"
+    :version (.join "-" (native-arch))
+    :help "Outputs a guess of the current architecture.")
 
-  (apply arg-package.add_argument ["source"]
-         {"nargs" "+"
-          "metavar" "SOURCE"
-          "help" "The path to a directory of externals, abstractions, or GUI plugins to be packaged."})
+  (arg-package.add_argument
+    "source"
+    :nargs "+"
+    :metavar "SOURCE"
+    :help "The path to a directory of externals, abstractions, or GUI plugins to be packaged.")
   (add-package-flags arg-package)
-  (apply arg-upload.add_argument ["source"]
-         {"nargs" "+"
-          "metavar" "PACKAGE"
-          "help" "The path to a package file to be uploaded, or a directory which will be packaged first automatically."})
+  (arg-upload.add_argument
+    "source"
+    :nargs "+"
+    :metavar "PACKAGE"
+    :help "The path to a package file to be uploaded, or a directory which will be packaged first automatically.")
   (add-package-flags arg-upload)
-  (apply arg-upload.add_argument ["--destination" "-d"]
-         {"help" "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
-          "default" ""
-          "required" False})
-  (apply arg-upload.add_argument ["--ask-password" "-P"]
-         {"action" "store_true"
-          "help" "Ask for upload password (rather than using password-manager."
-          "default" ""
-          "required" False})
-  (apply arg-upload.add_argument ["--no-source-error"]
-         {"action" "store_true"
-          "help" "Force-allow uploading of packages without sources."
-          "required" False})
+  (arg-upload.add_argument
+    "--destination" "-d"
+    :help "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
+    :default ""
+    :required False)
+  (arg-upload.add_argument
+    "--ask-password" "-P"
+    :action "store_true"
+    :help "Ask for upload password (rather than using password-manager."
+    :default ""
+    :required False)
+  (arg-upload.add_argument
+    "--no-source-error"
+    :action "store_true"
+    :help "Force-allow uploading of packages without sources."
+    :required False)
 
   (add-search-flags arg-find)
-  (apply arg-find.add_argument ["--depth"]
-         {"help" "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
-                 "default" 1
-                 "type" int
-                 "required" False})
-  (apply arg-find.add_argument ["--reverse"]
-         {"action" "store_true"
-          "help" "Reverse search result sorting"
-          "required" False})
-  (apply arg-find.add_argument ["--libraries"]
-         {"action" "store_true"
-          "help" "Find libraries (DEFAULT: True)"
-          "required" False})
-  (apply arg-find.add_argument ["--objects"]
-         {"action" "store_true"
-          "help" "Find objects (DEFAULT: True)"
-          "required" False})
-  (apply arg-find.add_argument ["search"]
-         {"nargs" "*"
-          "metavar" "TERM"
-          "help" "libraries/objects to search for"})
+  (arg-find.add_argument
+    "--depth"
+    :help "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
+    :default 1
+    :type int
+    :required False)
+  (arg-find.add_argument
+    "--reverse"
+    :action "store_true"
+    :help "Reverse search result sorting"
+    :required False)
+  (arg-find.add_argument
+    "--libraries"
+    :action "store_true"
+    :help "Find libraries (DEFAULT: True)"
+    :required False)
+  (arg-find.add_argument
+    "--objects"
+    :action "store_true"
+    :help "Find objects (DEFAULT: True)"
+    :required False)
+  (arg-find.add_argument
+    "search"
+    :nargs "*"
+    :metavar "TERM"
+    :help "libraries/objects to search for")
 
   (add-noverify-flags arg-verify)
 
-  (apply arg-verify.add_argument ["dekfile"]
-         {"nargs" "*"
-          "help" "deken package to verify"})
+  (arg-verify.add_argument
+    "dekfile"
+    :nargs "*"
+    :help "deken package to verify")
   (add-search-flags arg-download)
-  (apply arg-download.add_argument ["--no-verify"]
-         {"action" "store_true"
-          "help" "Don't abort download on verification errors"})
+  (arg-download.add_argument
+    "--no-verify"
+    :action "store_true"
+    :help "Don't abort download on verification errors")
   (add-noverify-flags arg-download)
-  (apply arg-download.add_argument ["package"]
-         {"nargs" "+"
-          "help" "package specifier or URL to download"})
+  (arg-download.add_argument
+    "package"
+    :nargs "+"
+    :help "package specifier or URL to download")
 
   (add-search-flags arg-install)
-  (apply arg-install.add_argument ["--no-verify"]
-         {"action" "store_true"
-          "help" "Don't abort download on verification errors"})
+  (arg-install.add_argument
+    "--no-verify"
+    :action "store_true"
+    :help "Don't abort download on verification errors")
   (add-noverify-flags arg-install)
-  (apply arg-install.add_argument ["--requirement" "-r"]
-         {"action" "append"
-          "help" "Install from the given requirements file. This option can be used multiple times."})
-  (apply arg-install.add_argument ["--installdir"]
-         {"default" default-installpath
-          "help" (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath))})
+  (arg-install.add_argument
+    "--requirement" "-r"
+    :action "append"
+    :help "Install from the given requirements file. This option can be used multiple times.")
+  (arg-install.add_argument
+    "--installdir"
+    :default default-installpath
+    :help (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath)))
 
-  (apply arg-install.add_argument ["package"]
-         {"nargs" "*"
-          "help" "package specifier or URL to install"})
-
+  (arg-install.add_argument
+    "package"
+    :nargs "*"
+    :help "package specifier or URL to install")
 
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
