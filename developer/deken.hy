@@ -108,21 +108,6 @@
   (defmacro runs? [exp]
     `(try (do ~exp True) (except [] False))))
 
-;; portability between hy versions
-(eval-when-compile
- (defmacro defcompat []
-  `(do
-    ;; nil? has been removed from hy-0.12
-    ~@(if (runs? (nil? None)) []
-         [`(defmacro nil? [x] `(= ~x None))])
-    ;; in hy-0.12 'slice' has been replaced with 'cut'
-    ~@(if (runs? (cut [])) [`(defmacro slice [&rest args] `(cut ~@args))])
-    ;; apply has been removed from hy-0.14
-    ~@(if (runs? (apply (fn []))) []
-         [`(defmacro apply [f &optional (args []) (kwargs {})]
-            `(~f #* ~args #** ~kwargs))]))))
-(defcompat)
-
 (defn binary-file? [filename]
   "checks if <filename> contains binary data"
   ;; files that contain '\0' are considered binary
