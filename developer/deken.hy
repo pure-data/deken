@@ -1265,11 +1265,11 @@
     (parse-data r.text (get r.headers "content-type"))))
 
 (defn find-packages [searchterms ;; as returned by categorize-search-terms
-                     &key {
-                           "architectures" [] ;; defaults to 'native'; use '*' for any architecture
-                           "versioncount" 0   ;; how many versions of a given library should be returned
-                           "searchurl" default-searchurl ;; where to search
-                           }]
+                     &optional
+                     [architectures []] ;; defaults to 'native'; use '*' for any architecture
+                     [versioncount 0]   ;; how many versions of a given library should be returned
+                     [searchurl default-searchurl] ;; where to search
+                     ]
   "finds packages and filters them according to architecture, requirements and versioncount"
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (filter-older-versions
