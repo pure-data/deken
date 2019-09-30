@@ -206,6 +206,7 @@
   (os.chdir last-dir)
   result)
 
+;; TODO: refactor 'listdir' and 'get-files-from-dir' into a single function
 
 (defn fix-easywebdav2 [pkg &optional
                        [broken "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"]
