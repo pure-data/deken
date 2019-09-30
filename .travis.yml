@@ -4,7 +4,7 @@ matrix:
   include:
     - language: generic
       os: osx
-      env: PIP=python3 -m pip
+      env: PIP=pip3
     - python: "3.7"
       env: PIP=pip
 
