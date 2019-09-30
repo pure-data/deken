@@ -52,7 +52,7 @@ fi
 
 # allow the user to override the default python
 if [ "x${PYTHON_BIN}" = x ]; then
- PYTHON_BIN=python
+ PYTHON_BIN=python3
 fi
 
 # This needs to be defined before we call HTTP_CLIENT below
@@ -136,7 +136,7 @@ install_deken() {
     fi
 
     which "${PYTHON_BIN}" >/dev/null || \
-        bail_install_msg "Oops, no Python found! You need Python to run Deken: ${PYTHON_BIN}
+        bail_install_msg "Oops, no Python found! You need Python3 to run Deken: ${PYTHON_BIN}
 You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
 #    which make >/dev/null || \
 #        bail_install_msg "Oops, no Make found! You need Make to run Deken."
