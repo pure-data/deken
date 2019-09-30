@@ -10,7 +10,6 @@ matrix:
 
 addons:
   homebrew:
-    update: true
     packages:
       - python3
 
