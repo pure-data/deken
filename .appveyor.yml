@@ -35,10 +35,11 @@ build_script:
   - set DEKEN_VERSION=
   - dist\deken -h
   - dist\deken package -v 000 tmp/deken-test
+  - dist\deken package --dekformat 0 -v000.0 tmp/deken-test
   - dist\deken --version
   - dist\deken --platform
   - dist\deken find zexy
-  - dist\deken find --architecture "*" zexy
+  - dist\deken find --architecture "*" --depth 0 zexy
 
 on_finish:
   - dir
