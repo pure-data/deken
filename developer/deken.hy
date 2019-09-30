@@ -948,9 +948,7 @@
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn archive? [filename]
   "(naive) check if the given filename is a (known) archive: just check the file extension"
-  (any (lfor ext [".dek" ".zip" ".tar.gz" ".tgz"]
-             :if (.endswith (filename.lower) ext)
-             ext)))
+  (test-extensions filename [".dek" ".zip" ".tar.gz" ".tgz"]))
 
 ;; download a file
 (defn download-file [url &optional filename]
