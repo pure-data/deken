@@ -33,7 +33,7 @@ script:
   - ~/bin/deken --version
   - ~/bin/deken --platform
   - ~/bin/deken find zexy
-  - ~/bin/deken find --architecture "*" zexy
+  - ~/bin/deken find --architecture "*" --depth 0 zexy
 
 after_script:
   - ls -l
