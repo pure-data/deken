@@ -141,7 +141,7 @@
 
 (defn stringify-tuple [t]
   (if t
-      (tuple (list-comp (if (nil? x) "" (.lower (str x))) [x t]))
+      (tuple (lfor x t (if (is x None) "" (.lower (str x)))))
       (tuple)))
 
 (defn str-to-bytes [s]
@@ -158,7 +158,7 @@
 
 (defn join-nonempty [joiner elements]
   "join all non-empty (non-false) elements"
-  (.join joiner (list-comp (str x) [x elements] x)))
+  (.join joiner (lfor x elements :if x (str x))))
 
 ;; concatenate dictionaries - hylang's assoc is broken
 (defn dict-merge [dict0 &rest dicts]
@@ -177,12 +177,12 @@
 ;; get multiple attributes as list
 (defn get-attrs [obj attributes &optional default]
   "returns a list of values, one for each attr in <attributes>"
-  (list-comp (getattr obj _default) [_ attributes]))
+  (lfor _ attributes (getattr obj _default)))
 
 ;; get multiple values from a dict (give keys as list, get values as list)
 (defn get-values [coll keys]
   "returns a list of values from a dictionary, pass the keys as list"
-  (list-comp (get coll _) [_ keys]))
+  (lfor _ keys (get coll _)))
 
 ;; get a value at an index/key or a default
 (defn try-get [elements index &optional default]
@@ -335,7 +335,7 @@
         (assoc t 2 "32"))
     (tuple t))
   (if archstring
-      (list-comp (split-arch x fixdek0) [x (re.findall r"\(([^()]*)\)" archstring)])
+      (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
       []))
 (defn arch-to-string [arch]
   "convert an architecture-tuple into a string"
@@ -364,15 +364,16 @@
         (.join ")(" (list-comp a [a (sort-archs archs)]))
         ")")
        ""))
-  (_get_archs (list-comp (.join "-" (list-comp (str parts) [parts arch])) [arch (get-externals-architectures
-                                                                                 folder
-                                                                                 :extra-files extra-files
-                                                                                 :recurse-subdirs recurse-subdirs)])))
+  (_get_archs (lfor arch (get-externals-architectures
+                           folder
+                           :extra-files extra-files
+                           :recurse-subdirs recurse-subdirs)
+                    (.join "-" (lfor parts arch (str parts))))))
 
 ;; check if a particular file has an extension in a set
 (defn test-extensions [filename extensions]
   "check if filename has one of the extensions in the set"
-  (len (list-comp e [e extensions] (.endswith (.lower filename) e))))
+  (len (lfor e extensions :if (.endswith (.lower filename) e) e)))
 
 ;; check for a particular file in a directory, recursively
 (defn test-filename-under-dir [pred dir]
@@ -392,19 +393,20 @@
   "examine a folder for external binaries (and sources) and return the architectures of those found"
   (defn listdir [folder &optional [recurse-subdirs True]]
     (if recurse-subdirs
-      (list-comp (os.path.join dp f) [(, dp dn fn) (os.walk folder) f fn])
-      (list-comp (os.path.join folder f) [f (os.listdir folder)])))
+        (lfor (, dirname subdirs filenames) (os.walk folder) f filenames (os.path.join dirname f))
+        (lfor f (os.listdir folder) (os.path.join folder f))))
   (sum (+
     (if (test-extensions-under-dir folder [".c" ".cpp" ".cxx" ".cc"])
         [[["Sources"]]] [])
-    (list-comp (cond
+    (lfor
+      f (+ (listdir folder recurse-subdirs) extra-files)
+      :if (os.path.exists f)
+      (cond
                 [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
                 [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")]
                 [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs f)]
                 [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
-                [True []])
-               [f (+ (listdir folder recurse-subdirs) extra-files)]
-               (os.path.exists f)))
+                [True []])))
        []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
@@ -501,10 +503,9 @@
   (defn do-get-elf-archs [elffile oshint]
     ; get the size of t_float in the elffile
     (defn get-elf-floatsizes [elffile]
-      (list-comp
-       (--classnew-to-floatsize-- _.name)
-       [_ (.iter_symbols (elffile.get_section_by_name ".dynsym"))]
-       (in "class_new" _.name)))
+      (lfor _ (.iter_symbols (elffile.get_section_by_name ".dynsym"))
+            :if (in "class_new" _.name)
+            (--classnew-to-floatsize-- _.name)))
     (defn get-elf-armcpu [cpu]
       (defn armcpu-from-aeabi [arm aeabi]
         (defn armcpu-from-aeabi-helper [data]
@@ -518,12 +519,12 @@
                           (.data (elffile.get_section_by_name ".ARM.attributes"))
                           (str-to-bytes "aeabi")))
        cpu))
-    (list-comp (,
+    (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
+               :if floatsize
+               (,
                 (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
-                (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
-                floatsize)
-               [floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])]
-               floatsize))
+                  (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
+                  floatsize)))
   (try (do
          (import [elftools.elf.elffile [ELFFile]])
          (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
@@ -553,18 +554,14 @@
   (defn get-macho-arch [macho]
     (defn get-macho-floatsizes [header]
       (import [macholib.SymbolTable [SymbolTable]])
-      (list-comp
-       (--classnew-to-floatsize-- (.decode name))
-       [(, _ name) (getattr (SymbolTable macho header) "undefsyms")]
-       (in (str-to-bytes "class_new") name)
-       )
-      )
+      (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
+            :if (in (str-to-bytes "class_new") name)
+            (--classnew-to-floatsize-- (.decode name))))
     (defn get-macho-headerarchs [header]
-      (list-comp
-       (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)
-       [floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])]))
-    (list (chain.from_iterable
-           (list-comp (get-macho-headerarchs hdr) [hdr macho.headers]))))
+      (lfor
+        floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])
+        (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)))
+    (list (chain.from_iterable (lfor hdr macho.headers (get-macho-headerarchs hdr)))))
   (try (do
         (import [macholib.MachO [MachO]])
         (get-macho-arch (MachO filename)))
@@ -575,19 +572,17 @@
   "guess OS/CPU/floatsize for PE (Windows) binaries"
   (defn get-pe-sectionarchs [cpu symbols]
     (if symbols
-        (list-comp (, "Windows" cpu (--classnew-to-floatsize-- fun)) [fun symbols])
+        (lfor fun symbols (, "Windows" cpu (--classnew-to-floatsize-- fun)))
         [(, "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
     (get-pe-sectionarchs
      (.lower (.pop (.split (cpudict.get pef.FILE_HEADER.Machine "") "_")))
      (flatten
-      (list-comp
-       (list-comp
-        (.decode imp.name)
-        [imp entry.imports]
-        (in (str-to-bytes "class_new") imp.name))
-       [entry pef.DIRECTORY_ENTRY_IMPORT]))))
+      (lfor entry pef.DIRECTORY_ENTRY_IMPORT
+        (lfor imp entry.imports
+              :if (in (str-to-bytes "class_new") imp.name)
+              (.decode imp.name))))))
   (try (do
          (import pefile)
          (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
@@ -603,17 +598,20 @@
   ;; objfile==TSV-file use directly (actually, we only check whether the file seems to not be binary)
   (defn get-files-from-zip [archive]
     (import zipfile)
-    (try
-     (list-comp f [f (.namelist (zipfile.ZipFile archive "r"))])
+    (try (.namelist (zipfile.ZipFile archive "r"))
      (except [e Exception] (log.debug e))))
   (defn get-files-from-dir [directory &optional [recursive False]]
     (if recursive
-      (list-comp f [f (chain.from_iterable (list-comp files [(, root dirs files) (os.walk directory)]))])
+        (list (chain.from_iterable (lfor (, root dirs files) (os.walk directory) files)))
       (try
-       (list-comp x [x (os.listdir directory)] (os.path.isfile (os.path.join directory x)))
+        (lfor x (os.listdir directory)
+                   :if (os.path.isfile (os.path.join directory x))
+                   x)
        (except [e OSError] []))))
   (defn genobjs [input]
-    (list-comp (% "%s\tDEKEN GENERATED\n" (slice (os.path.basename f) 0 -8)) [f input] (f.endswith "-help.pd")))
+    (lfor f input
+          :if (f.endswith "-help.pd")
+          (% "%s\tDEKEN GENERATED\n" (slice (os.path.basename f) 0 -8))))
   (defn readobjs [input]
     (try
      (with [f (open input)] (.readlines f))
@@ -745,26 +743,22 @@
         (defn gpg-get-config [gpg id]
           (try
             (get
-              (list-comp
-                (get (.split (.strip x)) 1)
-                [x
-                 (.readlines
-                   ( open
-                    (os.path.expanduser
-                      (os.path.join
-                        (or gpg.gnupghome (os.path.join "~" ".gnupg"))
-                        "gpg.conf"))
-                    ))]
-                (.startswith (.lstrip x) (.strip id) )) -1)
+              (lfor x (.readlines
+                             (open
+                               (os.path.expanduser
+                                 (os.path.join
+                                   (or gpg.gnupghome (os.path.join "~" ".gnupg"))
+                                   "gpg.conf"))))
+                         :if (.startswith (.lstrip x) (.strip id) )
+                         (get (.split (.strip x)) 1)) -1)
             (except [e [IOError IndexError]] None)))
         ;; get the GPG key for signing
         (defn gpg-get-key [gpg]
           (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
           (try
-            (first (list-comp k
-                              [k (gpg.list_keys True)]
-                              (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )]
-                                    [True True])))
+            (first (lfor k (gpg.list_keys True)
+                              :if (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])
+                              k))
             (except [e IndexError] None)))
 
         (defn do-gpg-sign-file [filename signfile gnupghome use-agent]
@@ -780,7 +774,7 @@
                  (except [e OSError] (--gpg-unavail-error-- "init" e))))
           (if gpg (do
                    (setv gpg.encoding "utf-8")
-                   (setv [keyid uid] (list-comp (try-get (gpg-get-key gpg) _ None) [_ ["keyid" "uids"]]))
+                   (setv [keyid uid] (lfor _ ["keyid" "uids"] (try-get (gpg-get-key gpg) _ None)))
                    (setv uid (try-get uid 0 None))
                    (setv passphrase
                          (if (and (not use-agent) keyid)
@@ -850,9 +844,10 @@
   "creates a boolean function to check whether a given package-dict matches any of the given requirements"
   (if specs
     (fn [libdict] (any
-                   (list-comp
-                    (match libdict)
-                    [match (list-comp (make-requirement-matcher spec) [spec specs] spec)])))
+                    (lfor match (lfor spec specs
+                                      :if spec
+                                      (make-requirement-matcher spec))
+                          (match libdict))))
     (fn [libdict] True)))
 
 
@@ -902,7 +897,7 @@
   (setv zip-filename (+ archive-file extension))
   (with [f (zip-file zip-filename)]
         (for [[root dirs files] (os.walk directory-to-zip)]
-          (for [file-path (list-comp (os.path.join root file) [file files])]
+          (for [file-path (lfor file files (os.path.join root file))]
             (if (os.path.exists file-path)
               (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
@@ -955,7 +950,9 @@
 ;; naive check, whether we have an archive: compare against known suffixes
 (defn archive? [filename]
   "(naive) check if the given filename is a (known) archive: just check the file extension"
-  (len (list-comp f [f [".dek" ".zip" ".tar.gz" ".tgz"]] (.endswith (filename.lower) f))))
+  (any (lfor ext [".dek" ".zip" ".tar.gz" ".tgz"]
+             :if (.endswith (filename.lower) ext)
+             ext)))
 
 ;; download a file
 (defn download-file [url &optional filename]
@@ -1052,8 +1049,8 @@
 ;; in case of failure, this exits
 (defn upload-packages [pkgs destination username password skip-source]
   "upload multiple packages at once"
-  (if (not skip-source) (check-sources (set (list-comp (filename-to-namever pkg) [pkg pkgs]))
-                                       (set (list-comp (has-sources? pkg) [pkg pkgs]))
+  (if (not skip-source) (check-sources (sfor pkg pkgs (filename-to-namever pkg))
+                                       (sfor pkg pkgs (has-sources? pkg))
                                        (if (= "puredata.info"
                                               (.lower (or destination.hostname default-destination.hostname)))
                                          username)))
@@ -1134,12 +1131,11 @@
    (except [e IndexError] [])))
 (defn parse-filename [filename]
   "parses a dekenformat filename (any version) into a (pkgname version archs extension) tuple"
-  (list-comp
-   (or x None)
-   [x (or
-       (parse-filename1 filename)
-       (parse-filename0 filename)
-       [None None None None])]))
+  (lfor x (or
+                 (parse-filename1 filename)
+                 (parse-filename0 filename)
+                 [None None None None])
+             (or x None)))
 (defn filename-to-namever [filename]
   "extracts a <name>/<version> string from a filename"
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
@@ -1160,13 +1156,10 @@
   (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
   (in pkg
       ;; list of package/version matching 'pkg' that have 'Source' archictecture
-      (list-comp
-       (has-sources? p)
-       [p
-        (list-comp
-         (try-get (.split (try-get (.split x "\t") 1) "/") -1)  ; filename part of the download URL
-         [x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))]
-         (= username (try-get (.split x "\t") 2)))])))
+      (lfor p (lfor x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))
+                         :if (= username (try-get (.split x "\t") 2))
+                         (try-get (.split (try-get (.split x "\t") 1) "/") -1))  ; filename part of the download URL
+            (has-sources? p))))
 
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources &optional puredata-info-user]
@@ -1257,11 +1250,9 @@
                (get result "architectures")
                (not (.endswith URL ".dek"))))
       result)
-    (list-comp
-     (apply parse-tsv (.split line "\t"))
-     [line (.splitlines (getattr r "text"))]
-     line)
-    )
+    (lfor line (.splitlines (getattr r "text"))
+          :if line
+          (parse-tsv #* (.split line "\t"))))
   (defn parse-data [data content-type]
     (cond
      [(in "text/tab-separated-values" content-type) (parse-tab-separated-values data)]
@@ -1284,17 +1275,14 @@
   "finds packages and filters them according to architecture, requirements and versioncount"
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (filter-older-versions
-   (list-comp
-    x
-    [x (search (or searchurl default-searchurl)
-               (try-get searchterms "libraries" [])
-               (try-get searchterms "objects" []))]
-    (and
-     (version-match? x)
-     (compatible-archs? (or architectures [(native-arch)]) (get x "architectures")))
-    )
-   versioncount)
-  )
+    (lfor x (search (or searchurl default-searchurl)
+                    (try-get searchterms "libraries" [])
+                    (try-get searchterms "objects" []))
+          :if (and
+                (version-match? x)
+                (compatible-archs? (or architectures [(native-arch)]) (get x "architectures")))
+          x)
+    versioncount))
 
 (defn find [&optional args]
   "searches the server for deken-packages and prints the results"
@@ -1308,7 +1296,7 @@
                (get result "uploader")
                (get result "timestamp")
                (or
-                 (.join "/" (list-comp (.join "-" x) [x (get result "architectures")]))
+                 (.join "/" (lfor x (get result "architectures") (.join "-" x)))
                  "all architectures"))))
     (if (.endswith url description)
       None
@@ -1326,7 +1314,7 @@
                         :architectures (if args.architecture
                                          (if (in "*" args.architecture)
                                            ["*"]
-                                           (split-archstring (.join "" (list-comp (% "(%s)" a) [a args.architecture]))))
+                                           (split-archstring (.join "" (lfor a args.architecture (% "(%s)" a)))))
                                          [(native-arch)])
                         :versioncount args.depth
                         :searchurl (or args.search_url default-searchurl))
@@ -1429,25 +1417,22 @@
        (log.info (% "Downloaded: %s" (, pkg)))
        pkg)))
   (setv foundurls
-        (list-comp
-         (get x "URL")
-         [x (find-packages searchterms
-                           :architectures architecture
-                           :versioncount 1
-                           :searchurl search-url)]
-         (package-uri? (try-get x "URL" ""))))
+        (lfor x (find-packages searchterms
+                               :architectures architecture
+                               :versioncount 1
+                               :searchurl search-url)
+              :if (package-uri? (try-get x "URL" ""))
+              (get x "URL")))
   (setv urls
-        (list-comp
-         x
-         [x (+ foundurls (try-get searchterms "urls" []))]
-         (or
-          (package-uri? x)
-          (log.info (+ "Skipping non-package URL" x)))))
+        (lfor x (+ foundurls (try-get searchterms "urls" []))
+              :if (or
+                    (package-uri? x)
+                    (log.info (+ "Skipping non-package URL" x)))
+              x))
   ;; return a list of successfully downloaded (and verified) files
-  (list-comp
-   x
-   [x (list-comp (try-download url) [url urls])]
-   x))
+  (lfor x (lfor url urls (try-download url))
+        :if x
+        x))
 
 (defn install-package [pkgfile installdir]
   "unpack a <pkgfile> into <installdir>"
@@ -1474,21 +1459,21 @@
                     (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
                               (, value (.join ", " (list-comp (str x) [x valid] x)))))))
               (set-default-floatsize args.default-floatsize)
-              (list-comp
-                (if (os.path.isdir name)
-                    ;; if asking for a directory just package it up
-                    (archive-extra
-                      (archive-dir
-                        name
-                        (make-archive-name
-                          (os.path.normpath name)
-                          args.version
-                          (int-dekformat args.dekformat)
-                          :recurse-subdirs args.search-subdirs
-                          :extra-arch-files args.extra-arch-files))
-                      (if (nil? args.objects) name args.objects))
-                    (fatal (% "Not a directory '%s'!" name)))
-                (name args.source)))
+              (lfor name args.source
+                    (if (os.path.isdir name)
+                        ;; if asking for a directory just package it up
+                        (archive-extra
+                          (archive-dir
+                            name
+                            (make-archive-name
+                              (os.path.normpath name)
+                              args.version
+                              (int-dekformat args.dekformat)
+                              :recurse-subdirs args.search-subdirs
+                              :extra-arch-files args.extra-arch-files))
+                          (if (is args.objects None) name args.objects))
+                        (fatal (% "Not a directory '%s'!" name)))
+                ))
    ;; upload packaged external to pure-data.info
    :upload (fn [args]
              (defn set-nonempty-password [username password]
@@ -1526,13 +1511,11 @@
              ;; do-upload returns the username (on success)...
              ;; so let's try storing the (non-empty) password in the keyring
              (apply set-nonempty-password
-               (do-upload (list-comp
-                            (mk-pkg-ifneeded x)
-                            (x args.source))
-                          (urlparse
-                            (or (getattr args "destination")
-                                (get-config-value "destination" "")))
-                          args.no-source-error)))
+                                    (do-upload (lfor x args.source (mk-pkg-ifneeded x))
+                                               (urlparse
+                                                 (or (getattr args "destination")
+                                                     (get-config-value "destination" "")))
+                                               args.no-source-error)))
    ;; search for externals
    :find find
    :search find
@@ -1567,27 +1550,26 @@
                     (os.makedirs installdir)
                     (except [e Exception]
                       (if (not (os.path.isdir installdir)) (raise e))))
-                   (list-comp
-                    (install-package pkg installdir)
-                    [pkg pkgs]
-                    (or
-                     (os.path.isfile pkg)
-                     (log.warning (% "skipping non-existing file '%s'" (, pkg))))))))
+                   (lfor pkg pkgs
+                              :if (or
+                                    (os.path.isfile pkg)
+                                    (log.warning (% "skipping non-existing file '%s'" (, pkg))))
+                              (install-package pkg installdir)))))
               (defn req2pkg [req]
                 (try
                  (with [f (open req "r")]
-                       (list-comp (.strip line) [line (.readlines f)]))
+                   (lfor line (.readlines f) (.strip line)))
                  (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
               (defn reqs2pkgs [reqs]
-                (chain.from-iterable (list-comp (req2pkg f) [f reqs])))
+                (chain.from-iterable (lfor f reqs (req2pkg f))))
               (setv pkgs (.union (set args.package) (reqs2pkgs args.requirement)))
 
               ;; those search-terms that refer to local files
-              (setv file-pkgs (set (list-comp x
-                                              [x pkgs]
-                                              (and
-                                               (package-uri? x)
-                                               (os.path.exists x)))))
+              (setv file-pkgs (sfor x pkgs
+                                    :if (and
+                                          (package-uri? x)
+                                          (os.path.exists x))
+                                    x))
               ;; search/download/verify the rest
               (setv pkgs (.difference pkgs (set file-pkgs)))
               (setv downloaded-pkgs
