@@ -1665,6 +1665,36 @@
                (, (.join "-" (native-arch))))
       :action "append"
       :required False))
+  (defn add-find-flags [parser]
+    (add-search-flags parser)
+    (parser.add_argument
+      "--depth"
+      :help "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
+      :default 1
+      :type int
+      :required False)
+    (parser.add_argument
+      "--reverse"
+      :action "store_true"
+      :help "Reverse search result sorting"
+      :required False)
+    (parser.add_argument
+      "--libraries"
+      :action "store_true"
+      :help "Find libraries (DEFAULT: True)"
+      :required False)
+    (parser.add_argument
+      "--objects"
+      :action "store_true"
+      :help "Find objects (DEFAULT: True)"
+      :required False)
+    (parser.add_argument
+      "search"
+      :nargs "*"
+      :metavar "TERM"
+      :help "libraries/objects to search for")
+    )
+
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
@@ -1769,33 +1799,7 @@
     :help "Force-allow uploading of packages without sources."
     :required False)
 
-  (add-search-flags arg-find)
-  (arg-find.add_argument
-    "--depth"
-    :help "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
-    :default 1
-    :type int
-    :required False)
-  (arg-find.add_argument
-    "--reverse"
-    :action "store_true"
-    :help "Reverse search result sorting"
-    :required False)
-  (arg-find.add_argument
-    "--libraries"
-    :action "store_true"
-    :help "Find libraries (DEFAULT: True)"
-    :required False)
-  (arg-find.add_argument
-    "--objects"
-    :action "store_true"
-    :help "Find objects (DEFAULT: True)"
-    :required False)
-  (arg-find.add_argument
-    "search"
-    :nargs "*"
-    :metavar "TERM"
-    :help "libraries/objects to search for")
+  (add-find-flags arg-find)
 
   (add-noverify-flags arg-verify)
 
