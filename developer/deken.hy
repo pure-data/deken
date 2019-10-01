@@ -1677,7 +1677,6 @@
           :prog "deken"
           :description "Deken is a packaging tool for Pure Data externals."))
   (setv arg-subparsers (arg-parser.add_subparsers
-                         :help "-h for help."
                          :dest "command"
                          :metavar "{package,upload,find,download,verify,install,uninstall}"))
   (setv arg-package (arg-subparsers.add_parser "package"))
