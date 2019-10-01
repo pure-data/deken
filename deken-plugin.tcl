@@ -303,6 +303,41 @@ proc ::deken::utilities::uninstall {path library} {
     }
     return 1
 }
+if { [catch {package require sha256} ] } {
+    proc ::deken::utilities::verify_sha256 {url pkgfile} {
+        ::deken::utilities::verbose 0 [format [_ "skipping SHA256 verification of %s." ] $url ]
+        return 1
+    }
+} {  # successfully imported sha256
+    proc ::deken::utilities::verify_sha256 {url pkgfile} {
+        set retval 1
+        if { [ catch {
+            set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
+            set hashfile [::deken::download_file ${url}.sha256 [::deken::get_tmpfilename [::deken::gettmpdir] ".sha256" ] ]
+            if { "$hashfile" eq "" } {
+                ::deken::utilities::verbose 0 [format [_ "unable to fetch reference SHA256 for %s." ] $url ]
+                return 1
+            } {
+                set fp [open $hashfile r]
+                set reference [string trim [string tolower [read $fp] ] ]
+                close $fp
+                catch { file delete $hashfile }
+                if { "${hash}" eq "${reference}" } {
+                    set retval 1
+                } {
+                    # SHA256 verification failed...
+                    set retval 0
+                }
+            }
+        } stdout ] } {
+            ::deken::utilities::verbose 0 "\[deken\] $stdout\n"
+            # unable to verify
+            ::deken::utilities::verbose 0 [format [_ "unable to perform SHA256 verification for %s." ] $url ]
+            set retval 1
+        }
+        return ${retval}
+    }
+}
 
 proc ::deken::utilities::rmrecursive {path} {
     # recursively remove ${path} if it exists, traversing into each directory
@@ -1193,6 +1228,18 @@ proc ::deken::clicked_link {URL filename} {
         return
     }
     ::pdwindow::debug "\n"
+    if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
+            if { "$::deken::keep_package" } { } {
+                catch { file delete $fullpkgfile }
+            }
+            ::pdwindow::error "\[deken\]: "
+            ::pdwindow::error [format [_ "SHA256 sum of %1\$s does not match reference %2\$s!" ] $filename ${URL}.sha256 ]
+            ::pdwindow::error "\n"
+            ::pdwindow::error [_ "aborting."]
+            ::pdwindow::error "\n"
+            return
+    }
+
     set deldir ""
     if { "$::deken::remove_on_install" } {
         if { [::deken::utilities::uninstall $installdir $extname] } {
