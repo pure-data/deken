@@ -59,6 +59,8 @@ try:
     # 'keyring' is disabled here as it makes problems with pyinstaller
     #import keyring
 
+    import subprocess
+
 except ImportError:
     pass
 
@@ -83,6 +85,24 @@ except ImportError:
 import hy
 import deken
 
+def askpass(prompt="Password: "):
+    print("my askpass")
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    subprocess.call(["stty", "-echo"])
+    password = None
+    try:
+        try:
+            password = raw_input()
+        except NameError:
+            password = input()
+    except: pass
+    subprocess.call(["stty", "echo"])
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+    return password
+
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -99,4 +119,5 @@ if __name__ == "__main__":
         deken.version = version
     except OSError: pass
     except IOError: pass
+    deken.askpass = askpass
     deken.main()
