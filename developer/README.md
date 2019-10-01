@@ -31,8 +31,12 @@ then make sure that [`~/bin` is in your `PATH`](https://apple.stackexchange.com/
 
 ### Prerequisites
 
-`deken` requires Python3 to be installed on your computer (and available from the cmdline).
-You can test whether python3 is installed, by opening a terminal and running `python3 --version`.
+`deken` requires Python3 to be installed on your computer (and available from
+the cmdline). You can test whether python3 is installed, by opening a terminal
+and running `python3 --version`.
+
+For installing (and updating) `deken`, you will also need `curl` (or `wget`)
+for downloading from the cmdline.
 
 
 #### macOS
