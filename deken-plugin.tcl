@@ -105,6 +105,7 @@ set ::deken::show_readme 1
 set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
 set ::deken::keep_package 0
+set ::deken::verify_sha256 1
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
@@ -115,6 +116,7 @@ set ::deken::preferences::remove_on_install {}
 set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
 set ::deken::preferences::keep_package {}
+set ::deken::preferences::verify_sha256 {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -161,6 +163,12 @@ proc ::deken::utilities::is_writable_dir {path} {
         return true
     }
     return false
+}
+
+proc ::deken::utilities::verbose {level message} {
+    ::pdwindow::verbose ${level} "\[deken\]: "
+    ::pdwindow::verbose ${level} ${message}
+    ::pdwindow::verbose ${level} "\n"
 }
 
 if { [catch {package require zipfile::decode} ] } {
@@ -378,11 +386,12 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::userplatform $platform
         set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
     }
-    proc ::deken::set_install_options {remove readme add} {
+    proc ::deken::set_install_options {remove readme add keep verify256} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
         set ::deken::add_to_path [::deken::utilities::tristate $add 0 0]
         set ::deken::keep_package [::deken::utilities::bool $keep]
+        set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
     }
 } {
     # Pd has a generic preferences system, that we can use
@@ -402,17 +411,20 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] 1]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
     set ::deken::keep_package [::deken::utilities::bool [::pd_guiprefs::read deken_keep_package] 0]
+    set ::deken::verify_sha256 [::deken::utilities::bool [::pd_guiprefs::read deken_verify_sha256] 1]
     set ::deken::add_to_path [::deken::utilities::tristate [::pd_guiprefs::read deken_add_to_path] ]
 
-    proc ::deken::set_install_options {remove readme path keep} {
+    proc ::deken::set_install_options {remove readme path keep verify256} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
         set ::deken::show_readme [::deken::utilities::bool $readme]
         set ::deken::add_to_path [::deken::utilities::tristate $path]
         set ::deken::keep_package [::deken::utilities::bool $keep]
+        set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
         ::pd_guiprefs::write deken_remove_on_install "$::deken::remove_on_install"
         ::pd_guiprefs::write deken_show_readme "$::deken::show_readme"
         ::pd_guiprefs::write deken_add_to_path "$::deken::add_to_path"
         ::pd_guiprefs::write deken_keep_package "$::deken::keep_package"
+        ::pd_guiprefs::write deken_verify_sha256 "$::deken::verify_sha256"
     }
 }
 
@@ -870,6 +882,7 @@ proc ::deken::preferences::create {mytoplevel} {
 
     set ::deken::preferences::show_readme $::deken::show_readme
     set ::deken::preferences::keep_package $::deken::keep_package
+    set ::deken::preferences::verify_sha256 $::deken::verify_sha256
     set ::deken::preferences::remove_on_install $::deken::remove_on_install
     set ::deken::preferences::add_to_path $::deken::add_to_path
     set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
@@ -945,6 +958,10 @@ proc ::deken::preferences::create {mytoplevel} {
     ## installation options
     labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
     pack $mytoplevel.install -side top -fill x -anchor w
+
+    checkbutton $mytoplevel.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
+        -variable ::deken::preferences::verify_sha256
+    pack $mytoplevel.install.verify256 -anchor w
 
     checkbutton $mytoplevel.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
         -variable ::deken::preferences::remove_on_install
@@ -1069,7 +1086,8 @@ proc ::deken::preferences::apply {mytoplevel} {
         "${::deken::preferences::remove_on_install}" \
         "${::deken::preferences::show_readme}" \
         "${::deken::preferences::add_to_path}" \
-        "${::deken::preferences::keep_package}"
+        "${::deken::preferences::keep_package}" \
+        "${::deken::preferences::verify_sha256}"
 }
 proc ::deken::preferences::cancel {mytoplevel} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
@@ -1229,6 +1247,7 @@ proc ::deken::clicked_link {URL filename} {
     }
     ::pdwindow::debug "\n"
     if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
+        if { "$::deken::verify_sha256" } {
             if { "$::deken::keep_package" } { } {
                 catch { file delete $fullpkgfile }
             }
@@ -1238,6 +1257,7 @@ proc ::deken::clicked_link {URL filename} {
             ::pdwindow::error [_ "aborting."]
             ::pdwindow::error "\n"
             return
+        }
     }
 
     set deldir ""
