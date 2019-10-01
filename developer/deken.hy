@@ -1708,7 +1708,8 @@
           :description "Deken is a packaging tool for Pure Data externals."))
   (setv arg-subparsers (arg-parser.add_subparsers
                          :dest "command"
-                         :metavar "{package,upload,find,download,verify,install,uninstall}"))
+                         :metavar "{package,upload,find,download,verify,install,uninstall}"
+                         ))
   (setv arg-package (arg-subparsers.add_parser
                       "package"
                       :description "create (and sign) a DEK-package from a directory with externals/abstractions/... guessing the architecture(s)"
