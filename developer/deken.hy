@@ -253,6 +253,11 @@
          "Please enter %s %s:: ")
        (, (name.upper) config-file-path name name forstring))))
 
+(defn askpass [&optional [prompt "Password: "]]
+  """prompt the user for a password"""
+  (import getpass)
+  (getpass.getpass prompt))
+
 (defn package-uri? [URI]
   "naive check whether the given URI seems to be a deken-package"
   (or
@@ -775,10 +780,9 @@
                        (setv passphrase
                              (if (and (not use-agent) keyid)
                                  (do
-                                   (import getpass)
                                    (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
                                              (, uid keyid filename)))
-                                   (getpass.getpass "Enter GPG passphrase: " ))))
+                                   (askpass "Enter GPG passphrase: " ))))
                        (setv signconfig (dict-merge
                                           {"detach" True}
                                           (if keyid {"keyid" keyid} {})
@@ -1180,9 +1184,7 @@
                    (except [e RuntimeError] (log.debug e))
                    (except [e Exception] (log.warning e)))
               (get-config-value "password")))
-      (do
-        (import getpass)
-        (getpass.getpass (% "Please enter password for uploading as '%s': " username)))))
+      (askpass (% "Please enter password for uploading as '%s': " username))))
 
 (defn user-agent []
   "get the user-agent string of this application"
