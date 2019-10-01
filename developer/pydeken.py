@@ -123,5 +123,6 @@ if __name__ == "__main__":
         deken.version = version
     except OSError: pass
     except IOError: pass
-    deken.askpass = lambda prompt: askpass(prompt, deken.askpass)
+    deken_askpass = deken.askpass
+    deken.askpass = lambda prompt: askpass(prompt, deken_askpass)
     deken.main()
