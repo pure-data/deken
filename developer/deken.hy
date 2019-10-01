@@ -1679,28 +1679,45 @@
   (setv arg-subparsers (arg-parser.add_subparsers
                          :dest "command"
                          :metavar "{package,upload,find,download,verify,install,uninstall}"))
-  (setv arg-package (arg-subparsers.add_parser "package"))
-  (setv arg-upload (arg-subparsers.add_parser "upload"))
-  (setv arg-find (arg-subparsers.add_parser "find"))
-  (setv arg-download (arg-subparsers.add_parser "download"))
+  (setv arg-package (arg-subparsers.add_parser
+                      "package"
+                      :description "create (and sign) a DEK-package from a directory with externals/abstractions/... guessing the architecture(s)"
+                      ))
+  (setv arg-upload (arg-subparsers.add_parser
+                     "upload"
+                      :description "upload a DEK-package to the deken repository (eventually creating the package from a directory)"
+                     ))
+  (setv arg-find (arg-subparsers.add_parser
+                   "find"
+                   :description "find packages (and/or libraries containing objects) in the repository"
+                   ))
 
   ;; verify a downloaded package (both SHA256 and (if available GPG))
-  (setv arg-verify (arg-subparsers.add_parser "verify"))
+  (setv arg-verify (arg-subparsers.add_parser
+                     "verify"
+                     :description "verify a downloaded package (using SHA256 checksums and - if available - GPG)"))
 
   ;; download a package from the internet
-  (setv arg-download (arg-subparsers.add_parser "download"))
+  (setv arg-download (arg-subparsers.add_parser
+                       "download"
+                       :description "search for a package, download it and verify the download"))
 
   ;; install a package from the internet
   ;; - package can be either an URL, a local file or a search string
   ;; - packages are verified (SHA256/GPG)
   ;; - search is similar to "find", but requires an "exact match"
   ;;   and installs only the first match (with the highest version number)
-  (setv arg-install (arg-subparsers.add_parser "install"))
+  (setv arg-install (arg-subparsers.add_parser
+                      "install"
+                      :description "search for a package, download and verify it and install it to be used by Pd"))
 
-  (setv arg-uninstall (arg-subparsers.add_parser "uninstall"))
+  (setv arg-uninstall (arg-subparsers.add_parser
+                        "uninstall"
+                        :description "attempt to uninstall (delete) an installed package"))
 
-  (arg-subparsers.add_parser "upgrade")
-  (arg-subparsers.add_parser "update")
+  (arg-subparsers.add_parser "upgrade" :description "self-'update' deken.")
+  (arg-subparsers.add_parser "update" :description "self-'update' deken.")
+
 
   (arg-parser.add_argument
     "-v" "--verbose"
