@@ -639,36 +639,48 @@ proc ::deken::status {{msg ""}} {
 }
 proc ::deken::scrollup {} {
     variable mytoplevelref
-    $mytoplevelref.results see 0.0
+    if { [winfo exists $mytoplevelref] } {
+        $mytoplevelref.results see 0.0
+    }
 }
 proc ::deken::post {msg {tag ""}} {
     variable mytoplevelref
-    $mytoplevelref.results insert end "$msg\n" $tag
-    $mytoplevelref.results see end
+    if { [winfo exists $mytoplevelref] } {
+        $mytoplevelref.results insert end "$msg\n" $tag
+        $mytoplevelref.results see end
+    }
 }
 proc ::deken::clearpost {} {
     variable mytoplevelref
-    $mytoplevelref.results delete 1.0 end
+    if { [winfo exists $mytoplevelref] } {
+        $mytoplevelref.results delete 1.0 end
+    }
 }
 proc ::deken::bind_posttag {tag key cmd} {
     variable mytoplevelref
-    $mytoplevelref.results tag bind $tag $key $cmd
+    if { [winfo exists $mytoplevelref] } {
+        $mytoplevelref.results tag bind $tag $key $cmd
+    }
 }
 proc ::deken::highlightable_posttag {tag} {
     variable mytoplevelref
-    ::deken::bind_posttag $tag <Enter> \
-        "$mytoplevelref.results tag add highlight [ $mytoplevelref.results tag ranges $tag ]"
-    ::deken::bind_posttag $tag <Leave> \
-        "$mytoplevelref.results tag remove highlight [ $mytoplevelref.results tag ranges $tag ]"
-    # make sure that the 'highlight' tag is topmost
-    $mytoplevelref.results tag raise highlight
+    if { [winfo exists $mytoplevelref] } {
+        ::deken::bind_posttag $tag <Enter> \
+            "$mytoplevelref.results tag add highlight [ $mytoplevelref.results tag ranges $tag ]"
+        ::deken::bind_posttag $tag <Leave> \
+            "$mytoplevelref.results tag remove highlight [ $mytoplevelref.results tag ranges $tag ]"
+        # make sure that the 'highlight' tag is topmost
+        $mytoplevelref.results tag raise highlight
+    }
 }
 proc ::deken::bind_postmenu {mytoplevel tag menus} {
     set cmd "::deken::result_contextmenu %W %x %y $menus"
-    if {$::windowingsystem eq "aqua"} {
-        $mytoplevel.results tag bind $tag <2> $cmd
-    } else {
-        $mytoplevel.results tag bind $tag <3> $cmd
+    if { [winfo exists $mytoplevel] } {
+        if {$::windowingsystem eq "aqua"} {
+            $mytoplevel.results tag bind $tag <2> $cmd
+        } else {
+            $mytoplevel.results tag bind $tag <3> $cmd
+        }
     }
 }
 proc ::deken::result_contextmenu {widget theX theY args} {
