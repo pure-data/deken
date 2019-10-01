@@ -1675,7 +1675,7 @@
   (setv arg-parser
         (argparse.ArgumentParser
           :prog "deken"
-          :description "Deken is a build tool for Pure Data externals."))
+          :description "Deken is a packaging tool for Pure Data externals."))
   (setv arg-subparsers (arg-parser.add_subparsers
                          :help "-h for help."
                          :dest "command"
