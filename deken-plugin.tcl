@@ -324,7 +324,7 @@ if { [catch {package require sha256} ] } {
             set hashfile [::deken::download_file ${url}.sha256 [::deken::get_tmpfilename [::deken::gettmpdir] ".sha256" ] ]
             if { "$hashfile" eq "" } {
                 ::deken::utilities::verbose 0 [format [_ "unable to fetch reference SHA256 for %s." ] $url ]
-                return 1
+                set retval 1
             } {
                 set fp [open $hashfile r]
                 set reference [string trim [string tolower [read $fp] ] ]
