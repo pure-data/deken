@@ -85,11 +85,15 @@ except ImportError:
 import hy
 import deken
 
-def askpass(prompt="Password: "):
-    print("my askpass")
+def askpass(prompt="Password: ", fallback=None):
+    try:
+        subprocess.call(["stty", "-echo"])
+    except:
+        if fallback:
+            return fallback(prompt)
+        return None
     sys.stdout.write(prompt)
     sys.stdout.flush()
-    subprocess.call(["stty", "-echo"])
     password = None
     try:
         try:
@@ -97,9 +101,9 @@ def askpass(prompt="Password: "):
         except NameError:
             password = input()
     except: pass
-    subprocess.call(["stty", "echo"])
     sys.stdout.write("\n")
     sys.stdout.flush()
+    subprocess.call(["stty", "echo"])
     return password
 
 
@@ -119,5 +123,5 @@ if __name__ == "__main__":
         deken.version = version
     except OSError: pass
     except IOError: pass
-    deken.askpass = askpass
+    deken.askpass = lambda prompt: askpass(prompt, deken.askpass)
     deken.main()
