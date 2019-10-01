@@ -1721,6 +1721,10 @@
                    "find"
                    :description "find packages (and/or libraries containing objects) in the repository"
                    ))
+  (setv arg-search (arg-subparsers.add_parser
+                     "search"
+                     :description "find packages (and/or libraries containing objects) in the repository"
+                     ))
 
   ;; verify a downloaded package (both SHA256 and (if available GPG))
   (setv arg-verify (arg-subparsers.add_parser
@@ -1800,6 +1804,7 @@
     :required False)
 
   (add-find-flags arg-find)
+  (add-find-flags arg-search)
 
   (add-noverify-flags arg-verify)
 
