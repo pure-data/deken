@@ -24,7 +24,7 @@ error() {
 uninstall_deken() {
     error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
-    sleep 3;
+    sleep 3
     rm -rf "${DEKEN_HOME}" "$0"
     exit 0
 }
@@ -101,9 +101,9 @@ bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
     # remove all trace of our attempts to install.
-    rm -rf $DEKEN_HOME;
+    rm -rf $DEKEN_HOME
     # bail from this script.
-    exit 1;
+    exit 1
 }
 bail_install_msg() {
     error "$@"
@@ -133,7 +133,7 @@ install_virtualenv() {
 	[ -d "$DEKEN_HOME/virtualenv-source" ] && (\
 		cd $DEKEN_HOME/virtualenv-source && \
 		/usr/bin/env "${PYTHON_BIN}" setup.py build ) \
-		|| bail_install;
+		|| bail_install
 }
 
 install_deken() {
@@ -161,7 +161,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
         $HTTP_CLIENT ${DEKENHY} $DEKEN_BASE_URL/deken.hy ) || bail_install)
     [ -e "${DEKENHY}" ] || bail_install
-    [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv;
+    [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv
     [ -d "$DEKEN_HOME/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
         $DEKEN_HOME/virtualenv-source/virtualenv.py -p "${PYTHON_BIN}" "$DEKEN_HOME/virtualenv" || exit 1)
@@ -181,11 +181,11 @@ upgrade_deken() {
     echo "Upgrading $0."
     $HTTP_CLIENT $0 $DEKEN_BASE_URL/deken
     # next upgrade our dependencies
-    for f in requirements.txt deken.hy;
+    for f in requirements.txt deken.hy
     do
-        echo "Fetching $f file: $DEKEN_BASE_URL/$f";
+        echo "Fetching $f file: $DEKEN_BASE_URL/$f"
         $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( error "Error upgrading $f"; exit 1; );
-        mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f;
+        mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f
     done
     # finally update the python dependencies
     $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements
@@ -215,7 +215,7 @@ tryrun_deken() {
 [ -d "$DEKEN_HOME" ] || install_deken
 
 # last check to make sure we can bootstrap
-[ -d "$DEKEN_HOME" ] || bail_install;
+[ -d "$DEKEN_HOME" ] || bail_install
 
 # catch the special "upgrade" command
 case "${onecmd}" in
