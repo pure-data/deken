@@ -1333,7 +1333,7 @@
                                                 ["*"]
                                                 (split-archstring (.join "" (lfor a args.architecture (% "(%s)" a)))))
                                             [(native-arch)])
-                         :versioncount args.depth
+                         :versioncount (if (is args.depth None) (if (in "*" args.architecture) 0 1) args.depth)
                          :searchurl (or args.search_url default-searchurl))
           args.reverse)]
     (print-result result)))
@@ -1686,13 +1686,14 @@
       :help (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
                (, (.join "-" (native-arch))))
       :action "append"
+      :default []
       :required False))
   (defn add-find-flags [parser]
     (add-search-flags parser)
     (parser.add_argument
       "--depth"
       :help "Limit search result to the N last versions (0 is unlimited; DEFAULT: 1)"
-      :default 1
+      :default None
       :type int
       :required False)
     (parser.add_argument
