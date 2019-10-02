@@ -26,7 +26,7 @@ install:
   - (cd tmp; unzip deken-test.zip; rm deken-test.zip)
 
 script:
-  - ~/bin/deken upgrade
+  - ~/bin/deken upgrade --self
   - ~/bin/deken package -v000.dekenci tmp/deken-test
   - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken --version
