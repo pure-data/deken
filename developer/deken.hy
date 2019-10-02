@@ -138,7 +138,7 @@
   (and (not (is s None)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
 
 (defn byte-to-int [b]
-  "convert a single byte (e.g. an element of bytes()) into an interger"
+  "convert a single byte (e.g. an element of bytes()) into an integer"
   (try (ord b) (except [e TypeError] (int b))))
 
 (defn join-nonempty [joiner elements]
@@ -151,7 +151,7 @@
   (defn dict-merge-aux [dict0 dicts]
     (for [d dicts] (if d (dict0.update d)))
     dict0)
-  ;; we need the aux just to precent side-effects on dict0
+  ;; we need the aux just to prevent side-effects on dict0
   (dict-merge-aux (.copy dict0) dicts))
 
 ;; apply attributes to objects in a functional way
@@ -1174,7 +1174,7 @@
   (import requests)
   (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
   (in pkg
-      ;; list of package/version matching 'pkg' that have 'Source' archictecture
+      ;; list of package/version matching 'pkg' that have 'Source' architecture
       (lfor p (lfor x (.splitlines (getattr (requests.get (% "http://deken.puredata.info/search?name=%s" (get (.split pkg "/") 0))) "text"))
                     :if (= username (try-get (.split x "\t") 2))
                     (try-get (.split (try-get (.split x "\t") 1) "/") -1))  ; filename part of the download URL
@@ -1568,7 +1568,7 @@
                             (do
                               (log.info (% "removing package directory '%s'" (, pkgdir)))
                               (shutil.rmtree pkgdir True))
-                            (log.warning (% "skipping non-existant directory '%s'" (, pkgdir))))))
+                            (log.warning (% "skipping non-existent directory '%s'" (, pkgdir))))))
                     (setv pkgs (--packages-from-args-- args.package args.requirement))
                     (uninstall-pkgs pkgs args.installdir))
        :install (fn [args] None
