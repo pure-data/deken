@@ -262,3 +262,7 @@ To prevent the creation/use of an objectlist file, pass an empty string
 ~~~sh
 $ deken package --objects "" my_external
 ~~~
+
+## Troubleshooting
+
+see [DEVELOPMENT.md](DEVELOPMENT.md) for some troubleshooting advice.
