@@ -576,7 +576,7 @@ if { "" != "$::current_plugin_loadpath" } {
 ::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
 ::pdwindow::verbose 0 "\n"
 
-# architectures that can be substituted for eachother
+# architectures that can be substituted for each other
 array set ::deken::architecture_substitutes {}
 set ::deken::architecture_substitutes(x86_64) [list "amd64" ]
 set ::deken::architecture_substitutes(amd64) [list "x86_64" ]
@@ -1571,7 +1571,7 @@ proc urldecode {str} {
 ## API draft
 
 # each backend is implemented via a single proc
-## that takes a single argument "term", the term to search fo
+## that takes a single argument "term", the term to search for
 ## an empty term indicates "search for all"
 # the backend then returns a list of results
 ## each result is a list of the following elements:
