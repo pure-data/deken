@@ -81,6 +81,18 @@ error() {
     echo "$@" 1>&2
 }
 
+countdown() {
+  local t
+  t=$1
+  t=$((t))
+  while [ $t -gt 0 ]; do
+     printf "\r%2d" $((t))
+     sleep 1
+     t=$((t-1))
+  done
+  printf "\r  \r"
+}
+
 uninstall_deken() {
     if ${systeminstalled}; then
       # on Debian we disallow uninstalling
@@ -90,7 +102,7 @@ uninstall_deken() {
     fi
     error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
-    sleep 3
+    countdown 5
     rm -rf "${DEKEN_HOME}" "$0"
     exit 0
 }
@@ -151,7 +163,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     error "This is your first time running deken on this machine."
     error "I'm going to install myself and my dependencies into ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
-    sleep 3
+    countdown 3
     [ -e "${DEKEN_HOME}/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: ${DEKEN_BASE_URL}/requirements.txt" && \
         ${HTTP_CLIENT} "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
