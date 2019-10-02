@@ -29,25 +29,6 @@ uninstall_deken() {
     exit 0
 }
 
-onecmd=""
-if test $# -eq 1; then
- onecmd="$1"
-fi
-if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
-  uninstall_deken
-fi
-if test "x${onecmd}" = "x--version"; then
-  echo "${DEKEN_VERSION}"
-  exit
-fi
-
-
-if [ $(id -u) -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
-    error "WARNING: You're currently running as root; probably by accident."
-    error "Press control-C to abort or Enter to continue as root."
-    error "Set DEKEN_ROOT to disable this warning."
-    read _
-fi
 
 if [ "$OSTYPE" = "cygwin" ] || [ "$OSTYPE" = "msys" ]; then
     delimiter=";"
@@ -93,6 +74,27 @@ if ${systeminstalled}; then
     DEKENHY="${0%/*}/../share/deken/deken.hy"
 else
     DEKENHY="${DEKEN_HOME}/deken.hy"
+fi
+
+
+onecmd=""
+if test $# -eq 1; then
+ onecmd="$1"
+fi
+if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
+  uninstall_deken
+fi
+if test "x${onecmd}" = "x--version"; then
+  echo "${DEKEN_VERSION}"
+  exit
+fi
+
+
+if [ $(id -u) -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
+    error "WARNING: You're currently running as root; probably by accident."
+    error "Press control-C to abort or Enter to continue as root."
+    error "Set DEKEN_ROOT to disable this warning."
+    read _
 fi
 
 bail_install() {
