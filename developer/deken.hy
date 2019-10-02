@@ -1772,8 +1772,8 @@
                         "uninstall"
                         :description "attempt to uninstall (delete) an installed package"))
 
-  (arg-subparsers.add_parser "upgrade" :description "self-'update' deken.")
-  (arg-subparsers.add_parser "update" :description "self-'update' deken.")
+  (setv arg-upgrade (arg-subparsers.add_parser "upgrade" :description "self-'update' deken."))
+  (setv arg-update (arg-subparsers.add_parser "update" :description "self-'update' deken."))
   (arg-subparsers.add_parser "systeminfo" :description "print information about your deken installation.")
 
   (arg-parser.add_argument
@@ -1861,16 +1861,26 @@
     "--installdir"
     :default default-installpath
     :help (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath)))
-
+  (arg-install.add_argument
+    "--self"
+    :action "store_true"
+    :help "(Re)install the 'deken' cmdline-utility (and dependencies) itself")
   (arg-install.add_argument
     "package"
     :nargs "*"
     :help "package specifier or URL to install")
 
-  (arg-uninstall.add_argument
+  (arg-update.add_argument
     "--self"
     :action "store_true"
-    :help "Remove the 'deken' cmdline-utility (and dependencies) itself")
+    :required True
+    :help "Update the 'deken' cmdline-utility (and dependencies) itself")
+  (arg-upgrade.add_argument
+    "--self"
+    :action "store_true"
+    :required True
+    :help "Update the 'deken' cmdline-utility (and dependencies) itself")
+
 
   (arg-uninstall.add_argument
     "--requirement" "-r"
@@ -1881,7 +1891,10 @@
     "--installdir"
     :default default-installpath
     :help (% "Directory to find installed packages (DEFAULT: %s)" (, default-installpath)))
-
+  (arg-uninstall.add_argument
+    "--self"
+    :action "store_true"
+    :help "Remove the 'deken' cmdline-utility (and dependencies) itself")
   (arg-uninstall.add_argument
     "package"
     :nargs "*"
