@@ -165,6 +165,16 @@ proc ::deken::utilities::is_writable_dir {path} {
     return false
 }
 
+proc ::deken::utilities::substpath {path} {
+    set PD_PATH $::sys_libdir
+    if { [ catch {
+        set result [::subst -nocommands -nobackslash "$path"]
+    } stdout ] } {
+        set result $path
+    }
+    return $result
+}
+
 proc ::deken::utilities::verbose {level message} {
     ::pdwindow::verbose ${level} "\[deken\]: "
     ::pdwindow::verbose ${level} ${message}
@@ -394,6 +404,9 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
     }
 } {
+    if {[string match {{*}} ${::deken::installpath}]} {
+        set ::deken::installpath [string range ${::deken::installpath} 1 end-1]
+    }
     # Pd has a generic preferences system, that we can use
     proc ::deken::set_installpath {installdir} {
         set ::deken::installpath $installdir
@@ -496,7 +509,8 @@ proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
 
 proc ::deken::get_writable_dir {paths} {
     foreach p $paths {
-        if { [ ::deken::utilities::is_writable_dir $p ] } { return $p }
+        set xp [ ::deken::utilities::substpath $p ]
+        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
     }
     return
 }
@@ -849,8 +863,9 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
 
 proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
     # only add absolute paths to the pathentries
+    set xpath [ ::deken::utilities::substpath $path ]
     if {! $generic} {
-        if { [file pathtype $path] != "absolute" } { return }
+        if { [file pathtype $xpath] != "absolute"} { return }
     }
 
     set rdb [::deken::utilities::newwidget ${toplevel}.path]
@@ -859,7 +874,7 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
 
     radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
     frame ${pad}
-    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${path}"
+    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
 
     grid ${rdb} -sticky w    -row ${row} -column 2
     grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
@@ -867,7 +882,7 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
 
 
     if {! $generic} {
-        ::deken::preferences::path_doit ${rdb} ${chk} ${path} false
+        ::deken::preferences::path_doit ${rdb} ${chk} ${xpath} false
     }
     return [list ${rdb} ${chk}]
 }
@@ -878,7 +893,6 @@ proc ::deken::preferences::create {mytoplevel} {
     # in order to get the scrolling-region right!!!
     # this seems to be so wrong...
     bind $mytoplevel <Map> "::deken::preferences::mapped %W"
-
     set ::deken::preferences::installpath $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
     if { $::deken::userplatform == "" } {
@@ -952,7 +966,11 @@ proc ::deken::preferences::create {mytoplevel} {
         ::deken::preferences::create_pathpad ${pathsframe} ${row}
         incr row
     }
+    set extradir [file join ${::sys_libdir} extra ]
     foreach p $::sys_staticpath {
+        if { [file normalize $p] == $extradir } {
+            set p [file join {${PD_PATH}} extra]
+        }
         ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
         incr row
     }
@@ -1194,6 +1212,7 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::prompt_installdir
         set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
     }
+    set installdir [::deken::utilities::substpath $installdir ]
     while {1} {
         if { "$installdir" == "" } {
             set msg  [_ "Please select a (writable) installation directory!"]
