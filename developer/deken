@@ -67,11 +67,6 @@ else
     DEKENHY="${DEKEN_HOME}/deken.hy"
 fi
 
-onecmd=""
-if test $# -eq 1; then
- onecmd="$1"
-fi
-
 
 ##############################################################################
 # helper functions
@@ -229,10 +224,11 @@ tryrun_deken() {
 ##############################################################################
 
 
-if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
+if [ $# -eq 2  ] && [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
   uninstall_deken
 fi
-if test "x${onecmd}" = "x--version"; then
+
+if [ $# -eq 1  ] && [ "x$1" = "x--version" ]; then
   echo "${DEKEN_VERSION}"
   exit
 fi
@@ -252,16 +248,13 @@ fi
 [ -d "${DEKEN_HOME}" ] || bail_install
 
 # catch the special "upgrade" command
-case "${onecmd}" in
-  upgrade|update)
-    # run the upgrade command instead
-    upgrade_deken
-    ;;
-  install)
-    install_deken
-    ;;
-  *)
+if [ $# -eq 2  ] && [ "x$1" = "xinstall" ] && [ "x$2" = "x--self" ]; then
+    echo install_deken
+elif [ $# -eq 2  ] && [ "x$1" = "xupgrade" ] && [ "x$2" = "x--self" ]; then
+    echo upgrade_deken
+elif [ $# -eq 2  ] && [ "x$1" = "xupdate" ] && [ "x$2" = "x--self" ]; then
+    echo upgrade_deken
+else
     # run the real deken command with args passed through
     tryrun_deken "$@"
-    ;;
-esac
+fi
