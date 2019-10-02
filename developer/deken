@@ -6,6 +6,11 @@
 
 # Much of this code is pilfered from Clojure's Leiningen tool
 
+
+##############################################################################
+# variable declarations
+##############################################################################
+
 export DEKEN_VERSION="0.5.2"
 export DEKEN_HOME="${DEKEN_HOME:-"${HOME}/.deken"}"
 DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-master}"
@@ -15,20 +20,6 @@ fi
 
 VIRTUALENV_VERSION="16.0.0"
 VIRTUALENV_URL="https://pypi.io/packages/source/v/virtualenv/virtualenv-${VIRTUALENV_VERSION}.tar.gz"
-
-
-error() {
-    echo "$@" 1>&2
-}
-
-uninstall_deken() {
-    error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
-    error "Feel free to ctrl-C now if you don't want to do this."
-    sleep 3
-    rm -rf "${DEKEN_HOME}" "$0"
-    exit 0
-}
-
 
 if [ "${OSTYPE}" = "cygwin" ] || [ "${OSTYPE}" = "msys" ]; then
     delimiter=";"
@@ -76,26 +67,27 @@ else
     DEKENHY="${DEKEN_HOME}/deken.hy"
 fi
 
-
 onecmd=""
 if test $# -eq 1; then
  onecmd="$1"
 fi
-if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
-  uninstall_deken
-fi
-if test "x${onecmd}" = "x--version"; then
-  echo "${DEKEN_VERSION}"
-  exit
-fi
 
 
-if [ $(id -u) -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
-    error "WARNING: You're currently running as root; probably by accident."
-    error "Press control-C to abort or Enter to continue as root."
-    error "Set DEKEN_ROOT to disable this warning."
-    read _
-fi
+##############################################################################
+# helper functions
+##############################################################################
+
+error() {
+    echo "$@" 1>&2
+}
+
+uninstall_deken() {
+    error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
+    error "Feel free to ctrl-C now if you don't want to do this."
+    sleep 3
+    rm -rf "${DEKEN_HOME}" "$0"
+    exit 0
+}
 
 bail_install() {
     error "Self-installation of Deken failed."
@@ -213,6 +205,27 @@ tryrun_deken() {
        exit 1
     fi
 }
+
+##############################################################################
+# here starts the code
+##############################################################################
+
+
+if [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
+  uninstall_deken
+fi
+if test "x${onecmd}" = "x--version"; then
+  echo "${DEKEN_VERSION}"
+  exit
+fi
+
+
+if [ $(id -u) -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
+    error "WARNING: You're currently running as root; probably by accident."
+    error "Press control-C to abort or Enter to continue as root."
+    error "Set DEKEN_ROOT to disable this warning."
+    read _
+fi
 
 # make sure we are deployed
 [ -d "${DEKEN_HOME}" ] || install_deken
