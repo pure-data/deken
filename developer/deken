@@ -82,6 +82,12 @@ error() {
 }
 
 uninstall_deken() {
+    if ${systeminstalled}; then
+      # on Debian we disallow uninstalling
+      error "Uninstalling is disabled for system-provided deken!"
+      error "Instead, use your package manager to remove deken."
+      exit 1
+    fi
     error "I'm going to uninstall myself and my dependencies from ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
     sleep 3
