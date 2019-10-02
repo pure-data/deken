@@ -258,6 +258,27 @@
   (import getpass)
   (getpass.getpass prompt))
 
+(defn print-system-info [args]
+  """print information about the environment we are running in"""
+  (print "============= DEKEN =============")
+  (print "Version     :" version)
+  (print "Config      :" config-file-path)
+  (print "Install-path:" default-installpath)
+  (print "Platform    :" (.join "-" (native-arch)))
+  (print)
+  (print "============= SYSTEM ============")
+  (print "Script      :" __file__)
+  (print "Executable  :" sys.executable)
+  (print "Hy          :" (do (import hy) hy.__version__))
+  (print "Python      :" (.join "; " (.splitlines sys.version)))
+  (print "PyPrefix    :" sys.prefix)
+  (print "PyBasePrefix:" (try sys.base_prefix (except [e Exception] None)))
+  (print "System      :" sys.platform)
+  (try (print "Windows     :" (sys.getwindowsversion)) (except [e Exception]))
+  (print "PATH        :" (.get os.environ "PATH"))
+  )
+
+
 (defn package-uri? [URI]
   "naive check whether the given URI seems to be a deken-package"
   (or
@@ -1587,6 +1608,7 @@
                             (set [])))
                   (install-pkgs (.union file-pkgs downloaded-pkgs) args.installdir)
                   )
+       :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
        :update upgrade
        :upgrade upgrade})
@@ -1708,7 +1730,7 @@
           :description "Deken is a packaging tool for Pure Data externals."))
   (setv arg-subparsers (arg-parser.add_subparsers
                          :dest "command"
-                         :metavar "{package,upload,find,download,verify,install,uninstall}"
+                         :metavar "{package,upload,find,download,verify,install,uninstall,systeminfo}"
                          ))
   (setv arg-package (arg-subparsers.add_parser
                       "package"
@@ -1752,7 +1774,7 @@
 
   (arg-subparsers.add_parser "upgrade" :description "self-'update' deken.")
   (arg-subparsers.add_parser "update" :description "self-'update' deken.")
-
+  (arg-subparsers.add_parser "systeminfo" :description "print information about your deken installation.")
 
   (arg-parser.add_argument
     "-v" "--verbose"
