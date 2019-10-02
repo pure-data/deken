@@ -1350,7 +1350,7 @@
            (webbrowser.open_new(page)))
          (except [e Exception])))
   (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
-  (sys.exit "'upgrade' not implemented for this platform!"))
+  (sys.exit "'update' not implemented for this platform!"))
 
 ;; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256
 ;; this require more thought: the verify function should never exit the program
