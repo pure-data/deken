@@ -166,12 +166,8 @@ proc ::deken::utilities::is_writable_dir {path} {
 }
 
 proc ::deken::utilities::substpath {path} {
-    set PD_PATH $::sys_libdir
-    if { [ catch {
-        set result [::subst -nocommands -nobackslash "$path"]
-    } stdout ] } {
-        set result $path
-    }
+    set result [string map "@PD_PATH@ $::sys_libdir" $path]
+    puts "subst $path -> $result"
     return $result
 }
 
@@ -404,9 +400,6 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
     }
 } {
-    if {[string match {{*}} ${::deken::installpath}]} {
-        set ::deken::installpath [string range ${::deken::installpath} 1 end-1]
-    }
     # Pd has a generic preferences system, that we can use
     proc ::deken::set_installpath {installdir} {
         set ::deken::installpath $installdir
@@ -977,7 +970,7 @@ proc ::deken::preferences::create {mytoplevel} {
     set extradir [file join ${::sys_libdir} extra ]
     foreach p $::sys_staticpath {
         if { [file normalize $p] == $extradir } {
-            set p [file join {${PD_PATH}} extra]
+            set p [file join @PD_PATH@ extra]
         }
         ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
         incr row
