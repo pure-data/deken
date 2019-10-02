@@ -27,10 +27,11 @@ install:
 
 script:
   - ~/bin/deken upgrade --self
-  - ~/bin/deken package -v000.dekenci tmp/deken-test
-  - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken --version
   - ~/bin/deken --platform
+  - ~/bin/deken systeminfo
+  - ~/bin/deken package -v000.dekenci tmp/deken-test
+  - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken find zexy
   - ~/bin/deken find --architecture "*" --depth 0 zexy
 
