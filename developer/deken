@@ -92,7 +92,7 @@ uninstall_deken() {
 bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
-    # remove all trace of our attempts to install.
+    # remove all traces of our attempts to install.
     rm -rf "${DEKEN_HOME}"
     # bail from this script.
     exit 1
