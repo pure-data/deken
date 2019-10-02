@@ -639,6 +639,11 @@ proc ::deken::versioncompare {a b} {
     return 0
 }
 
+proc ::deken::bind_globalshortcuts {toplevel} {
+    set closescript "destroy $toplevel"
+    bind $toplevel <$::modifier-Key-w> $closescript
+}
+
 proc ::deken::status {{msg ""}} {
     #variable mytoplevelref
     #$mytoplevelref.results insert end "$msg\n"
@@ -750,6 +755,7 @@ proc ::deken::open_searchui {mytoplevel} {
         raise $mytoplevel
     } else {
         ::deken::create_dialog $mytoplevel
+        ::deken::bind_globalshortcuts $mytoplevel
         $mytoplevel.results tag configure error -foreground red
         $mytoplevel.results tag configure warn -foreground orange
         $mytoplevel.results tag configure info -foreground grey
@@ -893,6 +899,8 @@ proc ::deken::preferences::create {mytoplevel} {
     # in order to get the scrolling-region right!!!
     # this seems to be so wrong...
     bind $mytoplevel <Map> "::deken::preferences::mapped %W"
+    ::deken::bind_globalshortcuts $mytoplevel
+
     set ::deken::preferences::installpath $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
     if { $::deken::userplatform == "" } {
