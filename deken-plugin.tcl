@@ -167,7 +167,6 @@ proc ::deken::utilities::is_writable_dir {path} {
 
 proc ::deken::utilities::substpath {path} {
     set result [string map "@PD_PATH@ $::sys_libdir" $path]
-    puts "subst $path -> $result"
     return $result
 }
 
