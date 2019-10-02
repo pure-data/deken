@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # Ensure this file is executable via `chmod a+x deken`, then place it
-# somewhere on your $PATH, like ~/bin. The rest of Deken will self-install
+# somewhere on your ${PATH}, like ~/bin. The rest of Deken will self-install
 # on first run into the ~/.deken/ directory.
 
 # Much of this code is pilfered from Clojure's Leiningen tool
 
 export DEKEN_VERSION="0.5.2"
-export DEKEN_HOME="${DEKEN_HOME:-"$HOME/.deken"}"
+export DEKEN_HOME="${DEKEN_HOME:-"${HOME}/.deken"}"
 DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-master}"
 if [ "x${DEKEN_BASE_URL}" = "x" ]; then
     DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer"
@@ -30,15 +30,15 @@ uninstall_deken() {
 }
 
 
-if [ "$OSTYPE" = "cygwin" ] || [ "$OSTYPE" = "msys" ]; then
+if [ "${OSTYPE}" = "cygwin" ] || [ "${OSTYPE}" = "msys" ]; then
     delimiter=";"
 else
     delimiter=":"
 fi
 
-if [ "$OSTYPE" = "cygwin" ]; then
+if [ "${OSTYPE}" = "cygwin" ]; then
   cygwin=true
-  export DEKEN_HOME=$(cygpath -w "$DEKEN_HOME")
+  export DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
 else
   cygwin=false
 fi
@@ -49,12 +49,12 @@ if [ "x${PYTHON_BIN}" = x ]; then
 fi
 
 # This needs to be defined before we call HTTP_CLIENT below
-if [ "$HTTP_CLIENT" = "" ]; then
+if [ "${HTTP_CLIENT}" = "" ]; then
     if which curl >/dev/null; then
-        if [ "$https_proxy" != "" ]; then
-            CURL_PROXY="-x $https_proxy"
+        if [ "${https_proxy}" != "" ]; then
+            CURL_PROXY="-x ${https_proxy}"
         fi
-        HTTP_CLIENT="curl $CURL_PROXY -f -L -o"
+        HTTP_CLIENT="curl ${CURL_PROXY} -f -L -o"
     else
         HTTP_CLIENT="wget -O"
     fi
@@ -90,7 +90,7 @@ if test "x${onecmd}" = "x--version"; then
 fi
 
 
-if [ $(id -u) -eq 0 ] && [ "$DEKEN_ROOT" = "" ]; then
+if [ $(id -u) -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
     error "WARNING: You're currently running as root; probably by accident."
     error "Press control-C to abort or Enter to continue as root."
     error "Set DEKEN_ROOT to disable this warning."
@@ -101,7 +101,7 @@ bail_install() {
     error "Self-installation of Deken failed."
     error "Please paste any errors in the bug tracker at https://github.com/pure-data/deken/issues"
     # remove all trace of our attempts to install.
-    rm -rf $DEKEN_HOME
+    rm -rf "${DEKEN_HOME}"
     # bail from this script.
     exit 1
 }
@@ -124,16 +124,19 @@ bail_requirements() {
 }
 
 install_virtualenv() {
-	echo "Downloading & installing Virtualenv."
-	rm -rf $DEKEN_HOME/virtualenv-source
-	mkdir -p $DEKEN_HOME/virtualenv-source && \
-	$HTTP_CLIENT $DEKEN_HOME/virtualenv.tar.gz "${VIRTUALENV_URL}" && \
-	tar -zxvf $DEKEN_HOME/virtualenv.tar.gz -C $DEKEN_HOME/virtualenv-source/ && \
-	mv $DEKEN_HOME/virtualenv-source/virtualenv-*/* $DEKEN_HOME/virtualenv-source
-	[ -d "$DEKEN_HOME/virtualenv-source" ] && (\
-		cd $DEKEN_HOME/virtualenv-source && \
-		/usr/bin/env "${PYTHON_BIN}" setup.py build ) \
-		|| bail_install
+    echo "Downloading & installing Virtualenv."
+    rm -rf "${DEKEN_HOME}/virtualenv-source"
+    mkdir -p "${DEKEN_HOME}/virtualenv-source" && \
+	${HTTP_CLIENT} "${DEKEN_HOME}/virtualenv.tar.gz" "${VIRTUALENV_URL}" && \
+	tar -zxvf "${DEKEN_HOME}/virtualenv.tar.gz" -C "${DEKEN_HOME}/virtualenv-source/" && \
+	mv "${DEKEN_HOME}"/virtualenv-source/virtualenv-*/* "${DEKEN_HOME}/virtualenv-source"
+
+    [ -d "${DEKEN_HOME}/virtualenv-source" ] && \
+        ( \
+	  cd "${DEKEN_HOME}/virtualenv-source" && \
+	      /usr/bin/env "${PYTHON_BIN}" setup.py build \
+        ) || \
+	    bail_install
 }
 
 install_deken() {
@@ -152,22 +155,22 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     error "This is your first time running deken on this machine."
     error "I'm going to install myself and my dependencies into ${DEKEN_HOME} now."
     error "Feel free to ctrl-C now if you don't want to do this."
-    sleep 3;
-    [ -e "$DEKEN_HOME/requirements.txt" ] || (\
-        ( echo "Fetching Python requirements file: $DEKEN_BASE_URL/requirements.txt" && \
-        $HTTP_CLIENT $DEKEN_HOME/requirements.txt $DEKEN_BASE_URL/requirements.txt ) || bail_install)
-    [ -e "$DEKEN_HOME/requirements.txt" ] || bail_install
+    sleep 3
+    [ -e "${DEKEN_HOME}/requirements.txt" ] || (\
+        ( echo "Fetching Python requirements file: ${DEKEN_BASE_URL}/requirements.txt" && \
+        ${HTTP_CLIENT} "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
+    [ -e "${DEKEN_HOME}/requirements.txt" ] || bail_install
     [ -e "${DEKENHY}" ] || (\
-        ( echo "Fetching main hylang file: $DEKEN_BASE_URL/deken.hy" && \
-        $HTTP_CLIENT ${DEKENHY} $DEKEN_BASE_URL/deken.hy ) || bail_install)
+        ( echo "Fetching main hylang file: ${DEKEN_BASE_URL}/deken.hy" && \
+        ${HTTP_CLIENT} "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
     [ -e "${DEKENHY}" ] || bail_install
-    [ -x "$DEKEN_HOME/virtualenv-source/virtualenv.py" ] || install_virtualenv
-    [ -d "$DEKEN_HOME/virtualenv" ] || (\
+    [ -x "${DEKEN_HOME}/virtualenv-source/virtualenv.py" ] || install_virtualenv
+    [ -d "${DEKEN_HOME}/virtualenv" ] || (\
         echo "Setting up the virtual environment." && \
-        $DEKEN_HOME/virtualenv-source/virtualenv.py -p "${PYTHON_BIN}" "$DEKEN_HOME/virtualenv" || exit 1)
-    [ -x "$DEKEN_HOME/virtualenv/bin/hy" ] || (\
+        "${DEKEN_HOME}/virtualenv-source/virtualenv.py" -p "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv" || exit 1)
+    [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
-        $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements)
+        "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements)
 }
 
 upgrade_deken() {
@@ -179,16 +182,16 @@ upgrade_deken() {
     fi
     # first upgrade this script itself
     echo "Upgrading $0."
-    $HTTP_CLIENT $0 $DEKEN_BASE_URL/deken
+    ${HTTP_CLIENT} "$0" "${DEKEN_BASE_URL}/deken"
     # next upgrade our dependencies
     for f in requirements.txt deken.hy
     do
-        echo "Fetching $f file: $DEKEN_BASE_URL/$f"
-        $HTTP_CLIENT $DEKEN_HOME/.upgrade-$f $DEKEN_BASE_URL/$f || ( error "Error upgrading $f"; exit 1; );
-        mv $DEKEN_HOME/.upgrade-$f $DEKEN_HOME/$f
+        echo "Fetching ${f} file: ${DEKEN_BASE_URL}/${f}"
+        ${HTTP_CLIENT} "${DEKEN_HOME}/.upgrade-${f}" "${DEKEN_BASE_URL}/${f}" || ( error "Error upgrading ${f}"; exit 1; )
+        mv "${DEKEN_HOME}/.upgrade-${f}" "${DEKEN_HOME}/${f}"
     done
     # finally update the python dependencies
-    $DEKEN_HOME/virtualenv/bin/pip install -r $DEKEN_HOME/requirements.txt || bail_requirements
+    "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements
     echo "Successfully upgraded."
 }
 
@@ -197,13 +200,13 @@ tryrun_deken() {
        hy3 "${DEKENHY}" "$@"
        exit $?
     fi
-    if [ ! -x "$DEKEN_HOME/virtualenv/bin/hy" ]; then
+    if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
        error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
        error "Try running '$0 install' or '$0 upgrade'"
        exit 1
     fi
-    if [ -e ${DEKENHY} ]; then
-       $DEKEN_HOME/virtualenv/bin/hy ${DEKENHY} "$@"
+    if [ -e "${DEKENHY}" ]; then
+       "${DEKEN_HOME}/virtualenv/bin/hy" "${DEKENHY}" "$@"
     else
        error "Unable to find '${DEKENHY}'"
        error "Try running '$0 install' or '$0 upgrade'"
@@ -212,10 +215,10 @@ tryrun_deken() {
 }
 
 # make sure we are deployed
-[ -d "$DEKEN_HOME" ] || install_deken
+[ -d "${DEKEN_HOME}" ] || install_deken
 
 # last check to make sure we can bootstrap
-[ -d "$DEKEN_HOME" ] || bail_install
+[ -d "${DEKEN_HOME}" ] || bail_install
 
 # catch the special "upgrade" command
 case "${onecmd}" in
