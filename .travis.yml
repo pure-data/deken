@@ -42,10 +42,11 @@ after_script:
 
 deploy:
   provider: releases
-  api_key: $GITHUB_DEPLOYMENT_TOKEN
   file: developer/dist/deken
   skip_cleanup: true
   on:
     branch: master
     tags: true
     os: osx
+  api-key:
+    secure: S35Qn8v4WAbO4X7Ia62vUj5bS5d4e/0YwUPaMp0ob3J8cN/NLu6rEWj7qf306yHz08FPhYfCTtDkTcytmRjAy//625aduiLn52XSGGma8QSzSGiCmx66OmTl/BpNg3ZdgYCttF5a5dk7va3qrOrZs6DMb4IXfi5Wu4fje/dCJheFsBwTLscLWsz/oldXTK0J5ddEwOHMFQ9DWqOpqhfMqqB77K0qy+9mKThBacyH5nai4tA0uObooyln3QU6bIJ8AcrDL/FcJQCHwWpt1wE/7yEgoe/AtPlDwVwGJ9BYRAe6P5Z/11Uzli1e0/DRmrYce1fOK6kqi1paXOAoQBPlH28q6hAKTSMhAbDBah9HO8oWgegwYS/9ntZMhZERHPEoQk9Qh2uZUepTA3s4HyyHejgmmdj3tgYatVKjEZOVUD9E9Kg1gOBNG8VFZDse2OP6Gi1MEQiF1jG4hpUTlpCU/+h8QDRSqQses58iICfNiWVeBJ+bVA9Yb9lpnr2DJY8ZqDH/KRj0uj/bhJp/n1+OCCG0Il77FJaH1T4pXmmSR+PCrDdBU1tawdQ4EFthZCCj8J7JbfNT79NCNFE6baKGVukMXdE4B/oapxTHpcm+EXkuenDSj0iQWey1PD/uBuOsjQj7f0bjFLBdiNCfVvqDuKERrgRAOL2ICeapCkUjwSk=
