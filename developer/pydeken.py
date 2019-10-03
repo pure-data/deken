@@ -56,13 +56,17 @@ try:
 
     import requests
 
-    # 'keyring' is disabled here as it makes problems with pyinstaller
-    #import keyring
-
     import subprocess
 
 except ImportError:
     pass
+
+# 'keyring' is disabled here as it makes problems with pyinstaller
+try
+    import keyring.backends.Windows
+    import keyring
+    pass
+except ImportError: pass
 
 try: import webbrowser
 except ImportError: pass
