@@ -3,18 +3,23 @@
 variables:
  IEMCI_CONFIGURATIONS: python3
 
-osx:
-  tags:
-    - osx
-  stage: build
+.build_script: &build_script
   script:
     - export DEKEN_VERSION=$(git describe --always)
-    - brew install python3
     - python3 -m pip install --upgrade pip
     - python3 -m pip install -r developer/requirements.txt
     - python3 -m pip install pyinstaller
     - (cd developer; pyinstaller deken.spec)
-    - cp developer/dist/deken* .
+
+osx:
+  tags:
+    - osx
+  stage: build
+  before_script:
+    - brew install --no-upgrade python3
+  <<: *build_script
+  after_script:
+    - cp developer/dist/deken .
   artifacts:
     name: deken
     paths:
@@ -25,13 +30,9 @@ windows:
   tags:
     - windows
   stage: build
-  script:
-    - export DEKEN_VERSION=$(git describe --always)
-    - python3 -m pip install --upgrade pip
-    - python3 -m pip install -r developer/requirements.txt
-    - python3 -m pip install pyinstaller
-    - pyinstaller deken.spec
-    - cp developer/dist/deken* .
+  <<: *build_script
+  after_script:
+    - cp developer/dist/deken.exe .
   artifacts:
     name: deken
     paths:
