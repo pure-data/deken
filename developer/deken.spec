@@ -7,9 +7,9 @@ datas = [('deken.hy', '.')]
 versionfile = "DEKEN_VERSION"
 try:
     import tempfile
-    tmpdir = tempfile.TemporaryDirectory()
+    tmpdir = tempfile.mkdtemp()
     version = os.environ['DEKEN_VERSION']
-    versionfile = os.path.join(tmpdir.name, versionfile)
+    versionfile = os.path.join(tmpdir, versionfile)
     with open(versionfile, 'w') as f:
         f.write(version)
         datas += [(versionfile, '.')]
@@ -59,3 +59,10 @@ exe = EXE(pyz,
           upx=True,
           runtime_tmpdir=None,
           console=True )
+
+try:
+  import shutil
+  shutil.rmtree(tmpdir)
+except Exception as e:
+  print("OOPS: %s" % (e,))
+print("BYE.")
