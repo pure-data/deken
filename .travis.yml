@@ -40,9 +40,14 @@ after_script:
   - ls -l
   - ls -l tmp/ developer/dist
 
+
+before_deploy:
+  - mv developer/dist/deken developer/dist/deken-${TRAVIS_TAG}${TRAVIS_OS_NAME}
+
 deploy:
   provider: releases
-  file: developer/dist/deken
+  file: developer/dist/deken-*
+  file_glob: true
   skip_cleanup: true
   on:
     branch: master
