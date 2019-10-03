@@ -7,8 +7,8 @@ variables:
   script:
     - export DEKEN_VERSION=$(git describe --always)
     - python3 -m pip install --upgrade pip
-    - python3 -m pip install --user -r developer/requirements.txt
-    - python3 -m pip install --user pyinstaller
+    - python3 -m pip install -r developer/requirements.txt
+    - python3 -m pip install pyinstaller
     - (cd developer; pyinstaller deken.spec)
 
 osx:
