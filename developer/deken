@@ -146,8 +146,6 @@ install_virtualenv() {
 }
 
 install_deken() {
-    mkdir -p "${DEKEN_HOME}"
-
     if ${systeminstalled}; then
        # on Debian, we can skip installation
        return
@@ -161,6 +159,8 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     error "Feel free to Ctrl-C now if you don't want to do this."
     countdown 3
     error "Installing deken."
+
+    mkdir -p "${DEKEN_HOME}"
     [ -e "${DEKEN_HOME}/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: ${DEKEN_BASE_URL}/requirements.txt" && \
         ${HTTP_CLIENT} "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
