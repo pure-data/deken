@@ -32,10 +32,11 @@ script:
   - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken find zexy
   - ~/bin/deken find --architecture "*" --depth 0 zexy
-
-after_script:
+  # create binaries with pyinstaller
   - ~/.deken/virtualenv/bin/pip install pyinstaller
   - (cd developer; DEKEN_VERSION=$(git describe --always) ~/.deken/virtualenv/bin/pyinstaller deken.spec)
+
+after_script:
   - ls -l
   - ls -l tmp/ developer/dist
 
