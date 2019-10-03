@@ -1,0 +1,39 @@
+# iem-ci configuration for deken
+
+variables:
+ IEMCI_CONFIGURATIONS: python3
+
+osx:
+  tags:
+    - osx
+  stage: build
+  script:
+    - export DEKEN_VERSION=$(git describe --always)
+    - brew install python3
+    - python3 -m pip install --upgrade pip
+    - python3 -m pip install -r developer/requirements.txt
+    - python3 -m pip install pyinstaller
+    - (cd developer; pyinstaller deken.spec)
+    - cp developer/dist/deken* .
+  artifacts:
+    name: deken
+    paths:
+      - deken
+    expire_in: 1 week
+
+windows:
+  tags:
+    - windows
+  stage: build
+  script:
+    - export DEKEN_VERSION=$(git describe --always)
+    - python3 -m pip install --upgrade pip
+    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install pyinstaller
+    - pyinstaller deken.spec
+    - cp developer/dist/deken* .
+  artifacts:
+    name: deken
+    paths:
+      - deken.exe
+    expire_in: 1 week
