@@ -85,6 +85,14 @@ except ImportError:
 import hy
 import deken
 
+## on macOS, pyinstaller requires more help...
+try:
+    import runpy
+    import hy.core.bootstrap
+    import hy.contrib.loop
+except ImportError:
+    pass
+
 def askpass(prompt="Password: ", fallback=None):
     try:
         subprocess.call(["stty", "-echo"])
