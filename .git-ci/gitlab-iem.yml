@@ -17,6 +17,7 @@ osx:
   stage: build
   before_script:
     - python3 --version || brew install --no-upgrade python3
+    - chown -R $(whoami) /usr/local/
   <<: *build_script
   after_script:
     - cp developer/dist/deken .
