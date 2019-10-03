@@ -38,3 +38,12 @@ after_script:
   - (cd developer; DEKEN_VERSION=$(git describe --always) ~/.deken/virtualenv/bin/pyinstaller deken.spec)
   - ls -l
   - ls -l tmp/ developer/dist
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_DEPLOYMENT_TOKEN
+  file: developer/dist/deken
+  skip_cleanup: true
+  on:
+    tags: true
+    os: osx
