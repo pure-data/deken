@@ -28,7 +28,7 @@ windows:
   script:
     - export DEKEN_VERSION=$(git describe --always)
     - python3 -m pip install --upgrade pip
-    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install -r developer/requirements.txt
     - python3 -m pip install pyinstaller
     - pyinstaller deken.spec
     - cp developer/dist/deken* .
