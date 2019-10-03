@@ -16,7 +16,7 @@ osx:
     - osx
   stage: build
   before_script:
-    - brew install --no-upgrade python3
+    - python3 --version || brew install --no-upgrade python3
   <<: *build_script
   after_script:
     - cp developer/dist/deken .
