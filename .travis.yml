@@ -36,5 +36,7 @@ script:
   - ~/bin/deken find --architecture "*" --depth 0 zexy
 
 after_script:
+  - ~/.deken/virtualenv/bin/pip install pyinstaller
+  - (cd developer; DEKEN_VERSION=$(git describe --always) ~/.deken/virtualenv/bin/pyinstaller deken.spec)
   - ls -l
-  - ls -l tmp/
+  - ls -l tmp/ developer/dist
