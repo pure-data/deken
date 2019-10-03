@@ -62,7 +62,7 @@ except ImportError:
     pass
 
 # 'keyring' is disabled here as it makes problems with pyinstaller
-try
+try:
     import keyring.backends.Windows
     import keyring
     pass
