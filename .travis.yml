@@ -46,5 +46,6 @@ deploy:
   file: developer/dist/deken
   skip_cleanup: true
   on:
+    branch: master
     tags: true
     os: osx
