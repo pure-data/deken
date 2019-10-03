@@ -4,7 +4,6 @@ matrix:
   include:
     - language: generic
       os: osx
-      osx_image: xcode9
     - python: "3.7"
 
 addons:
