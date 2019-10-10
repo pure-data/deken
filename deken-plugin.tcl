@@ -299,6 +299,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $installdir
     }
+    return $success
 }
 
 proc ::deken::utilities::uninstall {path library} {
@@ -1318,7 +1319,11 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
 
-    ::deken::utilities::extract $installdir $filename $fullpkgfile
+    if { [::deken::utilities::extract $installdir $filename $fullpkgfile ] > 0 } {
+        ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
+    } else {
+        ::deken::status [format [_ "Failed to install %s! See Pd-Console" ] $extname ] 0
+    }
 
     if { "$deldir" != "" } {
         # try getting rid of the directory to be deleted
