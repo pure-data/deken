@@ -245,6 +245,7 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
 set ::deken::_vbsunzip ""
 
 proc ::deken::utilities::extract {installdir filename fullpkgfile} {
+    ::deken::status [format [_ "Installing %s" ] $filename ]
     # installdir fullpkgfile filename
     set PWD [ pwd ]
     cd $installdir
@@ -323,6 +324,8 @@ if { [catch {package require sha256} ] } {
     }
 } {  # successfully imported sha256
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
+        ::deken::status [format [_ "SHA256 verification of %s" ] $pkgfile ]
+
         set retval 1
         if { [ catch {
             set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
@@ -1295,6 +1298,8 @@ proc ::deken::clicked_link {URL filename} {
 
     set deldir ""
     if { "$::deken::remove_on_install" } {
+        ::deken::status [format [_ "Removing %s" ] $extname ]
+
         if { [::deken::utilities::uninstall $installdir $extname] } {
         } {
             # ouch uninstalling failed.
