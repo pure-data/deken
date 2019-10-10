@@ -636,14 +636,16 @@ proc ::deken::bind_globalshortcuts {toplevel} {
     bind $toplevel <$::modifier-Key-w> $closescript
 }
 
-proc ::deken::status {{msg ""}} {
+proc ::deken::status {{msg ""} {timeout 5000}} {
     #variable mytoplevelref
     #$mytoplevelref.results insert end "$msg\n"
     #$mytoplevelref.status.label -text "$msg"
     after cancel $::deken::statustimer
     if {"" ne $msg} {
         set ::deken::statustext "STATUS: $msg"
-        set ::deken::statustimer [after 5000 [list set ::deken::statustext ""]]
+        if { $timeout != "0" } {
+            set ::deken::statustimer [after $timeout [list set ::deken::statustext ""]]
+        }
     } {
         set ::deken::statustext ""
     }
