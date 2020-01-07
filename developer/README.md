@@ -234,7 +234,7 @@ searches for *objects*.
 For this to work, the infrastructure must know which objects are contained in a
 library; which is done via an objectlist file.
 
-The objectlist file has one line per object, with the object-name at the beginning,
+The objectlist file consists of exactly one line per object, with the object-name at the beginning,
 followed by a TAB (`\t`) and a short (single-line) description of the object.
 
 ~~~
