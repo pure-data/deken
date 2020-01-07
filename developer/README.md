@@ -63,7 +63,7 @@ self-contained binaries from our Continuous Integration setup:
 - [Windows 32bit](https://ci.appveyor.com/api/projects/umlaeute/deken/artifacts/developer/dist/deken.exe?job=Environment%3A%20PYTHON%3DC%3A%5CPython36%2C%20PYTHON_VERSION%3D3.6%2C%20PYTHON_ARCH%3D32&branch=master)
 - [Windows 64bit](https://ci.appveyor.com/api/projects/umlaeute/deken/artifacts/developer/dist/deken.exe?job=Environment%3A%20PYTHON%3DC%3A%5CPython36-x64%2C%20PYTHON_VERSION%3D3.6%2C%20PYTHON_ARCH%3D64&branch=master)
 
-These builds are snaphots of the latest development branch of `deken`.
+These builds are snapshots of the latest development branch of `deken`.
 If they don't work for you, you might want to check the [releases page](https://github.com/pure-data/deken/releases)
 for downloads that have been tested by humans.
 

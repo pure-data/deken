@@ -47,7 +47,7 @@ by following these steps:
 - Navigate to `Help -> Find Packages` and search for an external
 - Right-Click one of the search results
 - Select "Copy package URL" to copy the link to the downloadable file to your clipboard
-- Download the packge from the copied link
+- Download the package from the copied link
 - Back in the deken search results, select "Copy OpenGPG signature URL"
 - Download the GPG-signature from the copied link to the same location as the package
 - Run `gpg --verify` on the downloaded file
