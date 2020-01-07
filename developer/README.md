@@ -244,7 +244,8 @@ frobnofy~	signal frobfurcation
 
 The objectlist file has the same name as the package with a `.txt` appended.
 E.g. if your library is called `frobnozzel(Windows-i386-32)(Sources).dek`, the
-objectlist would have the name `frobnozzel(Windows-i386-32)(Sources).dek.txt`
+objectlist file would have the name `frobnozzel(Windows-i386-32)(Sources).dek.txt`
+This file must be uploaded to the same directory as the `.dek` file.
 
 `deken` will try to automatically generate an objectlist file for a package.
 It looks for all "*-help.pd" files in the library directory, and creates an
