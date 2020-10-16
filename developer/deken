@@ -206,14 +206,14 @@ tryrun_deken() {
     fi
     if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
        error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
-       error "Try running '$0 install' or '$0 upgrade'"
+       error "Try running '$0 install --self' or '$0 upgrade --self'"
        exit 1
     fi
     if [ -e "${DEKENHY}" ]; then
        "${DEKEN_HOME}/virtualenv/bin/hy" "${DEKENHY}" "$@"
     else
        error "Unable to find '${DEKENHY}'"
-       error "Try running '$0 install' or '$0 upgrade'"
+       error "Try running '$0 install --self' or '$0 upgrade --self'"
        exit 1
     fi
 }
