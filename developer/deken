@@ -119,7 +119,7 @@ bail_requirements() {
     rm -f "${DEKEN_HOME}/requirements.txt"
     error "Installation of requirements failed."
     error "You probably should install the following packages first:"
-    error " - 'python-dev'"
+    error " - 'python3-dev'"
     error " - 'libffi-dev'"
     error " - 'libssl-dev'"
     error "You can run 'deken install' or 'deken upgrade' anytime to"
