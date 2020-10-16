@@ -248,11 +248,11 @@ fi
 
 # catch the special "upgrade" command
 if [ $# -eq 2  ] && [ "x$1" = "xinstall" ] && [ "x$2" = "x--self" ]; then
-    echo install_deken
+    install_deken
 elif [ $# -eq 2  ] && [ "x$1" = "xupgrade" ] && [ "x$2" = "x--self" ]; then
-    echo upgrade_deken
+    upgrade_deken
 elif [ $# -eq 2  ] && [ "x$1" = "xupdate" ] && [ "x$2" = "x--self" ]; then
-    echo upgrade_deken
+    upgrade_deken
 else
     # run the real deken command with args passed through
     tryrun_deken "$@"
