@@ -18,8 +18,7 @@ if [ "x${DEKEN_BASE_URL}" = "x" ]; then
     DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer"
 fi
 
-VIRTUALENV_VERSION="16.0.0"
-VIRTUALENV_URL="https://pypi.io/packages/source/v/virtualenv/virtualenv-${VIRTUALENV_VERSION}.tar.gz"
+VIRTUALENV_URL="https://bootstrap.pypa.io/virtualenv/@pyversion@/virtualenv.pyz"
 
 if [ "${OSTYPE}" = "cygwin" ] || [ "${OSTYPE}" = "msys" ]; then
     delimiter=";"
@@ -129,19 +128,17 @@ bail_requirements() {
 }
 
 install_virtualenv() {
-    echo "Downloading & installing Virtualenv."
-    rm -rf "${DEKEN_HOME}/virtualenv-source"
-    mkdir -p "${DEKEN_HOME}/virtualenv-source" && \
-	${HTTP_CLIENT} "${DEKEN_HOME}/virtualenv.tar.gz" "${VIRTUALENV_URL}" && \
-	tar -zxvf "${DEKEN_HOME}/virtualenv.tar.gz" -C "${DEKEN_HOME}/virtualenv-source/" && \
-	mv "${DEKEN_HOME}"/virtualenv-source/virtualenv-*/* "${DEKEN_HOME}/virtualenv-source"
+    local pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
+    local virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
+    echo "Downloading & installing Virtualenv for ${pyversion} using ${virtualenv_url}"
+    rm -rf "${DEKEN_HOME}/virtualenv.pyz"
+    mkdir -p "${DEKEN_HOME}"
+    ${HTTP_CLIENT} "${DEKEN_HOME}/virtualenv.pyz" "${virtualenv_url}" && \
+            "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv.pyz" "${DEKEN_HOME}/virtualenv"
+    rm -rf "${DEKEN_HOME}/virtualenv.pyz"
 
-    [ -d "${DEKEN_HOME}/virtualenv-source" ] && \
-        ( \
-	  cd "${DEKEN_HOME}/virtualenv-source" && \
-	      /usr/bin/env "${PYTHON_BIN}" setup.py build \
-        ) || \
-	    bail_install
+    [ -d "${DEKEN_HOME}/virtualenv" ] || \
+            bail_install
 }
 
 install_deken() {
@@ -168,10 +165,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         ( echo "Fetching main hylang file: ${DEKEN_BASE_URL}/deken.hy" && \
         ${HTTP_CLIENT} "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
     [ -e "${DEKENHY}" ] || bail_install
-    [ -x "${DEKEN_HOME}/virtualenv-source/virtualenv.py" ] || install_virtualenv
-    [ -d "${DEKEN_HOME}/virtualenv" ] || (\
-        echo "Setting up the virtual environment." && \
-        "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv-source/virtualenv.py" -p "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv" || exit 1)
+    [ -d "${DEKEN_HOME}/virtualenv" ] || install_virtualenv
     [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
         "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements)
