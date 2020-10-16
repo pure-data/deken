@@ -62,10 +62,9 @@ if test -z "${systeminstalled}"; then
 fi
 
 if ${systeminstalled}; then
-    DEKENHY="${0%/*}/../share/deken/deken.hy"
-else
-    DEKENHY="${DEKEN_HOME}/deken.hy"
+    DEKEN_HOME="${0%/*}/../share/deken"
 fi
+DEKENHY="${DEKEN_HOME}/deken.hy"
 
 
 ##############################################################################
