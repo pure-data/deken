@@ -103,6 +103,9 @@
 
 (setv default-floatsize None)
 
+
+(setv description_pattern (re.compile "^#X text -?[0-9]+ -?[0-9]+ DESCRIPTION (.*)"))
+
 ;; check whether a form executes or not
 (eval-when-compile
   (defmacro runs? [exp]
@@ -612,6 +615,29 @@
          (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
        (except [e Exception] (list))))
 
+(defn get-description-from-helpfile [helpfile]
+"get a short-description of an object from the 'DESCRIPTION' section
+of it's help-patch (if it exists);
+as of now, the patch-file parser is a bit simplistic:
+- it tries to get rid of Pd's artificial line-breaks after 80 (or so) chars,
+  but probably this makes problems with escaped linebreaks,...
+- it completely ignores any subpatches (so DESCRIPTION need not be in [pd META])
+- it doesn't handle DESCRIPTIONs that span multiple 'text's
+
+if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEKEN GENERATED'
+"
+  (.replace (.replace
+              (try-get
+                (list (filter None
+                              (lfor _
+                                    (.split (try
+                                              (with [f (open helpfile)]
+                                                (.read f))
+                                              (except [e OSError] "")) ";\n")
+                                    (try-get (description_pattern.match (.join " " (.splitlines _))) 1 None))))
+                0 "DEKEN GENERATED")
+              "\t" " ") "\n" " "))
+
 
 (defn make-objects-file [dekfilename objfile &optional [warn-exists True]]
   "generate object-list for <filename> from <objfile>"
@@ -640,7 +666,8 @@
   (defn genobjs [input]
     (lfor f input
           :if (f.endswith "-help.pd")
-          (% "%s\tDEKEN GENERATED\n" (cut (os.path.basename f) 0 -8))))
+          (% "%s\t%s\n"
+             (, (cut (os.path.basename f) 0 -8) (get-description-from-helpfile f)))))
   (defn readobjs [input]
     (try
       (with [f (open input)] (.readlines f))
