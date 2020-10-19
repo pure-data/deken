@@ -662,7 +662,7 @@
          (or
            (genobjs (or
                       (get-files-from-zip objfilename)
-                      (get-files-from-dir objfilename)))
+                      (get-files-from-dir objfilename :full_path True)))
            (if (binary-file? objfilename)
                []
                (readobjs objfilename))))]))
