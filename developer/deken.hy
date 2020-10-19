@@ -624,13 +624,18 @@
     (import zipfile)
     (try (.namelist (zipfile.ZipFile archive "r"))
          (except [e Exception] (log.debug e))))
-  (defn get-files-from-dir [directory &optional [recursive False]]
+  (defn get-files-from-dir [directory &optional [recursive False] [full_path False]]
     (if recursive
-        (list (chain.from_iterable (lfor (, root dirs files) (os.walk directory) files)))
+        (list (chain.from_iterable
+                (lfor (, root dirs files) (os.walk directory) (if full_path
+                                                                  (lfor f files (os.path.join root f))
+                                                                  files))))
         (try
           (lfor x (os.listdir directory)
                 :if (os.path.isfile (os.path.join directory x))
-                x)
+                (if full_path
+                    (os.path.join directory x)
+                    x))
           (except [e OSError] []))))
   (defn genobjs [input]
     (lfor f input
