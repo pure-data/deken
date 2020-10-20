@@ -1275,7 +1275,12 @@ proc ::deken::ensure_installdir {{installdir ""}} {
     return $installdir
 }
 
-proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""}}  {
+proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1}}  {
+    # fullpkgfile: the file to extract
+    # filename   : the package file name (usually the basename of $fullpkgfile)
+    #              but might be different depending on the download)
+    # installdir : where to put stuff into
+    # keep       : whether to remove the fullpkgfile after successful extraction
     set installdir [::deken::ensure_installdir ${installdir}]
     if { "${filename}" == "" } {
         set filename [file tail ${fullpkgfile}]
@@ -1307,7 +1312,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""}}  {
         }
     }
 
-    if { [::deken::utilities::extract $installdir $filename $fullpkgfile ] > 0 } {
+    if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
     } else {
         ::deken::status [format [_ "Failed to install %s! See Pd-Console" ] $extname ] 0
@@ -1410,7 +1415,7 @@ proc ::deken::clicked_link {URL filename} {
             return
         }
     }
-    ::deken::install_package ${fullpkgfile} ${filename} ${installdir}
+    ::deken::install_package ${fullpkgfile} ${filename} ${installdir} ${::deken::keep_package}
 }
 
 # download a file to a location
