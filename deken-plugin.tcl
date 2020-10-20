@@ -244,9 +244,8 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
 }
 set ::deken::_vbsunzip ""
 
-proc ::deken::utilities::extract {installdir filename fullpkgfile} {
+proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 1}} {
     ::deken::status [format [_ "Installing %s" ] $filename ]
-    # installdir fullpkgfile filename
     set PWD [ pwd ]
     cd $installdir
     set success 1
@@ -278,7 +277,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile} {
         ::pdwindow::debug [_ "\[deken\] " ]
         ::pdwindow::debug [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
         ::pdwindow::debug "\n"
-        if { "$::deken::keep_package" } { } {
+        if { "${keep_package}" } { } {
             catch { file delete $fullpkgfile }
         }
     } else {
