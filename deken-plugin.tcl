@@ -1197,27 +1197,28 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
     }
 }
 
-# handle a clicked link
-proc ::deken::clicked_link {URL filename} {
+
+
+proc ::deken::ensure_installdir {{installdir ""}} {
     ## make sure that the destination path exists
     ### if ::deken::installpath is set, use the first writable item
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
-    set installdir [::deken::find_installpath]
-    set parsedname [::deken::parse_filename $filename]
-    set extname [lindex $parsedname 0]
+    if { "$installdir" != "" } {return $installdir}
 
-    if { "$installdir" == "" } {
-        if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-            # if the docspath is set, try the externals subdir
-            set installdir [::pd_docsdir::get_externals_path]
-        }
+    set installdir [::deken::find_installpath]
+    if { "$installdir" != "" } {return $installdir}
+
+    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
+        # if the docspath is set, try the externals subdir
+        set installdir [::pd_docsdir::get_externals_path]
     }
-    if { "$installdir" == "" } {
-        # ask the user (and remember the decision)
-        ::deken::prompt_installdir
-        set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
-    }
+    if { "$installdir" != "" } {return $installdir}
+
+    # ask the user (and remember the decision)
+    ::deken::prompt_installdir
+    set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+
     set installdir [::deken::utilities::substpath $installdir ]
     while {1} {
         if { "$installdir" == "" } {
@@ -1272,30 +1273,18 @@ proc ::deken::clicked_link {URL filename} {
             break
         }
     }
+    return $installdir
+}
 
+proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""}}  {
+    set installdir [::deken::ensure_installdir ${installdir}]
+    if { "${filename}" == "" } {
+        set filename [file tail ${fullpkgfile}]
+    }
+    set parsedname [::deken::parse_filename $filename]
+    set extname [lindex $parsedname 0]
     set extpath [file join $installdir $extname]
-    set fullpkgfile [file join $installdir $filename]
-    ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
-    set fullpkgfile [::deken::download_file $URL $fullpkgfile]
-    if { "$fullpkgfile" eq "" } {
-        ::pdwindow::debug [_ "aborting."]
-        ::pdwindow::debug "\n"
-        return
-    }
-    ::pdwindow::debug "\n"
-    if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
-        if { "$::deken::verify_sha256" } {
-            if { "$::deken::keep_package" } { } {
-                catch { file delete $fullpkgfile }
-            }
-            ::pdwindow::error "\[deken\]: "
-            ::pdwindow::error [format [_ "SHA256 sum of %1\$s does not match reference %2\$s!" ] $filename ${URL}.sha256 ]
-            ::pdwindow::error "\n"
-            ::pdwindow::error [_ "aborting."]
-            ::pdwindow::error "\n"
-            return
-        }
-    }
+
 
     set deldir ""
     if { "$::deken::remove_on_install" } {
@@ -1391,6 +1380,38 @@ proc ::deken::clicked_link {URL filename} {
             }
         }
     }
+}
+
+# handle a clicked link
+proc ::deken::clicked_link {URL filename} {
+    ## make sure that the destination path exists
+    ### if ::deken::installpath is set, use the first writable item
+    ### if not, get a writable item from one of the searchpaths
+    ### if this still doesn't help, ask the user
+    set installdir [::deken::ensure_installdir]
+    set fullpkgfile [file join $installdir $filename]
+    ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
+    set fullpkgfile [::deken::download_file $URL $fullpkgfile]
+    if { "$fullpkgfile" eq "" } {
+        ::pdwindow::debug [_ "aborting."]
+        ::pdwindow::debug "\n"
+        return
+    }
+    ::pdwindow::debug "\n"
+    if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
+        if { "$::deken::verify_sha256" } {
+            if { "$::deken::keep_package" } { } {
+                catch { file delete $fullpkgfile }
+            }
+            ::pdwindow::error "\[deken\]: "
+            ::pdwindow::error [format [_ "SHA256 sum of %1\$s does not match reference %2\$s!" ] $filename ${URL}.sha256 ]
+            ::pdwindow::error "\n"
+            ::pdwindow::error [_ "aborting."]
+            ::pdwindow::error "\n"
+            return
+        }
+    }
+    ::deken::install_package ${fullpkgfile} ${filename} ${installdir}
 }
 
 # download a file to a location
