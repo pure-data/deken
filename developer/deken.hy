@@ -1024,6 +1024,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
         outfile)
       (except [e OSError] (log.warning (% "Unable to download file: %s" (, e))))))
   (import requests)
+  (log.info (% "Downloading '%s' as %s" (, url filename)))
   (setv r (requests.get url))
   (if (= 200 r.status_code)
       (save-data
