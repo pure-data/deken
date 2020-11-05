@@ -6,7 +6,6 @@ stages:
   - deploy
 
 variables:
- IEMCI_CONFIGURATIONS: python3
  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
  GIT_SUBMODULE_STRATEGY: normal
@@ -40,6 +39,8 @@ osx:
 windows:
   tags:
     - windows
+  variables:
+    - IEMCI_CONFIGURATIONS: python3
   stage: build
   <<: *build_script
   after_script:
