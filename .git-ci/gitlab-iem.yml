@@ -40,7 +40,7 @@ windows:
   tags:
     - windows
   variables:
-    - IEMCI_CONFIGURATIONS: python3
+    IEMCI_CONFIGURATIONS: python3
   stage: build
   <<: *build_script
   after_script:
