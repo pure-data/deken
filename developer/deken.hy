@@ -103,6 +103,9 @@
 
 (setv default-floatsize None)
 
+
+(setv description_pattern (re.compile "^#X text -?[0-9]+ -?[0-9]+ DESCRIPTION (.*)"))
+
 ;; check whether a form executes or not
 (eval-when-compile
   (defmacro runs? [exp]
@@ -376,7 +379,18 @@
     floatsize)
   (if default-floatsize
       (doit default-floatsize filename)
-      None))
+      (log.error (+ "OUCH: "
+                    (% "couldn't detect float-size%s" (if filename (% " for '%s'" filename) ""))
+                    "\n      and no default set, assuming None"
+                    "\n      use '--default-floatsize <N>' to override)"))))
+
+(defn --pack-architectures-- [archs]
+  """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
+  (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
+  (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
+  (setv archdict {})
+  (for [(, os cpu floatsize) archs] (assoc archdict (, os cpu) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
+  (.union (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
@@ -388,10 +402,10 @@
           (.join ")(" (list (sort-archs archs)))
           ")")
         ""))
-  (_get_archs (lfor arch (get-externals-architectures
-                           folder
-                           :extra-files extra-files
-                           :recurse-subdirs recurse-subdirs)
+  (_get_archs (lfor arch (--pack-architectures-- (get-externals-architectures
+                                                   folder
+                                                   :extra-files extra-files
+                                                   :recurse-subdirs recurse-subdirs))
                     (.join "-" (lfor parts arch (str parts))))))
 
 ;; check if a particular file has an extension in a set
@@ -428,7 +442,7 @@
            (cond
              [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
              [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")]
-             [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs f)]
+             [(re.search "\.(pd_darwin|d_[^.]*|dylib)$" f) (get-mach-archs f)]
              [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
              [True []])))
        []))
@@ -612,6 +626,29 @@
          (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
        (except [e Exception] (list))))
 
+(defn get-description-from-helpfile [helpfile]
+"get a short-description of an object from the 'DESCRIPTION' section
+of it's help-patch (if it exists);
+as of now, the patch-file parser is a bit simplistic:
+- it tries to get rid of Pd's artificial line-breaks after 80 (or so) chars,
+  but probably this makes problems with escaped linebreaks,...
+- it completely ignores any subpatches (so DESCRIPTION need not be in [pd META])
+- it doesn't handle DESCRIPTIONs that span multiple 'text's
+
+if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEKEN GENERATED'
+"
+  (.replace (.replace
+              (try-get
+                (list (filter None
+                              (lfor _
+                                    (.split (try
+                                              (with [f (open helpfile)]
+                                                (.read f))
+                                              (except [e OSError] "")) ";\n")
+                                    (try-get (description_pattern.match (.join " " (.splitlines _))) 1 None))))
+                0 "DEKEN GENERATED")
+              "\t" " ") "\n" " "))
+
 
 (defn make-objects-file [dekfilename objfile &optional [warn-exists True]]
   "generate object-list for <filename> from <objfile>"
@@ -624,18 +661,24 @@
     (import zipfile)
     (try (.namelist (zipfile.ZipFile archive "r"))
          (except [e Exception] (log.debug e))))
-  (defn get-files-from-dir [directory &optional [recursive False]]
+  (defn get-files-from-dir [directory &optional [recursive False] [full_path False]]
     (if recursive
-        (list (chain.from_iterable (lfor (, root dirs files) (os.walk directory) files)))
+        (list (chain.from_iterable
+                (lfor (, root dirs files) (os.walk directory) (if full_path
+                                                                  (lfor f files (os.path.join root f))
+                                                                  files))))
         (try
           (lfor x (os.listdir directory)
                 :if (os.path.isfile (os.path.join directory x))
-                x)
+                (if full_path
+                    (os.path.join directory x)
+                    x))
           (except [e OSError] []))))
   (defn genobjs [input]
     (lfor f input
           :if (f.endswith "-help.pd")
-          (% "%s\tDEKEN GENERATED\n" (cut (os.path.basename f) 0 -8))))
+          (% "%s\t%s\n"
+             (, (cut (os.path.basename f) 0 -8) (get-description-from-helpfile f)))))
   (defn readobjs [input]
     (try
       (with [f (open input)] (.readlines f))
@@ -657,7 +700,7 @@
          (or
            (genobjs (or
                       (get-files-from-zip objfilename)
-                      (get-files-from-dir objfilename)))
+                      (get-files-from-dir objfilename :full_path True)))
            (if (binary-file? objfilename)
                []
                (readobjs objfilename))))]))
@@ -992,6 +1035,7 @@
         outfile)
       (except [e OSError] (log.warning (% "Unable to download file: %s" (, e))))))
   (import requests)
+  (log.info (% "Downloading '%s' as %s" (, url filename)))
   (setv r (requests.get url))
   (if (= 200 r.status_code)
       (save-data

@@ -4,9 +4,7 @@ matrix:
   include:
     - language: generic
       os: osx
-      env: PIP=pip3
     - python: "3.7"
-      env: PIP=pip
 
 addons:
   homebrew:
@@ -34,7 +32,27 @@ script:
   - ~/bin/deken package --dekformat 0 -v000.dekenci tmp/deken-test
   - ~/bin/deken find zexy
   - ~/bin/deken find --architecture "*" --depth 0 zexy
+  # create binaries with pyinstaller
+  - ~/.deken/virtualenv/bin/pip install pyinstaller
+  - (cd developer; DEKEN_VERSION=$(git describe --always) ~/.deken/virtualenv/bin/pyinstaller deken.spec)
 
 after_script:
   - ls -l
-  - ls -l tmp/
+  - ls -l tmp/ developer/dist
+
+
+before_deploy:
+  - mv developer/dist/deken developer/dist/deken-${TRAVIS_TAG}${TRAVIS_OS_NAME}
+
+deploy:
+  provider: releases
+  file: developer/dist/deken-*
+  file_glob: true
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+    os: osx
+    repo: pure-data/deken
+  api-key:
+    secure: S35Qn8v4WAbO4X7Ia62vUj5bS5d4e/0YwUPaMp0ob3J8cN/NLu6rEWj7qf306yHz08FPhYfCTtDkTcytmRjAy//625aduiLn52XSGGma8QSzSGiCmx66OmTl/BpNg3ZdgYCttF5a5dk7va3qrOrZs6DMb4IXfi5Wu4fje/dCJheFsBwTLscLWsz/oldXTK0J5ddEwOHMFQ9DWqOpqhfMqqB77K0qy+9mKThBacyH5nai4tA0uObooyln3QU6bIJ8AcrDL/FcJQCHwWpt1wE/7yEgoe/AtPlDwVwGJ9BYRAe6P5Z/11Uzli1e0/DRmrYce1fOK6kqi1paXOAoQBPlH28q6hAKTSMhAbDBah9HO8oWgegwYS/9ntZMhZERHPEoQk9Qh2uZUepTA3s4HyyHejgmmdj3tgYatVKjEZOVUD9E9Kg1gOBNG8VFZDse2OP6Gi1MEQiF1jG4hpUTlpCU/+h8QDRSqQses58iICfNiWVeBJ+bVA9Yb9lpnr2DJY8ZqDH/KRj0uj/bhJp/n1+OCCG0Il77FJaH1T4pXmmSR+PCrDdBU1tawdQ4EFthZCCj8J7JbfNT79NCNFE6baKGVukMXdE4B/oapxTHpcm+EXkuenDSj0iQWey1PD/uBuOsjQj7f0bjFLBdiNCfVvqDuKERrgRAOL2ICeapCkUjwSk=

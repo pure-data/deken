@@ -1,7 +1,16 @@
 # iem-ci configuration for deken
+stages:
+  - build
+  - test
+  - release
+  - deploy
 
 variables:
  IEMCI_CONFIGURATIONS: python3
+ CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+ CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
+ GIT_SUBMODULE_STRATEGY: normal
+
 
 .build_script: &build_script
   script:
@@ -39,3 +48,39 @@ windows:
     paths:
       - deken.exe
     expire_in: 1 week
+
+# =====================================================================
+# docker images
+# =====================================================================
+
+.docker:
+  before_script:
+    - date
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker info
+    - docker images
+  after_script:
+    - docker images
+    - docker logout $CI_REGISTRY
+  tags:
+    - docker-builder
+  
+build:
+  stage: build
+  extends:
+    - .docker
+  script:
+    - ./.git-ci/git-version
+    - docker build -t $CONTAINER_TEST_IMAGE developer
+    - docker push $CONTAINER_TEST_IMAGE
+
+release:
+  stage: release
+  extends:
+    - .docker
+  script:
+    - docker pull $CONTAINER_TEST_IMAGE
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
+  only:
+    - tags
