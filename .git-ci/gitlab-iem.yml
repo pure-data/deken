@@ -10,14 +10,15 @@ variables:
  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
  GIT_SUBMODULE_STRATEGY: normal
  PYTHON: python3
+ PIPFLAGS: ""
 
 
 .build_script: &build_script
   script:
     - export DEKEN_VERSION=$(git describe --always)
     - ${PYTHON} -m pip install --upgrade pip
-    - ${PYTHON} -m pip install --user -r developer/requirements.txt
-    - ${PYTHON} -m pip install --user pyinstaller
+    - ${PYTHON} -m pip install ${PIPFLAGS} -r developer/requirements.txt
+    - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller
     - for d in ~/Library/Python/*/bin; do test -d "${d}" && PATH=${PATH}:${d}; done || true
     - echo $PATH
     - (cd developer; pyinstaller deken.spec)
@@ -25,6 +26,8 @@ variables:
 osx:
   tags:
     - osx
+  variables:
+    PIPFLAGS: --user
   stage: build
   before_script:
     - ${PYTHON} --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
@@ -47,11 +50,6 @@ windows:
     PYTHON: /c/Python38/python
   stage: build
   before_script:
-    - set
-    - python3 --version && true
-    - python --version && true
-    - find /c/Python* -type f -iname "*.exe" || true
-    - cat ~/.bashrc.local
     - ${PYTHON} --version && true
   <<: *build_script
   after_script:
