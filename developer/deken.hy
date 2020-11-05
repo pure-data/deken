@@ -438,7 +438,7 @@
            (cond
              [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
              [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")]
-             [(re.search "\.(pd_darwin|d_[^.]*)$" f) (get-mach-archs f)]
+             [(re.search "\.(pd_darwin|d_[^.]*|dylib)$" f) (get-mach-archs f)]
              [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
              [True []])))
        []))
