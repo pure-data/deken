@@ -379,7 +379,8 @@
     floatsize)
   (if default-floatsize
       (doit default-floatsize filename)
-      None))
+      (log.error (+ "OUCH: couldn't detect float-size and no default set, assuming None\n"
+                    "      use '--default-floatsize <N>' to override)"))))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
