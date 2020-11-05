@@ -382,6 +382,12 @@
       (log.error (+ "OUCH: couldn't detect float-size and no default set, assuming None\n"
                     "      use '--default-floatsize <N>' to override)"))))
 
+(defn --pack-architectures-- [archs]
+  """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
+  (setv archdict {})
+  (for [(, os cpu floatsize) archs] (assoc archdict (, os cpu) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
+  (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))))
+
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
   "get architecture-string for all Pd-binaries in the folder"
@@ -392,10 +398,10 @@
           (.join ")(" (list (sort-archs archs)))
           ")")
         ""))
-  (_get_archs (lfor arch (get-externals-architectures
-                           folder
-                           :extra-files extra-files
-                           :recurse-subdirs recurse-subdirs)
+  (_get_archs (lfor arch (--pack-architectures-- (get-externals-architectures
+                                                   folder
+                                                   :extra-files extra-files
+                                                   :recurse-subdirs recurse-subdirs))
                     (.join "-" (lfor parts arch (str parts))))))
 
 ;; check if a particular file has an extension in a set
