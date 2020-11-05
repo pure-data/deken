@@ -25,7 +25,7 @@ osx:
   stage: build
   before_script:
     - python3 --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
-    - sudo chown -R $(whoami) /usr/local/
+    - sudo chown -R $(whoami) /usr/local/ || echo "continuing without owning /usr/local"
   <<: *build_script
   after_script:
     - cp developer/dist/deken .
