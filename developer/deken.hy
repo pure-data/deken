@@ -558,7 +558,6 @@
                             (str-to-bytes "aeabi")))
         cpu))
     (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
-          :if floatsize
           (,
            (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
              (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
