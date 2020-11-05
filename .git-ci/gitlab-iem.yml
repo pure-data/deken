@@ -45,11 +45,11 @@ windows:
     IEMCI_CONFIGURATIONS: python3
   stage: build
   before_script:
+    - set
     - python3 --version && true
     - python --version && true
-    - echo $PATH
-    - find /c/Python* -type f -iname "*.exe" ||true
-    - python3() { /c/Python38/python.exe "$@" }
+    - find /c/Python* -type f -iname "*.exe" || true
+    - cat ~/.bashrc.local
     - python3 --version && true
   <<: *build_script
   after_script:
