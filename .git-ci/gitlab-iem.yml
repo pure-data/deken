@@ -26,6 +26,7 @@ osx:
   stage: build
   before_script:
     - python3 --version || brew install --no-upgrade python3
+    - python3 --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
     - sudo chown -R $(whoami) /usr/local/
   <<: *build_script
   after_script:
