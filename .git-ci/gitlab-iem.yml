@@ -36,6 +36,7 @@ osx:
     expire_in: 1 week
 
 windows:
+  allow_failure: true
   tags:
     - windows
   variables:
