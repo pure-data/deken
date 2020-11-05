@@ -14,6 +14,8 @@ variables:
 .build_script: &build_script
   script:
     - export DEKEN_VERSION=$(git describe --always)
+    - python3 --version && true
+    - python --version && true
     - python3 -m pip install --upgrade pip
     - python3 -m pip install --user -r developer/requirements.txt
     - python3 -m pip install --user pyinstaller
