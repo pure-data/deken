@@ -65,7 +65,7 @@ windows:
   tags:
     - docker-builder
   
-build:
+docker-build:
   stage: build
   extends:
     - .docker
@@ -74,7 +74,7 @@ build:
     - docker build -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
-release:
+docker-release:
   stage: release
   extends:
     - .docker
