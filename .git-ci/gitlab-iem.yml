@@ -17,6 +17,7 @@ variables:
     - python3 -m pip install --upgrade pip
     - python3 -m pip install --user -r developer/requirements.txt
     - python3 -m pip install --user pyinstaller
+    - for d in ~/Library/Python/*/bin; do test -d "${d}" && PATH=${PATH}:${i}; done || true
     - (cd developer; pyinstaller deken.spec)
 
 osx:
