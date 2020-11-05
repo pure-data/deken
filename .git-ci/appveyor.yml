@@ -38,8 +38,8 @@ build_script:
   - dist\deken --version
   - dist\deken --platform
   - dist\deken systeminfo
-  - dist\deken package -v 000 tmp/deken-test
-  - dist\deken package --dekformat 0 -v000.0 tmp/deken-test
+    #  - dist\deken package -v 000 tmp/deken-test
+    #  - dist\deken package --dekformat 0 -v000.0 tmp/deken-test
   - dist\deken find zexy
   - dist\deken find --architecture "*" --depth 0 zexy
 
