@@ -379,8 +379,10 @@
     floatsize)
   (if default-floatsize
       (doit default-floatsize filename)
-      (log.error (+ "OUCH: couldn't detect float-size and no default set, assuming None\n"
-                    "      use '--default-floatsize <N>' to override)"))))
+      (log.error (+ "OUCH: "
+                    (% "couldn't detect float-size%s" (if filename (% " for '%s'" filename) ""))
+                    "\n      and no default set, assuming None"
+                    "\n      use '--default-floatsize <N>' to override)"))))
 
 (defn --pack-architectures-- [archs]
   """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
