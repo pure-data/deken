@@ -386,9 +386,11 @@
 
 (defn --pack-architectures-- [archs]
   """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
+  (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
+  (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
   (setv archdict {})
   (for [(, os cpu floatsize) archs] (assoc archdict (, os cpu) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
-  (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))))
+  (.union (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder &optional [recurse-subdirs False] [extra-files []]]
