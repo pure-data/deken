@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "x${DEKEN_VERSION}" = "x" ]; then
+  DEKEN_VERSION=$(git describe --alway)
+  DEKEN_VERSION=${DEKEN_VERSION#v}
+fi
+sed -e "s|\(DEKEN_VERSION\)=\".*\"|\1=\"${DEKEN_VERSION}\"|g" -i developer/deken
+sed -e "s|\[\(::deken::versioncheck\) [^]]*\]|[\1 ${DEKEN_VERSION}]|g" -i deken-plugin.tcl
+
