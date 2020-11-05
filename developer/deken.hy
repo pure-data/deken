@@ -1320,7 +1320,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (import requests)
   (setv r (requests.get searchurl
                         :headers {"user-agent" (user-agent)
-                                  "accept" "tab-separated-values"}
+                                  "accept" "text/tab-separated-values"}
                         :params {"libraries" libraries
                                  "objects" objects}))
   (if (= 200 r.status_code)
