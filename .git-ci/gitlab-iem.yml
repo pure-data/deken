@@ -50,7 +50,7 @@ windows:
     - python --version && true
     - find /c/Python* -type f -iname "*.exe" || true
     - cat ~/.bashrc.local
-    - python3 --version && true
+    - /c/Python38/python --version && true
   <<: *build_script
   after_script:
     - cp developer/dist/deken.exe .
