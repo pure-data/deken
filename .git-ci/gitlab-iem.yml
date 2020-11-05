@@ -37,7 +37,7 @@ osx:
       - deken
     expire_in: 1 week
 
-.windows:
+windows:
   allow_failure: true
   tags:
     - windows
