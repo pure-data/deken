@@ -14,10 +14,6 @@ variables:
 .build_script: &build_script
   script:
     - export DEKEN_VERSION=$(git describe --always)
-    - python3 --version && true
-    - python --version && true
-    - echo $PATH
-    - find /c/Python* -type f -iname "*.exe" ||true
     - python3 -m pip install --upgrade pip
     - python3 -m pip install --user -r developer/requirements.txt
     - python3 -m pip install --user pyinstaller
@@ -48,6 +44,13 @@ windows:
   variables:
     IEMCI_CONFIGURATIONS: python3
   stage: build
+  before_script:
+    - python3 --version && true
+    - python --version && true
+    - echo $PATH
+    - find /c/Python* -type f -iname "*.exe" ||true
+    - python3() { /c/Python38/python.exe "$@" }
+    - python3 --version && true
   <<: *build_script
   after_script:
     - cp developer/dist/deken.exe .
