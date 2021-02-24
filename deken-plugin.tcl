@@ -761,6 +761,8 @@ proc ::deken::open_searchui {mytoplevel} {
         $mytoplevel.results tag configure archmatch
         $mytoplevel.results tag configure noarchmatch -foreground grey
     }
+    ::deken::post [_ "Enter an exact library or object name."] info
+    ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
     ::deken::post [_ "To get a list of all available externals, try an empty search."] info
 }
 
