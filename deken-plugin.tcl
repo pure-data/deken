@@ -1408,14 +1408,17 @@ proc ::deken::clicked_link {URL filename} {
     set installdir [::deken::ensure_installdir]
     set fullpkgfile [file join $installdir $filename]
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
+    ::deken::status [format [_ "Downloading '%s'" ] $filename]
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
         ::pdwindow::debug [_ "aborting."]
         ::pdwindow::debug "\n"
+        ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
         return
     }
     ::pdwindow::debug "\n"
     if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
+        ::deken::status [format [_ "Checksum mismatch for '%s'" ] $filename] 0
         if { "$::deken::verify_sha256" } {
             if { "$::deken::keep_package" } { } {
                 catch { file delete $fullpkgfile }
