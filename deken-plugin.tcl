@@ -641,12 +641,9 @@ proc ::deken::bind_globalshortcuts {toplevel} {
 }
 
 proc ::deken::status {{msg ""} {timeout 5000}} {
-    #variable mytoplevelref
-    #$mytoplevelref.results insert end "$msg\n"
-    #$mytoplevelref.status.label -text "$msg"
     after cancel $::deken::statustimer
     if {"" ne $msg} {
-        set ::deken::statustext "STATUS: $msg"
+        set ::deken::statustext "$msg"
         if { $timeout != "0" } {
             set ::deken::statustimer [after $timeout [list set ::deken::statustext ""]]
         }
@@ -826,7 +823,7 @@ proc ::deken::create_dialog {mytoplevel} {
 
     frame $mytoplevel.status -relief sunken
     pack $mytoplevel.status -side bottom -fill x -pady 3
-    label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken
+    label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken -anchor w
     pack $mytoplevel.status.label -side top -fill x
 
 
