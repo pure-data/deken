@@ -738,9 +738,7 @@ proc ::deken::update_searchbutton {mytoplevel} {
 }
 
 proc ::deken::progress {x} {
-    ::pdwindow::debug [format [_ "\[deken\] %s%% of download completed"] ${x}]
-    ::pdwindow::debug "\n"
-
+    ::deken::status [format [_ "\[deken\] %s%% of download completed"] ${x}]
 }
 
 # this function gets called when the menu is clicked
