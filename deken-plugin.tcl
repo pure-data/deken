@@ -818,7 +818,7 @@ proc ::deken::create_dialog {mytoplevel} {
     if { [ catch {
         ttk::progressbar $mytoplevel.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
     } {
-        pack $mytoplevel.progress.bar -side top
+        pack $mytoplevel.progress.bar -side top -fill x
         proc ::deken::progress {x} {
             set ::deken::progressvar $x
         }
