@@ -807,13 +807,6 @@ proc ::deken::create_dialog {mytoplevel} {
     label $mytoplevel.warning.label -text [_ "Only install externals uploaded by people you trust."]
     pack $mytoplevel.warning.label -side left -padx 6
 
-    frame $mytoplevel.status
-    pack $mytoplevel.status -side bottom -fill x
-    button $mytoplevel.status.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
-    pack $mytoplevel.status.preferences -side right -padx 6 -pady 3 -ipadx 10
-    label $mytoplevel.status.label -textvariable ::deken::statustext
-    pack $mytoplevel.status.label -side left -padx 6
-
     text $mytoplevel.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$mytoplevel.results.ys set"
     scrollbar $mytoplevel.results.ys -orient vertical -command "$mytoplevel.results yview"
     pack $mytoplevel.results.ys -side right -fill y
@@ -821,15 +814,26 @@ proc ::deken::create_dialog {mytoplevel} {
 
 
     frame $mytoplevel.progress
-    pack $mytoplevel.progress -side bottom -fill x
+    pack $mytoplevel.progress -side top -fill x
     if { [ catch {
         ttk::progressbar $mytoplevel.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
     } {
-        pack $mytoplevel.progress.bar -side bottom
+        pack $mytoplevel.progress.bar -side top
         proc ::deken::progress {x} {
             set ::deken::progressvar $x
         }
-    }
+}
+
+    frame $mytoplevel.status -relief sunken
+    pack $mytoplevel.status -side bottom -fill x -pady 3
+    label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken
+    pack $mytoplevel.status.label -side top -fill x
+
+
+    frame $mytoplevel.buttons
+    pack $mytoplevel.buttons -side top -fill x
+    button $mytoplevel.buttons.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
+    pack $mytoplevel.buttons.preferences -side right -padx 6 -pady 3 -ipadx 10
 }
 
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
