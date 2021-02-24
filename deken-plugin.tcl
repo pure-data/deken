@@ -789,6 +789,17 @@ proc ::deken::create_dialog {mytoplevel} {
     button $mytoplevel.searchbit.button -text [_ "Show all"] -default active -command "::deken::initiate_search $mytoplevel"
     pack $mytoplevel.searchbit.button -side right -padx 6 -pady 3 -ipadx 10
 
+    frame $mytoplevel.objlib
+    pack $mytoplevel.objlib -side top -fill x
+    label $mytoplevel.objlib.label -text [_ "Search for: "]
+    radiobutton $mytoplevel.objlib.libraries -text [_ "libraries"] -variable ::deken::searchtype -value libraries
+    radiobutton $mytoplevel.objlib.objects -text [_ "objects"] -variable ::deken::searchtype -value objects
+    radiobutton $mytoplevel.objlib.both -text [_ "both"] -variable ::deken::searchtype -value name
+    foreach x {label libraries objects both} {
+        pack $mytoplevel.objlib.$x -side left -padx 6
+        puts  $mytoplevel.objlib.$x
+    }
+
     frame $mytoplevel.warning
     pack $mytoplevel.warning -side top -fill x
     label $mytoplevel.warning.label -text [_ "Only install externals uploaded by people you trust."]
