@@ -106,6 +106,7 @@ set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
 set ::deken::keep_package 0
 set ::deken::verify_sha256 1
+set ::deken::searchtype name
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
@@ -1646,10 +1647,10 @@ proc ::deken::search::puredata.info {term} {
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set queryterm {}
-    foreach x $term {lappend queryterm name $x}
+    foreach x $term {lappend queryterm ${::deken::searchtype} $x}
     if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stderr ] } {
-        set queryterm [ join $term "&name=" ]
-        set queryterm "name=${queryterm}"
+        set queryterm [ join $term "&${::deken::searchtype}=" ]
+        set queryterm "${::deken::searchtype}=${queryterm}"
     }
 
     # deken-specific socket config
