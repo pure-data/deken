@@ -794,7 +794,6 @@ proc ::deken::create_dialog {mytoplevel} {
     radiobutton $mytoplevel.objlib.both -text [_ "both"] -variable ::deken::searchtype -value name
     foreach x {label libraries objects both} {
         pack $mytoplevel.objlib.$x -side left -padx 6
-        puts  $mytoplevel.objlib.$x
     }
 
     frame $mytoplevel.warning
