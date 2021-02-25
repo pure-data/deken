@@ -864,7 +864,11 @@ proc ::deken::create_dialog {mytoplevel} {
     label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken -anchor w
     pack $mytoplevel.status.label -side bottom -fill x
 
-    set m [menu .deken_moremenu]
+    set m .deken_moremenu
+    if { [winfo exists $m] } {
+        destroy $m
+    }
+    set m [menu $m]
     $m add command -label [_ "Preferences" ]  -command "::deken::preferences::show"
     $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
 
