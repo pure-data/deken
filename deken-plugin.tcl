@@ -826,16 +826,17 @@ proc ::deken::create_dialog {mytoplevel} {
         proc ::deken::progress {x} { set ::deken::progressvar $x }
     }
 
-    frame $mytoplevel.status -relief sunken
+    frame $mytoplevel.status
     pack $mytoplevel.status -side bottom -fill x -pady 3
     label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken -anchor w
-    pack $mytoplevel.status.label -side top -fill x
+    pack $mytoplevel.status.label -side bottom -fill x
 
+    set m [menu .deken_moremenu]
+    $m add command -label [_ "Preferences" ]  -command "::deken::preferences::show"
+    $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
 
-    frame $mytoplevel.buttons
-    pack $mytoplevel.buttons -side top -fill x
-    button $mytoplevel.buttons.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
-    pack $mytoplevel.buttons.preferences -side right -padx 6 -pady 3 -ipadx 10
+    button $mytoplevel.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $mytoplevel\] \[winfo pointery $mytoplevel\]"
+    pack $mytoplevel.status.installdek -side right -padx 6 -pady 3 -ipadx 10
 }
 proc ::deken::install_package_from_file {{pkgfile ""}} {
     set types {}
