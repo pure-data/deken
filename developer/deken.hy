@@ -1129,7 +1129,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; compute the archive filename for a particular external on this platform
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
 ;; v0: "<pkgname>-v<version>-(<arch1>)(<arch2>)-externals.tar.gz" (resp. ".zip")
-(defn make-archive-name [folder version
+(defn make-archive-name [folder pkgname version
                          &optional
                          [filenameversion 1]
                          [recurse-subdirs False]
@@ -1148,7 +1148,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 (archive-extension archs))]
       [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
   (do-make-name
-    (os.path.basename folder)
+    (or pkgname (os.path.basename folder))
     (cond [(is version None)
            (fatal
              (+ (% "No version for '%s'!\n" folder)
@@ -1527,6 +1527,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 name
                                 (make-archive-name
                                   (os.path.normpath name)
+                                  (or args.name (os.path.normpath name))
                                   args.version
                                   (int-dekformat args.dekformat)
                                   :recurse-subdirs args.search-subdirs
@@ -1660,6 +1661,11 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 (defn main []
   "run deken"
   (defn add-package-flags [parser]
+    (parser.add_argument
+      "--name" "-n"
+      :help "The library name as it appears in the package filename (DEFAULT: the last path component of the SOURCE)."
+      :default None
+      :required False)
     (parser.add_argument
       "--version" "-v"
       :help "A library version number to insert into the package name (in case the package is created)."
