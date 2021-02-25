@@ -842,6 +842,38 @@ proc ::deken::create_dialog {mytoplevel} {
     button $mytoplevel.buttons.preferences -text [_ "Preferences" ] -command "::deken::preferences::show"
     pack $mytoplevel.buttons.preferences -side right -padx 6 -pady 3 -ipadx 10
 }
+proc ::deken::install_package_from_file {{pkgfile ""}} {
+    set types {}
+    lappend types [list [_ "Deken Packages" ] .dek]
+    lappend types [list [_ "ZIP Files" ] .zip]
+    if {$::tcl_platform(platform) ne "windows"} {
+        lappend types [list [_ "TAR Files" ] {.tar.gz .tgz} ]
+    }
+    lappend types [list [_ "All Files" ]  *  ]
+    if { "${pkgfile}" eq ""} {
+        set pkgfile [tk_getOpenFile -defaultextension dek -filetypes $types]
+    }
+    if { "${pkgfile}" eq "" } { return }
+
+    # user picked one
+    # perform checks and install it
+    set pkgfile [file normalize $pkgfile]
+
+    if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
+        ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
+        if { "$::deken::verify_sha256" } {
+            set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
+            tk_messageBox \
+                -title [_ "SHA256 verification failed" ] \
+                -message ${msg} \
+                -icon error \
+                -parent .externals_searchui \
+                -type ok
+            return
+        }
+    }
+    ::deken::install_package ${pkgfile} "" "" 1
+}
 
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
     set pad [::deken::utilities::newwidget ${toplevel}.pad]
