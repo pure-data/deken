@@ -1340,7 +1340,14 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
     } else {
-        ::deken::status [format [_ "Failed to install %s! See Pd-Console" ] $extname ] 0
+        set msg [format [_ "Failed to install %s!" ] $extname ]
+        ::deken::status ${msg} 0
+        tk_messageBox \
+            -title [_ "Package installation failed" ] \
+            -message ${msg} \
+            -icon error \
+            -parent .externals_searchui \
+            -type ok
     }
 
     if { "$deldir" != "" } {
@@ -1435,11 +1442,13 @@ proc ::deken::clicked_link {URL filename} {
             if { "$::deken::keep_package" } { } {
                 catch { file delete $fullpkgfile }
             }
-            ::pdwindow::error "\[deken\]: "
-            ::pdwindow::error [format [_ "SHA256 sum of %1\$s does not match reference %2\$s!" ] $filename ${URL}.sha256 ]
-            ::pdwindow::error "\n"
-            ::pdwindow::error [_ "aborting."]
-            ::pdwindow::error "\n"
+            set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
+            tk_messageBox \
+                -title [_ "SHA256 verification failed" ] \
+                -message ${msg} \
+                -icon error \
+                -parent .externals_searchui \
+                -type ok
             return
         }
     }
