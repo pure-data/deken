@@ -332,7 +332,18 @@ if { [catch {package require sha256} ] } {
         set retval 1
         if { [ catch {
             set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
-            set hashfile [::deken::download_file ${url}.sha256 [::deken::get_tmpfilename [::deken::gettmpdir] ".sha256" ] ]
+            # check if $url really is a local file
+            if { [file normalize $url] eq $url } {
+                # $url is really an absolute filename
+                # use it, if it exists
+                set hashfile "${url}.sha256"
+                if { [file isfile $url ] && [file readable $url] } { } {
+                    set hashfile ""
+                }
+            } {
+                # otherwise fetch it from the internet
+                set hashfile [::deken::download_file ${url}.sha256 [::deken::get_tmpfilename [::deken::gettmpdir] ".sha256" ] ]
+            }
             if { "$hashfile" eq "" } {
                 ::deken::utilities::verbose 0 [format [_ "unable to fetch reference SHA256 for %s." ] $url ]
                 set retval 1
