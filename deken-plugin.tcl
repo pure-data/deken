@@ -1107,7 +1107,6 @@ proc ::deken::preferences::create {mytoplevel} {
 proc ::deken::preferences::mapped {mytoplevel} {
     set cnv $mytoplevel.installdir.cnv
     catch {
-        #puts "bbox [$cnv bbox all]"
         set bbox [$cnv bbox all]
         if { "$bbox" != "" } {
             $cnv configure -scrollregion $bbox
