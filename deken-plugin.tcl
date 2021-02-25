@@ -1477,9 +1477,10 @@ proc ::deken::download_file {URL outputfilename} {
         ::pdwindow::error "\n"
         set outputfilename ""
     }
+    ::http::cleanup $httpresult
+
     flush $f
     close $f
-    ::http::cleanup $httpresult
 
     if { "$outputfilename" != "" } {
         catch { file delete $outputfilename }
