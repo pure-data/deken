@@ -1282,12 +1282,9 @@ proc ::deken::initiate_search {mytoplevel} {
 proc ::deken::show_result {mytoplevel counter result showmatches} {
     foreach {title cmd match comment status contextmenus pkgname} $result {break}
     set tag ch$counter
-    #if { [ ($match) ] } { set matchtag archmatch } { set matchtag noarchmatch }
-    set matchtag [expr $match?"archmatch":"noarchmatch" ]
-    set tags {}
-    foreach t [list $tag $matchtag $pkgname] {
-        if { "$t" ne "" } {lappend tags $t}
-    }
+    set tags [list $tag [expr $match?"archmatch":"noarchmatch" ] ]
+    if { "$pkgname" ne "" } {lappend tags "$pkgname"}
+
     if {($match == $showmatches)} {
         set comment [string map {"\n" "\n\t"} $comment]
         ::deken::post "$title\n\t$comment\n" $tags
