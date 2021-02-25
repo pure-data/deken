@@ -266,7 +266,12 @@ Set objShell = Nothing
 }
 } { # successfully imported zipfile::decode
 proc ::deken::utilities::unzipper {zipfile {path .}} {
-    ::zipfile::decode::unzipfile "${zipfile}" "${path}"
+    if { [catch {
+        ::zipfile::decode::unzipfile "${zipfile}" "${path}"
+    } stdout ] } {
+        ::deken::utilities::debug "\[deken\] unzip: $stdout"
+        return 0
+    }
     return 1
 }
 }
