@@ -754,6 +754,29 @@ proc ::deken::result_contextmenu {widget theX theY args} {
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
+proc ::deken::menu_packageselect {mytoplevel pkgname installcmd} {
+    puts "to install $pkgname use '${installcmd}'"
+    set results ${mytoplevel}.results
+    set counter 0
+    foreach {a b} [$results tag ranges $pkgname] {$results tag remove selected $a $b}
+    foreach r $::deken::results {
+        set cmd {}
+        set contextmenus {}
+        set name {}
+        puts "$counter.......... $r"
+        foreach {_ cmd _ _ _ contextmenus name} $r {break}
+        if { ${cmd} eq ${installcmd} } {
+            # mark as install candidate
+            puts "select $counter for $cmd"
+            foreach {a b} [$results tag ranges ch$counter] {$results tag add selected $a $b}
+        }
+        incr counter
+    }
+}
+proc ::deken::menu_installselected {mytoplevel} {
+}
+
+
 proc ::deken::do_prompt_installdir {path {mytoplevel .externals_searchui}} {
     if {[winfo exists $mytoplevel]} {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
@@ -801,6 +824,7 @@ proc ::deken::open_searchui {mytoplevel} {
         $mytoplevel.results tag configure highlight -foreground blue
         $mytoplevel.results tag configure archmatch
         $mytoplevel.results tag configure noarchmatch -foreground grey
+        $mytoplevel.results tag configure selected -background lightblue
     }
     ::deken::post [_ "Enter an exact library or object name."] info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
@@ -1260,9 +1284,13 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
     set tag ch$counter
     #if { [ ($match) ] } { set matchtag archmatch } { set matchtag noarchmatch }
     set matchtag [expr $match?"archmatch":"noarchmatch" ]
+    set tags {}
+    foreach t [list $tag $matchtag $pkgname] {
+        if { "$t" ne "" } {lappend tags $t}
+    }
     if {($match == $showmatches)} {
         set comment [string map {"\n" "\n\t"} $comment]
-        ::deken::post "$title\n\t$comment\n" [list $tag $matchtag]
+        ::deken::post "$title\n\t$comment\n" $tags
         ::deken::highlightable_posttag $tag
         ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
@@ -1808,13 +1836,15 @@ proc ::deken::search::puredata.info {term} {
             set archs [lindex $pkgverarch 2]
 
             set match [::deken::architecture_match "$archs" ]
-
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
             set sortname ${pkgname}/${version}/${date}
             set menus [list \
                            [_ "Install package" ] $cmd \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
+                           {} {} \
+                           [_ "(De)select package for installation" ] "::deken::menu_packageselect .externals_searchui $pkgname {$cmd}" \
+                           [_ "Install selected packages" ] "::deken::menu_installselected" \
                            {} {} \
                            [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
