@@ -757,7 +757,7 @@ proc ::deken::result_contextmenu {widget theX theY args} {
 proc ::deken::do_prompt_installdir {path {mytoplevel .externals_searchui}} {
     if {[winfo exists $mytoplevel]} {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
-                    -initialdir ${path} -parent .externals_searchui]
+                    -initialdir ${path} -parent $mytoplevel]
     } {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
                     -initialdir ${path}]
