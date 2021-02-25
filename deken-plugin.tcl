@@ -1580,9 +1580,7 @@ proc ::deken::download_file {URL outputfilename} {
     if {[expr $ncode != 200 ]} {
         ## FIXXME: we probably should handle redirects correctly (following them...)
         set err [::http::code $httpresult]
-        ::pdwindow::error "\[deken\] "
-        ::pdwindow::error [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $URL $err ]
-        ::pdwindow::error "\n"
+        ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $URL $err ]\n"
         set outputfilename ""
     }
     ::http::cleanup $httpresult
