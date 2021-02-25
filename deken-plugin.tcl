@@ -175,6 +175,31 @@ proc ::deken::utilities::verbose {level message} {
     ::pdwindow::verbose ${level} "\[deken\]: ${message}\n"
 }
 
+if { [catch {package require tkdnd} ] } {
+    proc :: deken::utilities::dnd_init {windowid} { }
+} {
+proc ::deken::utilities::dnd_init {windowid} {
+    ::tkdnd::drop_target register $windowid DND_Files
+    bind $windowid <<Drop:DND_Files>> {::deken::utilities::dnd_drop_files %D}
+}
+proc ::deken::utilities::dnd_drop_files {files} {
+     foreach f $files {
+        if { [regexp -all -nocase "\.(zip|dek|tgz|tar\.gz)$" ${f} ] } {
+            set msg [format [_ "installing deken package '%s'" ] $f]
+            ::deken::status ${msg}
+            ::deken::utilities::verbose -1 ${msg}
+            ::deken::install_package_from_file $f
+        } {
+            set msg [format [_ "ignoring '%s': doesn't look like a deken package" ] $f]
+            ::deken::status ${msg}
+            ::deken::utilities::verbose -1 ${msg}
+        }
+    }
+    return "link"
+}
+}
+
+
 if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
@@ -760,6 +785,7 @@ proc ::deken::open_searchui {mytoplevel} {
     } else {
         ::deken::create_dialog $mytoplevel
         ::deken::bind_globalshortcuts $mytoplevel
+        ::deken::utilities::dnd_init $mytoplevel.results
         $mytoplevel.results tag configure error -foreground red
         $mytoplevel.results tag configure warn -foreground orange
         $mytoplevel.results tag configure info -foreground grey
