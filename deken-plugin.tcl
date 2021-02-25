@@ -1339,6 +1339,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
+        set install_failed 0
     } else {
         set msg [format [_ "Failed to install %s!" ] $extname ]
         ::deken::status ${msg} 0
@@ -1348,6 +1349,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             -icon error \
             -parent .externals_searchui \
             -type ok
+        set install_failed 1
     }
 
     if { "$deldir" != "" } {
@@ -1366,6 +1368,8 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         }
         set $deldir ""
     }
+
+    if { ${install_failed} } { return }
 
     if { "$::deken::show_readme" } {
         foreach ext {pd html txt} {
