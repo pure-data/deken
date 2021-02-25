@@ -817,17 +817,14 @@ proc ::deken::create_dialog {mytoplevel} {
     pack $mytoplevel.results.ys -side right -fill y
     pack $mytoplevel.results -side top -padx 6 -pady 3 -fill both -expand true
 
-
     frame $mytoplevel.progress
     pack $mytoplevel.progress -side top -fill x
     if { [ catch {
         ttk::progressbar $mytoplevel.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
     } {
         pack $mytoplevel.progress.bar -side top -fill x
-        proc ::deken::progress {x} {
-            set ::deken::progressvar $x
-        }
-}
+        proc ::deken::progress {x} { set ::deken::progressvar $x }
+    }
 
     frame $mytoplevel.status -relief sunken
     pack $mytoplevel.status -side bottom -fill x -pady 3
