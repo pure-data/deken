@@ -806,7 +806,7 @@ proc ::deken::update_searchbutton {mytoplevel} {
 }
 
 proc ::deken::progress {x} {
-    ::deken::status [format [_ "\[deken\] %s%% of download completed"] ${x}]
+    ::deken::status [format [_ "%s%% of download completed"] ${x}]
 }
 
 # this function gets called when the menu is clicked
@@ -1433,6 +1433,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         }
     }
 
+    ::deken::status [format [_ "Installing package %s" ] $extname ] 0
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
         set install_failed 0
@@ -1527,7 +1528,7 @@ proc ::deken::clicked_link {URL filename} {
     set installdir [::deken::ensure_installdir]
     set fullpkgfile [file join $installdir $filename]
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
-    ::deken::status [format [_ "Downloading '%s'" ] $filename]
+    ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
         ::pdwindow::debug [_ "aborting."]
