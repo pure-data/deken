@@ -380,7 +380,7 @@ if { [catch {package require sha256} ] } {
                 }
             }
         } stdout ] } {
-            ::deken::utilities::verbose 0 "${stdout}\n"
+            ::deken::utilities::verbose 0 "${stdout}"
             # unable to verify
             ::deken::utilities::verbose 0 [format [_ "unable to perform SHA256 verification for %s." ] $url ]
             set retval 1
@@ -611,7 +611,7 @@ if { "Windows" eq "$::deken::platform(os)" } {
 if { "" != "$::current_plugin_loadpath" } {
     ::deken::utilities::debug [format [_ {\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.} ] $::current_plugin_loadpath ]
 }
-::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]\n"
+::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]"
 
 # architectures that can be substituted for each other
 array set ::deken::architecture_substitutes {}
@@ -639,7 +639,7 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(bits) ${bits}
         set ::deken::platform(floatsize) ${floatsize}
 
-        ::pdwindow::verbose 1 "[format [_ {\[deken\] Platform re-detected: %s} ] [::deken::platform2string 1] ]\n"
+        ::deken::utilities::verbose 1 "[format [_ {Platform re-detected: %s} ] [::deken::platform2string 1] ]"
     }
 }
 
