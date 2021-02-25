@@ -52,6 +52,9 @@ namespace eval ::deken:: {
 
     # whether to use http:// or https://
     variable protocol
+
+    # results
+    variable results
 }
 
 namespace eval ::deken::preferences {
@@ -1212,8 +1215,6 @@ proc ::deken::preferences::ok {mytoplevel} {
     ::deken::preferences::cancel $mytoplevel
 }
 
-
-
 proc ::deken::initiate_search {mytoplevel} {
     set searchterm [$mytoplevel.searchbit.entry get]
     # let the user know what we're doing
@@ -1230,22 +1231,10 @@ proc ::deken::initiate_search {mytoplevel} {
     } else {
     # delete all text in the results
     ::deken::clearpost
+
+    set ::deken::results $results
     if {[llength $results] != 0} {
-        set counter 0
-        # build the list UI of results
-        foreach r $results {
-            ::deken::show_result $mytoplevel $counter $r 1
-            incr counter
-        }
-        if { "$::deken::hideforeignarch" } {
-            # skip display of non-matching archs
-        } {
-            foreach r $results {
-                ::deken::show_result $mytoplevel $counter $r 0
-                incr counter
-            }
-        }
-	::deken::scrollup
+        ::deken::show_results $mytoplevel
     } else {
         ::pdwindow::post [_ "\[deken\] No matching externals found." ]
         ::pdwindow::debug " "
@@ -1258,7 +1247,6 @@ proc ::deken::initiate_search {mytoplevel} {
 # display a single found entry
 proc ::deken::show_result {mytoplevel counter result showmatches} {
     foreach {title cmd match comment status contextmenus} $result {break}
-
     set tag ch$counter
     #if { [ ($match) ] } { set matchtag archmatch } { set matchtag noarchmatch }
     set matchtag [expr $match?"archmatch":"noarchmatch" ]
@@ -1274,7 +1262,24 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
     }
 }
 
-
+# display all found entry
+proc ::deken::show_results {mytoplevel} {
+    set counter 0
+    # build the list UI of results
+    foreach r $::deken::results {
+        ::deken::show_result $mytoplevel $counter $r 1
+        incr counter
+    }
+    if { "$::deken::hideforeignarch" } {
+        # skip display of non-matching archs
+    } {
+        foreach r $::deken::results {
+            ::deken::show_result $mytoplevel $counter $r 0
+            incr counter
+        }
+    }
+    ::deken::scrollup
+}
 
 proc ::deken::ensure_installdir {{installdir ""}} {
     ## make sure that the destination path exists
