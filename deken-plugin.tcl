@@ -172,9 +172,7 @@ proc ::deken::utilities::substpath {path} {
 }
 
 proc ::deken::utilities::verbose {level message} {
-    ::pdwindow::verbose ${level} "\[deken\]: "
-    ::pdwindow::verbose ${level} ${message}
-    ::pdwindow::verbose ${level} "\n"
+    ::pdwindow::verbose ${level} "\[deken\]: ${message}\n"
 }
 
 if { [catch {package require zipfile::decode} ] } {
