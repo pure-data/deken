@@ -55,6 +55,7 @@ namespace eval ::deken:: {
 
     # results
     variable results
+    variable selected {}
 }
 
 namespace eval ::deken::preferences {
@@ -710,6 +711,7 @@ proc ::deken::clearpost {} {
     if { [winfo exists $mytoplevelref] } {
         $mytoplevelref.results delete 1.0 end
     }
+    set ::deken::selected {}
 }
 proc ::deken::bind_posttag {tag key cmd} {
     variable mytoplevelref
@@ -754,26 +756,56 @@ proc ::deken::result_contextmenu {widget theX theY args} {
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
-proc ::deken::menu_packageselect {mytoplevel pkgname installcmd} {
-    puts "to install $pkgname use '${installcmd}'"
+proc ::deken::menu_selectpackage {mytoplevel pkgname installcmd} {
     set results ${mytoplevel}.results
-    set counter 0
-    foreach {a b} [$results tag ranges $pkgname] {$results tag remove selected $a $b}
-    foreach r $::deken::results {
-        set cmd {}
-        set contextmenus {}
-        set name {}
-        puts "$counter.......... $r"
-        foreach {_ cmd _ _ _ contextmenus name} $r {break}
-        if { ${cmd} eq ${installcmd} } {
-            # mark as install candidate
-            puts "select $counter for $cmd"
-            foreach {a b} [$results tag ranges ch$counter] {$results tag add selected $a $b}
+
+    # set/unset the selection in a "dict"
+    set state {}
+    set counter 1
+    foreach {k v} $::deken::selected {
+        if { $k eq $pkgname } {
+            if { [lindex $::deken::selected $counter] eq {} } {
+                set state 1
+                lset ::deken::selected $counter $installcmd
+            } {
+                set state 0
+                lset ::deken::selected $counter {}
+            }
+            break
         }
-        incr counter
+        incr counter 2
+    }
+    if { ${state} eq {} } {
+        # not found in the dict; just add it
+        lappend ::deken::selected $pkgname $installcmd
+        set state 1
+    }
+
+
+    # set/unset the visual representation (via tags)
+    set counter 0
+    foreach {a b} [$results tag ranges /$pkgname] {$results tag remove sel $a $b}
+    if { $state } {
+        foreach r $::deken::results {
+            if { [lindex $r 1] eq ${installcmd} } {
+                foreach {a b} [$results tag ranges ch$counter] {$results tag add sel $a $b}
+            }
+            incr counter
+        }
     }
 }
 proc ::deken::menu_installselected {mytoplevel} {
+    set counter 0
+    foreach {k v} $::deken::selected {
+        eval $v
+        incr counter
+    }
+    if { $counter eq 0 } {
+        ::deken::status [_ "No packages selected for installation."]
+    }
+    # clear the selection
+    set ::deken::selected {}
+    foreach {a b} [${mytoplevel}.results tag ranges sel] {${mytoplevel}.results tag remove sel $a $b}
 }
 
 
@@ -824,7 +856,6 @@ proc ::deken::open_searchui {mytoplevel} {
         $mytoplevel.results tag configure highlight -foreground blue
         $mytoplevel.results tag configure archmatch
         $mytoplevel.results tag configure noarchmatch -foreground grey
-        $mytoplevel.results tag configure selected -background lightblue
     }
     ::deken::post [_ "Enter an exact library or object name."] info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
@@ -1283,7 +1314,7 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
     foreach {title cmd match comment status contextmenus pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr $match?"archmatch":"noarchmatch" ] ]
-    if { "$pkgname" ne "" } {lappend tags "$pkgname"}
+    if { "$pkgname" ne "" } {lappend tags "/$pkgname"}
 
     if {($match == $showmatches)} {
         set comment [string map {"\n" "\n\t"} $comment]
@@ -1308,12 +1339,15 @@ proc ::deken::show_results {mytoplevel} {
     if { "$::deken::hideforeignarch" } {
         # skip display of non-matching archs
     } {
+        set counter 0
         foreach r $::deken::results {
             ::deken::show_result $mytoplevel $counter $r 0
             incr counter
         }
     }
     ::deken::scrollup
+    $mytoplevel.results tag raise sel
+    $mytoplevel.results tag raise highlight
 }
 
 proc ::deken::ensure_installdir {{installdir ""}} {
@@ -1841,8 +1875,8 @@ proc ::deken::search::puredata.info {term} {
                            [_ "Install package" ] $cmd \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
                            {} {} \
-                           [_ "(De)select package for installation" ] "::deken::menu_packageselect .externals_searchui $pkgname {$cmd}" \
-                           [_ "Install selected packages" ] "::deken::menu_installselected" \
+                           [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
+                           [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
                            {} {} \
                            [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
