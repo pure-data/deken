@@ -1807,6 +1807,7 @@ proc ::deken::search::puredata.info {term} {
             set menus [list \
                            [_ "Install package" ] $cmd \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
+                           {} {} \
                            [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
                            [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
