@@ -320,7 +320,9 @@ proc ::deken::utilities::uninstall {path library} {
 }
 if { [catch {package require sha256} ] } {
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
-        ::deken::utilities::verbose 0 [format [_ "skipping SHA256 verification of %s." ] $url ]
+        set msg [format [_ "skipping SHA256 verification of %s." ] $url ]
+        ::deken::status $msg
+        ::deken::utilities::verbose 0 $msg
         return 1
     }
 } {  # successfully imported sha256
