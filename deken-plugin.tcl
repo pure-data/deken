@@ -1805,7 +1805,7 @@ proc ::deken::search::puredata.info {term} {
 
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
-            set sortname ${pkgname}--${version}--${date}
+            set sortname ${pkgname}/${version}/${date}
             set menus [list \
                            [_ "Install package" ] $cmd \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
