@@ -173,7 +173,7 @@ proc ::deken::utilities::substpath {path} {
 }
 
 proc ::deken::utilities::verbose {level message} {
-    ::pdwindow::verbose ${level} "\[deken\]: ${message}\n"
+    ::pdwindow::verbose ${level} "\[deken\] ${message}\n"
 }
 proc ::deken::utilities::debug {message} {
     ::pdwindow::debug "${message}\n"
