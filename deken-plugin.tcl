@@ -503,19 +503,21 @@ proc ::deken::normalize_result {title
                                 {subtitle ""}
                                 {statusline ""}
                                 {contextmenus {}}
+                                {pkgname ""}
                                 args} {
     ## normalize a search-result
     # the function parameters are guaranteed to be a stable API (with the exception or args)
     # but the value returned by this function is an implementation detail
     # <title> the primary line displayed for the search-result
-    # - <cmd>  the full command to run to install the library
+    # - <cmd> the full command to run to install the library
     # - <match> boolean value to indicate whether this entry matches the current architecture
     # - <subtitle> additional text to be shown under the <name>
     # - <statusline> additional text to be shown in the STATUS line if the mouse hovers over the result
     # - <contextmenus> list of <menuitem> <menucmd> pairs to be shown via a right-click context-menu
-    # - <args> RESERVED FOR FUTURE USE (do not use!)
+    # - <pkgname> the library name (typically this gets parsed from the package filename)
+    # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    return [list "" $title $cmd $match $subtitle $statusline $contextmenus]
+    return [list "" $title $cmd $match $subtitle $statusline $contextmenus $pkgname]
 }
 
 
@@ -1254,7 +1256,7 @@ proc ::deken::initiate_search {mytoplevel} {
 
 # display a single found entry
 proc ::deken::show_result {mytoplevel counter result showmatches} {
-    foreach {title cmd match comment status contextmenus} $result {break}
+    foreach {title cmd match comment status contextmenus pkgname} $result {break}
     set tag ch$counter
     #if { [ ($match) ] } { set matchtag archmatch } { set matchtag noarchmatch }
     set matchtag [expr $match?"archmatch":"noarchmatch" ]
@@ -1818,14 +1820,14 @@ proc ::deken::search::puredata.info {term} {
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
                            [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
                           ]
-            set res [list $sortname $filename $name $cmd $match $comment $status $menus]
+            set res [list $sortname $filename $name $cmd $match $comment $status $menus $pkgname]
             lappend searchresults $res
         }
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {_ _ title cmd match comment status menus} $r {
-            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus]
+        foreach {_ _ title cmd match comment status menus pkgname} $r {
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname]
             break
         }
     }
