@@ -1636,7 +1636,7 @@ proc ::deken::architecture_match {archs} {
             # normalize arm-architectures by stripping away sub-architectures
             # TODO: leave any big-endian indicator in place
             regexp -- {(armv[0-9]*)[^0-9]*} $machine _ machine
-            if { "${os}" eq "${OS}" && "${floatsize}" eq "${FLOATSIZE}" } {
+            if { ("${os}" eq "${OS}") && (("${floatsize}" eq "${FLOATSIZE}") || ("${floatsize}" eq "0"))} {
                 ## so OS and floatsize match...
                 ## check whether the CPU matches as well
                 if { "${machine}" eq "${MACHINE}" } {return 1}
