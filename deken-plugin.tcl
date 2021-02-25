@@ -743,7 +743,11 @@ proc ::deken::result_contextmenu {widget theX theY args} {
     }
     menu $m
     foreach {title cmd} $args {
-        $m add command -label $title -command $cmd
+        if { "${title}" eq "" } {
+            $m add separator
+        } {
+            $m add command -label $title -command $cmd
+        }
     }
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
