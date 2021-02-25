@@ -1797,13 +1797,15 @@ proc ::deken::search::puredata.info {term} {
             set filename [ file tail $URL ]
             set cmd [list ::deken::clicked_link $decURL $filename]
             set pkgverarch [ ::deken::parse_filename $filename ]
+            set pkgname [lindex $pkgverarch 0]
+            set version [lindex $pkgverarch 1]
             set archs [lindex $pkgverarch 2]
 
             set match [::deken::architecture_match "$archs" ]
 
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
-            set sortname [lindex $pkgverarch 0]--[lindex $pkgverarch 1]--$date
+            set sortname ${pkgname}--${version}--${date}
             set menus [list \
                            [_ "Install package" ] $cmd \
                            [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
