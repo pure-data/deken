@@ -79,19 +79,16 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::pdwindow::debug [format [_ "\[deken\] installed version \[%1\$s\] > %2\$s...skipping!" ] $::deken::version $version ]
-                ::pdwindow::debug "\n"
+                ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s\] > %2\$s...skipping!" ] $::deken::version $version ]
                 return 0
             }
             if { $x < $y } {
-                ::pdwindow::debug [format [_ "\[deken\] installed version \[%1\$s] < %2\$s...overwriting!" ] $::deken::version $version ]
-                ::pdwindow::debug "\n"
+                ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s] < %2\$s...overwriting!" ] $::deken::version $version ]
                 set ::deken::version $version
                 return 1
             }
         }
-        ::pdwindow::debug [format [_ "\[deken\] installed version \[%1\$s\] == %2\$s...skipping!" ] $::deken::version $version ]
-        ::pdwindow::debug "\n"
+        ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s\] == %2\$s...skipping!" ] $::deken::version $version ]
         return 0
     }
     set ::deken::version $version
@@ -178,6 +175,9 @@ proc ::deken::utilities::substpath {path} {
 proc ::deken::utilities::verbose {level message} {
     ::pdwindow::verbose ${level} "\[deken\]: ${message}\n"
 }
+proc ::deken::utilities::debug {message} {
+    ::pdwindow::debug "${message}\n"
+}
 
 if { [catch {package require tkdnd} ] } {
     proc :: deken::utilities::dnd_init {windowid} { }
@@ -258,7 +258,7 @@ Set objShell = Nothing
      } {
         catch { file rename ${zipfilezip} ${zipfile} }
         catch { file delete "${vbsscript}" }
-        ::pdwindow::debug "\[deken\] VBS-unzip($vbsscript): $stdout\n"
+        ::deken::utilities::debug "\[deken\] VBS-unzip($vbsscript): $stdout"
         return 0
     }
     catch { file delete "${vbsscript}" }
@@ -280,14 +280,14 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
     if { [ string match *.dek $fullpkgfile ] } then {
         if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
             if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
-                ::pdwindow::debug "$stdout\n"
+                ::deken::utilities::debug "$stdout"
                 set success 0
             }
         }
     } elseif { [ string match *.zip $fullpkgfile ] } then {
         if { [ ::deken::utilities::unzipper $fullpkgfile  $installdir ] } { } {
             if { [ catch { exec unzip -uo $fullpkgfile } stdout ] } {
-                ::pdwindow::debug "$stdout\n"
+                ::deken::utilities::debug "$stdout"
                 set success 0
             }
         }
@@ -295,35 +295,30 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
                 || [ string match *.tgz $fullpkgfile ]
               } then {
         if { [ catch { exec tar xf $fullpkgfile } stdout ] } {
-            ::pdwindow::debug "$stdout\n"
+            ::deken::utilities::debug "$stdout"
             set success 0
         }
     }
     cd $PWD
 
     if { $success > 0 } {
-        ::pdwindow::debug [_ "\[deken\] " ]
-        ::pdwindow::debug [format [_ "Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
-        ::pdwindow::debug "\n"
+        ::deken::utilities::debug [format [_ "\[deken\] Successfully unzipped %1\$s into %2\$s."] $filename $installdir ]
         if { "${keep_package}" } { } {
             catch { file delete $fullpkgfile }
         }
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
-        ::pdwindow::error [_ "\[deken\] Unable to extract package automatically." ]
-        ::pdwindow::error "\n"
-        ::pdwindow::post [_ "Please perform the following steps manually:" ]
-        ::pdwindow::post "\n"
-        ::pdwindow::post [format [_ "1. Unzip %s." ]  $fullpkgfile ]
-        ::pdwindow::post "\n  "
-        ::pdwindow::post [_ "You might need to change the file-extension from .dek to .zip" ]
-        ::pdwindow::post "\n"
+        set msg ""
+        if { [string match "*.dek" $fullpkgfile] } {
+            set msg "\n  [_ {You might need to change the file-extension from .dek to .zip} ]"
+        }
+        ::pdwindow::error "[_ {\[deken\] Unable to extract package automatically.} ]\n"
+        ::pdwindow::post "[_ {Please perform the following steps manually:} ]
+[format [_ {1. Unzip %s.} ]  $fullpkgfile ]${msg}
+[format [_ {2. Copy the contents into %s.} ] $installdir]
+[format [_ {3. Remove %s. (optional)} ]  $fullpkgfile ]"
         pd_menucommands::menu_openfile $fullpkgfile
-        ::pdwindow::post [format [_ "2. Copy the contents into %s." ] $installdir]
-        ::pdwindow::post "\n"
-        ::pdwindow::post [format [_ "3. Remove %s. (optional)" ]  $fullpkgfile ]
-        ::pdwindow::post "\n"
         pd_menucommands::menu_openfile $installdir
     }
     return $success
@@ -333,13 +328,11 @@ proc ::deken::utilities::uninstall {path library} {
     # recursively remove ${path}/${library} if it exists
     set fullpath [file join ${path} ${library}]
     if {[file exists ${fullpath}]} {
-        ::pdwindow::debug [format [_ "\[deken\] uninstalling '%s'" ] ${fullpath} ]
-        ::pdwindow::debug "\n"
+        ::deken::utilities::debug [format [_ {\[deken\] uninstalling '%s'} ] ${fullpath} ]
         if { [catch {
             file delete -force "${fullpath}"
         } stdout ] } {
-            ::pdwindow::debug [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
-            ::pdwindow::debug "\n    $stdout\n"
+            ::deken::utilities::debug "[format [_ {Uninstalling %1$s from %2$s failed!}] ${library} ${path}]\n    $stdout"
             return 0
         }
     }
@@ -387,7 +380,7 @@ if { [catch {package require sha256} ] } {
                 }
             }
         } stdout ] } {
-            ::deken::utilities::verbose 0 "\[deken\] $stdout\n"
+            ::deken::utilities::verbose 0 "${stdout}\n"
             # unable to verify
             ::deken::utilities::verbose 0 [format [_ "unable to perform SHA256 verification for %s." ] $url ]
             set retval 1
@@ -616,11 +609,9 @@ if { "Windows" eq "$::deken::platform(os)" } {
 # console message to let them know we're loaded
 ## but only if we are being called as a plugin (not as built-in)
 if { "" != "$::current_plugin_loadpath" } {
-    ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ]  $::current_plugin_loadpath ]
-    ::pdwindow::debug "\n"
+    ::deken::utilities::debug [format [_ {\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.} ] $::current_plugin_loadpath ]
 }
-::pdwindow::verbose 0 [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
-::pdwindow::verbose 0 "\n"
+::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]\n"
 
 # architectures that can be substituted for each other
 array set ::deken::architecture_substitutes {}
@@ -648,8 +639,7 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(bits) ${bits}
         set ::deken::platform(floatsize) ${floatsize}
 
-        ::pdwindow::verbose 1 [format [_ "\[deken\] Platform re-detected: %s" ] [::deken::platform2string 1] ]
-        ::pdwindow::verbose 1 "\n"
+        ::pdwindow::verbose 1 "[format [_ {\[deken\] Platform re-detected: %s} ] [::deken::platform2string 1] ]\n"
     }
 }
 
@@ -1284,15 +1274,13 @@ proc ::deken::initiate_search {mytoplevel} {
     set searchterm [$mytoplevel.searchbit.entry get]
     # let the user know what we're doing
     ::deken::clearpost
-    ::pdwindow::debug [_ "\[deken\] Start searching for externals..."]
-    ::pdwindow::debug "${searchterm}\n"
+    ::deken::utilities::debug "[_ {\[deken\] Start searching for externals...}] ${searchterm}"
     set ::deken::progressvar 0
     if { [ catch {
         set results [::deken::search_for ${searchterm}]
     } stdout ] } {
-        ::pdwindow::debug [format [_ "\[deken\] online? %s" ] $stdout ]
-        ::pdwindow::debug "\n"
-        ::deken::status [format "%s %s" [_ "Unable to perform search." ] [_ "Are you online?" ] ]
+        ::deken::utilities::debug [format [_ {\[deken\] online? %s} ] $stdout ]
+        ::deken::status "[_ {Unable to perform search.} ] [_ {Are you online?} ]"
     } else {
     # delete all text in the results
     ::deken::clearpost
@@ -1302,8 +1290,7 @@ proc ::deken::initiate_search {mytoplevel} {
         ::deken::show_results $mytoplevel
     } else {
         ::pdwindow::post [_ "\[deken\] No matching externals found." ]
-        ::pdwindow::debug " "
-        ::pdwindow::debug [_ "Try using the full name e.g. 'freeverb'." ]
+        ::pdwindow::debug " [_ {Try using the full name e.g. 'freeverb'.} ]"
         ::pdwindow::post "\n"
         ::deken::status [_ "No matching externals found." ]
     }
@@ -1456,9 +1443,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
                 file mkdir $deldir
                 file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
             } ] } {
-                ::pdwindow::debug "\[deken\]: "
-                ::pdwindow::debug [format [_ "temporarily moving %1\$s into %2\$s failed." ] $extname $deldir ]
-                ::pdwindow::debug "\n"
+                ::deken::utilities::debug [format [_ {\[deken\] temporarily moving %1$s into %2$s failed.} ] $extname $deldir ]
                 set deldir ""
             }
         }
@@ -1519,9 +1504,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         # add to the search paths? bail if the version of pd doesn't support it
         if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
         if {![file exists $extpath]} {
-            ::pdwindow::debug "\[deken\] "
-            ::pdwindow::debug [format [_ "Unable to add %s to search paths"] $extname]
-            ::pdwindow::debug "\n"
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to add %s to search paths}] $extname]
             return
         }
         set doit yes
@@ -1535,9 +1518,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         switch -- "${doit}" {
             yes {
                 add_to_searchpaths [file join $installdir $extname]
-                ::pdwindow::debug "\[deken\] "
-                ::pdwindow::debug [format [_ "Added %s to search paths"] $extname]
-                ::pdwindow::debug "\n"
+                ::deken::utilities::debug [format [_ {\[deken\] Added %s to search paths}] $extname]
                 # if this version of pd supports it, try refreshing the helpbrowser
                 if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
                     ::helpbrowser::refresh
@@ -1562,12 +1543,11 @@ proc ::deken::clicked_link {URL filename} {
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
-        ::pdwindow::debug [_ "aborting."]
-        ::pdwindow::debug "\n"
+        ::deken::utilities::debug [_ {aborting.}]
         ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
         return
     }
-    ::pdwindow::debug "\n"
+    ::deken::utilities::debug ""
     if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
         ::deken::status [format [_ "Checksum mismatch for '%s'" ] $filename] 0
         if { "$::deken::verify_sha256" } {
@@ -1613,17 +1593,13 @@ proc ::deken::download_file {URL outputfilename} {
     if { "$outputfilename" != "" } {
         catch { file delete $outputfilename }
         if {[file exists $outputfilename]} {
-            ::pdwindow::debug "\[deken\] "
-            ::pdwindow::debug [format [_ "Unable to remove stray file %s" ] $outputfilename ]
-            ::pdwindow::debug "\n"
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to remove stray file %s} ] $outputfilename ]
             set outputfilename ""
         }
     }
     if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
         if {[catch { file rename $downloadfilename $outputfilename}]} {
-            ::pdwindow::debug "\[deken\] "
-            ::pdwindow::debug [format [_ "Unable to rename downloaded file to %s" ] $outputfilename ] error
-            ::pdwindow::debug "\n"
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to rename downloaded file to %s} ] $outputfilename ]
             set outputfilename ""
         }
     }
@@ -1744,8 +1720,7 @@ proc ::deken::search_for {term} {
                 lappend result [lrange $r 1 end]
             }
         } stdout] } {
-            ::pdwindow::debug "\[deken\] $searcher: $stdout"
-            ::pdwindow::debug "\n"
+            ::deken::utilities::debug "\[deken\] $searcher: $stdout"
         }
     }
     return $result
@@ -1839,9 +1814,7 @@ proc ::deken::search::puredata.info {term} {
     set ncode [::http::ncode $token]
     if {[expr $ncode != 200 ]} {
         set err [::http::code $token]
-        ::pdwindow::debug "\[deken\]"
-        ::pdwindow::debug [_ "Unable to perform search." ]
-        ::pdwindow::debug "\n   ${err}\n"
+        ::deken::utilities::debug "[_ {\[deken\] Unable to perform search.}]\n   ${err}"
         return {}
     }
     set contents [::http::data $token]
