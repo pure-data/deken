@@ -1848,11 +1848,11 @@ proc ::deken::search::puredata.info {term} {
             set status $URL
             set sortname ${pkgname}/${version}/${date}
             set menus [list \
-                           [_ "Install package" ] $cmd \
-                           [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
-                           {} {} \
                            [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
                            [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
+                           {} {} \
+                           [_ "Install package" ] $cmd \
+                           [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
                            {} {} \
                            [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
