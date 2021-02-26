@@ -858,8 +858,13 @@ proc ::deken::open_searchui {winid} {
         $winid.results tag configure noarchmatch -foreground grey
     }
     ::deken::post [_ "Enter an exact library or object name."] info
+    ::deken::post "\t[_ {e.g. 'freeverb~'}]" info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
+    ::deken::post "\t[_ {e.g. '*-plugin' will match 'deken-plugin' (and more).}]" info
+    ::deken::post [_ "You can restrict the search to only-libraries or only-objects."] info
     ::deken::post [_ "To get a list of all available externals, try an empty search."] info
+    ::deken::post "" info
+    ::deken::post [_ "Right-clicking a search result will give you more options..." ] info
 }
 
 # build the externals search dialog window
