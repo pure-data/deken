@@ -122,7 +122,7 @@ set ::deken::preferences::verify_sha256 {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
-    variable dialogwin
+    variable winid
     variable platform
     variable architecture_substitutes
     variable installpath
@@ -689,40 +689,40 @@ proc ::deken::status {{msg ""} {timeout 5000}} {
     }
 }
 proc ::deken::scrollup {} {
-    variable dialogwin
-    if { [winfo exists $dialogwin] } {
-        $dialogwin.results see 0.0
+    variable winid
+    if { [winfo exists $winid] } {
+        $winid.results see 0.0
     }
 }
 proc ::deken::post {msg {tag ""}} {
-    variable dialogwin
-    if { [winfo exists $dialogwin] } {
-        $dialogwin.results insert end "$msg\n" $tag
-        $dialogwin.results see end
+    variable winid
+    if { [winfo exists $winid] } {
+        $winid.results insert end "$msg\n" $tag
+        $winid.results see end
     }
 }
 proc ::deken::clearpost {} {
-    variable dialogwin
-    if { [winfo exists $dialogwin] } {
-        $dialogwin.results delete 1.0 end
+    variable winid
+    if { [winfo exists $winid] } {
+        $winid.results delete 1.0 end
     }
     set ::deken::selected {}
 }
 proc ::deken::bind_posttag {tag key cmd} {
-    variable dialogwin
-    if { [winfo exists $dialogwin] } {
-        $dialogwin.results tag bind $tag $key $cmd
+    variable winid
+    if { [winfo exists $winid] } {
+        $winid.results tag bind $tag $key $cmd
     }
 }
 proc ::deken::highlightable_posttag {tag} {
-    variable dialogwin
-    if { [winfo exists $dialogwin] } {
+    variable winid
+    if { [winfo exists $winid] } {
         ::deken::bind_posttag $tag <Enter> \
-            "$dialogwin.results tag add highlight [ $dialogwin.results tag ranges $tag ]"
+            "$winid.results tag add highlight [ $winid.results tag ranges $tag ]"
         ::deken::bind_posttag $tag <Leave> \
-            "$dialogwin.results tag remove highlight [ $dialogwin.results tag ranges $tag ]"
+            "$winid.results tag remove highlight [ $winid.results tag ranges $tag ]"
         # make sure that the 'highlight' tag is topmost
-        $dialogwin.results tag raise highlight
+        $winid.results tag raise highlight
     }
 }
 proc ::deken::bind_postmenu {winid tag menus} {
@@ -804,7 +804,8 @@ proc ::deken::menu_installselected {winid} {
 }
 
 
-proc ::deken::do_prompt_installdir {path {winid .externals_searchui}} {
+proc ::deken::do_prompt_installdir {path} {
+    variable winid
     if {[winfo exists $winid]} {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
                     -initialdir ${path} -parent $winid]
@@ -860,7 +861,7 @@ proc ::deken::open_searchui {winid} {
 # build the externals search dialog window
 proc ::deken::create_dialog {winid} {
     toplevel $winid -class DialogWindow
-    variable dialogwin $winid
+    set ::deken::winid $winid
     wm title $winid [_ "Find externals"]
     wm geometry $winid 670x550
     wm minsize $winid 230 360
