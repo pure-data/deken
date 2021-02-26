@@ -921,7 +921,7 @@ proc ::deken::create_dialog {winid} {
         destroy $m
     }
     set m [menu $m]
-    $m add command -label [_ "Preferences" ]  -command "::deken::preferences::show"
+    $m add command -label [_ "Preferences..." ]  -command "::deken::preferences::show"
     $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
 
     button $winid.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $winid\] \[winfo pointery $winid\]"
