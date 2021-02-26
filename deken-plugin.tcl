@@ -759,7 +759,7 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
     set counter 1
     foreach {k v} $::deken::selected {
         if { $k eq $pkgname } {
-            if { [lindex $::deken::selected $counter] eq {} } {
+            if { $v ne $installcmd } {
                 set state 1
                 lset ::deken::selected $counter $installcmd
             } {
