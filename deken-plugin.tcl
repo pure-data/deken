@@ -353,6 +353,7 @@ if { [catch {package require sha256} ] } {
 } {  # successfully imported sha256
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
         ::deken::status [format [_ "SHA256 verification of %s" ] $pkgfile ]
+        ::deken::syncgui
 
         set retval 1
         if { [ catch {
@@ -687,6 +688,9 @@ proc ::deken::status {{msg ""} {timeout 5000}} {
     } {
         set ::deken::statustext ""
     }
+}
+proc ::deken::syncgui {} {
+    update idletasks
 }
 proc ::deken::scrollup {} {
     variable winid
@@ -1483,6 +1487,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     }
 
     ::deken::status [format [_ "Installing package %s" ] $extname ] 0
+    ::deken::syncgui
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
         set install_failed 0
@@ -1574,6 +1579,7 @@ proc ::deken::clicked_link {URL filename} {
     set fullpkgfile [file join $installdir $filename]
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
+    ::deken::syncgui
     set fullpkgfile [::deken::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
         ::deken::utilities::debug [_ {aborting.}]
