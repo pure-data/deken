@@ -792,8 +792,10 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
 proc ::deken::menu_installselected {winid} {
     set counter 0
     foreach {k v} $::deken::selected {
-        eval $v
-        incr counter
+        if { $v ne {} } {
+            eval $v
+            incr counter
+        }
     }
     if { $counter eq 0 } {
         ::deken::status [_ "No packages selected for installation."]
