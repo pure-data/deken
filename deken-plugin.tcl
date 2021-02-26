@@ -797,8 +797,10 @@ proc ::deken::menu_installselected {winid} {
             incr counter
         }
     }
-    if { $counter eq 0 } {
+    if { $counter == 0 } {
         ::deken::status [_ "No packages selected for installation."]
+    } elseif { $counter > 1 } {
+        ::deken::status [format [_ "Processed %d packages selected for installation."] $counter ]
     }
     # clear the selection
     set ::deken::selected {}
