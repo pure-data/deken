@@ -79,16 +79,16 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s\] > %2\$s...skipping!" ] $::deken::version $version ]
+                ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s\] > %2$s...skipping!} ] $::deken::version $version ]\n"
                 return 0
             }
             if { $x < $y } {
-                ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s] < %2\$s...overwriting!" ] $::deken::version $version ]
+                ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s] < %2$s...overwriting!} ] $::deken::version $version ]\n"
                 set ::deken::version $version
                 return 1
             }
         }
-        ::deken::utilities::debug [format [_ "\[deken\] installed version \[%1\$s\] == %2\$s...skipping!" ] $::deken::version $version ]
+        ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s\] == %2$s...skipping!} ] $::deken::version $version ]\n"
         return 0
     }
     set ::deken::version $version
