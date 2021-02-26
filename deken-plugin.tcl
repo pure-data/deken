@@ -122,7 +122,7 @@ set ::deken::preferences::verify_sha256 {}
 
 namespace eval ::deken:: {
     namespace export open_searchui
-    variable mytoplevelref
+    variable dialogwin
     variable platform
     variable architecture_substitutes
     variable installpath
@@ -689,49 +689,49 @@ proc ::deken::status {{msg ""} {timeout 5000}} {
     }
 }
 proc ::deken::scrollup {} {
-    variable mytoplevelref
-    if { [winfo exists $mytoplevelref] } {
-        $mytoplevelref.results see 0.0
+    variable dialogwin
+    if { [winfo exists $dialogwin] } {
+        $dialogwin.results see 0.0
     }
 }
 proc ::deken::post {msg {tag ""}} {
-    variable mytoplevelref
-    if { [winfo exists $mytoplevelref] } {
-        $mytoplevelref.results insert end "$msg\n" $tag
-        $mytoplevelref.results see end
+    variable dialogwin
+    if { [winfo exists $dialogwin] } {
+        $dialogwin.results insert end "$msg\n" $tag
+        $dialogwin.results see end
     }
 }
 proc ::deken::clearpost {} {
-    variable mytoplevelref
-    if { [winfo exists $mytoplevelref] } {
-        $mytoplevelref.results delete 1.0 end
+    variable dialogwin
+    if { [winfo exists $dialogwin] } {
+        $dialogwin.results delete 1.0 end
     }
     set ::deken::selected {}
 }
 proc ::deken::bind_posttag {tag key cmd} {
-    variable mytoplevelref
-    if { [winfo exists $mytoplevelref] } {
-        $mytoplevelref.results tag bind $tag $key $cmd
+    variable dialogwin
+    if { [winfo exists $dialogwin] } {
+        $dialogwin.results tag bind $tag $key $cmd
     }
 }
 proc ::deken::highlightable_posttag {tag} {
-    variable mytoplevelref
-    if { [winfo exists $mytoplevelref] } {
+    variable dialogwin
+    if { [winfo exists $dialogwin] } {
         ::deken::bind_posttag $tag <Enter> \
-            "$mytoplevelref.results tag add highlight [ $mytoplevelref.results tag ranges $tag ]"
+            "$dialogwin.results tag add highlight [ $dialogwin.results tag ranges $tag ]"
         ::deken::bind_posttag $tag <Leave> \
-            "$mytoplevelref.results tag remove highlight [ $mytoplevelref.results tag ranges $tag ]"
+            "$dialogwin.results tag remove highlight [ $dialogwin.results tag ranges $tag ]"
         # make sure that the 'highlight' tag is topmost
-        $mytoplevelref.results tag raise highlight
+        $dialogwin.results tag raise highlight
     }
 }
-proc ::deken::bind_postmenu {mytoplevel tag menus} {
+proc ::deken::bind_postmenu {winid tag menus} {
     set cmd "::deken::result_contextmenu %W %x %y $menus"
-    if { [winfo exists $mytoplevel] } {
+    if { [winfo exists $winid] } {
         if {$::windowingsystem eq "aqua"} {
-            $mytoplevel.results tag bind $tag <2> $cmd
+            $winid.results tag bind $tag <2> $cmd
         } else {
-            $mytoplevel.results tag bind $tag <3> $cmd
+            $winid.results tag bind $tag <3> $cmd
         }
     }
 }
@@ -751,8 +751,8 @@ proc ::deken::result_contextmenu {widget theX theY args} {
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
-proc ::deken::menu_selectpackage {mytoplevel pkgname installcmd} {
-    set results ${mytoplevel}.results
+proc ::deken::menu_selectpackage {winid pkgname installcmd} {
+    set results ${winid}.results
 
     # set/unset the selection in a "dict"
     set state {}
@@ -789,7 +789,7 @@ proc ::deken::menu_selectpackage {mytoplevel pkgname installcmd} {
         }
     }
 }
-proc ::deken::menu_installselected {mytoplevel} {
+proc ::deken::menu_installselected {winid} {
     set counter 0
     foreach {k v} $::deken::selected {
         eval $v
@@ -800,14 +800,14 @@ proc ::deken::menu_installselected {mytoplevel} {
     }
     # clear the selection
     set ::deken::selected {}
-    foreach {a b} [${mytoplevel}.results tag ranges sel] {${mytoplevel}.results tag remove sel $a $b}
+    foreach {a b} [${winid}.results tag ranges sel] {${winid}.results tag remove sel $a $b}
 }
 
 
-proc ::deken::do_prompt_installdir {path {mytoplevel .externals_searchui}} {
-    if {[winfo exists $mytoplevel]} {
+proc ::deken::do_prompt_installdir {path {winid .externals_searchui}} {
+    if {[winfo exists $winid]} {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
-                    -initialdir ${path} -parent $mytoplevel]
+                    -initialdir ${path} -parent $winid]
     } {
         return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
                     -initialdir ${path}]
@@ -824,11 +824,11 @@ proc ::deken::prompt_installdir {} {
 }
 
 
-proc ::deken::update_searchbutton {mytoplevel} {
-    if { [$mytoplevel.searchbit.entry get] == "" } {
-        $mytoplevel.searchbit.button configure -text [_ "Show all" ]
+proc ::deken::update_searchbutton {winid} {
+    if { [$winid.searchbit.entry get] == "" } {
+        $winid.searchbit.button configure -text [_ "Show all" ]
     } {
-        $mytoplevel.searchbit.button configure -text [_ "Search" ]
+        $winid.searchbit.button configure -text [_ "Search" ]
     }
 }
 
@@ -837,20 +837,20 @@ proc ::deken::progress {x} {
 }
 
 # this function gets called when the menu is clicked
-proc ::deken::open_searchui {mytoplevel} {
-    if {[winfo exists $mytoplevel]} {
-        wm deiconify $mytoplevel
-        raise $mytoplevel
+proc ::deken::open_searchui {winid} {
+    if {[winfo exists $winid]} {
+        wm deiconify $winid
+        raise $winid
     } else {
-        ::deken::create_dialog $mytoplevel
-        ::deken::bind_globalshortcuts $mytoplevel
-        ::deken::utilities::dnd_init $mytoplevel.results
-        $mytoplevel.results tag configure error -foreground red
-        $mytoplevel.results tag configure warn -foreground orange
-        $mytoplevel.results tag configure info -foreground grey
-        $mytoplevel.results tag configure highlight -foreground blue
-        $mytoplevel.results tag configure archmatch
-        $mytoplevel.results tag configure noarchmatch -foreground grey
+        ::deken::create_dialog $winid
+        ::deken::bind_globalshortcuts $winid
+        ::deken::utilities::dnd_init $winid.results
+        $winid.results tag configure error -foreground red
+        $winid.results tag configure warn -foreground orange
+        $winid.results tag configure info -foreground grey
+        $winid.results tag configure highlight -foreground blue
+        $winid.results tag configure archmatch
+        $winid.results tag configure noarchmatch -foreground grey
     }
     ::deken::post [_ "Enter an exact library or object name."] info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
@@ -858,63 +858,63 @@ proc ::deken::open_searchui {mytoplevel} {
 }
 
 # build the externals search dialog window
-proc ::deken::create_dialog {mytoplevel} {
-    toplevel $mytoplevel -class DialogWindow
-    variable mytoplevelref $mytoplevel
-    wm title $mytoplevel [_ "Find externals"]
-    wm geometry $mytoplevel 670x550
-    wm minsize $mytoplevel 230 360
-    wm transient $mytoplevel
-    $mytoplevel configure -padx 10 -pady 5
+proc ::deken::create_dialog {winid} {
+    toplevel $winid -class DialogWindow
+    variable dialogwin $winid
+    wm title $winid [_ "Find externals"]
+    wm geometry $winid 670x550
+    wm minsize $winid 230 360
+    wm transient $winid
+    $winid configure -padx 10 -pady 5
 
     if {$::windowingsystem eq "aqua"} {
-        $mytoplevel configure -menu $::dialog_menubar
+        $winid configure -menu $::dialog_menubar
     }
 
-    frame $mytoplevel.searchbit
-    pack $mytoplevel.searchbit -side top -fill x
+    frame $winid.searchbit
+    pack $winid.searchbit -side top -fill x
 
-    entry $mytoplevel.searchbit.entry -font 18 -relief sunken -highlightthickness 1 -highlightcolor blue
-    pack $mytoplevel.searchbit.entry -side left -padx 6 -fill x -expand true
-    bind $mytoplevel.searchbit.entry <Key-Return> "::deken::initiate_search $mytoplevel"
-    bind $mytoplevel.searchbit.entry <KeyRelease> "::deken::update_searchbutton $mytoplevel"
-    focus $mytoplevel.searchbit.entry
-    button $mytoplevel.searchbit.button -text [_ "Show all"] -default active -command "::deken::initiate_search $mytoplevel"
-    pack $mytoplevel.searchbit.button -side right -padx 6 -pady 3 -ipadx 10
+    entry $winid.searchbit.entry -font 18 -relief sunken -highlightthickness 1 -highlightcolor blue
+    pack $winid.searchbit.entry -side left -padx 6 -fill x -expand true
+    bind $winid.searchbit.entry <Key-Return> "::deken::initiate_search $winid"
+    bind $winid.searchbit.entry <KeyRelease> "::deken::update_searchbutton $winid"
+    focus $winid.searchbit.entry
+    button $winid.searchbit.button -text [_ "Show all"] -default active -command "::deken::initiate_search $winid"
+    pack $winid.searchbit.button -side right -padx 6 -pady 3 -ipadx 10
 
-    frame $mytoplevel.objlib
-    pack $mytoplevel.objlib -side top -fill x
-    label $mytoplevel.objlib.label -text [_ "Search for: "]
-    radiobutton $mytoplevel.objlib.libraries -text [_ "libraries"] -variable ::deken::searchtype -value libraries
-    radiobutton $mytoplevel.objlib.objects -text [_ "objects"] -variable ::deken::searchtype -value objects
-    radiobutton $mytoplevel.objlib.both -text [_ "both"] -variable ::deken::searchtype -value name
+    frame $winid.objlib
+    pack $winid.objlib -side top -fill x
+    label $winid.objlib.label -text [_ "Search for: "]
+    radiobutton $winid.objlib.libraries -text [_ "libraries"] -variable ::deken::searchtype -value libraries
+    radiobutton $winid.objlib.objects -text [_ "objects"] -variable ::deken::searchtype -value objects
+    radiobutton $winid.objlib.both -text [_ "both"] -variable ::deken::searchtype -value name
     foreach x {label libraries objects both} {
-        pack $mytoplevel.objlib.$x -side left -padx 6
+        pack $winid.objlib.$x -side left -padx 6
     }
 
-    frame $mytoplevel.warning
-    pack $mytoplevel.warning -side top -fill x
-    label $mytoplevel.warning.label -text [_ "Only install externals uploaded by people you trust."]
-    pack $mytoplevel.warning.label -side left -padx 6
+    frame $winid.warning
+    pack $winid.warning -side top -fill x
+    label $winid.warning.label -text [_ "Only install externals uploaded by people you trust."]
+    pack $winid.warning.label -side left -padx 6
 
-    text $mytoplevel.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$mytoplevel.results.ys set"
-    scrollbar $mytoplevel.results.ys -orient vertical -command "$mytoplevel.results yview"
-    pack $mytoplevel.results.ys -side right -fill y
-    pack $mytoplevel.results -side top -padx 6 -pady 3 -fill both -expand true
+    text $winid.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$winid.results.ys set"
+    scrollbar $winid.results.ys -orient vertical -command "$winid.results yview"
+    pack $winid.results.ys -side right -fill y
+    pack $winid.results -side top -padx 6 -pady 3 -fill both -expand true
 
-    frame $mytoplevel.progress
-    pack $mytoplevel.progress -side top -fill x
+    frame $winid.progress
+    pack $winid.progress -side top -fill x
     if { [ catch {
-        ttk::progressbar $mytoplevel.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
+        ttk::progressbar $winid.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
     } {
-        pack $mytoplevel.progress.bar -side top -fill x
+        pack $winid.progress.bar -side top -fill x
         proc ::deken::progress {x} { set ::deken::progressvar $x }
     }
 
-    frame $mytoplevel.status
-    pack $mytoplevel.status -side bottom -fill x -pady 3
-    label $mytoplevel.status.label -textvariable ::deken::statustext -relief sunken -anchor w
-    pack $mytoplevel.status.label -side bottom -fill x
+    frame $winid.status
+    pack $winid.status -side bottom -fill x -pady 3
+    label $winid.status.label -textvariable ::deken::statustext -relief sunken -anchor w
+    pack $winid.status.label -side bottom -fill x
 
     set m .deken_moremenu
     if { [winfo exists $m] } {
@@ -924,8 +924,8 @@ proc ::deken::create_dialog {mytoplevel} {
     $m add command -label [_ "Preferences" ]  -command "::deken::preferences::show"
     $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
 
-    button $mytoplevel.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $mytoplevel\] \[winfo pointery $mytoplevel\]"
-    pack $mytoplevel.status.installdek -side right -padx 6 -pady 3 -ipadx 10
+    button $winid.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $winid\] \[winfo pointery $winid\]"
+    pack $winid.status.installdek -side right -padx 6 -pady 3 -ipadx 10
 }
 proc ::deken::install_package_from_file {{pkgfile ""}} {
     set types {}
@@ -1032,13 +1032,13 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     return [list ${rdb} ${chk}]
 }
 
-proc ::deken::preferences::create {mytoplevel} {
+proc ::deken::preferences::create {winid} {
     # urgh...we want to know when the window gets drawn,
     # so we can query the size of the pathentries canvas
     # in order to get the scrolling-region right!!!
     # this seems to be so wrong...
-    bind $mytoplevel <Map> "::deken::preferences::mapped %W"
-    ::deken::bind_globalshortcuts $mytoplevel
+    bind $winid <Map> "::deken::preferences::mapped %W"
+    ::deken::bind_globalshortcuts $winid
 
     set ::deken::preferences::installpath $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
@@ -1067,27 +1067,27 @@ proc ::deken::preferences::create {mytoplevel} {
     #    - a directory chooser
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
-    labelframe $mytoplevel.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    canvas $mytoplevel.installdir.cnv \
+    labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    canvas $winid.installdir.cnv \
         -confine true
-    scrollbar $mytoplevel.installdir.scrollv \
-        -command "$mytoplevel.installdir.cnv yview"
-    scrollbar $mytoplevel.installdir.scrollh \
+    scrollbar $winid.installdir.scrollv \
+        -command "$winid.installdir.cnv yview"
+    scrollbar $winid.installdir.scrollh \
         -orient horizontal \
-        -command "$mytoplevel.installdir.cnv xview"
-    $mytoplevel.installdir.cnv configure \
+        -command "$winid.installdir.cnv xview"
+    $winid.installdir.cnv configure \
         -xscrollincrement 0 \
-        -xscrollcommand " $mytoplevel.installdir.scrollh set"
-    $mytoplevel.installdir.cnv configure \
+        -xscrollcommand " $winid.installdir.scrollh set"
+    $winid.installdir.cnv configure \
         -yscrollincrement 0 \
-        -yscrollcommand " $mytoplevel.installdir.scrollv set" \
+        -yscrollcommand " $winid.installdir.scrollv set" \
 
-    pack $mytoplevel.installdir.cnv -side left -fill both -expand 1
-    pack $mytoplevel.installdir.scrollv -side right -fill y
-    pack $mytoplevel.installdir.scrollh -side bottom -fill x -before  $mytoplevel.installdir.cnv
-    pack $mytoplevel.installdir -fill both
+    pack $winid.installdir.cnv -side left -fill both -expand 1
+    pack $winid.installdir.scrollv -side right -fill y
+    pack $winid.installdir.scrollh -side bottom -fill x -before  $winid.installdir.cnv
+    pack $winid.installdir -fill both
 
-    set pathsframe [frame $mytoplevel.installdir.cnv.f]
+    set pathsframe [frame $winid.installdir.cnv.f]
     set row 0
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
@@ -1130,32 +1130,32 @@ proc ::deken::preferences::create {mytoplevel} {
     }
 
     pack $pathsframe -fill x
-    $mytoplevel.installdir.cnv create window 0 0 -anchor nw -window $pathsframe
+    $winid.installdir.cnv create window 0 0 -anchor nw -window $pathsframe
 
     ## installation options
-    labelframe $mytoplevel.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
-    pack $mytoplevel.install -side top -fill x -anchor w
+    labelframe $winid.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $winid.install -side top -fill x -anchor w
 
-    checkbutton $mytoplevel.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
+    checkbutton $winid.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
         -variable ::deken::preferences::verify_sha256
-    pack $mytoplevel.install.verify256 -anchor w
+    pack $winid.install.verify256 -anchor w
 
-    checkbutton $mytoplevel.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
+    checkbutton $winid.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
         -variable ::deken::preferences::remove_on_install
-    pack $mytoplevel.install.remove -anchor w
+    pack $winid.install.remove -anchor w
 
-    checkbutton $mytoplevel.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
+    checkbutton $winid.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
         -variable ::deken::preferences::show_readme
-    pack $mytoplevel.install.readme -anchor w
+    pack $winid.install.readme -anchor w
 
-    checkbutton $mytoplevel.install.keeppackage -text [_ "Keep package files after installation?"] \
+    checkbutton $winid.install.keeppackage -text [_ "Keep package files after installation?"] \
         -variable ::deken::preferences::keep_package
-    pack $mytoplevel.install.keeppackage -anchor w
+    pack $winid.install.keeppackage -anchor w
 
 
-    checkbutton $mytoplevel.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
+    checkbutton $winid.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
         -variable ::deken::preferences::add_to_path
-    catch { $mytoplevel.install.add_to_path configure \
+    catch { $winid.install.add_to_path configure \
                 -tristatevalue 1 \
                 -onvalue 2 \
                 -command {set ::deken::preferences::add_to_path \
@@ -1163,66 +1163,66 @@ proc ::deken::preferences::create {mytoplevel} {
                                    [::deken::utilities::tristate $::deken::preferences::add_to_path_temp 1 0]]}
     } stdout
 
-    pack $mytoplevel.install.add_to_path -anchor w
+    pack $winid.install.add_to_path -anchor w
 
 
     ## platform filter settings
-    labelframe $mytoplevel.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
-    pack $mytoplevel.platform -side top -fill x -anchor w
+    labelframe $winid.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $winid.platform -side top -fill x -anchor w
 
     # default architecture vs user-defined arch
-    radiobutton $mytoplevel.platform.default -value "DEFAULT" \
+    radiobutton $winid.platform.default -value "DEFAULT" \
         -text [format [_ "Default platform: %s" ] [::deken::platform2string ] ] \
         -variable ::deken::preferences::platform \
-        -command "$mytoplevel.platform.userarch.entry configure -state disabled"
-    pack $mytoplevel.platform.default -anchor w
+        -command "$winid.platform.userarch.entry configure -state disabled"
+    pack $winid.platform.default -anchor w
 
-    frame $mytoplevel.platform.userarch
-    radiobutton $mytoplevel.platform.userarch.radio -value "USER" \
+    frame $winid.platform.userarch
+    radiobutton $winid.platform.userarch.radio -value "USER" \
         -text [_ "User-defined platform:" ] \
         -variable ::deken::preferences::platform \
-        -command "$mytoplevel.platform.userarch.entry configure -state normal"
-    entry $mytoplevel.platform.userarch.entry -textvariable ::deken::preferences::userplatform
+        -command "$winid.platform.userarch.entry configure -state normal"
+    entry $winid.platform.userarch.entry -textvariable ::deken::preferences::userplatform
     if { "$::deken::preferences::platform" == "DEFAULT" } {
-        $mytoplevel.platform.userarch.entry configure -state disabled
+        $winid.platform.userarch.entry configure -state disabled
     }
 
-    pack $mytoplevel.platform.userarch -anchor w
-    pack $mytoplevel.platform.userarch.radio -side left
-    pack $mytoplevel.platform.userarch.entry -side right -fill x
+    pack $winid.platform.userarch -anchor w
+    pack $winid.platform.userarch.radio -side left
+    pack $winid.platform.userarch.entry -side right -fill x
 
     # hide non-matching architecture?
-    ::deken::preferences::create_packpad $mytoplevel.platform 2 10
+    ::deken::preferences::create_packpad $winid.platform 2 10
 
-    checkbutton $mytoplevel.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
+    checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
         -variable ::deken::preferences::hideforeignarch
-    pack $mytoplevel.platform.hide_foreign -anchor w
+    pack $winid.platform.hide_foreign -anchor w
 
 
     # Use two frames for the buttons, since we want them both bottom and right
-    frame $mytoplevel.nb
-    pack $mytoplevel.nb -side bottom -fill x -pady 2m
+    frame $winid.nb
+    pack $winid.nb -side bottom -fill x -pady 2m
 
     # buttons
-    frame $mytoplevel.nb.buttonframe
-    pack $mytoplevel.nb.buttonframe -side right -fill x -padx 2m
+    frame $winid.nb.buttonframe
+    pack $winid.nb.buttonframe -side right -fill x -padx 2m
 
-    button $mytoplevel.nb.buttonframe.cancel -text [_ "Cancel"] \
-        -command "::deken::preferences::cancel $mytoplevel"
-    pack $mytoplevel.nb.buttonframe.cancel -side left -expand 1 -fill x -padx 15 -ipadx 10
+    button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
+        -command "::deken::preferences::cancel $winid"
+    pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill x -padx 15 -ipadx 10
     if {$::windowingsystem ne "aqua"} {
-        button $mytoplevel.nb.buttonframe.apply -text [_ "Apply"] \
-            -command "::deken::preferences::apply $mytoplevel"
-        pack $mytoplevel.nb.buttonframe.apply -side left -expand 1 -fill x -padx 15 -ipadx 10
+        button $winid.nb.buttonframe.apply -text [_ "Apply"] \
+            -command "::deken::preferences::apply $winid"
+        pack $winid.nb.buttonframe.apply -side left -expand 1 -fill x -padx 15 -ipadx 10
     }
-    button $mytoplevel.nb.buttonframe.ok -text [_ "OK"] \
-        -command "::deken::preferences::ok $mytoplevel"
-    pack $mytoplevel.nb.buttonframe.ok -side left -expand 1 -fill x -padx 15 -ipadx 10
+    button $winid.nb.buttonframe.ok -text [_ "OK"] \
+        -command "::deken::preferences::ok $winid"
+    pack $winid.nb.buttonframe.ok -side left -expand 1 -fill x -padx 15 -ipadx 10
 
 }
 
-proc ::deken::preferences::mapped {mytoplevel} {
-    set cnv $mytoplevel.installdir.cnv
+proc ::deken::preferences::mapped {winid} {
+    set cnv $winid.installdir.cnv
     catch {
         set bbox [$cnv bbox all]
         if { "$bbox" != "" } {
@@ -1231,22 +1231,22 @@ proc ::deken::preferences::mapped {mytoplevel} {
     } stdout
 }
 
-proc ::deken::preferences::show {{mytoplevel .deken_preferences}} {
-    if {[winfo exists $mytoplevel]} {
-        wm deiconify $mytoplevel
-        raise $mytoplevel
+proc ::deken::preferences::show {{winid .deken_preferences}} {
+    if {[winfo exists $winid]} {
+        wm deiconify $winid
+        raise $winid
     } else {
-        toplevel $mytoplevel -class DialogWindow
-        wm title $mytoplevel [format [_ "Deken %s Preferences"] $::deken::version]
+        toplevel $winid -class DialogWindow
+        wm title $winid [format [_ "Deken %s Preferences"] $::deken::version]
 
-        frame $mytoplevel.frame
-        pack $mytoplevel.frame -side top -padx 6 -pady 3 -fill both -expand true
+        frame $winid.frame
+        pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
 
-        ::deken::preferences::create $mytoplevel.frame
+        ::deken::preferences::create $winid.frame
     }
 }
 
-proc ::deken::preferences::apply {mytoplevel} {
+proc ::deken::preferences::apply {winid} {
     set installpath "${::deken::preferences::installpath}"
     if { "$installpath" == "USER" } {
         set installpath "${::deken::preferences::userinstallpath}"
@@ -1265,18 +1265,18 @@ proc ::deken::preferences::apply {mytoplevel} {
         "${::deken::preferences::keep_package}" \
         "${::deken::preferences::verify_sha256}"
 }
-proc ::deken::preferences::cancel {mytoplevel} {
+proc ::deken::preferences::cancel {winid} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
     if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
-    #destroy $mytoplevel
+    #destroy $winid
 }
-proc ::deken::preferences::ok {mytoplevel} {
-    ::deken::preferences::apply $mytoplevel
-    ::deken::preferences::cancel $mytoplevel
+proc ::deken::preferences::ok {winid} {
+    ::deken::preferences::apply $winid
+    ::deken::preferences::cancel $winid
 }
 
-proc ::deken::initiate_search {mytoplevel} {
-    set searchterm [$mytoplevel.searchbit.entry get]
+proc ::deken::initiate_search {winid} {
+    set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
     ::deken::clearpost
     ::deken::utilities::debug "[_ {\[deken\] Start searching for externals...}] ${searchterm}"
@@ -1292,7 +1292,7 @@ proc ::deken::initiate_search {mytoplevel} {
 
     set ::deken::results $results
     if {[llength $results] != 0} {
-        ::deken::show_results $mytoplevel
+        ::deken::show_results $winid
     } else {
         ::pdwindow::post [_ "\[deken\] No matching externals found." ]
         ::pdwindow::debug " [_ {Try using the full name e.g. 'freeverb'.} ]"
@@ -1302,7 +1302,7 @@ proc ::deken::initiate_search {mytoplevel} {
 }}
 
 # display a single found entry
-proc ::deken::show_result {mytoplevel counter result showmatches} {
+proc ::deken::show_result {winid counter result showmatches} {
     foreach {title cmd match comment status contextmenus pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr $match?"archmatch":"noarchmatch" ] ]
@@ -1315,17 +1315,17 @@ proc ::deken::show_result {mytoplevel counter result showmatches} {
         ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
         if { "" ne $contextmenus } {
-            ::deken::bind_postmenu $mytoplevel $tag $contextmenus
+            ::deken::bind_postmenu $winid $tag $contextmenus
         }
     }
 }
 
 # display all found entry
-proc ::deken::show_results {mytoplevel} {
+proc ::deken::show_results {winid} {
     set counter 0
     # build the list UI of results
     foreach r $::deken::results {
-        ::deken::show_result $mytoplevel $counter $r 1
+        ::deken::show_result $winid $counter $r 1
         incr counter
     }
     if { "$::deken::hideforeignarch" } {
@@ -1333,13 +1333,13 @@ proc ::deken::show_results {mytoplevel} {
     } {
         set counter 0
         foreach r $::deken::results {
-            ::deken::show_result $mytoplevel $counter $r 0
+            ::deken::show_result $winid $counter $r 0
             incr counter
         }
     }
     ::deken::scrollup
-    $mytoplevel.results tag raise sel
-    $mytoplevel.results tag raise highlight
+    $winid.results tag raise sel
+    $winid.results tag raise highlight
 }
 
 proc ::deken::ensure_installdir {{installdir ""}} {
