@@ -970,6 +970,24 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
     ::deken::install_package ${pkgfile} "" "" 1
 }
 
+proc ::deken::open_search_objects {args}  {
+    set winid .externals_searchui
+    ::deken::open_searchui $winid
+    ::deken::clearpost
+
+    if { $::deken::searchtype ne "objects" } {
+        ${winid}.searchbit.entry delete 0 end
+    }
+    if { [$winid.searchbit.entry get] ne {} } {
+        ${winid}.searchbit.entry insert end " "
+    }
+
+    ${winid}.searchbit.entry insert end $args
+
+    set ::deken::searchtype objects
+    ::deken::update_searchbutton $winid
+}
+
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
     set pad [::deken::utilities::newwidget ${toplevel}.pad]
     frame $pad -relief groove -borderwidth 2 -width 2 -height 2
