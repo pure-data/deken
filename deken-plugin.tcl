@@ -1859,15 +1859,29 @@ proc ::deken::search::puredata.info {term} {
 
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
+    if { [catch {
+        set latestrelease [dict create]
+        foreach ele $splitCont {
+            set ele [ string trim $ele ]
+            if { "" ne $ele } {
+                foreach {name URL creator date} [ split $ele "\t" ] {break}
+                set filename [ file tail $URL ]
+                foreach {pkgname version archs} [ ::deken::parse_filename $filename ] {break}
+                #if { $version eq "0.0.extended" } { set date "0000-00-00 00:02:00" }
+                set olddate {}
+                catch { set olddate [dict get $latestrelease $pkgname] }
+                if { $date > $olddate } {
+                    dict set latestrelease $pkgname $date
+                }
+            }
+        }
+    } stdout ] } {
+        set latestrelease {}
+    }
     foreach ele $splitCont {
         set ele [ string trim $ele ]
         if { "" ne $ele } {
-            set sele [ split $ele "\t" ]
-
-            set name  [ string trim [ lindex $sele 0 ]]
-            set URL   [ string trim [ lindex $sele 1 ]]
-            set creator [ string trim [ lindex $sele 2 ]]
-            set date    [regsub -all {[TZ]} [ string trim [ lindex $sele 3 ] ] { }]
+            foreach {name URL creator date} [ split $ele "\t" ] {break}
             set decURL [urldecode $URL]
             set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
             set filename [ file tail $URL ]
@@ -1880,7 +1894,11 @@ proc ::deken::search::puredata.info {term} {
             set match [::deken::architecture_match "$archs" ]
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
-            set sortname ${pkgname}/${version}/${date}
+            set sortprefix "0000-00-00 00:01:00"
+            if { $latestrelease ne {} } {
+                catch { set sortprefix [dict get $latestrelease $pkgname] }
+            }
+            set sortname "${sortprefix}/${pkgname}/${version}/${date}"
             set menus [list \
                            [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
                            [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
