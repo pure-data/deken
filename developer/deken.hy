@@ -1697,6 +1697,17 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       "--dekformat"
       :help "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
       :default 1
+      :required False)
+    (parser.add_argument
+      "--no-sign-gpg"
+      :help "Do not sign the package (DEFAULT: False)."
+      :action "store_true"
+      :required False)
+    (parser.add_argument
+      "--sign-gpg"
+      :help "Sign the package (DEFAULT: True)."
+      :action "store_false"
+      :dest "no_sign_gpg"
       :required False))
   (defn add-noverify-flags [parser]
     (parser.add_argument
@@ -1772,6 +1783,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
     (del args.verbose)
     (del args.quiet)
+    (if (and (hasattr args "no_sign_gpg") args.no-sign-gpg)
+      (do (global gpg-sign-file)
+          (defn gpg-sign-file [filename])))
     args)
 
   (setv arg-parser
