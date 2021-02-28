@@ -1929,9 +1929,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     :default []
     :help "Install from the given requirements file. This option can be used multiple times.")
   (arg-install.add_argument
-    "--installdir"
+    "--install-dir"
     :default default-installpath
+    :dest "installdir"
     :help (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath)))
+  (arg-install.add_argument
+    "--installdir"
+    :help argparse.SUPPRESS)
   (arg-install.add_argument
     "--self"
     :action "store_true"
@@ -1959,9 +1963,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     :default []
     :help "Uninstall packages specified in the given requirements file. This option can be used multiple times.")
   (arg-uninstall.add_argument
-    "--installdir"
+    "--install-dir"
     :default default-installpath
+    :dest "installdir"
     :help (% "Directory to find installed packages (DEFAULT: %s)" (, default-installpath)))
+  (arg-uninstall.add_argument
+    "--installdir"
+    :help argparse.SUPPRESS)
   (arg-uninstall.add_argument
     "--self"
     :action "store_true"
