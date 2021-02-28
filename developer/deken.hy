@@ -1133,7 +1133,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          &optional
                          [filenameversion 1]
                          [recurse-subdirs False]
-                         [extra-arch-files []]]
+                         [extra-arch-files []]
+                         [output-dir "."]]
   "calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
@@ -1148,7 +1149,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 (archive-extension archs))]
       [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
   (do-make-name
-    (or pkgname (os.path.basename folder))
+    (os.path.normpath (os.path.join output-dir (or pkgname (os.path.basename folder))))
     (cond [(is version None)
            (fatal
              (+ (% "No version for '%s'!\n" folder)
@@ -1527,9 +1528,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 name
                                 (make-archive-name
                                   (os.path.normpath name)
-                                  (or args.name (os.path.normpath name))
+                                  (os.path.basename (os.path.normpath (or args.name name)))
                                   args.version
-                                  (int-dekformat args.dekformat)
+                                  :output-dir args.output-dir
+                                  :filenameversion (int-dekformat args.dekformat)
                                   :recurse-subdirs args.search-subdirs
                                   :extra-arch-files args.extra-arch-files))
                               (if (is args.objects None) name args.objects))
@@ -1686,6 +1688,11 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       :help "EXPERT: Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
       :default []
       :nargs "*"
+      :required False)
+    (parser.add_argument
+      "--output-dir"
+      :help "Output directory for package files (DEFAULT: .)."
+      :default "."
       :required False)
     (parser.add_argument
       "--default-floatsize"
