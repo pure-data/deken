@@ -203,6 +203,34 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     return $fallback
 }
 
+proc ::deken::utilities::substpath {path} {
+    set result [string map "@PD_PATH@ $::sys_libdir" $path]
+    return $result
+}
+
+proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""}} {
+    for {set i 0} {true} {incr i} {
+        set tmpfile [file join ${path} dekentmp.${i}${ext}]
+        if {![file exists $tmpfile]} {
+            return $tmpfile
+        }
+    }
+}
+
+proc ::deken::utilities::get_tmpdir {} {
+    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
+    set tmpdir ""
+    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TEMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    set tmpdir "/tmp"
+    set tmpdir [pwd]
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+}
+
 proc ::deken::utilities::is_writabledir {path} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
@@ -216,6 +244,37 @@ proc ::deken::utilities::is_writabledir {path} {
     return false
 }
 
+proc ::deken::utilities::get_writabledir {paths} {
+    foreach p $paths {
+        set xp [ ::deken::utilities::substpath $p ]
+        if { [ ::deken::utilities::is_writabledir $xp ] } { return $p }
+    }
+    return
+}
+
+proc ::deken::utilities::rmrecursive {path} {
+    # recursively remove ${path} if it exists, traversing into each directory
+    # to delete single items (rather than just unlinking the parent directory)
+    set errors 0
+    set myname [lindex [info level 0] 0]
+    set children [glob -nocomplain -directory $path -types hidden *]
+    lappend children {*}[glob -nocomplain -directory $path *]
+    foreach child $children[set children {}] {
+        if {[file tail $child] in {. ..}} {
+            continue
+        }
+        if {[file isdirectory $child]} {
+            if {[file type $child] ne "link"} {
+                incr errors [$myname $child]
+            }
+        }
+        if { [ catch { file delete -force $child } ] } {
+            incr errors
+        }
+    }
+    return $errors
+}
+
 # http://rosettacode.org/wiki/URL_decoding#Tcl
 proc ::deken::utilities::urldecode {str} {
     set specialMap {"[" "%5B" "]" "%5D"}
@@ -223,11 +282,6 @@ proc ::deken::utilities::urldecode {str} {
     set replacement {[format "%c" [scan "\1" "%2x"]]}
     set modStr [regsub -all $seqRE [string map $specialMap $str] $replacement]
     encoding convertfrom utf-8 [subst -nobackslashes -novariables $modStr]
-}
-
-proc ::deken::utilities::substpath {path} {
-    set result [string map "@PD_PATH@ $::sys_libdir" $path]
-    return $result
 }
 
 proc ::deken::utilities::verbose {level message} {
@@ -454,60 +508,6 @@ if { [catch {package require sha256} ] } {
         }
         return ${retval}
     }
-}
-
-proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""}} {
-    for {set i 0} {true} {incr i} {
-        set tmpfile [file join ${path} dekentmp.${i}${ext}]
-        if {![file exists $tmpfile]} {
-            return $tmpfile
-        }
-    }
-}
-
-proc ::deken::utilities::get_tmpdir {} {
-    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
-    set tmpdir ""
-    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TEMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    set tmpdir "/tmp"
-    set tmpdir [pwd]
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-}
-
-proc ::deken::utilities::get_writabledir {paths} {
-    foreach p $paths {
-        set xp [ ::deken::utilities::substpath $p ]
-        if { [ ::deken::utilities::is_writabledir $xp ] } { return $p }
-    }
-    return
-}
-
-proc ::deken::utilities::rmrecursive {path} {
-    # recursively remove ${path} if it exists, traversing into each directory
-    # to delete single items (rather than just unlinking the parent directory)
-    set errors 0
-    set myname [lindex [info level 0] 0]
-    set children [glob -nocomplain -directory $path -types hidden *]
-    lappend children {*}[glob -nocomplain -directory $path *]
-    foreach child $children[set children {}] {
-        if {[file tail $child] in {. ..}} {
-            continue
-        }
-        if {[file isdirectory $child]} {
-            if {[file type $child] ne "link"} {
-                incr errors [$myname $child]
-            }
-        }
-        if { [ catch { file delete -force $child } ] } {
-            incr errors
-        }
-    }
-    return $errors
 }
 
 # download a file to a location
