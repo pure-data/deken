@@ -505,26 +505,6 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
 }
 
-proc ::deken::register {fun} {
-    # register a searchfunction with deken.
-    # the searchfunction <fun> will be called with a <searchterm>,
-    # and must return a list of <result>.
-    # <searchterm> is a list of (whitespace separated) words.
-    # each word denotes a library or library-object to search for and may
-    # contain wildcards ("*").
-    # the <result> should be normalized via ::deken::search::normalize_result
-    # failing to do so, a <result> is a list <name> <cmd> <match> <comment> <status> <args...>
-    # - <title> non-empty name of the library (to be shown to the user as search-result)
-    # - <cmd>  the full command to run to install the library
-    # - <match> boolean value to indicate whether this entry matches the current architecture
-    # - <subtitle> additional text to be shown under the <name>
-    # - <status> additional text to be shown in the STATUS line if the mouse hovers over the result
-    # - <args>... additional args (ignored)
-    # the library <name> must be non-empty (and empty value is reserved for normalized results)
-
-    set ::deken::backends [linsert $::deken::backends 0 $fun]
-}
-
 proc ::deken::normalize_result {title
                                 cmd
                                 {match 1}
@@ -1804,6 +1784,26 @@ proc urldecode {str} {
 # ####################################################################
 # search backends
 # ####################################################################
+
+proc ::deken::register {fun} {
+    # register a searchfunction with deken.
+    # the searchfunction <fun> will be called with a <searchterm>,
+    # and must return a list of <result>.
+    # <searchterm> is a list of (whitespace separated) words.
+    # each word denotes a library or library-object to search for and may
+    # contain wildcards ("*").
+    # the <result> should be normalized via ::deken::search::normalize_result
+    # failing to do so, a <result> is a list <name> <cmd> <match> <comment> <status> <args...>
+    # - <title> non-empty name of the library (to be shown to the user as search-result)
+    # - <cmd>  the full command to run to install the library
+    # - <match> boolean value to indicate whether this entry matches the current architecture
+    # - <subtitle> additional text to be shown under the <name>
+    # - <status> additional text to be shown in the STATUS line if the mouse hovers over the result
+    # - <args>... additional args (ignored)
+    # the library <name> must be non-empty (and empty value is reserved for normalized results)
+
+    set ::deken::backends [linsert $::deken::backends 0 $fun]
+}
 
 ## API draft
 
