@@ -187,6 +187,11 @@ if {[info commands lreverse] == ""} {
         set res
     } ;# RS
 }
+
+# ######################################################################
+# ################ utiltities ##########################################
+# ######################################################################
+
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr bool($value) ] } stdout
     return $fallback
