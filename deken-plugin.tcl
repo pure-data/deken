@@ -987,6 +987,163 @@ proc ::deken::versioncompare {a b} {
     return 0
 }
 
+proc ::deken::install_package_from_file {{pkgfile ""}} {
+    set types {}
+    lappend types [list [_ "Deken Packages" ] .dek]
+    lappend types [list [_ "ZIP Files" ] .zip]
+    if {$::tcl_platform(platform) ne "windows"} {
+        lappend types [list [_ "TAR Files" ] {.tar.gz .tgz} ]
+    }
+    lappend types [list [_ "All Files" ]  *  ]
+    if { "${pkgfile}" eq ""} {
+        set pkgfile [tk_getOpenFile -defaultextension dek -filetypes $types]
+    }
+    if { "${pkgfile}" eq "" } { return }
+
+    # user picked one
+    # perform checks and install it
+    set pkgfile [file normalize $pkgfile]
+
+    if { "$::deken::verify_sha256" } {
+        if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
+            ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
+            set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
+
+            set result "retry"
+            while { "$result" eq "retry" } {
+                set result [tk_messageBox \
+                                -title [_ "SHA256 verification failed" ] \
+                                -message ${msg} \
+                                -icon error \
+                                -parent .externals_searchui \
+                                -type abortretryignore]
+                # we don't have a good strategy if the user selects 'retry'
+                # so we just display the dialog again...
+            }
+            if { "$result" eq "abort" } { return }
+        }
+    }
+    ::deken::install_package ${pkgfile} "" "" 1
+}
+
+proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1}}  {
+    # fullpkgfile: the file to extract
+    # filename   : the package file name (usually the basename of $fullpkgfile)
+    #              but might be different depending on the download)
+    # installdir : where to put stuff into
+    # keep       : whether to remove the fullpkgfile after successful extraction
+    if { "${filename}" == "" } {
+        set filename [file tail ${fullpkgfile}]
+    }
+    set installdir [::deken::ensure_installdir ${installdir} ${filename}]
+    set parsedname [::deken::parse_filename $filename]
+    set extname [lindex $parsedname 0]
+    set extpath [file join $installdir $extname]
+
+
+    set deldir ""
+    if { "$::deken::remove_on_install" } {
+        ::deken::status [format [_ "Removing %s" ] $extname ]
+
+        if { ! [::deken::utilities::uninstall $installdir $extname] } {
+            # ouch uninstalling failed.
+            # on msw, lets assume this is because some of the files in the folder are locked.
+            # so move the folder out of the way and proceed
+            set deldir [::deken::get_tmpfilename $installdir]
+            if { [ catch {
+                file mkdir $deldir
+                file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
+            } ] } {
+                ::deken::utilities::debug [format [_ {\[deken\] temporarily moving %1$s into %2$s failed.} ] $extname $deldir ]
+                set deldir ""
+            }
+        }
+    }
+
+    ::deken::status [format [_ "Installing package %s" ] $extname ] 0
+    ::deken::syncgui
+    if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
+        ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
+        set install_failed 0
+    } else {
+        set msg [format [_ "Failed to install %s!" ] $extname ]
+        ::deken::status ${msg} 0
+        tk_messageBox \
+            -title [_ "Package installation failed" ] \
+            -message ${msg} \
+            -icon error \
+            -parent .externals_searchui \
+            -type ok
+        set install_failed 1
+    }
+
+    if { "$deldir" != "" } {
+        # try getting rid of the directory to be deleted
+        # we already tried once (and failed), so this time we iterate over each file
+        set rmerrors [::deken::utilities::rmrecursive $deldir]
+        # and if there are still files around, ask the user to delete them.
+        if { $rmerrors > 0 } {
+            set msg [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ]
+            set _args "-message \"[format $msg $extname $deldir]\" -type okcancel -default ok -icon warning -parent .externals_searchui"
+            switch -- [eval tk_messageBox ${_args}] {
+                ok {
+                    ::pd_menucommands::menu_openfile $deldir
+                }
+            }
+        }
+        set deldir ""
+    }
+
+    if { ${install_failed} } { return }
+
+    if { "$::deken::show_readme" } {
+        foreach ext {pd html txt} {
+            set r [file join $extpath "README.deken.$ext"]
+            if {[file exists $r]} {
+                if { "$ext" == "pd" } {
+                    set directory [file normalize [file dirname $r]]
+                    set basename [file tail $r]
+                    pdsend "pd open [enquote_path $basename] [enquote_path $directory]"
+                } else {
+                    pd_menucommands::menu_openfile $r
+                }
+                break
+            }
+        }
+    }
+
+    if { "$::deken::add_to_path" } {
+        # add to the search paths? bail if the version of pd doesn't support it
+        if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
+        if {![file exists $extpath]} {
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to add %s to search paths}] $extname]
+            return
+        }
+        set doit yes
+        if { $::deken::add_to_path > 1 } {
+            set doit yes
+        } else {
+            set msg [_ "Add %s to the Pd search paths?" ]
+            set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
+            set doit [eval tk_messageBox ${_args}]
+        }
+        switch -- "${doit}" {
+            yes {
+                add_to_searchpaths [file join $installdir $extname]
+                ::deken::utilities::debug [format [_ {\[deken\] Added %s to search paths}] $extname]
+                # if this version of pd supports it, try refreshing the helpbrowser
+                if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
+                    ::helpbrowser::refresh
+                }
+            }
+            no {
+                return
+            }
+        }
+    }
+}
+
+
 proc ::deken::bind_globalshortcuts {toplevel} {
     set closescript "destroy $toplevel"
     bind $toplevel <$::modifier-Key-w> $closescript
@@ -1255,44 +1412,6 @@ proc ::deken::create_dialog {winid} {
     button $winid.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $winid\] \[winfo pointery $winid\]"
     pack $winid.status.installdek -side right -padx 6 -pady 3 -ipadx 10
 }
-proc ::deken::install_package_from_file {{pkgfile ""}} {
-    set types {}
-    lappend types [list [_ "Deken Packages" ] .dek]
-    lappend types [list [_ "ZIP Files" ] .zip]
-    if {$::tcl_platform(platform) ne "windows"} {
-        lappend types [list [_ "TAR Files" ] {.tar.gz .tgz} ]
-    }
-    lappend types [list [_ "All Files" ]  *  ]
-    if { "${pkgfile}" eq ""} {
-        set pkgfile [tk_getOpenFile -defaultextension dek -filetypes $types]
-    }
-    if { "${pkgfile}" eq "" } { return }
-
-    # user picked one
-    # perform checks and install it
-    set pkgfile [file normalize $pkgfile]
-
-    if { "$::deken::verify_sha256" } {
-        if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
-            ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
-            set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
-
-            set result "retry"
-            while { "$result" eq "retry" } {
-                set result [tk_messageBox \
-                                -title [_ "SHA256 verification failed" ] \
-                                -message ${msg} \
-                                -icon error \
-                                -parent .externals_searchui \
-                                -type abortretryignore]
-                # we don't have a good strategy if the user selects 'retry'
-                # so we just display the dialog again...
-            }
-            if { "$result" eq "abort" } { return }
-        }
-    }
-    ::deken::install_package ${pkgfile} "" "" 1
-}
 
 proc ::deken::open_search_objects {args}  {
     set winid .externals_searchui
@@ -1455,123 +1574,6 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
         }
     }
     return $installdir
-}
-
-proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1}}  {
-    # fullpkgfile: the file to extract
-    # filename   : the package file name (usually the basename of $fullpkgfile)
-    #              but might be different depending on the download)
-    # installdir : where to put stuff into
-    # keep       : whether to remove the fullpkgfile after successful extraction
-    if { "${filename}" == "" } {
-        set filename [file tail ${fullpkgfile}]
-    }
-    set installdir [::deken::ensure_installdir ${installdir} ${filename}]
-    set parsedname [::deken::parse_filename $filename]
-    set extname [lindex $parsedname 0]
-    set extpath [file join $installdir $extname]
-
-
-    set deldir ""
-    if { "$::deken::remove_on_install" } {
-        ::deken::status [format [_ "Removing %s" ] $extname ]
-
-        if { ! [::deken::utilities::uninstall $installdir $extname] } {
-            # ouch uninstalling failed.
-            # on msw, lets assume this is because some of the files in the folder are locked.
-            # so move the folder out of the way and proceed
-            set deldir [::deken::get_tmpfilename $installdir]
-            if { [ catch {
-                file mkdir $deldir
-                file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
-            } ] } {
-                ::deken::utilities::debug [format [_ {\[deken\] temporarily moving %1$s into %2$s failed.} ] $extname $deldir ]
-                set deldir ""
-            }
-        }
-    }
-
-    ::deken::status [format [_ "Installing package %s" ] $extname ] 0
-    ::deken::syncgui
-    if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
-        ::deken::status [format [_ "Successfully installed %s!" ] $extname ] 0
-        set install_failed 0
-    } else {
-        set msg [format [_ "Failed to install %s!" ] $extname ]
-        ::deken::status ${msg} 0
-        tk_messageBox \
-            -title [_ "Package installation failed" ] \
-            -message ${msg} \
-            -icon error \
-            -parent .externals_searchui \
-            -type ok
-        set install_failed 1
-    }
-
-    if { "$deldir" != "" } {
-        # try getting rid of the directory to be deleted
-        # we already tried once (and failed), so this time we iterate over each file
-        set rmerrors [::deken::utilities::rmrecursive $deldir]
-        # and if there are still files around, ask the user to delete them.
-        if { $rmerrors > 0 } {
-            set msg [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ]
-            set _args "-message \"[format $msg $extname $deldir]\" -type okcancel -default ok -icon warning -parent .externals_searchui"
-            switch -- [eval tk_messageBox ${_args}] {
-                ok {
-                    ::pd_menucommands::menu_openfile $deldir
-                }
-            }
-        }
-        set deldir ""
-    }
-
-    if { ${install_failed} } { return }
-
-    if { "$::deken::show_readme" } {
-        foreach ext {pd html txt} {
-            set r [file join $extpath "README.deken.$ext"]
-            if {[file exists $r]} {
-                if { "$ext" == "pd" } {
-                    set directory [file normalize [file dirname $r]]
-                    set basename [file tail $r]
-                    pdsend "pd open [enquote_path $basename] [enquote_path $directory]"
-                } else {
-                    pd_menucommands::menu_openfile $r
-                }
-                break
-            }
-        }
-    }
-
-    if { "$::deken::add_to_path" } {
-        # add to the search paths? bail if the version of pd doesn't support it
-        if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
-        if {![file exists $extpath]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to add %s to search paths}] $extname]
-            return
-        }
-        set doit yes
-        if { $::deken::add_to_path > 1 } {
-            set doit yes
-        } else {
-            set msg [_ "Add %s to the Pd search paths?" ]
-            set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
-            set doit [eval tk_messageBox ${_args}]
-        }
-        switch -- "${doit}" {
-            yes {
-                add_to_searchpaths [file join $installdir $extname]
-                ::deken::utilities::debug [format [_ {\[deken\] Added %s to search paths}] $extname]
-                # if this version of pd supports it, try refreshing the helpbrowser
-                if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
-                    ::helpbrowser::refresh
-                }
-            }
-            no {
-                return
-            }
-        }
-    }
 }
 
 # handle a clicked link
