@@ -98,28 +98,6 @@ proc ::deken::versioncheck {version} {
 ## put the current version of this package here:
 if { [::deken::versioncheck 0.6.1] } {
 
-## FIXXXXME only initialize vars if not yet set
-set ::deken::installpath {}
-set ::deken::userplatform {}
-set ::deken::hideforeignarch 1
-set ::deken::show_readme 1
-set ::deken::remove_on_install 1
-set ::deken::add_to_path 0
-set ::deken::keep_package 0
-set ::deken::verify_sha256 1
-set ::deken::searchtype name
-set ::deken::preferences::installpath {}
-set ::deken::preferences::userinstallpath {}
-set ::deken::preferences::platform {}
-set ::deken::preferences::userplatform {}
-set ::deken::preferences::hideforeignarch {}
-set ::deken::preferences::show_readme {}
-set ::deken::preferences::remove_on_install {}
-set ::deken::preferences::add_to_path {}
-set ::deken::preferences::add_to_path_temp {}
-set ::deken::preferences::keep_package {}
-set ::deken::preferences::verify_sha256 {}
-
 namespace eval ::deken:: {
     namespace export open_searchui
     variable winid
@@ -134,10 +112,59 @@ namespace eval ::deken:: {
 }
 namespace eval ::deken::search:: { }
 
-set ::deken::installpath ""
-set ::deken::statustimer ""
-set ::deken::userplaform ""
+## FIXXXXME only initialize vars if not yet set
+set ::deken::backends {}
+set ::deken::installpath {}
+set ::deken::userplatform {}
 set ::deken::hideforeignarch false
+set ::deken::show_readme 1
+set ::deken::remove_on_install 1
+set ::deken::add_to_path 0
+set ::deken::keep_package 0
+set ::deken::verify_sha256 1
+set ::deken::searchtype name
+set ::deken::statustimer {}
+set ::deken::preferences::installpath {}
+set ::deken::preferences::userinstallpath {}
+set ::deken::preferences::platform {}
+set ::deken::preferences::userplatform {}
+set ::deken::preferences::hideforeignarch {}
+set ::deken::preferences::show_readme {}
+set ::deken::preferences::remove_on_install {}
+set ::deken::preferences::add_to_path {}
+set ::deken::preferences::add_to_path_temp {}
+set ::deken::preferences::keep_package {}
+set ::deken::preferences::verify_sha256 {}
+
+set ::deken::platform(os) $::tcl_platform(os)
+set ::deken::platform(machine) $::tcl_platform(machine)
+set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
+set ::deken::platform(floatsize) 32
+
+# architectures that can be substituted for each other
+array set ::deken::architecture_substitutes {}
+set ::deken::architecture_substitutes(x86_64) [list "amd64" ]
+set ::deken::architecture_substitutes(amd64) [list "x86_64" ]
+set ::deken::architecture_substitutes(i686) [list "i586" "i386"]
+set ::deken::architecture_substitutes(i586) [list "i386"]
+set ::deken::architecture_substitutes(armv6l) [list "armv6" "arm"]
+set ::deken::architecture_substitutes(armv7l) [list "armv7" "armv6l" "armv6" "arm"]
+set ::deken::architecture_substitutes(PowerPC) [list "ppc"]
+set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
+
+# normalize W32 OSs
+if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
+    # we are not interested in the w32 flavour, so we just use 'Windows' for all of them
+    set ::deken::platform(os) "Windows"
+}
+# normalize W32 CPUs
+if { "Windows" eq "$::deken::platform(os)" } {
+    # in redmond, intel only produces 32bit CPUs,...
+    if { "intel" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "i686" }
+    # ... and all 64bit CPUs are manufactured by amd
+    #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
+}
+
 
 set ::deken::protocol "http"
 if { ! [catch {package present tls} stdout] } {
@@ -274,8 +301,6 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
     return 1
 }
 }
-set ::deken::_vbsunzip ""
-
 proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 1}} {
     ::deken::status [format [_ "Installing %s" ] $filename ]
     set PWD [ pwd ]
@@ -480,7 +505,6 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     }
 }
 
-set ::deken::backends [list]
 proc ::deken::register {fun} {
     # register a searchfunction with deken.
     # the searchfunction <fun> will be called with a <searchterm>,
@@ -598,23 +622,6 @@ if {[info commands lreverse] == ""} {
     } ;# RS
 }
 
-set ::deken::platform(os) $::tcl_platform(os)
-set ::deken::platform(machine) $::tcl_platform(machine)
-set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
-set ::deken::platform(floatsize) 32
-
-# normalize W32 OSs
-if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
-    # we are not interested in the w32 flavour, so we just use 'Windows' for all of them
-    set ::deken::platform(os) "Windows"
-}
-# normalize W32 CPUs
-if { "Windows" eq "$::deken::platform(os)" } {
-    # in redmond, intel only produces 32bit CPUs,...
-    if { "intel" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "i686" }
-    # ... and all 64bit CPUs are manufactured by amd
-    #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
-}
 
 # console message to let them know we're loaded
 ## but only if we are being called as a plugin (not as built-in)
@@ -623,16 +630,6 @@ if { "" != "$::current_plugin_loadpath" } {
 }
 ::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]"
 
-# architectures that can be substituted for each other
-array set ::deken::architecture_substitutes {}
-set ::deken::architecture_substitutes(x86_64) [list "amd64" ]
-set ::deken::architecture_substitutes(amd64) [list "x86_64" ]
-set ::deken::architecture_substitutes(i686) [list "i586" "i386"]
-set ::deken::architecture_substitutes(i586) [list "i386"]
-set ::deken::architecture_substitutes(armv6l) [list "armv6" "arm"]
-set ::deken::architecture_substitutes(armv7l) [list "armv7" "armv6l" "armv6" "arm"]
-set ::deken::architecture_substitutes(PowerPC) [list "ppc"]
-set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
 
 # try to set install path when plugin is loaded
 set ::deken::installpath [::deken::find_installpath]
