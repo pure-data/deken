@@ -95,3 +95,25 @@ docker-release:
     - docker push $CONTAINER_RELEASE_IMAGE
   only:
     - tags
+
+# =====================================================================
+# deken package
+# =====================================================================
+deken:
+  stage: release
+  image: $CONTAINER_TEST_IMAGE
+  variables:
+    DEKEN_ROOT: "yes"
+  script:
+# create source package
+    - export DEKEN_VERSION=$(git describe --always)
+    - mkdir deken-plugin
+    - cp deken-plugin.tcl LICENSE.txt deken-plugin/
+    - cp README.plugin.txt deken-plugin/README.txt
+    - deken package --version="${DEKEN_VERSION#v}" deken-plugin
+# upload deken packages
+    - test -z "${CI_COMMIT_TAG}" || test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-source-error ./*.dek
+  artifacts:
+    name: deken-package
+    paths:
+      - ./*.dek
