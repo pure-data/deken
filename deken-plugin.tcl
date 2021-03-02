@@ -1828,7 +1828,7 @@ proc ::deken::search::puredata.info {term} {
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set queryterm {}
     foreach x $term {lappend queryterm ${::deken::searchtype} $x}
-    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stderr ] } {
+    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stdout ] } {
         set queryterm [ join $term "&${::deken::searchtype}=" ]
         set queryterm "${::deken::searchtype}=${queryterm}"
     }
