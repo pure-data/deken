@@ -612,25 +612,25 @@ proc ::deken::utilities::parse_filename {filename} {
     list $pkgname $version $archs
 }
 
-proc ::deken::utilities::newwidget {basename} {
+
+# ######################################################################
+# ################ preferences #########################################
+# ######################################################################
+
+proc ::deken::preferences::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
     while {[winfo exists ${basename}${i}]} {incr i}
     return ${basename}${i}
 }
 
-
-# ######################################################################
-# ################ preferences #########################################
-# ######################################################################
-
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
-    set pad [::deken::utilities::newwidget ${toplevel}.pad]
+    set pad [::deken::preferences::newwidget ${toplevel}.pad]
     frame $pad -relief groove -borderwidth 2 -width 2 -height 2
     grid ${pad} -sticky ew -row ${row} -column 0 -columnspan 3 -padx ${padx}  -pady ${pady}
 }
 proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
-    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
+    set mypad [::deken::preferences::newwidget ${toplevel}.pad]
 
     frame $mypad
     pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill "y"
@@ -678,9 +678,9 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
         if { [file pathtype $xpath] != "absolute"} { return }
     }
 
-    set rdb [::deken::utilities::newwidget ${toplevel}.path]
-    set chk [::deken::utilities::newwidget ${toplevel}.doit]
-    set pad [::deken::utilities::newwidget ${toplevel}.pad]
+    set rdb [::deken::preferences::newwidget ${toplevel}.path]
+    set chk [::deken::preferences::newwidget ${toplevel}.doit]
+    set pad [::deken::preferences::newwidget ${toplevel}.pad]
 
     radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
     frame ${pad}
