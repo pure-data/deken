@@ -552,6 +552,56 @@ proc ::deken::download_file {url outputfilename} {
 }
 
 
+# parse a deken-packagefilename into it's components:
+# v0:: <pkgname>[-v<version>-]?{(<arch>)}-externals.<ext>
+# v1:: <pkgname>[\[<version\]]?{(<arch>)}
+# return: list <pkgname> <version> [list <arch> ...]
+proc ::deken::parse_filename {filename} {
+    set pkgname $filename
+    set archs [list]
+    set version ""
+    if { [ string match "*.dek" $filename ] } {
+        ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
+        set archstring ""
+        regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring
+        foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
+            if {![string first v ${o}]} {
+                set version [string range $o 1 end]
+            } else { # ignoring unknown option...
+            }
+        }
+        foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
+    } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
+        ## deken filename v0
+        set pkgname $basename
+        # basename <pkgname>[-v<version>-]?{(<arch>)}
+        ## strip off the archs
+        set baselist [split $basename () ]
+        # get pkgname + version
+        set pkgver [lindex $baselist 0]
+        if { ! [ regexp "(.*)-v(.*)-" $pkgver _ pkgname version ] } {
+            set pkgname $pkgver
+            set version ""
+        }
+        # get archs
+        foreach {a _} [lreplace $baselist 0 0] {
+            # in filename.v0 the semantics of the last arch field ("bits") was unclear
+            # since this format predates float64 builds, we just force it to 32
+            regsub -- {-[0-9]+$} $a {-32} a
+            lappend archs $a
+        }
+        if { "x$archs$version" == "x" } {
+            # try again as <pkgname>-v<version>
+            if { ! [ regexp "(.*)-v(.*)" $pkgver _ pkgname version ] } {
+                set pkgname $pkgver
+                set version ""
+            }
+        }
+    }
+    list $pkgname $version $archs
+}
+
+
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
@@ -1673,54 +1723,6 @@ proc ::deken::download_progress {token total current} {
     }
 }
 
-# parse a deken-packagefilename into it's components:
-# v0:: <pkgname>[-v<version>-]?{(<arch>)}-externals.<ext>
-# v1:: <pkgname>[\[<version\]]?{(<arch>)}
-# return: list <pkgname> <version> [list <arch> ...]
-proc ::deken::parse_filename {filename} {
-    set pkgname $filename
-    set archs [list]
-    set version ""
-    if { [ string match "*.dek" $filename ] } {
-        ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
-        set archstring ""
-        regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring
-        foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
-            if {![string first v ${o}]} {
-                set version [string range $o 1 end]
-            } else { # ignoring unknown option...
-            }
-        }
-        foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
-    } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
-        ## deken filename v0
-        set pkgname $basename
-        # basename <pkgname>[-v<version>-]?{(<arch>)}
-        ## strip off the archs
-        set baselist [split $basename () ]
-        # get pkgname + version
-        set pkgver [lindex $baselist 0]
-        if { ! [ regexp "(.*)-v(.*)-" $pkgver _ pkgname version ] } {
-            set pkgname $pkgver
-            set version ""
-        }
-        # get archs
-        foreach {a _} [lreplace $baselist 0 0] {
-            # in filename.v0 the semantics of the last arch field ("bits") was unclear
-            # since this format predates float64 builds, we just force it to 32
-            regsub -- {-[0-9]+$} $a {-32} a
-            lappend archs $a
-        }
-        if { "x$archs$version" == "x" } {
-            # try again as <pkgname>-v<version>
-            if { ! [ regexp "(.*)-v(.*)" $pkgver _ pkgname version ] } {
-                set pkgname $pkgver
-                set version ""
-            }
-        }
-    }
-    list $pkgname $version $archs
-}
 
 # test for platform match with our current platform
 proc ::deken::architecture_match {archs} {
