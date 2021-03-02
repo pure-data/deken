@@ -1607,8 +1607,8 @@ proc ::deken::clicked_link {URL filename} {
 
 # download a file to a location
 # http://wiki.tcl.tk/15303
-proc ::deken::download_file {URL outputfilename} {
-    set URL [string map {{[} "%5b" {]} "%5d"} $URL]
+proc ::deken::download_file {url outputfilename} {
+    set URL [string map {{[} "%5b" {]} "%5d"} $url]
     set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
