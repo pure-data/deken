@@ -445,6 +445,37 @@ if { [catch {package require sha256} ] } {
     }
 }
 
+proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
+    for {set i 0} {true} {incr i} {
+        set tmpfile [file join ${path} dekentmp.${i}${ext}]
+        if {![file exists $tmpfile]} {
+            return $tmpfile
+        }
+    }
+}
+
+proc ::deken::gettmpdir {} {
+    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
+    set tmpdir ""
+    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TEMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    set tmpdir "/tmp"
+    set tmpdir [pwd]
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+}
+
+proc ::deken::get_writable_dir {paths} {
+    foreach p $paths {
+        set xp [ ::deken::utilities::substpath $p ]
+        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
+    }
+    return
+}
+
 proc ::deken::utilities::rmrecursive {path} {
     # recursively remove ${path} if it exists, traversing into each directory
     # to delete single items (rather than just unlinking the parent directory)
@@ -468,36 +499,6 @@ proc ::deken::utilities::rmrecursive {path} {
     return $errors
 }
 
-proc ::deken::gettmpdir {} {
-    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
-    set tmpdir ""
-    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TEMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    set tmpdir "/tmp"
-    set tmpdir [pwd]
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-}
-
-proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
-    for {set i 0} {true} {incr i} {
-        set tmpfile [file join ${path} dekentmp.${i}${ext}]
-        if {![file exists $tmpfile]} {
-            return $tmpfile
-        }
-    }
-}
-
-proc ::deken::get_writable_dir {paths} {
-    foreach p $paths {
-        set xp [ ::deken::utilities::substpath $p ]
-        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
-    }
-    return
-}
 
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
