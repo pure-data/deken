@@ -1048,17 +1048,6 @@ proc ::deken::platform2string {{verbose 0}} {
     }
 }
 
-# console message to let them know we're loaded
-## but only if we are being called as a plugin (not as built-in)
-if { "" != "$::current_plugin_loadpath" } {
-    ::deken::utilities::debug [format [_ {\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.} ] $::current_plugin_loadpath ]
-}
-::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]"
-
-
-# try to set install path when plugin is loaded
-set ::deken::installpath [::deken::find_installpath]
-
 # allow overriding deken platform from Pd-core
 proc ::deken::set_platform {os machine bits floatsize} {
     if { $os != $::deken::platform(os) ||
@@ -1790,15 +1779,29 @@ proc ::deken::search_for {term} {
     return $result
 }
 
-# create an entry for our search in the "help" menu (or re-use an existing one)
-set mymenu .menubar.help
-if { [catch {
-    $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
-} _ ] } {
-    $mymenu add separator
-    $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+
+proc ::deken::initialize {} {
+    # console message to let them know we're loaded
+    ## but only if we are being called as a plugin (not as built-in)
+    if { "" != "$::current_plugin_loadpath" } {
+        ::deken::utilities::debug [format [_ {\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.} ] $::current_plugin_loadpath ]
+    }
+    ::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]"
+
+    # try to set install path when plugin is loaded
+    set ::deken::installpath [::deken::find_installpath]
+
+
+    # create an entry for our search in the "help" menu (or re-use an existing one)
+    set mymenu .menubar.help
+    if { [catch {
+        $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+    } _ ] } {
+        $mymenu add separator
+        $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+    }
+    # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 }
-# bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 
 
 # ######################################################################
@@ -1974,5 +1977,6 @@ proc ::deken::search::puredata.info {term} {
     return $sortedresult
 }
 
+::deken::initialize
 ::deken::register ::deken::search::puredata.info
 }
