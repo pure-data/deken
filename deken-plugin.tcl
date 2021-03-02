@@ -1613,15 +1613,26 @@ proc ::deken::download_file {url outputfilename} {
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
 
-    set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
-    set ncode [::http::ncode $httpresult]
-    if {$ncode != 200} {
-        ## FIXXME: we probably should handle redirects correctly (following them...)
-        set err [::http::code $httpresult]
-        ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $URL $err ]\n"
+    if { [catch {
+        set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
+        set ncode [::http::ncode $httpresult]
+        if {$ncode != 200} {
+            ## FIXXME: we probably should handle redirects correctly (following them...)
+            set err [::http::code $httpresult]
+            ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $url $err ]\n"
+            set outputfilename ""
+        }
+        ::http::cleanup $httpresult
+    } stdout ] } {
+        set msg [format [_ "Unable to download from '%s'!" ] $url ]
+        tk_messageBox \
+            -title [_ "Download failed" ] \
+            -message "${msg}\n$stdout" \
+            -icon error \
+            -parent .externals_searchui \
+            -type ok
         set outputfilename ""
     }
-    ::http::cleanup $httpresult
 
     flush $f
     close $f
@@ -1841,7 +1852,18 @@ proc ::deken::search::puredata.info {term} {
     ::http::config -useragent "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
 
     # fetch search result
-    set token [::http::geturl "${dekenserver}?${queryterm}"]
+    if { [catch {
+        set token [::http::geturl "${dekenserver}?${queryterm}"]
+    } stdout ] } {
+        set msg [format [_ "Searching for '%s' failed!" ] $term ]
+        tk_messageBox \
+            -title [_ "Search failed" ] \
+            -message "${msg}\n$stdout" \
+            -icon error \
+            -parent .externals_searchui \
+            -type ok
+        return
+    }
 
     # restore http settings
     ::http::config -accept $httpaccept
