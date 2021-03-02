@@ -860,6 +860,7 @@ proc ::deken::open_searchui {winid} {
         $winid.results tag configure archmatch
         $winid.results tag configure noarchmatch -foreground grey
     }
+    ::deken::clearpost
     ::deken::post [_ "Enter an exact library or object name."] info
     ::deken::post "\t[_ {e.g. 'freeverb~'}]" info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
