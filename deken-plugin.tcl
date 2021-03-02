@@ -966,13 +966,19 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
         if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
             ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
             set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
-            tk_messageBox \
-                -title [_ "SHA256 verification failed" ] \
-                -message ${msg} \
-                -icon error \
-                -parent .externals_searchui \
-                -type ok
-            return
+
+            set result "retry"
+            while { "$result" eq "retry" } {
+                set result [tk_messageBox \
+                                -title [_ "SHA256 verification failed" ] \
+                                -message ${msg} \
+                                -icon error \
+                                -parent .externals_searchui \
+                                -type abortretryignore]
+                # we don't have a good strategy if the user selects 'retry'
+                # so we just display the dialog again...
+            }
+            if { "$result" eq "abort" } { return }
         }
     }
     ::deken::install_package ${pkgfile} "" "" 1
