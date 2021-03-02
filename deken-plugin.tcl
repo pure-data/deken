@@ -468,6 +468,37 @@ proc ::deken::utilities::rmrecursive {path} {
     return $errors
 }
 
+proc ::deken::gettmpdir {} {
+    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
+    set tmpdir ""
+    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    catch {set tmpdir $::env(TEMP)}
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+    set tmpdir "/tmp"
+    set tmpdir [pwd]
+    if {[_iswdir $tmpdir]} {return $tmpdir}
+}
+
+proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
+    for {set i 0} {true} {incr i} {
+        set tmpfile [file join ${path} dekentmp.${i}${ext}]
+        if {![file exists $tmpfile]} {
+            return $tmpfile
+        }
+    }
+}
+
+proc ::deken::get_writable_dir {paths} {
+    foreach p $paths {
+        set xp [ ::deken::utilities::substpath $p ]
+        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
+    }
+    return
+}
+
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
@@ -874,37 +905,6 @@ proc ::deken::normalize_result {title
     list "" $title $cmd $match $subtitle $statusline $contextmenus $pkgname
 }
 
-
-proc ::deken::gettmpdir {} {
-    proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
-    set tmpdir ""
-    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TEMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    set tmpdir "/tmp"
-    set tmpdir [pwd]
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-}
-
-proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
-    for {set i 0} {true} {incr i} {
-        set tmpfile [file join ${path} dekentmp.${i}${ext}]
-        if {![file exists $tmpfile]} {
-            return $tmpfile
-        }
-    }
-}
-
-proc ::deken::get_writable_dir {paths} {
-    foreach p $paths {
-        set xp [ ::deken::utilities::substpath $p ]
-        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
-    }
-    return
-}
 
 # find an install path, either from prefs or on the system
 # returns an empty string if nothing was found
