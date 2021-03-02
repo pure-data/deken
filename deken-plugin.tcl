@@ -454,6 +454,331 @@ proc ::deken::utilities::newwidget {basename} {
     return ${basename}${i}
 }
 
+# ######################################################################
+# ################ preferences #########################################
+# ######################################################################
+
+proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
+    set pad [::deken::utilities::newwidget ${toplevel}.pad]
+    frame $pad -relief groove -borderwidth 2 -width 2 -height 2
+    grid ${pad} -sticky ew -row ${row} -column 0 -columnspan 3 -padx ${padx}  -pady ${pady}
+}
+proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
+    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
+
+    frame $mypad
+    pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill "y"
+
+    return $mypad
+}
+
+proc ::deken::preferences::userpath_doit { } {
+    set installdir [::deken::do_prompt_installdir ${::deken::preferences::userinstallpath}]
+    if { "${installdir}" != "" } {
+        set ::deken::preferences::userinstallpath "${installdir}"
+    }
+}
+proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
+    # handler for the check/create button
+    # if the path does not exist, disable the radiobutton and suggest to Create it
+    # if the path exists, check whether it is writable
+    #  if it is writable, enable the radiobutton and disable the check/create button
+    #  if it is not writable, keep the radiobutton disabled and suggest to (Re)Check
+    ${ckb} configure -state normal
+    ${rdb} configure -state disabled
+
+    if { ! [file exists ${path}] } {
+        ${ckb} configure -text [_ "Create"]
+        if { $mkdir } {
+            catch { file mkdir $path }
+        }
+    }
+
+    if { [file exists ${path}] } {
+        ${ckb} configure -text [_ "Check"]
+    }
+
+    if { [::deken::utilities::is_writable_dir ${path} ] } {
+        ${ckb} configure -state disabled
+        ${rdb} configure -state normal
+    }
+}
+
+proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
+    # only add absolute paths to the pathentries
+    set xpath [ ::deken::utilities::substpath $path ]
+    if {! $generic} {
+        if { [file pathtype $xpath] != "absolute"} { return }
+    }
+
+    set rdb [::deken::utilities::newwidget ${toplevel}.path]
+    set chk [::deken::utilities::newwidget ${toplevel}.doit]
+    set pad [::deken::utilities::newwidget ${toplevel}.pad]
+
+    radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
+    frame ${pad}
+    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
+
+    grid ${rdb} -sticky "w"  -row ${row} -column 2
+    grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
+    grid ${chk} -sticky nsew -row ${row} -column 0
+
+
+    if {! $generic} {
+        ::deken::preferences::path_doit ${rdb} ${chk} ${xpath} false
+    }
+    list ${rdb} ${chk}
+}
+
+proc ::deken::preferences::create {winid} {
+    # urgh...we want to know when the window gets drawn,
+    # so we can query the size of the pathentries canvas
+    # in order to get the scrolling-region right!!!
+    # this seems to be so wrong...
+    bind $winid <Map> "::deken::preferences::mapped %W"
+    ::deken::bind_globalshortcuts $winid
+
+    set ::deken::preferences::installpath $::deken::installpath
+    set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
+    if { $::deken::userplatform == "" } {
+        set ::deken::preferences::platform DEFAULT
+        set ::deken::preferences::userplatform [ ::deken::platform2string ]
+    } else {
+        set ::deken::preferences::platform USER
+        set ::deken::preferences::userplatform $::deken::userplatform
+    }
+
+    set ::deken::preferences::installpath USER
+    set ::deken::preferences::userinstallpath $::deken::installpath
+
+    set ::deken::preferences::show_readme $::deken::show_readme
+    set ::deken::preferences::keep_package $::deken::keep_package
+    set ::deken::preferences::verify_sha256 $::deken::verify_sha256
+    set ::deken::preferences::remove_on_install $::deken::remove_on_install
+    set ::deken::preferences::add_to_path $::deken::add_to_path
+    set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
+
+    # this dialog allows us to select:
+    #  - which directory to extract to
+    #    - including all (writable) elements from $::sys_staticpath
+    #      and option to create each of them
+    #    - a directory chooser
+    #  - whether to delete directories before re-extracting
+    #  - whether to filter-out non-matching architectures
+    labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    canvas $winid.installdir.cnv \
+        -confine true
+    scrollbar $winid.installdir.scrollv \
+        -command "$winid.installdir.cnv yview"
+    scrollbar $winid.installdir.scrollh \
+        -orient horizontal \
+        -command "$winid.installdir.cnv xview"
+    $winid.installdir.cnv configure \
+        -xscrollincrement 0 \
+        -xscrollcommand " $winid.installdir.scrollh set"
+    $winid.installdir.cnv configure \
+        -yscrollincrement 0 \
+        -yscrollcommand " $winid.installdir.scrollv set" \
+
+    pack $winid.installdir.cnv -side left -fill both -expand 1
+    pack $winid.installdir.scrollv -side right -fill "y"
+    pack $winid.installdir.scrollh -side bottom -fill "x" -before  $winid.installdir.cnv
+    pack $winid.installdir -fill both
+
+    set pathsframe [frame $winid.installdir.cnv.f]
+    set row 0
+    ### dekenpath: directory-chooser
+    # FIXME: should we ask user to add chosen directory to PATH?
+    set pathdoit [::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath "USER" true]
+    incr row
+    [lindex $pathdoit 0] configure \
+        -foreground blue \
+        -value "USER" \
+        -textvariable ::deken::preferences::userinstallpath \
+        -variable ::deken::preferences::installpath
+    [lindex $pathdoit 1] configure \
+        -text "..." \
+        -command "::deken::preferences::userpath_doit"
+    ::deken::preferences::create_pathpad ${pathsframe} ${row}
+    incr row
+
+    ### dekenpath: default directories
+    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
+        foreach p [::pd_docsdir::get_externals_path] {
+            ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+            incr row
+        }
+        ::deken::preferences::create_pathpad ${pathsframe} ${row}
+        incr row
+    }
+    set extradir [file join ${::sys_libdir} extra ]
+    foreach p $::sys_staticpath {
+        if { [file normalize $p] == $extradir } {
+            set p [file join @PD_PATH@ extra]
+        }
+        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+        incr row
+    }
+    ::deken::preferences::create_pathpad ${pathsframe} ${row}
+    incr row
+
+    foreach p $::sys_searchpath {
+        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
+        incr row
+    }
+
+    pack $pathsframe -fill "x"
+    $winid.installdir.cnv create window 0 0 -anchor "nw" -window $pathsframe
+
+    ## installation options
+    labelframe $winid.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $winid.install -side top -fill "x" -anchor "w"
+
+    checkbutton $winid.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
+        -variable ::deken::preferences::verify_sha256
+    pack $winid.install.verify256 -anchor "w"
+
+    checkbutton $winid.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
+        -variable ::deken::preferences::remove_on_install
+    pack $winid.install.remove -anchor "w"
+
+    checkbutton $winid.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
+        -variable ::deken::preferences::show_readme
+    pack $winid.install.readme -anchor "w"
+
+    checkbutton $winid.install.keeppackage -text [_ "Keep package files after installation?"] \
+        -variable ::deken::preferences::keep_package
+    pack $winid.install.keeppackage -anchor "w"
+
+
+    checkbutton $winid.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
+        -variable ::deken::preferences::add_to_path
+    catch { $winid.install.add_to_path configure \
+                -tristatevalue 1 \
+                -onvalue 2 \
+                -command {set ::deken::preferences::add_to_path \
+                              [set ::deken::preferences::add_to_path_temp \
+                                   [::deken::utilities::tristate $::deken::preferences::add_to_path_temp 1 0]]}
+    } stdout
+
+    pack $winid.install.add_to_path -anchor "w"
+
+
+    ## platform filter settings
+    labelframe $winid.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
+    pack $winid.platform -side top -fill "x" -anchor "w"
+
+    # default architecture vs user-defined arch
+    radiobutton $winid.platform.default -value "DEFAULT" \
+        -text [format [_ "Default platform: %s" ] [::deken::platform2string ] ] \
+        -variable ::deken::preferences::platform \
+        -command "$winid.platform.userarch.entry configure -state disabled"
+    pack $winid.platform.default -anchor "w"
+
+    frame $winid.platform.userarch
+    radiobutton $winid.platform.userarch.radio -value "USER" \
+        -text [_ "User-defined platform:" ] \
+        -variable ::deken::preferences::platform \
+        -command "$winid.platform.userarch.entry configure -state normal"
+    entry $winid.platform.userarch.entry -textvariable ::deken::preferences::userplatform
+    if { "$::deken::preferences::platform" == "DEFAULT" } {
+        $winid.platform.userarch.entry configure -state disabled
+    }
+
+    pack $winid.platform.userarch -anchor "w"
+    pack $winid.platform.userarch.radio -side left
+    pack $winid.platform.userarch.entry -side right -fill "x"
+
+    # hide non-matching architecture?
+    ::deken::preferences::create_packpad $winid.platform 2 10
+
+    checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
+        -variable ::deken::preferences::hideforeignarch
+    pack $winid.platform.hide_foreign -anchor "w"
+
+
+    # Use two frames for the buttons, since we want them both bottom and right
+    frame $winid.nb
+    pack $winid.nb -side bottom -fill "x" -pady 2m
+
+    # buttons
+    frame $winid.nb.buttonframe
+    pack $winid.nb.buttonframe -side right -fill "x" -padx 2m
+
+    button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
+        -command "::deken::preferences::cancel $winid"
+    pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill "x" -padx 15 -ipadx 10
+    if {$::windowingsystem ne "aqua"} {
+        button $winid.nb.buttonframe.apply -text [_ "Apply"] \
+            -command "::deken::preferences::apply $winid"
+        pack $winid.nb.buttonframe.apply -side left -expand 1 -fill "x" -padx 15 -ipadx 10
+    }
+    button $winid.nb.buttonframe.ok -text [_ "OK"] \
+        -command "::deken::preferences::ok $winid"
+    pack $winid.nb.buttonframe.ok -side left -expand 1 -fill "x" -padx 15 -ipadx 10
+
+}
+
+proc ::deken::preferences::mapped {winid} {
+    set cnv $winid.installdir.cnv
+    catch {
+        set bbox [$cnv bbox all]
+        if { "$bbox" != "" } {
+            $cnv configure -scrollregion $bbox
+        }
+    } stdout
+}
+
+proc ::deken::preferences::show {{winid .deken_preferences}} {
+    if {[winfo exists $winid]} {
+        wm deiconify $winid
+        raise $winid
+    } else {
+        toplevel $winid -class DialogWindow
+        wm title $winid [format [_ "Deken %s Preferences"] $::deken::version]
+
+        frame $winid.frame
+        pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
+
+        ::deken::preferences::create $winid.frame
+    }
+}
+
+proc ::deken::preferences::apply {winid} {
+    set installpath "${::deken::preferences::installpath}"
+    if { "$installpath" == "USER" } {
+        set installpath "${::deken::preferences::userinstallpath}"
+    }
+
+    ::deken::set_installpath "$installpath"
+    set plat ""
+    if { "${::deken::preferences::platform}" == "USER" } {
+        set plat "${::deken::preferences::userplatform}"
+    }
+    ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
+    ::deken::set_install_options \
+        "${::deken::preferences::remove_on_install}" \
+        "${::deken::preferences::show_readme}" \
+        "${::deken::preferences::add_to_path}" \
+        "${::deken::preferences::keep_package}" \
+        "${::deken::preferences::verify_sha256}"
+}
+proc ::deken::preferences::cancel {winid} {
+    ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
+    if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
+    #destroy $winid
+}
+proc ::deken::preferences::ok {winid} {
+    ::deken::preferences::apply $winid
+    ::deken::preferences::cancel $winid
+}
+
+
+# ######################################################################
+# ################ core ################################################
+# ######################################################################
+
+
 if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
     # this is a Pd without the new GUI-prefs
     proc ::deken::set_installpath {installdir} {
@@ -977,321 +1302,6 @@ proc ::deken::open_search_objects {args}  {
 
     set ::deken::searchtype objects
     ::deken::update_searchbutton $winid
-}
-
-proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
-    set pad [::deken::utilities::newwidget ${toplevel}.pad]
-    frame $pad -relief groove -borderwidth 2 -width 2 -height 2
-    grid ${pad} -sticky ew -row ${row} -column 0 -columnspan 3 -padx ${padx}  -pady ${pady}
-}
-proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
-    set mypad [::deken::utilities::newwidget ${toplevel}.pad]
-
-    frame $mypad
-    pack $mypad -padx ${padx} -pady ${pady} -expand 1 -fill "y"
-
-    return $mypad
-}
-
-proc ::deken::preferences::userpath_doit { } {
-    set installdir [::deken::do_prompt_installdir ${::deken::preferences::userinstallpath}]
-    if { "${installdir}" != "" } {
-        set ::deken::preferences::userinstallpath "${installdir}"
-    }
-}
-proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
-    # handler for the check/create button
-    # if the path does not exist, disable the radiobutton and suggest to Create it
-    # if the path exists, check whether it is writable
-    #  if it is writable, enable the radiobutton and disable the check/create button
-    #  if it is not writable, keep the radiobutton disabled and suggest to (Re)Check
-    ${ckb} configure -state normal
-    ${rdb} configure -state disabled
-
-    if { ! [file exists ${path}] } {
-        ${ckb} configure -text [_ "Create"]
-        if { $mkdir } {
-            catch { file mkdir $path }
-        }
-    }
-
-    if { [file exists ${path}] } {
-        ${ckb} configure -text [_ "Check"]
-    }
-
-    if { [::deken::utilities::is_writable_dir ${path} ] } {
-        ${ckb} configure -state disabled
-        ${rdb} configure -state normal
-    }
-}
-
-proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
-    # only add absolute paths to the pathentries
-    set xpath [ ::deken::utilities::substpath $path ]
-    if {! $generic} {
-        if { [file pathtype $xpath] != "absolute"} { return }
-    }
-
-    set rdb [::deken::utilities::newwidget ${toplevel}.path]
-    set chk [::deken::utilities::newwidget ${toplevel}.doit]
-    set pad [::deken::utilities::newwidget ${toplevel}.pad]
-
-    radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
-    frame ${pad}
-    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
-
-    grid ${rdb} -sticky "w"  -row ${row} -column 2
-    grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
-    grid ${chk} -sticky nsew -row ${row} -column 0
-
-
-    if {! $generic} {
-        ::deken::preferences::path_doit ${rdb} ${chk} ${xpath} false
-    }
-    list ${rdb} ${chk}
-}
-
-proc ::deken::preferences::create {winid} {
-    # urgh...we want to know when the window gets drawn,
-    # so we can query the size of the pathentries canvas
-    # in order to get the scrolling-region right!!!
-    # this seems to be so wrong...
-    bind $winid <Map> "::deken::preferences::mapped %W"
-    ::deken::bind_globalshortcuts $winid
-
-    set ::deken::preferences::installpath $::deken::installpath
-    set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
-    if { $::deken::userplatform == "" } {
-        set ::deken::preferences::platform DEFAULT
-        set ::deken::preferences::userplatform [ ::deken::platform2string ]
-    } else {
-        set ::deken::preferences::platform USER
-        set ::deken::preferences::userplatform $::deken::userplatform
-    }
-
-    set ::deken::preferences::installpath USER
-    set ::deken::preferences::userinstallpath $::deken::installpath
-
-    set ::deken::preferences::show_readme $::deken::show_readme
-    set ::deken::preferences::keep_package $::deken::keep_package
-    set ::deken::preferences::verify_sha256 $::deken::verify_sha256
-    set ::deken::preferences::remove_on_install $::deken::remove_on_install
-    set ::deken::preferences::add_to_path $::deken::add_to_path
-    set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
-
-    # this dialog allows us to select:
-    #  - which directory to extract to
-    #    - including all (writable) elements from $::sys_staticpath
-    #      and option to create each of them
-    #    - a directory chooser
-    #  - whether to delete directories before re-extracting
-    #  - whether to filter-out non-matching architectures
-    labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    canvas $winid.installdir.cnv \
-        -confine true
-    scrollbar $winid.installdir.scrollv \
-        -command "$winid.installdir.cnv yview"
-    scrollbar $winid.installdir.scrollh \
-        -orient horizontal \
-        -command "$winid.installdir.cnv xview"
-    $winid.installdir.cnv configure \
-        -xscrollincrement 0 \
-        -xscrollcommand " $winid.installdir.scrollh set"
-    $winid.installdir.cnv configure \
-        -yscrollincrement 0 \
-        -yscrollcommand " $winid.installdir.scrollv set" \
-
-    pack $winid.installdir.cnv -side left -fill both -expand 1
-    pack $winid.installdir.scrollv -side right -fill "y"
-    pack $winid.installdir.scrollh -side bottom -fill "x" -before  $winid.installdir.cnv
-    pack $winid.installdir -fill both
-
-    set pathsframe [frame $winid.installdir.cnv.f]
-    set row 0
-    ### dekenpath: directory-chooser
-    # FIXME: should we ask user to add chosen directory to PATH?
-    set pathdoit [::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath "USER" true]
-    incr row
-    [lindex $pathdoit 0] configure \
-        -foreground blue \
-        -value "USER" \
-        -textvariable ::deken::preferences::userinstallpath \
-        -variable ::deken::preferences::installpath
-    [lindex $pathdoit 1] configure \
-        -text "..." \
-        -command "::deken::preferences::userpath_doit"
-    ::deken::preferences::create_pathpad ${pathsframe} ${row}
-    incr row
-
-    ### dekenpath: default directories
-    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        foreach p [::pd_docsdir::get_externals_path] {
-            ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
-            incr row
-        }
-        ::deken::preferences::create_pathpad ${pathsframe} ${row}
-        incr row
-    }
-    set extradir [file join ${::sys_libdir} extra ]
-    foreach p $::sys_staticpath {
-        if { [file normalize $p] == $extradir } {
-            set p [file join @PD_PATH@ extra]
-        }
-        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
-        incr row
-    }
-    ::deken::preferences::create_pathpad ${pathsframe} ${row}
-    incr row
-
-    foreach p $::sys_searchpath {
-        ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath $p
-        incr row
-    }
-
-    pack $pathsframe -fill "x"
-    $winid.installdir.cnv create window 0 0 -anchor "nw" -window $pathsframe
-
-    ## installation options
-    labelframe $winid.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
-    pack $winid.install -side top -fill "x" -anchor "w"
-
-    checkbutton $winid.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
-        -variable ::deken::preferences::verify_sha256
-    pack $winid.install.verify256 -anchor "w"
-
-    checkbutton $winid.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
-        -variable ::deken::preferences::remove_on_install
-    pack $winid.install.remove -anchor "w"
-
-    checkbutton $winid.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
-        -variable ::deken::preferences::show_readme
-    pack $winid.install.readme -anchor "w"
-
-    checkbutton $winid.install.keeppackage -text [_ "Keep package files after installation?"] \
-        -variable ::deken::preferences::keep_package
-    pack $winid.install.keeppackage -anchor "w"
-
-
-    checkbutton $winid.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
-        -variable ::deken::preferences::add_to_path
-    catch { $winid.install.add_to_path configure \
-                -tristatevalue 1 \
-                -onvalue 2 \
-                -command {set ::deken::preferences::add_to_path \
-                              [set ::deken::preferences::add_to_path_temp \
-                                   [::deken::utilities::tristate $::deken::preferences::add_to_path_temp 1 0]]}
-    } stdout
-
-    pack $winid.install.add_to_path -anchor "w"
-
-
-    ## platform filter settings
-    labelframe $winid.platform -text [_ "Platform settings:" ] -padx 5 -pady 5 -borderwidth 1
-    pack $winid.platform -side top -fill "x" -anchor "w"
-
-    # default architecture vs user-defined arch
-    radiobutton $winid.platform.default -value "DEFAULT" \
-        -text [format [_ "Default platform: %s" ] [::deken::platform2string ] ] \
-        -variable ::deken::preferences::platform \
-        -command "$winid.platform.userarch.entry configure -state disabled"
-    pack $winid.platform.default -anchor "w"
-
-    frame $winid.platform.userarch
-    radiobutton $winid.platform.userarch.radio -value "USER" \
-        -text [_ "User-defined platform:" ] \
-        -variable ::deken::preferences::platform \
-        -command "$winid.platform.userarch.entry configure -state normal"
-    entry $winid.platform.userarch.entry -textvariable ::deken::preferences::userplatform
-    if { "$::deken::preferences::platform" == "DEFAULT" } {
-        $winid.platform.userarch.entry configure -state disabled
-    }
-
-    pack $winid.platform.userarch -anchor "w"
-    pack $winid.platform.userarch.radio -side left
-    pack $winid.platform.userarch.entry -side right -fill "x"
-
-    # hide non-matching architecture?
-    ::deken::preferences::create_packpad $winid.platform 2 10
-
-    checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
-        -variable ::deken::preferences::hideforeignarch
-    pack $winid.platform.hide_foreign -anchor "w"
-
-
-    # Use two frames for the buttons, since we want them both bottom and right
-    frame $winid.nb
-    pack $winid.nb -side bottom -fill "x" -pady 2m
-
-    # buttons
-    frame $winid.nb.buttonframe
-    pack $winid.nb.buttonframe -side right -fill "x" -padx 2m
-
-    button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
-        -command "::deken::preferences::cancel $winid"
-    pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-    if {$::windowingsystem ne "aqua"} {
-        button $winid.nb.buttonframe.apply -text [_ "Apply"] \
-            -command "::deken::preferences::apply $winid"
-        pack $winid.nb.buttonframe.apply -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-    }
-    button $winid.nb.buttonframe.ok -text [_ "OK"] \
-        -command "::deken::preferences::ok $winid"
-    pack $winid.nb.buttonframe.ok -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-
-}
-
-proc ::deken::preferences::mapped {winid} {
-    set cnv $winid.installdir.cnv
-    catch {
-        set bbox [$cnv bbox all]
-        if { "$bbox" != "" } {
-            $cnv configure -scrollregion $bbox
-        }
-    } stdout
-}
-
-proc ::deken::preferences::show {{winid .deken_preferences}} {
-    if {[winfo exists $winid]} {
-        wm deiconify $winid
-        raise $winid
-    } else {
-        toplevel $winid -class DialogWindow
-        wm title $winid [format [_ "Deken %s Preferences"] $::deken::version]
-
-        frame $winid.frame
-        pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
-
-        ::deken::preferences::create $winid.frame
-    }
-}
-
-proc ::deken::preferences::apply {winid} {
-    set installpath "${::deken::preferences::installpath}"
-    if { "$installpath" == "USER" } {
-        set installpath "${::deken::preferences::userinstallpath}"
-    }
-
-    ::deken::set_installpath "$installpath"
-    set plat ""
-    if { "${::deken::preferences::platform}" == "USER" } {
-        set plat "${::deken::preferences::userplatform}"
-    }
-    ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
-    ::deken::set_install_options \
-        "${::deken::preferences::remove_on_install}" \
-        "${::deken::preferences::show_readme}" \
-        "${::deken::preferences::add_to_path}" \
-        "${::deken::preferences::keep_package}" \
-        "${::deken::preferences::verify_sha256}"
-}
-proc ::deken::preferences::cancel {winid} {
-    ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
-    if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
-    #destroy $winid
-}
-proc ::deken::preferences::ok {winid} {
-    ::deken::preferences::apply $winid
-    ::deken::preferences::cancel $winid
 }
 
 proc ::deken::initiate_search {winid} {
