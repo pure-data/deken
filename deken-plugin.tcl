@@ -1255,7 +1255,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     }
 }
 
-
+##### GUI ########
 proc ::deken::bind_globalshortcuts {toplevel} {
     set closescript "destroy $toplevel"
     bind $toplevel <$::modifier-Key-w> $closescript
@@ -1804,9 +1804,9 @@ if { [catch {
 # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 
 
-# ####################################################################
-# search backends
-# ####################################################################
+# ######################################################################
+# ################ search backends #####################################
+# ######################################################################
 
 proc ::deken::register {fun} {
     # register a searchfunction with deken.
