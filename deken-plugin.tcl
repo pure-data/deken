@@ -512,14 +512,18 @@ if { [catch {package require sha256} ] } {
 
 # download a file to a location
 # http://wiki.tcl.tk/15303
-proc ::deken::utilities::download_file {url outputfilename} {
+proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
     set URL [string map {{[} "%5b" {]} "%5d"} $url]
     set downloadfilename [::deken::utilities::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
 
     if { [catch {
-        set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
+        if { $progressproc eq {} } {
+            set httpresult [::http::geturl $URL -binary true -channel $f]
+        } else {
+            set httpresult [::http::geturl $URL -binary true -progress ${progressproc} -channel $f]
+        }
         set ncode [::http::ncode $httpresult]
         if {$ncode != 200} {
             ## FIXXME: we probably should handle redirects correctly (following them...)
@@ -1686,7 +1690,7 @@ proc ::deken::clicked_link {URL filename} {
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
     ::deken::syncgui
-    set fullpkgfile [::deken::utilities::download_file $URL $fullpkgfile]
+    set fullpkgfile [::deken::utilities::download_file $URL $fullpkgfile "::deken::download_progress"]
     if { "$fullpkgfile" eq "" } {
         ::deken::utilities::debug [_ {aborting.}]
         ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
