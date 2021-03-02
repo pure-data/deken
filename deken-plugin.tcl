@@ -962,9 +962,9 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
     # perform checks and install it
     set pkgfile [file normalize $pkgfile]
 
-    if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
-        ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
-        if { "$::deken::verify_sha256" } {
+    if { "$::deken::verify_sha256" } {
+        if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
+            ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
             set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
             tk_messageBox \
                 -title [_ "SHA256 verification failed" ] \
