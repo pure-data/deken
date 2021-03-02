@@ -203,7 +203,7 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     return $fallback
 }
 
-proc ::deken::utilities::is_writable_dir {path} {
+proc ::deken::utilities::is_writabledir {path} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
     set tmpfile [::deken::utilities::get_tmpfilename $path]
@@ -482,7 +482,7 @@ proc ::deken::utilities::get_tmpdir {} {
 proc ::deken::utilities::get_writabledir {paths} {
     foreach p $paths {
         set xp [ ::deken::utilities::substpath $p ]
-        if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
+        if { [ ::deken::utilities::is_writabledir $xp ] } { return $p }
     }
     return
 }
@@ -665,7 +665,7 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
         ${ckb} configure -text [_ "Check"]
     }
 
-    if { [::deken::utilities::is_writable_dir ${path} ] } {
+    if { [::deken::utilities::is_writabledir ${path} ] } {
         ${ckb} configure -state disabled
         ${rdb} configure -state normal
     }
