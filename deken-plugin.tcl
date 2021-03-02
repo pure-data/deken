@@ -516,7 +516,7 @@ proc ::deken::normalize_result {title
     # - <pkgname> the library name (typically this gets parsed from the package filename)
     # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    return [list "" $title $cmd $match $subtitle $statusline $contextmenus $pkgname]
+    list "" $title $cmd $match $subtitle $statusline $contextmenus $pkgname
 }
 
 
@@ -814,11 +814,11 @@ proc ::deken::menu_installselected {winid} {
 proc ::deken::do_prompt_installdir {path} {
     variable winid
     if {[winfo exists $winid]} {
-        return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
-                    -initialdir ${path} -parent $winid]
+        tk_chooseDirectory -title [_ "Install externals to directory:"] \
+            -initialdir ${path} -parent $winid
     } else {
-        return [tk_chooseDirectory -title [_ "Install externals to directory:"] \
-                    -initialdir ${path}]
+        tk_chooseDirectory -title [_ "Install externals to directory:"] \
+            -initialdir ${path}
     }
 }
 
@@ -1059,7 +1059,7 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     if {! $generic} {
         ::deken::preferences::path_doit ${rdb} ${chk} ${xpath} false
     }
-    return [list ${rdb} ${chk}]
+    list ${rdb} ${chk}
 }
 
 proc ::deken::preferences::create {winid} {
@@ -1698,7 +1698,7 @@ proc ::deken::parse_filename {filename} {
             }
         }
     }
-    return [list $pkgname $version $archs]
+    list $pkgname $version $archs
 }
 
 # test for platform match with our current platform
@@ -1777,7 +1777,7 @@ proc urldecode {str} {
     set seqRE {%([0-9a-fA-F]{2})}
     set replacement {[format "%c" [scan "\1" "%2x"]]}
     set modStr [regsub -all $seqRE [string map $specialMap $str] $replacement]
-    return [encoding convertfrom utf-8 [subst -nobackslashes -novariables $modStr]]
+    encoding convertfrom utf-8 [subst -nobackslashes -novariables $modStr]
 }
 
 
