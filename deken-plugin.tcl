@@ -499,6 +499,58 @@ proc ::deken::utilities::rmrecursive {path} {
     return $errors
 }
 
+# download a file to a location
+# http://wiki.tcl.tk/15303
+proc ::deken::download_file {url outputfilename} {
+    set URL [string map {{[} "%5b" {]} "%5d"} $url]
+    set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
+    set f [open $downloadfilename w]
+    fconfigure $f -translation binary
+
+    if { [catch {
+        set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
+        set ncode [::http::ncode $httpresult]
+        if {$ncode != 200} {
+            ## FIXXME: we probably should handle redirects correctly (following them...)
+            set err [::http::code $httpresult]
+            ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $url $err ]\n"
+            set outputfilename ""
+        }
+        ::http::cleanup $httpresult
+    } stdout ] } {
+        set msg [format [_ "Unable to download from '%s'!" ] $url ]
+        tk_messageBox \
+            -title [_ "Download failed" ] \
+            -message "${msg}\n$stdout" \
+            -icon error \
+            -parent .externals_searchui \
+            -type ok
+        set outputfilename ""
+    }
+
+    flush $f
+    close $f
+
+    if { "$outputfilename" != "" } {
+        catch { file delete $outputfilename }
+        if {[file exists $outputfilename]} {
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to remove stray file %s} ] $outputfilename ]
+            set outputfilename ""
+        }
+    }
+    if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
+        if {[catch { file rename $downloadfilename $outputfilename}]} {
+            ::deken::utilities::debug [format [_ {\[deken\] Unable to rename downloaded file to %s} ] $outputfilename ]
+            set outputfilename ""
+        }
+    }
+    if { "$outputfilename" eq "" } {
+        file delete $downloadfilename
+    }
+
+    return $outputfilename
+}
+
 
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
@@ -1612,58 +1664,6 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
     ::deken::install_package ${fullpkgfile} ${filename} ${installdir} ${::deken::keep_package}
-}
-
-# download a file to a location
-# http://wiki.tcl.tk/15303
-proc ::deken::download_file {url outputfilename} {
-    set URL [string map {{[} "%5b" {]} "%5d"} $url]
-    set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
-    set f [open $downloadfilename w]
-    fconfigure $f -translation binary
-
-    if { [catch {
-        set httpresult [::http::geturl $URL -binary true -progress "::deken::download_progress" -channel $f]
-        set ncode [::http::ncode $httpresult]
-        if {$ncode != 200} {
-            ## FIXXME: we probably should handle redirects correctly (following them...)
-            set err [::http::code $httpresult]
-            ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $url $err ]\n"
-            set outputfilename ""
-        }
-        ::http::cleanup $httpresult
-    } stdout ] } {
-        set msg [format [_ "Unable to download from '%s'!" ] $url ]
-        tk_messageBox \
-            -title [_ "Download failed" ] \
-            -message "${msg}\n$stdout" \
-            -icon error \
-            -parent .externals_searchui \
-            -type ok
-        set outputfilename ""
-    }
-
-    flush $f
-    close $f
-
-    if { "$outputfilename" != "" } {
-        catch { file delete $outputfilename }
-        if {[file exists $outputfilename]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to remove stray file %s} ] $outputfilename ]
-            set outputfilename ""
-        }
-    }
-    if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
-        if {[catch { file rename $downloadfilename $outputfilename}]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to rename downloaded file to %s} ] $outputfilename ]
-            set outputfilename ""
-        }
-    }
-    if { "$outputfilename" eq "" } {
-        file delete $downloadfilename
-    }
-
-    return $outputfilename
 }
 
 # print the download progress to the results window
