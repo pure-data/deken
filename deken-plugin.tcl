@@ -171,6 +171,22 @@ if { ! [catch {package present tls} stdout] } {
     set ::deken::protocol "https"
 }
 
+
+# ######################################################################
+# ################ compatibility #######################################
+# ######################################################################
+
+# list-reverter (compat for tcl<8.5)
+if {[info commands lreverse] == ""} {
+    proc lreverse list {
+        set res {}
+        set i [llength $list]
+        while {$i} {
+            lappend res [lindex $list [incr i -1]]
+        }
+        set res
+    } ;# RS
+}
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr bool($value) ] } stdout
     return $fallback
@@ -914,19 +930,6 @@ proc ::deken::platform2string {{verbose 0}} {
         return $::deken::platform(os)-$::deken::platform(machine)-$::deken::platform(floatsize)
     }
 }
-
-# list-reverter (compat for tcl<8.5)
-if {[info commands lreverse] == ""} {
-    proc lreverse list {
-        set res {}
-        set i [llength $list]
-        while {$i} {
-            lappend res [lindex $list [incr i -1]]
-        }
-        set res
-    } ;# RS
-}
-
 
 # console message to let them know we're loaded
 ## but only if we are being called as a plugin (not as built-in)
