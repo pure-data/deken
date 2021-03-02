@@ -25,6 +25,7 @@ package require Tcl 8.4
 # + require everything and all your script needs.
 #   If a requirement is missing,
 #   Pd will load, but the script will not.
+
 package require http 2
 # try enabling https if possible
 if { [catch {package require tls} ] } {} else {
@@ -260,7 +261,6 @@ proc ::deken::utilities::dnd_drop_files {files} {
 }
 }
 
-
 if { [catch {package require zipfile::decode} ] } {
 proc ::deken::utilities::unzipper {zipfile {path .}} {
     ## this is w32 only
@@ -331,6 +331,7 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
     return 1
 }
 }
+
 proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 1}} {
     ::deken::status [format [_ "Installing %s" ] $filename ]
     set PWD [ pwd ]
@@ -397,6 +398,7 @@ proc ::deken::utilities::uninstall {path library} {
     }
     return 1
 }
+
 if { [catch {package require sha256} ] } {
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
         set msg [format [_ "skipping SHA256 verification of %s." ] $url ]
@@ -610,13 +612,13 @@ proc ::deken::parse_filename {filename} {
     list $pkgname $version $archs
 }
 
-
 proc ::deken::utilities::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
     while {[winfo exists ${basename}${i}]} {incr i}
     return ${basename}${i}
 }
+
 
 # ######################################################################
 # ################ preferences #########################################
@@ -642,6 +644,7 @@ proc ::deken::preferences::userpath_doit { } {
         set ::deken::preferences::userinstallpath "${installdir}"
     }
 }
+
 proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
     # handler for the check/create button
     # if the path does not exist, disable the radiobutton and suggest to Create it
@@ -880,7 +883,6 @@ proc ::deken::preferences::create {winid} {
     button $winid.nb.buttonframe.ok -text [_ "OK"] \
         -command "::deken::preferences::ok $winid"
     pack $winid.nb.buttonframe.ok -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-
 }
 
 proc ::deken::preferences::mapped {winid} {
@@ -937,11 +939,9 @@ proc ::deken::preferences::ok {winid} {
     ::deken::preferences::cancel $winid
 }
 
-
 # ######################################################################
 # ################ core ################################################
 # ######################################################################
-
 
 if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout ] } {
     # this is a Pd without the new GUI-prefs
@@ -1137,7 +1137,6 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
     }
     ::deken::install_package ${pkgfile} "" "" 1
 }
-
 proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1}}  {
     # fullpkgfile: the file to extract
     # filename   : the package file name (usually the basename of $fullpkgfile)
@@ -1362,7 +1361,6 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
         lappend ::deken::selected $pkgname $installcmd
         set state 1
     }
-
 
     # set/unset the visual representation (via tags)
     set counter 0
@@ -1732,7 +1730,6 @@ proc ::deken::download_progress {token total current} {
     }
 }
 
-
 # test for platform match with our current platform
 proc ::deken::architecture_match {archs} {
     # if there are no architecture sections this must be arch-independent
@@ -1827,6 +1824,7 @@ proc ::deken::register {fun} {
 
     set ::deken::backends [linsert $::deken::backends 0 $fun]
 }
+
 
 ## API draft
 
