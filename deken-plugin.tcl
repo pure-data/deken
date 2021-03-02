@@ -355,12 +355,14 @@ if { [catch {package require sha256} ] } {
         ::deken::syncgui
 
         set retval 1
+        set isremote 1
         if { [ catch {
             # check if $url really is a local file
             if { [file normalize $url] eq $url } {
                 # $url is really an absolute filename
                 # use it, if it exists
                 set hashfile "${url}.sha256"
+                set isremote 0
                 if { [file isfile $url ] && [file readable $url] } { } else {
                     set hashfile ""
                 }
@@ -375,7 +377,9 @@ if { [catch {package require sha256} ] } {
                 set fp [open $hashfile r]
                 set reference [string trim [string tolower [read $fp] ] ]
                 close $fp
-                catch { file delete $hashfile }
+                if { $isremote } {
+                    catch { file delete $hashfile }
+                }
 
                 set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
                 if { "${hash}" eq "${reference}" } {
