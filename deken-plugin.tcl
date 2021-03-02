@@ -206,7 +206,7 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
 proc ::deken::utilities::is_writable_dir {path} {
     set fs [file separator]
     set access [list RDWR CREAT EXCL TRUNC]
-    set tmpfile [::deken::get_tmpfilename $path]
+    set tmpfile [::deken::utilities::get_tmpfilename $path]
     # try creating tmpfile
     if {![catch {open $tmpfile $access} channel]} {
         close $channel
@@ -217,7 +217,7 @@ proc ::deken::utilities::is_writable_dir {path} {
 }
 
 # http://rosettacode.org/wiki/URL_decoding#Tcl
-proc urldecode {str} {
+proc ::deken::utilities::urldecode {str} {
     set specialMap {"[" "%5B" "]" "%5D"}
     set seqRE {%([0-9a-fA-F]{2})}
     set replacement {[format "%c" [scan "\1" "%2x"]]}
@@ -267,7 +267,7 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
     if {$::tcl_platform(platform) ne "windows"} { return 0 }
 
     ## create script-file
-    set vbsscript [::deken::get_tmpfilename [::deken::gettmpdir] ".vbs" ]
+    set vbsscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".vbs" ]
     set script {
 On Error Resume Next
 Set fso = CreateObject("Scripting.FileSystemObject")
@@ -425,7 +425,7 @@ if { [catch {package require sha256} ] } {
                 }
             } else {
                 # otherwise fetch it from the internet
-                set hashfile [::deken::download_file ${url}.sha256 [::deken::get_tmpfilename [::deken::gettmpdir] ".sha256" ] ]
+                set hashfile [::deken::utilities::download_file ${url}.sha256 [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".sha256" ] ]
             }
             if { "$hashfile" eq "" } {
                 ::deken::utilities::verbose 0 [format [_ "unable to fetch reference SHA256 for %s." ] $url ]
@@ -456,7 +456,7 @@ if { [catch {package require sha256} ] } {
     }
 }
 
-proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
+proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""}} {
     for {set i 0} {true} {incr i} {
         set tmpfile [file join ${path} dekentmp.${i}${ext}]
         if {![file exists $tmpfile]} {
@@ -465,7 +465,7 @@ proc ::deken::get_tmpfilename {{path ""} {ext ""}} {
     }
 }
 
-proc ::deken::gettmpdir {} {
+proc ::deken::utilities::get_tmpdir {} {
     proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
     set tmpdir ""
     catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
@@ -479,7 +479,7 @@ proc ::deken::gettmpdir {} {
     if {[_iswdir $tmpdir]} {return $tmpdir}
 }
 
-proc ::deken::get_writable_dir {paths} {
+proc ::deken::utilities::get_writabledir {paths} {
     foreach p $paths {
         set xp [ ::deken::utilities::substpath $p ]
         if { [ ::deken::utilities::is_writable_dir $xp ] } { return $p }
@@ -512,9 +512,9 @@ proc ::deken::utilities::rmrecursive {path} {
 
 # download a file to a location
 # http://wiki.tcl.tk/15303
-proc ::deken::download_file {url outputfilename} {
+proc ::deken::utilities::download_file {url outputfilename} {
     set URL [string map {{[} "%5b" {]} "%5d"} $url]
-    set downloadfilename [::deken::get_tmpfilename [file dirname $outputfilename] ]
+    set downloadfilename [::deken::utilities::get_tmpfilename [file dirname $outputfilename] ]
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
 
@@ -567,7 +567,7 @@ proc ::deken::download_file {url outputfilename} {
 # v0:: <pkgname>[-v<version>-]?{(<arch>)}-externals.<ext>
 # v1:: <pkgname>[\[<version\]]?{(<arch>)}
 # return: list <pkgname> <version> [list <arch> ...]
-proc ::deken::parse_filename {filename} {
+proc ::deken::utilities::parse_filename {filename} {
     set pkgname $filename
     set archs [list]
     set version ""
@@ -1024,11 +1024,11 @@ proc ::deken::find_installpath {{ignoreprefs false}} {
     set installpath ""
     if { [ info exists ::deken::installpath ] && !$ignoreprefs } {
         ## any previous choice?
-        set installpath [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+        set installpath [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
     }
     if { "$installpath" == "" } {
         ## search the default paths
-        set installpath [ ::deken::get_writable_dir $::sys_staticpath ]
+        set installpath [ ::deken::utilities::get_writabledir $::sys_staticpath ]
     }
     if { "$installpath" == "" } {
         # let's use the first of $::sys_staticpath, if it does not exist yet
@@ -1147,7 +1147,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         set filename [file tail ${fullpkgfile}]
     }
     set installdir [::deken::ensure_installdir ${installdir} ${filename}]
-    set parsedname [::deken::parse_filename $filename]
+    set parsedname [::deken::utilities::parse_filename $filename]
     set extname [lindex $parsedname 0]
     set extpath [file join $installdir $extname]
 
@@ -1160,7 +1160,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             # ouch uninstalling failed.
             # on msw, lets assume this is because some of the files in the folder are locked.
             # so move the folder out of the way and proceed
-            set deldir [::deken::get_tmpfilename $installdir]
+            set deldir [::deken::utilities::get_tmpfilename $installdir]
             if { [ catch {
                 file mkdir $deldir
                 file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
@@ -1627,7 +1627,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
 
     # ask the user (and remember the decision)
     ::deken::prompt_installdir
-    set installdir [ ::deken::get_writable_dir [list $::deken::installpath ] ]
+    set installdir [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
 
     set installdir [::deken::utilities::substpath $installdir ]
     while {1} {
@@ -1677,7 +1677,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
             catch { file mkdir $installdir }
         }
         # check whether this is a writable directory
-        set installdir [ ::deken::get_writable_dir [list $installdir ] ]
+        set installdir [ ::deken::utilities::get_writabledir [list $installdir ] ]
         if { "$installdir" != "" } {
             # stop looping if we've found our dir
             break
@@ -1697,7 +1697,7 @@ proc ::deken::clicked_link {URL filename} {
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
     ::deken::syncgui
-    set fullpkgfile [::deken::download_file $URL $fullpkgfile]
+    set fullpkgfile [::deken::utilities::download_file $URL $fullpkgfile]
     if { "$fullpkgfile" eq "" } {
         ::deken::utilities::debug [_ {aborting.}]
         ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
@@ -1916,7 +1916,7 @@ proc ::deken::search::puredata.info {term} {
             if { "" ne $ele } {
                 foreach {name URL creator date} [ split $ele "\t" ] {break}
                 set filename [ file tail $URL ]
-                foreach {pkgname version archs} [ ::deken::parse_filename $filename ] {break}
+                foreach {pkgname version archs} [ ::deken::utilities::parse_filename $filename ] {break}
                 #if { $version eq "0.0.extended" } { set date "0000-00-00 00:02:00" }
                 set olddate {}
                 catch { set olddate [dict get $latestrelease $pkgname] }
@@ -1932,11 +1932,11 @@ proc ::deken::search::puredata.info {term} {
         set ele [ string trim $ele ]
         if { "" ne $ele } {
             foreach {name URL creator date} [ split $ele "\t" ] {break}
-            set decURL [urldecode $URL]
+            set decURL [::deken::utilities::urldecode $URL]
             set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
             set filename [ file tail $URL ]
             set cmd [list ::deken::clicked_link $decURL $filename]
-            set pkgverarch [ ::deken::parse_filename $filename ]
+            set pkgverarch [ ::deken::utilities::parse_filename $filename ]
             set pkgname [lindex $pkgverarch 0]
             set version [lindex $pkgverarch 1]
             set archs [lindex $pkgverarch 2]
