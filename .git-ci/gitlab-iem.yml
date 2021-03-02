@@ -15,7 +15,7 @@ variables:
 
 .build_script: &build_script
   script:
-    - export DEKEN_VERSION=$(git describe --always)
+    - export DEKEN_VERSION=$(.git-ci/git-version)
     - ${PYTHON} -m pip install --upgrade pip
     - ${PYTHON} -m pip install ${PIPFLAGS} -r developer/requirements.txt
     - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller
@@ -106,7 +106,7 @@ deken:
     DEKEN_ROOT: "yes"
   script:
 # create source package
-    - export DEKEN_VERSION=$(git describe --always)
+    - export DEKEN_VERSION=$(.git-ci/git-version)
     - mkdir deken-plugin
     - cp deken-plugin.tcl LICENSE.txt deken-plugin/
     - cp README.plugin.txt deken-plugin/README.txt
