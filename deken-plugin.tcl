@@ -215,6 +215,15 @@ proc ::deken::utilities::is_writable_dir {path} {
     return false
 }
 
+# http://rosettacode.org/wiki/URL_decoding#Tcl
+proc urldecode {str} {
+    set specialMap {"[" "%5B" "]" "%5D"}
+    set seqRE {%([0-9a-fA-F]{2})}
+    set replacement {[format "%c" [scan "\1" "%2x"]]}
+    set modStr [regsub -all $seqRE [string map $specialMap $str] $replacement]
+    encoding convertfrom utf-8 [subst -nobackslashes -novariables $modStr]
+}
+
 proc ::deken::utilities::substpath {path} {
     set result [string map "@PD_PATH@ $::sys_libdir" $path]
     return $result
@@ -1793,15 +1802,6 @@ if { [catch {
     $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
 }
 # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
-
-# http://rosettacode.org/wiki/URL_decoding#Tcl
-proc urldecode {str} {
-    set specialMap {"[" "%5B" "]" "%5D"}
-    set seqRE {%([0-9a-fA-F]{2})}
-    set replacement {[format "%c" [scan "\1" "%2x"]]}
-    set modStr [regsub -all $seqRE [string map $specialMap $str] $replacement]
-    encoding convertfrom utf-8 [subst -nobackslashes -novariables $modStr]
-}
 
 
 # ####################################################################
