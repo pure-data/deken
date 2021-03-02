@@ -356,7 +356,6 @@ if { [catch {package require sha256} ] } {
 
         set retval 1
         if { [ catch {
-            set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
             # check if $url really is a local file
             if { [file normalize $url] eq $url } {
                 # $url is really an absolute filename
@@ -377,6 +376,8 @@ if { [catch {package require sha256} ] } {
                 set reference [string trim [string tolower [read $fp] ] ]
                 close $fp
                 catch { file delete $hashfile }
+
+                set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
                 if { "${hash}" eq "${reference}" } {
                     set retval 1
                 } else {
