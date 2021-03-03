@@ -11,6 +11,7 @@ variables:
  GIT_SUBMODULE_STRATEGY: normal
  PYTHON: python3
  PIPFLAGS: ""
+ GIT_DEPTH: 0
 
 
 .build_script: &build_script
@@ -134,6 +135,6 @@ gitversion:
   extends: deken
   image: debian:buster
   variables:
-    GIT_DEPTH: 100
+    GIT_DEPTH: 1000
   script:
     - .git-ci/git-version
