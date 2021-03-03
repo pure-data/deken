@@ -1659,6 +1659,18 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                   )
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
+       :systemfix (fn [args] None
+                  (setv fixes {
+                        :easywebdav2 (fn []
+                                 (import easywebdav2)
+                                 (fix-easywebdav2 easywebdav2 :exit None))})
+                  (setv fixnames (lfor k (.keys fixes) (cut (str k) 1)))
+                  (defn try-call [x] (if x (x)))
+                  (if args.all
+                      (if args.fix (fatal "'--all' and named fixes are exclusive. Choose one.")
+                                   (setv args.fix fixnames)))
+                  (if args.fix (lfor f args.fix (try-call (.get fixes (keyword f))))
+                               (fatal (% "Known systemfixes: %s" (.join "," fixnames)) 0)))
        :update upgrade
        :upgrade upgrade})
 
@@ -1804,7 +1816,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           :description "Deken is a packaging tool for Pure Data externals."))
   (setv arg-subparsers (arg-parser.add_subparsers
                          :dest "command"
-                         :metavar "{package,upload,find,download,verify,install,uninstall,systeminfo}"
+                         :metavar "{package,upload,find,download,verify,install,uninstall,systeminfo,systemfix}"
                          ))
   (setv arg-package (arg-subparsers.add_parser
                       "package"
@@ -1849,6 +1861,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (setv arg-upgrade (arg-subparsers.add_parser "upgrade" :description "self-'update' deken."))
   (setv arg-update (arg-subparsers.add_parser "update" :description "self-'update' deken."))
   (arg-subparsers.add_parser "systeminfo" :description "print information about your deken installation.")
+  (setv arg-systemfix (arg-subparsers.add_parser
+                      "systemfix"
+                      :description "run system-fixups (e.g. patching some python modules)"
+                      ))
 
   (arg-parser.add_argument
     "-v" "--verbose"
@@ -1981,7 +1997,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     "package"
     :nargs "*"
     :help "package to uninstall")
-
+  (arg-systemfix.add_argument
+    "--all"
+    :action "store_true"
+    :help "run all system-fixes")
+  (arg-systemfix.add_argument
+    "fix"
+    :metavar "FIX"
+    :nargs "*"
+    :help "run the named system-fix")
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (keyword arguments.command)))
   ;;(print "Deken" version)
