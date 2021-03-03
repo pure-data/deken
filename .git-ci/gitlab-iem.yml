@@ -126,3 +126,9 @@ deken:
     name: deken-package
     paths:
       - ./*.dek
+
+gitversion:
+  extends: deken
+  image: debian:buster
+  script:
+    - .git-ci/git-version
