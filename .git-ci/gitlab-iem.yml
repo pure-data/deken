@@ -106,7 +106,7 @@ deken:
     - apt-get update
     - apt-get install --no-install-recommends -y git
   script:
-    . echo $CONTAINER_TEST_IMAGE
+    - echo $CONTAINER_TEST_IMAGE
     - git tag
     - git describe --always
     - git fetch --tags
