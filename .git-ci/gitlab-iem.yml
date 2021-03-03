@@ -11,6 +11,7 @@ variables:
  GIT_SUBMODULE_STRATEGY: normal
  PYTHON: python3
  PIPFLAGS: ""
+ GIT_DEPTH: 1000
 
 
 .build_script: &build_script
@@ -103,8 +104,6 @@ deken:
   stage: release
   image: $CONTAINER_TEST_IMAGE
   variables:
-    GIT_DEPTH: 0
-  variables:
   before_script:
     - apt-get update
     - apt-get install --no-install-recommends -y git ca-certificates
@@ -135,5 +134,7 @@ deken:
 gitversion:
   extends: deken
   image: debian:buster
+  variables:
+    GIT_DEPTH: 0
   script:
     - .git-ci/git-version
