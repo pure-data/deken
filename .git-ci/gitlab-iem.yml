@@ -103,7 +103,7 @@ deken:
   image: $CONTAINER_TEST_IMAGE
   before_script:
     - apt-get update
-    - apt-get install --no-install-recommends -y git
+    - apt-get install --no-install-recommends -y git ca-certificates
     - git fetch --unshallow || true
   script:
 # create source package
