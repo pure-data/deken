@@ -1148,6 +1148,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 "-externals"
                                 (archive-extension archs))]
       [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
+  (setv version (if (.startswith version "v") (cut version 1) version))
   (do-make-name
     (os.path.normpath (os.path.join output-dir (or pkgname (os.path.basename folder))))
     (cond [(is version None)
