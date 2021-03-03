@@ -12,7 +12,8 @@ COPY deken.hy /usr/local/share/deken/
 COPY requirements.txt /tmp
 RUN mkdir -p /usr/local/bin/ /usr/local/share/deken/ ~/.deken \
 	&& pip install --no-cache-dir --trusted-host pypi.python.org -r /tmp/requirements.txt \
-	&& rm /tmp/requirements.txt
+	&& rm /tmp/requirements.txt \
+	&& deken systemfix --all
 
 # we are runnign as root, so set this
 ENV DEKEN_ROOT=yes
