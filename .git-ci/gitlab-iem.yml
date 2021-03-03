@@ -12,7 +12,6 @@ variables:
  PYTHON: python3
  PIPFLAGS: ""
 
-
 .build_script: &build_script
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
@@ -105,6 +104,7 @@ deken:
   before_script:
     - apt-get update
     - apt-get install --no-install-recommends -y git
+    - git fetch --unshallow || true
   script:
 # create source package
     - export DEKEN_VERSION=$(.git-ci/git-version)
