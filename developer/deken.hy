@@ -199,7 +199,8 @@
 
 (defn fix-easywebdav2 [pkg &optional
                        [broken "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir, safe=True, **kwargs)"]
-                       [fixed "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir_, safe=True, **kwargs)"]]
+                       [fixed "            for dir_ in dirs:\n                try:\n                    self.mkdir(dir_, safe=True, **kwargs)"]
+                       [exit 1]]
   "try to patch easywebdav2, it's broken as of 1.3.0"
   (try
     (do
@@ -214,7 +215,7 @@
               ;; TODO: stop execution and require the user to re-start
               (fatal (.join "\n"
                             ["Fixing a problem with the 'easywebdav' module succeeded."
-                             "Please re-run your command!"]))
+                             "Please re-run your command!"]) exit)
               )
             (except [e OSError]
               (do
