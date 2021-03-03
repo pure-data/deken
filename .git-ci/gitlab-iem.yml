@@ -85,6 +85,19 @@ docker-build:
     - docker build -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
+docker-test:
+  stage: test
+  image: $CONTAINER_TEST_IMAGE
+  dependencies: []
+  before_script:
+    - apt-get update
+    - apt-get install --no-install-recommends -y git ca-certificates
+    - git fetch --unshallow || true
+  script:
+    - export DEKEN_VERSION=$(.git-ci/git-version)
+    - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-test
+    - test -z "${CI_COMMIT_TAG}" || test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
+
 docker-release:
   stage: release
   extends:
