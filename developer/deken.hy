@@ -62,10 +62,11 @@
 (defn debug [x] "print the argument and return it" (log.debug x) x)
 
 ;; print a fatal error and exit with an error code
-(defn fatal [x]
+(defn fatal [x &optional [exit 1]]
   "print argument as an error message and exit"
   (log.fatal x)
-  (sys.exit 1))
+  (if (not (is exit None))
+      (sys.exit exit)))
 
 (setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
