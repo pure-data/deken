@@ -213,10 +213,9 @@
               (with [f (open filename "w")]
                 (f.write (.replace data broken fixed)))
               ;; TODO: stop execution and require the user to re-start
-              (fatal (.join "\n"
-                            ["Fixing a problem with the 'easywebdav' module succeeded."
-                             "Please re-run your command!"]) exit)
-              )
+              (setv msg ["Fixing a problem with the 'easywebdav2' module succeeded."])
+              (if (not (is exit None)) (.append msg "Please re-run your command!"))
+              (fatal (.join "\n" msg) exit))
             (except [e OSError]
               (do
                 (log.error "The 'easywebdav2' module is broken, and trying to fix the problem failed,")
