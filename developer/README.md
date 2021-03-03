@@ -30,6 +30,36 @@ On *Debian* and derivatives (like *Ubuntu*), `deken` is also readily available v
 apt-get install deken
 ~~~
 
+### Docker containers
+
+[docker](https://hub.docker.com/) is all the rage these days, so naturally there is a docker image for `deken` as well.
+
+Get the latest and greatest release:
+
+~~~sh
+docker pull registry.git.iem.at/pd/deken
+~~~
+
+(For the more daring, you can also grab the lastest development snapshot under the `master` tag).
+
+To use it to create your packages:
+
+~~~sh
+$ ls -d deken-test*
+deken-test/
+$ docker run --rm -ti --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken package --version 1.2.3 deken-test
+$ ls -d deken-test*
+deken-test
+'deken-test[v1.2.3].dek'
+'deken-test[v1.2.3].dek.sha256'
+$
+~~~
+
+And to upload packages:
+~~~sh
+$ docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken upload *.dek
+~~~
+
 ### Manual bootstrap
 
 ~~~sh
