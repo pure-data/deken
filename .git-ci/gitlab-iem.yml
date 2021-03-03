@@ -113,6 +113,7 @@ deken:
     - git describe || true
     - git describe --tags || true
     - git describe --always || true
+    - git rev-list $(git tag -l | sort -V | tail -1)..HEAD --count || true
   script:
 # create source package
     - export DEKEN_VERSION=$(.git-ci/git-version)
