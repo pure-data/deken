@@ -1,4 +1,17 @@
 # iem-ci configuration for deken
+
+################################
+# jobs
+#
+# build::windows, build::osx -- create standalone 'deken' cmdline-utilities
+# build::docker-build        -- create a docker-container with the 'deken'
+#                               cmdline utility ready to be used
+# test::docker-test          -- test the docker-container by using it to
+#                               create and upload a 'deken-test' package
+# release::docker-release    -- tag the docker-container as 'latest'
+# deploy::upload2deken       -- create a 'deken-plugin' package
+#                               upload the package if this is a tagged release
+
 stages:
   - build
   - test
@@ -15,6 +28,7 @@ variables:
 .build_script: &build_script
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
+    - echo "${DEKEN_VERSION}"
     - ${PYTHON} -m pip install --upgrade pip
     - ${PYTHON} -m pip install ${PIPFLAGS} -r developer/requirements.txt
     - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller
@@ -82,6 +96,7 @@ docker-build:
     - .docker
   script:
     - ./.git-ci/git-version
+    - echo "${DEKEN_VERSION}"
     - docker build -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
@@ -95,7 +110,9 @@ docker-test:
     - git fetch --unshallow || true
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
+    - echo "${DEKEN_VERSION}"
     - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-test
+    - find . -maxdepth 1 -name "*.dek*"
     - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
 
 docker-release:
@@ -112,7 +129,7 @@ docker-release:
 # =====================================================================
 # deken package
 # =====================================================================
-deken:
+upload2deken:
   stage: deploy
   image: $CONTAINER_TEST_IMAGE
   dependencies: []
@@ -123,10 +140,12 @@ deken:
   script:
 # create source package
     - export DEKEN_VERSION=$(.git-ci/git-version)
+    - echo "${DEKEN_VERSION}"
     - mkdir deken-plugin
     - cp deken-plugin.tcl LICENSE.txt deken-plugin/
     - cp README.plugin.txt deken-plugin/README.txt
     - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-plugin
+    - find . -maxdepth 1 -name "*.dek*"
 # upload deken packages
     - test -z "${CI_COMMIT_TAG}" || test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
   artifacts:
