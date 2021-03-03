@@ -23,7 +23,7 @@ variables:
     - echo $PATH
     - (cd developer; pyinstaller deken.spec)
 
-osx:
+.osx:
   tags:
     - osx
   variables:
@@ -41,7 +41,7 @@ osx:
       - deken
     expire_in: 1 week
 
-windows:
+.windows:
   allow_failure: true
   tags:
     - windows
@@ -85,7 +85,7 @@ docker-build:
     - docker build -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
-docker-release:
+.docker-release:
   stage: release
   extends:
     - .docker
@@ -106,6 +106,7 @@ deken:
     - apt-get update
     - apt-get install --no-install-recommends -y git
   script:
+    . echo $CONTAINER_TEST_IMAGE
     - git tag
     - git describe --always
     - git fetch --tags
