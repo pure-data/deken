@@ -11,8 +11,6 @@ variables:
  GIT_SUBMODULE_STRATEGY: normal
  PYTHON: python3
  PIPFLAGS: ""
- GIT_DEPTH: 0
-
 
 .build_script: &build_script
   script:
@@ -110,7 +108,7 @@ deken:
     - echo $CONTAINER_TEST_IMAGE
     - git tag
     - git describe --always
-    - git fetch --tags
+    - git fetch --unshallow
     - git tag
     - git describe || true
     - git describe --tags || true
@@ -134,7 +132,5 @@ deken:
 gitversion:
   extends: deken
   image: debian:buster
-  variables:
-    GIT_DEPTH: 1000
   script:
     - .git-ci/git-version
