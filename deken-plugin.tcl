@@ -1073,6 +1073,10 @@ proc ::deken::versioncompare {a b} {
     # each version string is split into numeric and non-numeric elements
     # the elements are compared pairwise
     # "~" sorts before everything else
+
+    # sidenote: in practice the version we get here are of the form "<date>/<library>/<version>/<date>"
+    # we probably should only use this version-comparision for the <version> part,
+    # and use 'string compare' for the other parts
     foreach x [regexp -all -inline {\d+|\D+} [string map {~ \t} $a]] y [regexp -all -inline {\d+|\D+} [string map {~ \t} $b]] {
         if { "$x" == "" } { set x " " }
         if { "$y" == "" } { set y " " }
