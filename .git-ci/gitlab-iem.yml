@@ -96,7 +96,7 @@ docker-test:
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-test
-    - test -z "${CI_COMMIT_TAG}" || test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
 
 docker-release:
   stage: release
