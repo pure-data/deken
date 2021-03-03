@@ -102,8 +102,6 @@ docker-release:
 deken:
   stage: release
   image: $CONTAINER_TEST_IMAGE
-  variables:
-    DEKEN_ROOT: "yes"
   script:
 # create source package
     - export DEKEN_VERSION=$(.git-ci/git-version)
