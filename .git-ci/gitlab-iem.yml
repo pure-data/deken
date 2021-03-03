@@ -106,6 +106,8 @@ deken:
     - apt-get update
     - apt-get install --no-install-recommends -y git
   script:
+    - git tag
+    - get describe --always
 # create source package
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - mkdir deken-plugin
