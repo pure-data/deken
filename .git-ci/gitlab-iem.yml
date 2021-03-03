@@ -64,6 +64,7 @@ windows:
 # =====================================================================
 
 .docker:
+  dependencies: []
   before_script:
     - date
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -99,8 +100,9 @@ docker-release:
 # deken package
 # =====================================================================
 deken:
-  stage: release
+  stage: deploy
   image: $CONTAINER_TEST_IMAGE
+  dependencies: []
   before_script:
     - apt-get update
     - apt-get install --no-install-recommends -y git ca-certificates
