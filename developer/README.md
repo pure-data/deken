@@ -49,7 +49,7 @@ $ ls -d deken-test*
 deken-test/
 $ docker run --rm -ti --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken package --version 1.2.3 deken-test
 $ ls -d deken-test*
-deken-test
+deken-test/
 'deken-test[v1.2.3].dek'
 'deken-test[v1.2.3].dek.sha256'
 $
