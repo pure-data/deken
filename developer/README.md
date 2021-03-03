@@ -1,4 +1,4 @@
-# Developers #
+# External Developers #
 
 You can use the [`deken` command line
 tool](https://raw.githubusercontent.com/pure-data/deken/master/developer/deken)
@@ -10,15 +10,38 @@ files yourself. See the "Filename format" section below.
 
 ## Get started ##
 
-	$ mkdir -p ~/bin/
-	$ curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
-	$ chmod 755 ~/bin/deken
-	$ deken
-	This is your first time running deken on this machine.
-	I'm going to install myself and my dependencies into ~/.deken now.
-	Feel free to ctrl-C now if you don't want to do this.
-	...
+### Prebuilt Binaries
 
+If you don't want to install Python3, bash (MSYS),... as described below, you can also download
+self-contained binaries from our Continuous Integration setup:
+
+- [Windows 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/master/download?job=windows)
+- [macOS 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/master/download?job=osx)
+
+If they don't work for you, you might want to check the [releases page](https://github.com/pure-data/deken/releases)
+for downloads that have been tested by humans.
+
+These builds are snapshots of the latest development branch of `deken`.
+
+
+On *Debian* and derivatives (like *Ubuntu*), `deken` is also readily available via `apt`:
+
+~~~sh
+apt-get install deken
+~~~
+
+### Manual bootstrap
+
+~~~sh
+$ mkdir -p ~/bin/
+$ curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
+$ chmod 755 ~/bin/deken
+$ deken
+This is your first time running deken on this machine.
+I'm going to install myself and my dependencies into ~/.deken now.
+Feel free to ctrl-C now if you don't want to do this.
+...
+~~~
 
 See [config.md](./config.md) for deken's configuration file format.
 
@@ -29,7 +52,7 @@ If you get an error like
 
 then make sure that [`~/bin` is in your `PATH`](https://apple.stackexchange.com/a/99838).
 
-### Prerequisites
+#### Prerequisites
 
 `deken` requires Python3 to be installed on your computer (and available from
 the cmdline). You can test whether python3 is installed, by opening a terminal
@@ -39,7 +62,7 @@ For installing (and updating) `deken`, you will also need `curl` (or `wget`)
 for downloading from the cmdline.
 
 
-#### macOS
+##### macOS
 On macOS, you can install missing dependencies with [brew](https://brew.sh/).
 Once you have installed `brew`, run the following in your terminal:
 
@@ -47,7 +70,7 @@ Once you have installed `brew`, run the following in your terminal:
 brew install python3
 ~~~
 
-### Windows
+##### Windows
 
 On Windows you might need to install [MSYS2/MinGW64](https://www.msys2.org/),
 which comes with `pacman` as a package manager to install missing dependencies.
@@ -56,16 +79,6 @@ Once you have installed `pacman`, run the following in your terminal:
 ~~~sh
 pacman -Suy python3
 ~~~
-
-If you don't want to install Python3, bash (MSYS),... on your Windows machine, you can also download
-self-contained binaries from our Continuous Integration setup:
-
-- [Windows 32bit](https://ci.appveyor.com/api/projects/umlaeute/deken/artifacts/developer/dist/deken.exe?job=Environment%3A%20PYTHON%3DC%3A%5CPython36%2C%20PYTHON_VERSION%3D3.6%2C%20PYTHON_ARCH%3D32&branch=master)
-- [Windows 64bit](https://ci.appveyor.com/api/projects/umlaeute/deken/artifacts/developer/dist/deken.exe?job=Environment%3A%20PYTHON%3DC%3A%5CPython36-x64%2C%20PYTHON_VERSION%3D3.6%2C%20PYTHON_ARCH%3D64&branch=master)
-
-These builds are snapshots of the latest development branch of `deken`.
-If they don't work for you, you might want to check the [releases page](https://github.com/pure-data/deken/releases)
-for downloads that have been tested by humans.
 
 ## Show help ##
 
