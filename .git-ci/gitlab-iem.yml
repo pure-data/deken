@@ -102,6 +102,9 @@ docker-build:
 deken:
   stage: release
   image: $CONTAINER_TEST_IMAGE
+  variables:
+    GIT_DEPTH: 0
+  variables:
   before_script:
     - apt-get update
     - apt-get install --no-install-recommends -y git ca-certificates
