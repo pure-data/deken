@@ -47,12 +47,12 @@ variables:
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
-    - "${DEKEN_EXE}" package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" .git-ci/deken-test
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" .git-ci/deken-test
     - find . -maxdepth 1 -name "*.dek*"
     - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || "${DEKEN_EXE}" upload --no-sign-gpg --no-source-error ./*.dek
 
 fetch-testdata:
-  stage: test
+  stage: build
   image: alpine
   script:
     - mkdir -p .git-ci/deken-test
