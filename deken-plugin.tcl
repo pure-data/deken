@@ -1934,7 +1934,8 @@ proc ::deken::search::puredata.info {term} {
     set splitCont [split $contents "\n"]
     # loop through the resulting tab-delimited table
     if { [catch {
-        set latestrelease [dict create]
+        set latestrelease0 [dict create]
+        set latestrelease1 [dict create]
         foreach ele $splitCont {
             set ele [ string trim $ele ]
             if { "" ne $ele } {
@@ -1943,14 +1944,20 @@ proc ::deken::search::puredata.info {term} {
                 foreach {pkgname version archs} [ ::deken::utilities::parse_filename $filename ] {break}
                 #if { $version eq "0.0.extended" } { set date "0000-00-00 00:02:00" }
                 set olddate {}
-                catch { set olddate [dict get $latestrelease $pkgname] }
+                set match [::deken::architecture_match "$archs" ]
+                if { ${match} } {
+                    catch { set olddate [dict get ${latestrelease1} $pkgname] }
+                } else {
+                    catch { set olddate [dict get ${latestrelease0} $pkgname] }
+                }
                 if { $date > $olddate } {
-                    dict set latestrelease $pkgname $date
+                    dict set latestrelease${match} $pkgname $date
                 }
             }
         }
     } stdout ] } {
-        set latestrelease {}
+        set latestrelease0 {}
+        set latestrelease1 {}
     }
     foreach ele $splitCont {
         set ele [ string trim $ele ]
@@ -1969,9 +1976,10 @@ proc ::deken::search::puredata.info {term} {
             set comment [format [_ "Uploaded by %1\$s @ %2\$s" ] $creator $date ]
             set status $URL
             set sortprefix "0000-00-00 00:01:00"
-            if { $latestrelease ne {} } {
-                catch { set sortprefix [dict get $latestrelease $pkgname] }
+            if { ${match} == 0 } {
+                catch { set sortprefix [dict get ${latestrelease0} $pkgname] }
             }
+            catch { set sortprefix [dict get ${latestrelease1} $pkgname] }
             set sortname "${sortprefix}/${pkgname}/${version}/${date}"
             set menus [list \
                            [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
@@ -1990,7 +1998,7 @@ proc ::deken::search::puredata.info {term} {
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {_ _ title cmd match comment status menus pkgname} $r {
+        foreach {sortname filename title cmd match comment status menus pkgname} $r {
             lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname]
             break
         }
