@@ -50,6 +50,7 @@ namespace eval ::deken:: {
     variable installpath
     variable userplatform
     variable hideforeignarch
+    variable hideoldversions
 
     # whether to use http:// or https://
     variable protocol
@@ -68,6 +69,7 @@ namespace eval ::deken::preferences {
     variable userplatform
     # boolean whether non-matching archs should be hidden
     variable hideforeignarch
+    variable hideoldversions
 }
 namespace eval ::deken::utilities { }
 
@@ -118,6 +120,7 @@ set ::deken::backends {}
 set ::deken::installpath {}
 set ::deken::userplatform {}
 set ::deken::hideforeignarch false
+set ::deken::hideoldversions false
 set ::deken::show_readme 1
 set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
@@ -130,6 +133,7 @@ set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
 set ::deken::preferences::userplatform {}
 set ::deken::preferences::hideforeignarch {}
+set ::deken::preferences::hideoldversions {}
 set ::deken::preferences::show_readme {}
 set ::deken::preferences::remove_on_install {}
 set ::deken::preferences::add_to_path {}
@@ -711,6 +715,7 @@ proc ::deken::preferences::create {winid} {
 
     set ::deken::preferences::installpath $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
+    set ::deken::preferences::hideoldversions $::deken::hideoldversions
     if { $::deken::userplatform == "" } {
         set ::deken::preferences::platform DEFAULT
         set ::deken::preferences::userplatform [ ::deken::platform2string ]
@@ -866,6 +871,9 @@ proc ::deken::preferences::create {winid} {
     checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
         -variable ::deken::preferences::hideforeignarch
     pack $winid.platform.hide_foreign -anchor "w"
+    checkbutton $winid.platform.only_newest -text [_ "Only show the newest version of a library?\n(treats other versions like foreign architectures)"] \
+        -variable ::deken::preferences::hideoldversions -justify "left"
+    pack $winid.platform.only_newest -anchor "w"
 
 
     # Use two frames for the buttons, since we want them both bottom and right
@@ -925,7 +933,7 @@ proc ::deken::preferences::apply {winid} {
     if { "${::deken::preferences::platform}" == "USER" } {
         set plat "${::deken::preferences::userplatform}"
     }
-    ::deken::set_platform_options "${plat}" "${::deken::preferences::hideforeignarch}"
+    ::deken::set_platform_options ${plat} ${::deken::preferences::hideforeignarch} ${::deken::preferences::hideoldversions}
     ::deken::set_install_options \
         "${::deken::preferences::remove_on_install}" \
         "${::deken::preferences::show_readme}" \
@@ -952,9 +960,10 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     proc ::deken::set_installpath {installdir} {
         set ::deken::installpath $installdir
     }
-    proc ::deken::set_platform_options {platform hide} {
+    proc ::deken::set_platform_options {platform hideforeignarch {hideoldversions 0}} {
         set ::deken::userplatform $platform
-        set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
+        set ::deken::hideforeignarch [::deken::utilities::bool $hideforeignarch ]
+        set ::deken::hideoldversions [::deken::utilities::bool $hideoldversions ]
     }
     proc ::deken::set_install_options {remove readme add keep verify256} {
         set ::deken::remove_on_install [::deken::utilities::bool $remove]
@@ -972,11 +981,14 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     # user requested platform (empty = DEFAULT)
     set ::deken::userplatform [::pd_guiprefs::read deken_platform]
     set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] 1]
-    proc ::deken::set_platform_options {platform hide} {
+    set ::deken::hideoldversions [::deken::utilities::bool [::pd_guiprefs::read deken_hide_old_versions] 1]
+    proc ::deken::set_platform_options {platform hideforeignarch {hideoldversions 0}} {
         set ::deken::userplatform $platform
-        set ::deken::hideforeignarch [::deken::utilities::bool $hide ]
+        set ::deken::hideforeignarch [::deken::utilities::bool $hideforeignarch ]
+        set ::deken::hideoldversions [::deken::utilities::bool $hideoldversions ]
         ::pd_guiprefs::write deken_platform "$platform"
         ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
+        ::pd_guiprefs::write deken_hide_old_versions $::deken::hideoldversions
     }
     set ::deken::remove_on_install [::deken::utilities::bool [::pd_guiprefs::read deken_remove_on_install] 1]
     set ::deken::show_readme [::deken::utilities::bool [::pd_guiprefs::read deken_show_readme] 1]
@@ -1605,7 +1617,7 @@ proc ::deken::show_results {winid} {
         ::deken::show_result $winid $counter $r 1
         incr counter
     }
-    if { "$::deken::hideforeignarch" } {
+    if { "${::deken::hideforeignarch}" } {
         # skip display of non-matching archs
     } else {
         set counter 0
@@ -1936,6 +1948,7 @@ proc ::deken::search::puredata.info {term} {
     if { [catch {
         set latestrelease0 [dict create]
         set latestrelease1 [dict create]
+        set newestversion [dict create]
         foreach ele $splitCont {
             set ele [ string trim $ele ]
             if { "" ne $ele } {
@@ -1953,11 +1966,17 @@ proc ::deken::search::puredata.info {term} {
                 if { $date > $olddate } {
                     dict set latestrelease${match} $pkgname $date
                 }
+                set oldversion {}
+                catch { set oldversion [dict get ${newestversion} $pkgname] }
+                if { [::deken::versioncompare $version $oldversion] > 0 } {
+                    dict set newestversion $pkgname $version
+                }
             }
         }
     } stdout ] } {
         set latestrelease0 {}
         set latestrelease1 {}
+        set newestversion {}
     }
     foreach ele $splitCont {
         set ele [ string trim $ele ]
@@ -1978,6 +1997,16 @@ proc ::deken::search::puredata.info {term} {
             set sortprefix "0000-00-00 00:01:00"
             if { ${match} == 0 } {
                 catch { set sortprefix [dict get ${latestrelease0} $pkgname] }
+            } else {
+                if { "${::deken::hideoldversions}" } {
+                    # if this version is not the newest one, mark it as unmatched
+                    catch {
+                        set oldversion [dict get ${newestversion} $pkgname]
+                        if { [::deken::versioncompare $version $oldversion] < 0 } {
+                            set match 0
+                        }
+                    }
+                }
             }
             catch { set sortprefix [dict get ${latestrelease1} $pkgname] }
             set sortname "${sortprefix}/${pkgname}/${version}/${date}"
