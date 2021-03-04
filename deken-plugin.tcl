@@ -1520,22 +1520,35 @@ proc ::deken::create_dialog {winid} {
     pack $winid.status.installdek -side right -padx 6 -pady 3 -ipadx 10
 }
 
-proc ::deken::open_search_objects {args}  {
+proc ::deken::open_search_xxx {searchtype xxx}  {
     set winid .externals_searchui
     ::deken::open_searchui $winid
     ::deken::clearpost
 
-    if { $::deken::searchtype ne "objects" } {
-        ${winid}.searchbit.entry delete 0 end
+    set searchterm {}
+    if { $::deken::searchtype eq "${searchtype}" } {
+        append searchterm [$winid.searchbit.entry get]
     }
-    if { [$winid.searchbit.entry get] ne {} } {
-        ${winid}.searchbit.entry insert end " "
+    if { ${searchterm} ne {} } {  append searchterm " " }
+    foreach xx $xxx {
+        foreach x $xx {
+            lappend searchterm $x
+        }
     }
 
-    ${winid}.searchbit.entry insert end $args
+    ${winid}.searchbit.entry delete 0 end
+    ${winid}.searchbit.entry insert end ${searchterm}
 
-    set ::deken::searchtype objects
+    set ::deken::searchtype "${searchtype}"
     ::deken::update_searchbutton $winid
+}
+
+proc ::deken::open_search_objects {args}  {
+    ::deken::open_search_xxx "objects" $args
+}
+
+proc ::deken::open_search_libraries {args}  {
+    ::deken::open_search_xxx "libraries" $args
 }
 
 proc ::deken::initiate_search {winid} {
