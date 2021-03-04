@@ -8,6 +8,10 @@
 #                               cmdline utility ready to be used
 # test::docker-test          -- test the docker-container by using it to
 #                               create and upload a 'deken-test' package
+# test::windows-test         -- test the Windows binaries by using it to
+#                               create and upload a 'deken-test' package
+# test::osx-test             -- test the macOS binaries by using it to
+#                               create and upload a 'deken-test' package
 # release::docker-release    -- tag the docker-container as 'latest'
 # deploy::upload2deken       -- create a 'deken-plugin' package
 #                               upload the package if this is a tagged release
@@ -36,6 +40,16 @@ variables:
     - echo $PATH
     - (cd developer; pyinstaller deken.spec)
 
+.deken-test:
+  stage: test
+  script:
+    - export DEKEN_VERSION=$(.git-ci/git-version)
+    - echo "${DEKEN_VERSION}"
+    - ./deken package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" deken-test
+    - find . -maxdepth 1 -name "*.dek*"
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ./deken upload --no-sign-gpg --no-source-error ./*.dek
+
+
 osx:
   tags:
     - osx
@@ -53,6 +67,14 @@ osx:
     paths:
       - deken
     expire_in: 1 week
+
+osx-test:
+  extends:
+    - .deken-test
+  tags:
+    - osx
+  dependencies:
+    - osx
 
 windows:
   allow_failure: true
@@ -72,6 +94,14 @@ windows:
     paths:
       - deken.exe
     expire_in: 1 week
+
+windows-test:
+  extends:
+    - .deken-test
+  tags:
+    - windows
+  dependencies:
+    - windows
 
 # =====================================================================
 # docker images
