@@ -42,13 +42,27 @@ variables:
 
 .deken-test:
   stage: test
+  variables:
+    DEKEN_EXE: ./deken
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
-    - ./deken package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" deken-test
+    - "${DEKEN_EXE}" package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" .git-ci/deken-test
     - find . -maxdepth 1 -name "*.dek*"
-    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ./deken upload --no-sign-gpg --no-source-error ./*.dek
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || "${DEKEN_EXE}" upload --no-sign-gpg --no-source-error ./*.dek
 
+fetch-testdata:
+  stage: test
+  image: alpine
+  script:
+    - mkdir -p .git-ci/deken-test
+    - wget -O linux.tgz https://git.iem.at/pd/deken/-/package_files/4/download
+    - tar -f linux.tgz -C .git-ci/deken-test/ -xv
+  artifacts:
+    name: deken-test
+    paths:
+      - .git-ci/deken-test/
+    expire_in: 1 week
 
 osx:
   tags:
@@ -75,6 +89,7 @@ osx-test:
     - osx
   dependencies:
     - osx
+    - fetch-testdata
 
 windows:
   allow_failure: true
@@ -102,6 +117,7 @@ windows-test:
     - windows
   dependencies:
     - windows
+    - fetch-testdata
 
 # =====================================================================
 # docker images
@@ -131,19 +147,17 @@ docker-build:
     - docker push $CONTAINER_TEST_IMAGE
 
 docker-test:
-  stage: test
+  extends:
+    - .deken-test
   image: $CONTAINER_TEST_IMAGE
-  dependencies: []
+  variables:
+    DEKEN_EXE: deken
+  dependencies:
+    - fetch-testdata
   before_script:
     - apt-get update
     - apt-get install --no-install-recommends -y git ca-certificates
     - git fetch --unshallow || true
-  script:
-    - export DEKEN_VERSION=$(.git-ci/git-version)
-    - echo "${DEKEN_VERSION}"
-    - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-test
-    - find . -maxdepth 1 -name "*.dek*"
-    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || deken upload --no-sign-gpg --no-source-error ./*.dek
 
 docker-release:
   stage: release
