@@ -548,9 +548,9 @@
   (defn do-get-elf-archs [elffile oshint]
                                 ; get the size of t_float in the elffile
     (defn get-elf-floatsizes [elffile]
-      (lfor _ (.iter_symbols (elffile.get_section_by_name ".dynsym"))
-            :if (in "class_new" _.name)
-            (--pdfunction-to-floatsize-- _.name)))
+      (list (filter-none
+              (lfor _ (.iter_symbols (elffile.get_section_by_name ".dynsym"))
+                    (--pdfunction-to-floatsize-- _.name)))))
     (defn get-elf-armcpu [cpu]
       (defn armcpu-from-aeabi [arm aeabi]
         (defn armcpu-from-aeabi-helper [data]
@@ -598,9 +598,9 @@
   (defn get-macho-arch [macho]
     (defn get-macho-floatsizes [header]
       (import [macholib.SymbolTable [SymbolTable]])
-      (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
-            :if (in (str-to-bytes "class_new") name)
-            (--pdfunction-to-floatsize-- (.decode name))))
+      (list (filter-none
+              (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
+                    (--pdfunction-to-floatsize-- (.decode name))))))
     (defn get-macho-headerarchs [header]
       (lfor
         floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])
