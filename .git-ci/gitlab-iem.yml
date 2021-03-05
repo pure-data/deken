@@ -56,8 +56,8 @@ fetch-testdata:
   image: alpine
   script:
     - mkdir -p .git-ci/deken-test
-    - wget -O linux.tgz https://git.iem.at/pd/deken/-/package_files/4/download
-    - tar -f linux.tgz -C .git-ci/deken-test/ -xv
+    - wget -O externals.tgz https://git.iem.at/pd/deken/-/package_files/5/download
+    - tar -f externals.tgz -C .git-ci/deken-test/ -xv
   artifacts:
     name: deken-test
     paths:
