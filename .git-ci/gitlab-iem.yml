@@ -45,6 +45,7 @@ variables:
   variables:
     DEKEN_EXE: ./deken
   script:
+    - ${DEKEN_EXE} systeminfo
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
     - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "XXX-deken-test" .git-ci/deken-test
