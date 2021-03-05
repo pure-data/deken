@@ -126,11 +126,13 @@
       [(not data) False]
       [(in needle data) True]
       [True (contains? f needle)]))
-  (try
-    (with [f (open filename "rb")]
-      (contains? f (str-to-bytes "\0")))
-    (except [e Exception]
-      (log.debug e))))
+  (if (os.path.isdir filename)
+      False
+      (try
+        (with [f (open filename "rb")]
+          (contains? f (str-to-bytes "\0")))
+        (except [e Exception]
+          (log.debug e)))))
 
 (defn stringify-tuple [t]
   (if t
@@ -691,9 +693,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           (% "%s\t%s\n"
              (, (cut (os.path.basename f) 0 -8) (get-description-from-helpfile f)))))
   (defn readobjs [input]
-    (try
-      (with [f (open input)] (.readlines f))
-      (except [e Exception] (log.debug e))))
+    (if (not (os.path.isdir input))
+        (try
+          (with [f (open input)] (.readlines f))
+          (except [e Exception] (log.debug e)))))
   (defn writeobjs [output data]
     (if data
         (try (do
@@ -709,9 +712,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
        (writeobjs
          dekfilename
          (or
-           (genobjs (or
-                      (get-files-from-zip objfilename)
-                      (get-files-from-dir objfilename :full_path True)))
+           (genobjs (if (os.path.isdir objfilename)
+                      (get-files-from-dir objfilename :full_path True)
+                      (get-files-from-zip objfilename)))
            (if (binary-file? objfilename)
                []
                (readobjs objfilename))))]))
