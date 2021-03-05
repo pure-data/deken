@@ -454,6 +454,8 @@
   (cond
     [(in function-names ["_class_new" "class_new"]) 32]
     [(in function-names ["_class_new64" "class_new64"]) 64]
+    [(in function-names ["_class_addmethod" "class_addmethod"
+                         "_sys_register_loader" "sys_register_loader"]) 0]
     [True None]))
 
 
