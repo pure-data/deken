@@ -614,19 +614,24 @@
 ;; Windows PE file
 (defn get-windows-archs [filename]
   "guess OS/CPU/floatsize for PE (Windows) binaries"
-  (defn get-pe-sectionarchs [cpu symbols]
-    (if symbols
-        (lfor fun symbols (, "Windows" cpu (--pdfunction-to-floatsize-- fun)))
+
+  (defn get-pe-floatsizes [cpu floatsizes]
+    (if floatsizes
+        (lfor floatsize floatsizes (, "Windows" cpu floatsize))
         [(, "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
+
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
-    (get-pe-sectionarchs
+    (get-pe-floatsizes
       (.lower (.pop (.split (cpudict.get pef.FILE_HEADER.Machine "") "_")))
-      (flatten
-        (lfor entry pef.DIRECTORY_ENTRY_IMPORT
-              (lfor imp entry.imports
-                    :if (in (str-to-bytes "class_new") imp.name)
-                    (.decode imp.name))))))
+      (list (filter-none
+              (lfor
+                fun (flatten
+                      (lfor entry pef.DIRECTORY_ENTRY_IMPORT
+                            (lfor imp entry.imports
+                                  (.decode imp.name))))
+                (--pdfunction-to-floatsize-- fun))))))
+
   (try (do
          (import pefile)
          (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
