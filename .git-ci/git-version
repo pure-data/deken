@@ -7,9 +7,9 @@ if [ "x${DEKEN_VERSION}" = "x" ]; then
 fi
 DEKEN_VERSION=${DEKEN_VERSION#v}
 if [ -n "${DEKEN_VERSION}" ]; then
-  sed -e "s|\(DEKEN_VERSION\)=\".*\"|\1=\"${DEKEN_VERSION}\"|g" -i developer/deken
-  sed -e "s|\[\(::deken::versioncheck\) [^]]*\]|[\1 ${DEKEN_VERSION}]|g" -i deken-plugin.tcl
-  sed -e "s|^\(version\):.*|\1: ${DEKEN_VERSION}|g" -i deken-test/README.deken.txt
+  sed -i '' -e "s|\(DEKEN_VERSION\)=\".*\"|\1=\"${DEKEN_VERSION}\"|g" developer/deken
+  sed -i '' -e "s|\[\(::deken::versioncheck\) [^]]*\]|[\1 ${DEKEN_VERSION}]|g" deken-plugin.tcl
+  sed -i '' -e "s|^\(version\):.*|\1: ${DEKEN_VERSION}|g" deken-test/README.deken.txt
 fi
 
 echo "${DEKEN_VERSION}"
