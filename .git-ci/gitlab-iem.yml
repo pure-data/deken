@@ -199,7 +199,8 @@ upload2deken:
   dependencies: []
   script:
 # create source package
-    - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
+    - deken systeminfo
+    - export DEKEN_VERSION=$(deken --version)
     - echo "${DEKEN_VERSION}"
     - mkdir deken-plugin
     - cp deken-plugin.tcl LICENSE.txt deken-plugin/
