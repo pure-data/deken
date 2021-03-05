@@ -49,6 +49,9 @@ variables:
     - echo "${DEKEN_VERSION}"
     - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" .git-ci/deken-test
     - find . -maxdepth 1 -name "*.dek*"
+      # remove floatsize=0 packages, in case they were wrongly created...
+    - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
+      # upload the deken-test package
     - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || "${DEKEN_EXE}" upload --no-sign-gpg --no-source-error ./*.dek
 
 fetch-testdata:
