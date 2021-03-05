@@ -62,6 +62,9 @@ variables:
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
       # upload the deken-test package
     - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || "${DEKEN_EXE}" upload --no-sign-gpg --no-source-error ./*.dek
+      # test installing/uninstalling the package
+    - ${DEKEN_EXE} install *.dek
+    - ${DEKEN_EXE} uninstall "${DEKEN_TEST}"
 
 fetch-testdata:
   stage: build
