@@ -208,8 +208,9 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
 }
 
 proc ::deken::utilities::substpath {path} {
-    set result [string map "@PD_PATH@ $::sys_libdir" $path]
-    return $result
+    set map "@PD_PATH@"
+    lappend map $::sys_libdir
+    string map $map $path]
 }
 
 proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""}} {
