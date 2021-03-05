@@ -449,12 +449,12 @@
        []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
-(defn --pdsymbol-to-floatsize-- [function-names]
-  "detect Pd-floatsize based on the list of <function-names> used in the binary"
+(defn --pdfunction-to-floatsize-- [function-name]
+  "detect Pd-floatsize based on the list of <function-name> used in the binary"
   (cond
-    [(in function-names ["_class_new" "class_new"]) 32]
-    [(in function-names ["_class_new64" "class_new64"]) 64]
-    [(in function-names ["_class_addmethod" "class_addmethod"
+    [(in function-name ["_class_new" "class_new"]) 32]
+    [(in function-name ["_class_new64" "class_new64"]) 64]
+    [(in function-name ["_class_addmethod" "class_addmethod"
                          "_sys_register_loader" "sys_register_loader"]) 0]
     [True None]))
 
@@ -546,7 +546,7 @@
     (defn get-elf-floatsizes [elffile]
       (lfor _ (.iter_symbols (elffile.get_section_by_name ".dynsym"))
             :if (in "class_new" _.name)
-            (--pdsymbol-to-floatsize-- _.name)))
+            (--pdfunction-to-floatsize-- _.name)))
     (defn get-elf-armcpu [cpu]
       (defn armcpu-from-aeabi [arm aeabi]
         (defn armcpu-from-aeabi-helper [data]
@@ -596,7 +596,7 @@
       (import [macholib.SymbolTable [SymbolTable]])
       (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
             :if (in (str-to-bytes "class_new") name)
-            (--pdsymbol-to-floatsize-- (.decode name))))
+            (--pdfunction-to-floatsize-- (.decode name))))
     (defn get-macho-headerarchs [header]
       (lfor
         floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])
@@ -612,7 +612,7 @@
   "guess OS/CPU/floatsize for PE (Windows) binaries"
   (defn get-pe-sectionarchs [cpu symbols]
     (if symbols
-        (lfor fun symbols (, "Windows" cpu (--pdsymbol-to-floatsize-- fun)))
+        (lfor fun symbols (, "Windows" cpu (--pdfunction-to-floatsize-- fun)))
         [(, "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
