@@ -46,7 +46,7 @@ variables:
     DEKEN_EXE: ./deken
   script:
     - ${DEKEN_EXE} systeminfo
-    - export DEKEN_VERSION=$(.git-ci/git-version)
+    - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
     - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "XXX-deken-test" .git-ci/deken-test
     - find . -maxdepth 1 -name "*.dek*"
@@ -146,7 +146,6 @@ docker-build:
     - .docker
   script:
     - ./.git-ci/git-version
-    - echo "${DEKEN_VERSION}"
     - docker build -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
@@ -158,10 +157,6 @@ docker-test:
     DEKEN_EXE: deken
   dependencies:
     - fetch-testdata
-  before_script:
-    - apt-get update
-    - apt-get install --no-install-recommends -y git ca-certificates
-    - git fetch --unshallow || true
 
 docker-release:
   stage: release
@@ -181,13 +176,9 @@ upload2deken:
   stage: deploy
   image: $CONTAINER_TEST_IMAGE
   dependencies: []
-  before_script:
-    - apt-get update
-    - apt-get install --no-install-recommends -y git ca-certificates
-    - git fetch --unshallow || true
   script:
 # create source package
-    - export DEKEN_VERSION=$(.git-ci/git-version)
+    - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
     - mkdir deken-plugin
     - cp deken-plugin.tcl LICENSE.txt deken-plugin/
