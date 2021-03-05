@@ -47,7 +47,7 @@ variables:
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
-    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_ID}" .git-ci/deken-test
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "XXX-deken-test" .git-ci/deken-test
     - find . -maxdepth 1 -name "*.dek*"
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
