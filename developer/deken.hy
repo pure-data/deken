@@ -68,6 +68,10 @@
   (if (not (is exit None))
       (sys.exit exit)))
 
+(defn filter-none [iterable]
+  "filter all None-elements from the iterable"
+  (filter (fn [item] (not (is item None))) iterable))
+
 (setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (setv version (or
