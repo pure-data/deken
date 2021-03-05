@@ -44,11 +44,19 @@ variables:
   stage: test
   variables:
     DEKEN_EXE: ./deken
+    DEKEN_TEST: XXX-deken-test
   script:
     - ${DEKEN_EXE} systeminfo
     - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
-    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "XXX-deken-test" .git-ci/deken-test
+    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
+    - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST}
+      # check whether renaming working
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST}"
+    - find . -maxdepth 1 -name "*.dek*" -print
+    - rm decken-test*.dek*
+      # check whether automatic names work
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" ".git-ci/tmp/${DEKEN_TEST}"
     - find . -maxdepth 1 -name "*.dek*"
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
