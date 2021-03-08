@@ -977,7 +977,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     # Pd has a generic preferences system, that we can use
     proc ::deken::set_installpath {installdir} {
         set ::deken::installpath $installdir
-        ::pd_guiprefs::write dekenpath $installdir
+        ::pd_guiprefs::write dekenpath [list $installdir]
     }
     # user requested platform (empty = DEFAULT)
     set ::deken::userplatform [::pd_guiprefs::read deken_platform]
@@ -987,7 +987,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::userplatform $platform
         set ::deken::hideforeignarch [::deken::utilities::bool $hideforeignarch ]
         set ::deken::hideoldversions [::deken::utilities::bool $hideoldversions ]
-        ::pd_guiprefs::write deken_platform "$platform"
+        ::pd_guiprefs::write deken_platform [list $platform]
         ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
         ::pd_guiprefs::write deken_hide_old_versions $::deken::hideoldversions
     }
