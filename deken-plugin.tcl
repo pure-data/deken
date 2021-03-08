@@ -1135,7 +1135,7 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
             while { "$result" eq "retry" } {
                 set result [tk_messageBox \
                                 -title [_ "SHA256 verification failed" ] \
-                                -message ${msg} \
+                                -message "${msg}" \
                                 -icon error \
                                 -parent .externals_searchui \
                                 -type abortretryignore]
@@ -1204,9 +1204,12 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         set rmerrors [::deken::utilities::rmrecursive $deldir]
         # and if there are still files around, ask the user to delete them.
         if { $rmerrors > 0 } {
-            set msg [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ]
-            set _args "-message \"[format $msg $extname $deldir]\" -type okcancel -default ok -icon warning -parent .externals_searchui"
-            switch -- [eval tk_messageBox ${_args}] {
+            set result [tk_messageBox
+                        -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] $extname $deldir]
+                        -type okcancel -default ok
+                        -icon warning
+                        -parent .externals_searchui]
+            switch -- $result {
                 ok {
                     ::pd_menucommands::menu_openfile $deldir
                 }
@@ -1240,15 +1243,17 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             ::deken::utilities::debug [format [_ {\[deken\] Unable to add %s to search paths}] $extname]
             return
         }
-        set doit yes
+        set result yes
         if { $::deken::add_to_path > 1 } {
-            set doit yes
+            set result yes
         } else {
-            set msg [_ "Add %s to the Pd search paths?" ]
-            set _args "-message \"[format $msg $extname]\" -type yesno -default yes -icon question -parent .externals_searchui"
-            set doit [eval tk_messageBox ${_args}]
+            set result [tk_messageBox
+                      -message [format [_ "Add %s to the Pd search paths?" ]  $extname]
+                      -type yesno -default yes
+                      -icon question
+                      -parent .externals_searchui]
         }
-        switch -- "${doit}" {
+        switch -- "${result}" {
             yes {
                 add_to_searchpaths [file join $installdir $extname]
                 ::deken::utilities::debug [format [_ {\[deken\] Added %s to search paths}] $extname]
@@ -1655,9 +1660,12 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
     set installdir [::deken::utilities::substpath $installdir ]
     while {1} {
         if { "$installdir" == "" } {
-            set msg  [_ "Please select a (writable) installation directory!"]
-            set _args "-message $msg -type retrycancel -default retry -icon warning -parent .externals_searchui"
-            switch -- [eval tk_messageBox ${_args}] {
+            set result [tk_messageBox
+                        -message [_ "Please select a (writable) installation directory!"]
+                        -type retrycancel -default retry
+                        -icon warning
+                        -parent .externals_searchui]
+            switch -- "${result}" {
                 cancel {return}
                 retry {
                     if {[::deken::prompt_installdir]} {
@@ -1668,9 +1676,12 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
                 }
             }
         } else {
-            set msg [format [_ "Install %1\$s to %2\$s?" ] $extname $installdir]
-            set _args "-message \"$msg\" -type yesnocancel -default yes -icon question -parent .externals_searchui"
-            switch -- [eval tk_messageBox ${_args}] {
+            set result [tk_messageBox
+                        -message [format [_ "Install %1\$s to %2\$s?" ] $extname $installdir]
+                        -type yesnocancel -default yes
+                        -icon question
+                        -parent .externals_searchui]
+            switch -- "${result}" {
                 cancel {return}
                 yes { }
                 no {
