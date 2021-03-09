@@ -2033,24 +2033,32 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     set pkgname [lindex $pkgverarch 0]
     set cmd [list ::deken::clicked_link $decURL $filename]
 
-    set menus [list \
-                   [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
-                   [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
-                   {} {} \
-                   [_ "Install package" ] $cmd \
-                   [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
-                   {} {} \
-                   [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
-                   [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
-                   [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
-                  ]
-    foreach {title cmd} $menus {
-        if { "${title}" eq "" } {
-            $m add separator
-        } else {
-            $m add command -label $title -command $cmd
+    set selcount 0
+    set selected 0
+    foreach {k v} $::deken::selected {
+        if { ${v} != {} } {incr selcount}
+        if { ($k eq $pkgname) && ($v eq $cmd) } {
+            set selected 1
+            break
         }
     }
+
+    if { $selected } {
+        set selmsg [_ "Deselect package" ]
+    } else {
+        set selmsg [_ "Select package for installation" ]
+    }
+    $m add command -label "${selmsg}" -command "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}"
+    if { $selcount } {
+        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected .externals_searchui"
+    } else {
+        $m add command -label [_ "Install package" ] -command $cmd
+    }
+    $m add separator
+    $m add command -label [_ "Open webpage" ] -command "pd_menucommands::menu_openfile [file dirname ${URL}] -command"
+    $m add command -label [_ "Copy package URL" ] -command "clipboard clear; clipboard append $saveURL"
+    $m add command -label [_ "Copy SHA256 checksum URL" ] -command "clipboard clear; clipboard append ${saveURL}.sha256"
+    $m add command -label [_ "Copy OpenGPG signature URL" ] -command "clipboard clear; clipboard append ${saveURL}.asc"
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
