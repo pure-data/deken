@@ -542,9 +542,8 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
         tk_messageBox \
             -title [_ "Download failed" ] \
             -message "${msg}\n$stdout" \
-            -icon error \
-            -parent .externals_searchui \
-            -type ok
+            -icon error -type ok \
+            -parent .externals_searchui
         set outputfilename ""
     }
 
@@ -1136,9 +1135,8 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
                 set result [tk_messageBox \
                                 -title [_ "SHA256 verification failed" ] \
                                 -message "${msg}" \
-                                -icon error \
-                                -parent .externals_searchui \
-                                -type abortretryignore]
+                                -icon error -type abortretryignore \
+                                -parent .externals_searchui]
                 # we don't have a good strategy if the user selects 'retry'
                 # so we just display the dialog again...
             }
@@ -1191,10 +1189,9 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         ::deken::status ${msg} 0
         tk_messageBox \
             -title [_ "Package installation failed" ] \
-            -message ${msg} \
-            -icon error \
-            -parent .externals_searchui \
-            -type ok
+            -message "${msg}" \
+            -icon error -type ok \
+            -parent .externals_searchui
         set install_failed 1
     }
 
@@ -1204,11 +1201,10 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         set rmerrors [::deken::utilities::rmrecursive $deldir]
         # and if there are still files around, ask the user to delete them.
         if { $rmerrors > 0 } {
-            set result [tk_messageBox
-                        -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] $extname $deldir]
-                        -type okcancel -default ok
-                        -icon warning
-                        -parent .externals_searchui]
+            set result [tk_messageBox \
+                            -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] $extname $deldir] \
+                            -icon warning -type okcancel -default ok \
+                            -parent .externals_searchui]
             switch -- $result {
                 ok {
                     ::pd_menucommands::menu_openfile $deldir
@@ -1247,11 +1243,10 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         if { $::deken::add_to_path > 1 } {
             set result yes
         } else {
-            set result [tk_messageBox
-                      -message [format [_ "Add %s to the Pd search paths?" ]  $extname]
-                      -type yesno -default yes
-                      -icon question
-                      -parent .externals_searchui]
+            set result [tk_messageBox \
+                            -message [format [_ "Add %s to the Pd search paths?" ]  $extname] \
+                            -icon question -type yesno -default yes \
+                            -parent .externals_searchui]
         }
         switch -- "${result}" {
             yes {
@@ -1660,11 +1655,10 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
     set installdir [::deken::utilities::substpath $installdir ]
     while {1} {
         if { "$installdir" == "" } {
-            set result [tk_messageBox
-                        -message [_ "Please select a (writable) installation directory!"]
-                        -type retrycancel -default retry
-                        -icon warning
-                        -parent .externals_searchui]
+            set result [tk_messageBox \
+                            -message [_ "Please select a (writable) installation directory!"] \
+                            -icon warning -type retrycancel -default retry \
+                            -parent .externals_searchui]
             switch -- "${result}" {
                 cancel {return}
                 retry {
@@ -1676,11 +1670,10 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
                 }
             }
         } else {
-            set result [tk_messageBox
-                        -message [format [_ "Install %1\$s to %2\$s?" ] $extname $installdir]
-                        -type yesnocancel -default yes
-                        -icon question
-                        -parent .externals_searchui]
+            set result [tk_messageBox \
+                            -message [format [_ "Install %1\$s to %2\$s?" ] $extname $installdir] \
+                            -icon question -type yesnocancel -default yes \
+                            -parent .externals_searchui]
             switch -- "${result}" {
                 cancel {return}
                 yes { }
@@ -1744,13 +1737,11 @@ proc ::deken::clicked_link {URL filename} {
             if { ! "$::deken::keep_package" } {
                 catch { file delete $fullpkgfile }
             }
-            set msg [format [_ "SHA256 verification of %s failed!" ] $fullpkgfile ]
             tk_messageBox \
                 -title [_ "SHA256 verification failed" ] \
-                -message ${msg} \
-                -icon error \
-                -parent .externals_searchui \
-                -type ok
+                -message [format [_ "SHA256 verification of %s failed!" ] $fullpkgfile ] \
+                -icon error -type ok \
+                -parent .externals_searchui
             return
         }
     }
@@ -1936,9 +1927,8 @@ proc ::deken::search::puredata.info {term} {
         tk_messageBox \
             -title [_ "Search failed" ] \
             -message "${msg}\n$stdout" \
-            -icon error \
-            -parent .externals_searchui \
-            -type ok
+            -icon error -type ok \
+            -parent .externals_searchui
         return
     }
 
