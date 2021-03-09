@@ -1018,7 +1018,7 @@ proc ::deken::normalize_result {title
                                 {match 1}
                                 {subtitle ""}
                                 {statusline ""}
-                                {contextmenus {}}
+                                {contextcmd {}}
                                 {pkgname ""}
                                 args} {
     ## normalize a search-result
@@ -1029,11 +1029,11 @@ proc ::deken::normalize_result {title
     # - <match> boolean value to indicate whether this entry matches the current architecture
     # - <subtitle> additional text to be shown under the <name>
     # - <statusline> additional text to be shown in the STATUS line if the mouse hovers over the result
-    # - <contextmenus> list of <menuitem> <menucmd> pairs to be shown via a right-click context-menu
+    # - <contextcmd> the full command to be executed when the user right-clicks the menu-entry
     # - <pkgname> the library name (typically this gets parsed from the package filename)
     # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    list "" $title $cmd $match $subtitle $statusline $contextmenus $pkgname
+    list "" $title $cmd $match $subtitle $statusline $contextcmd $pkgname
 }
 
 
@@ -1326,8 +1326,7 @@ proc ::deken::highlightable_posttag {tagname} {
         $winid.results tag raise highlight
     }
 }
-proc ::deken::bind_contextmenu {winid tagname menus} {
-    set cmd "::deken::result_contextmenu %W %x %y $menus"
+proc ::deken::bind_contextmenu {winid tagname cmd} {
     if { [winfo exists $winid] } {
         if {$::windowingsystem eq "aqua"} {
             $winid.results tag bind $tagname <2> $cmd
@@ -1335,21 +1334,6 @@ proc ::deken::bind_contextmenu {winid tagname menus} {
             $winid.results tag bind $tagname <3> $cmd
         }
     }
-}
-proc ::deken::result_contextmenu {widget theX theY args} {
-    set m .dekenresults_contextMenu
-    if { [winfo exists $m] } {
-        destroy $m
-    }
-    menu $m
-    foreach {title cmd} $args {
-        if { "${title}" eq "" } {
-            $m add separator
-        } else {
-            $m add command -label $title -command $cmd
-        }
-    }
-    tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
 proc ::deken::menu_selectpackage {winid pkgname installcmd} {
@@ -1597,7 +1581,7 @@ proc ::deken::initiate_search {winid} {
 
 # display a single found entry
 proc ::deken::show_result {winid counter result showmatches} {
-    foreach {title cmd match comment status contextmenus pkgname} $result {break}
+    foreach {title cmd match comment status contextcmd pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr ${match}?"archmatch":"noarchmatch" ] ]
     if { "$pkgname" ne "" } {lappend tags "/$pkgname"}
@@ -1608,8 +1592,8 @@ proc ::deken::show_result {winid counter result showmatches} {
         ::deken::highlightable_posttag $tag
         ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
-        if { "" ne $contextmenus } {
-            ::deken::bind_contextmenu $winid $tag $contextmenus
+        if { "" ne $contextcmd } {
+            ::deken::bind_contextmenu $winid $tag $contextcmd
         }
     }
 }
@@ -2033,6 +2017,7 @@ proc ::deken::search::puredata.info::search {term} {
                            [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
                            [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
                           ]
+            set menus [list ::deken::search::puredata.info::contextmenu %W %x %y $menus]
             set res [list $sortname $filename $name $cmd $match $comment $status $menus $pkgname]
             lappend searchresults $res
         }
@@ -2046,6 +2031,22 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
+proc ::deken::search::puredata.info::contextmenu {widget theX theY menus} {
+    set m .dekenresults_contextMenu
+    if { [winfo exists $m] } {
+        destroy $m
+    }
+    menu $m
+    foreach {title cmd} $menus {
+        if { "${title}" eq "" } {
+            $m add separator
+        } else {
+            $m add command -label $title -command $cmd
+        }
+    }
+    tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
+}
+
 
 ::deken::initialize
 ::deken::register ::deken::search::puredata.info::search
