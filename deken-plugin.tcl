@@ -207,7 +207,7 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     return $fallback
 }
 
-proc ::deken::utilities::substpath {path} {
+proc ::deken::utilities::expandpath {path} {
     set map "@PD_PATH@"
     lappend map $::sys_libdir
     string map $map $path
@@ -251,7 +251,7 @@ proc ::deken::utilities::is_writabledir {path} {
 
 proc ::deken::utilities::get_writabledir {paths} {
     foreach p $paths {
-        set xp [ ::deken::utilities::substpath $p ]
+        set xp [ ::deken::utilities::expandpath $p ]
         if { [ ::deken::utilities::is_writabledir $xp ] } { return $p }
     }
     return
@@ -684,7 +684,7 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
 
 proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
     # only add absolute paths to the pathentries
-    set xpath [ ::deken::utilities::substpath $path ]
+    set xpath [ ::deken::utilities::expandpath $path ]
     if {! $generic} {
         if { [file pathtype $xpath] != "absolute"} { return }
     }
@@ -1640,7 +1640,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
     ::deken::prompt_installdir
     set installdir [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
 
-    set installdir [::deken::utilities::substpath $installdir ]
+    set installdir [::deken::utilities::expandpath $installdir ]
     while {1} {
         if { "$installdir" == "" } {
             set result [tk_messageBox \
