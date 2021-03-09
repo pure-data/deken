@@ -1326,7 +1326,7 @@ proc ::deken::highlightable_posttag {tagname} {
         $winid.results tag raise highlight
     }
 }
-proc ::deken::bind_postmenu {winid tagname menus} {
+proc ::deken::bind_contextmenu {winid tagname menus} {
     set cmd "::deken::result_contextmenu %W %x %y $menus"
     if { [winfo exists $winid] } {
         if {$::windowingsystem eq "aqua"} {
@@ -1609,7 +1609,7 @@ proc ::deken::show_result {winid counter result showmatches} {
         ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
         ::deken::bind_posttag $tag <1> "$cmd"
         if { "" ne $contextmenus } {
-            ::deken::bind_postmenu $winid $tag $contextmenus
+            ::deken::bind_contextmenu $winid $tag $contextmenus
         }
     }
 }
