@@ -103,7 +103,7 @@ if { [::deken::versioncheck 0.7.2] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
-    variable winid
+    variable winid .externals_searchui
     variable platform
     variable architecture_substitutes
     variable installpath
