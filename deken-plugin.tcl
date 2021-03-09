@@ -1404,13 +1404,12 @@ proc ::deken::menu_installselected {winid} {
 
 
 proc ::deken::do_prompt_installdir {path} {
+    set msg [_ "Install externals to directory:"]
     variable winid
     if {[winfo exists $winid]} {
-        tk_chooseDirectory -title [_ "Install externals to directory:"] \
-            -initialdir ${path} -parent $winid
+        tk_chooseDirectory -title "${msg}" -initialdir ${path} -parent $winid
     } else {
-        tk_chooseDirectory -title [_ "Install externals to directory:"] \
-            -initialdir ${path}
+        tk_chooseDirectory -title "${msg}" -initialdir ${path}
     }
 }
 
