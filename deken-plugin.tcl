@@ -1910,7 +1910,8 @@ proc ::deken::register {fun} {
 
 ## ####################################################################
 ## searching puredata.info
-proc ::deken::search::puredata.info {term} {
+namespace eval ::deken::search::puredata.info { }
+proc ::deken::search::puredata.info::search {term} {
     set searchresults [list]
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
@@ -2047,5 +2048,5 @@ proc ::deken::search::puredata.info {term} {
 }
 
 ::deken::initialize
-::deken::register ::deken::search::puredata.info
+::deken::register ::deken::search::puredata.info::search
 }
