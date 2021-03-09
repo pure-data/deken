@@ -2049,13 +2049,14 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
         set selmsg [_ "Select package for installation" ]
     }
     $m add command -label "${selmsg}" -command "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}"
+    $m add separator
     if { $selcount } {
         $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected .externals_searchui"
     } else {
         $m add command -label [_ "Install package" ] -command $cmd
     }
     $m add separator
-    $m add command -label [_ "Open webpage" ] -command "pd_menucommands::menu_openfile [file dirname ${URL}] -command"
+    $m add command -label [_ "Open package webpage" ] -command "pd_menucommands::menu_openfile [file dirname ${URL}]"
     $m add command -label [_ "Copy package URL" ] -command "clipboard clear; clipboard append $saveURL"
     $m add command -label [_ "Copy SHA256 checksum URL" ] -command "clipboard clear; clipboard append ${saveURL}.sha256"
     $m add command -label [_ "Copy OpenGPG signature URL" ] -command "clipboard clear; clipboard append ${saveURL}.asc"
