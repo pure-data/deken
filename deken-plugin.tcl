@@ -1979,7 +1979,6 @@ proc ::deken::search::puredata.info::search {term} {
         if { "" ne $ele } {
             foreach {name URL creator date} [ split $ele "\t" ] {break}
             set decURL [::deken::utilities::urldecode $URL]
-            set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
             set filename [ file tail $URL ]
             set cmd [list ::deken::clicked_link $decURL $filename]
             set pkgverarch [ ::deken::utilities::parse_filename $filename ]
@@ -2006,19 +2005,8 @@ proc ::deken::search::puredata.info::search {term} {
             }
             catch { set sortprefix [dict get ${latestrelease1} $pkgname] }
             set sortname "${sortprefix}/${pkgname}/${version}/${date}"
-            set menus [list \
-                           [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
-                           [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
-                           {} {} \
-                           [_ "Install package" ] $cmd \
-                           [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
-                           {} {} \
-                           [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
-                           [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
-                           [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
-                          ]
-            set menus [list ::deken::search::puredata.info::contextmenu %W %x %y $menus]
-            set res [list $sortname $filename $name $cmd $match $comment $status $menus $pkgname]
+            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
+            set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
             lappend searchresults $res
         }
     }
@@ -2031,12 +2019,31 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
-proc ::deken::search::puredata.info::contextmenu {widget theX theY menus} {
+proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     set m .dekenresults_contextMenu
     if { [winfo exists $m] } {
         destroy $m
     }
     menu $m
+
+    set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
+    set decURL [::deken::utilities::urldecode $URL]
+    set filename [ file tail $URL ]
+    set pkgverarch [ ::deken::utilities::parse_filename $filename ]
+    set pkgname [lindex $pkgverarch 0]
+    set cmd [list ::deken::clicked_link $decURL $filename]
+
+    set menus [list \
+                   [_ "(De)select package for installation" ] "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}" \
+                   [_ "Install selected packages" ] "::deken::menu_installselected .externals_searchui" \
+                   {} {} \
+                   [_ "Install package" ] $cmd \
+                   [_ "Open webpage" ] "pd_menucommands::menu_openfile [file dirname ${URL}]" \
+                   {} {} \
+                   [_ "Copy package URL" ] "clipboard clear; clipboard append $saveURL" \
+                   [_ "Copy SHA256 checksum URL" ] "clipboard clear; clipboard append ${saveURL}.sha256" \
+                   [_ "Copy OpenGPG signature URL" ] "clipboard clear; clipboard append ${saveURL}.asc" \
+                  ]
     foreach {title cmd} $menus {
         if { "${title}" eq "" } {
             $m add separator
