@@ -392,6 +392,9 @@ proc ::deken::utilities::unzipper {zipfile {path .}} {
 }
 
 proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 1}} {
+    if { ! [ file isdirectory "${installdir}" ] } {
+        return 0
+    }
     ::deken::status [format [_ "Installing %s" ] $filename ]
     set PWD [ pwd ]
     cd $installdir
@@ -1719,6 +1722,11 @@ proc ::deken::clicked_link {URL filename} {
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     set installdir [::deken::ensure_installdir "" ${filename}]
+    if { "${installdir}" == "" } {
+        ::deken::utilities::debug [format [_ "Cancelling download of %s: No installation directory given." ] $filename]
+        ::deken::status [format [_ "Installing to non-existant directory failed" ] $filename]
+        return
+    }
     set fullpkgfile [file join $installdir $filename]
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
