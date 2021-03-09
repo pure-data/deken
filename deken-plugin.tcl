@@ -2026,7 +2026,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     }
     menu $m
 
-    set saveURL [string map {"[" "%%5B" "]" "%%5D"} $URL]
+    set saveURL [string map {"[" "%5B" "]" "%5D"} $URL]
     set decURL [::deken::utilities::urldecode $URL]
     set filename [ file tail $URL ]
     set pkgverarch [ ::deken::utilities::parse_filename $filename ]
