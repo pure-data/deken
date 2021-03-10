@@ -654,8 +654,8 @@ proc ::deken::preferences::create_packpad {toplevel {padx 2} {pady 2} } {
     return $mypad
 }
 
-proc ::deken::preferences::userpath_doit { } {
-    set installdir [::deken::do_prompt_installdir ${::deken::preferences::userinstallpath}]
+proc ::deken::preferences::userpath_doit { winid } {
+    set installdir [::deken::do_prompt_installdir ${::deken::preferences::userinstallpath} $winid]
     if { "${installdir}" != "" } {
         set ::deken::preferences::userinstallpath "${installdir}"
     }
@@ -782,7 +782,7 @@ proc ::deken::preferences::create {winid} {
         -variable ::deken::preferences::installpath
     [lindex $pathdoit 1] configure \
         -text "..." \
-        -command "::deken::preferences::userpath_doit"
+        -command "::deken::preferences::userpath_doit $winid"
     ::deken::preferences::create_pathpad ${pathsframe} ${row}
     incr row
 
@@ -1413,9 +1413,11 @@ proc ::deken::menu_installselected {winid} {
 }
 
 
-proc ::deken::do_prompt_installdir {path} {
+proc ::deken::do_prompt_installdir {path {winid {}}} {
     set msg [_ "Install externals to directory:"]
-    variable winid
+    if { $winid eq {} } {
+        set winid $::deken::winid
+    }
     if {[winfo exists $winid]} {
         tk_chooseDirectory -title "${msg}" -initialdir ${path} -parent $winid
     } else {
