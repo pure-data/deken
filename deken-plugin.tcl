@@ -111,6 +111,8 @@ namespace eval ::deken:: {
     variable statustimer
     variable backends
     variable progressvar
+    variable progresstext
+    variable progresstimer
     namespace export register
 }
 namespace eval ::deken::search:: { }
@@ -128,6 +130,7 @@ set ::deken::keep_package 0
 set ::deken::verify_sha256 1
 set ::deken::searchtype name
 set ::deken::statustimer {}
+set ::deken::progresstimer {}
 set ::deken::preferences::installpath {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
@@ -1186,12 +1189,15 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
     ::deken::status [format [_ "Installing package %s" ] $extname ] 0
     ::deken::syncgui
+    ::deken::progress 0
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
+        ::deken::progressstatus [_ "Installation completed!" ]
         set msg [format [_ "Successfully installed %s!" ] $extname ]
         ::deken::status "${msg}" 0
         ::pdwindow::post "\[deken\] $msg\n"
         set install_failed 0
     } else {
+        ::deken::progressstatus [_ "Installation failed!" ]
         set msg [format [_ "Failed to install %s!" ] $extname ]
         ::deken::status ${msg} 0
         tk_messageBox \
@@ -1286,6 +1292,17 @@ proc ::deken::status {{msg ""} {timeout 5000}} {
         }
     } else {
         set ::deken::statustext ""
+    }
+}
+proc ::deken::progressstatus {{msg ""} {timeout 5000}} {
+   after cancel $::deken::progresstimer
+    if {"" ne $msg} {
+        set ::deken::progresstext "$msg"
+        if { $timeout != "0" } {
+            set ::deken::progresstimer [after $timeout [list set "::deken::progresstext" ""]]
+        }
+    } else {
+        set ::deken::progresstext ""
     }
 }
 proc ::deken::syncgui {} {
@@ -1504,6 +1521,8 @@ proc ::deken::create_dialog {winid} {
         ttk::progressbar $winid.progress.bar -orient horizontal -length 640 -maximum 100 -mode determinate -variable ::deken::progressvar } stdout ] } {
         pack $winid.progress.bar -side top -fill "x"
         proc ::deken::progress {x} { set ::deken::progressvar $x }
+        label ${winid}.progress.label -textvariable ::deken::progresstext -padx 0 -borderwidth 0
+        place ${winid}.progress.label -in ${winid}.progress.bar -x 1
     }
 
     frame $winid.status
@@ -1560,6 +1579,7 @@ proc ::deken::initiate_search {winid} {
     ::deken::clearpost
     ::deken::utilities::debug "[_ {\[deken\] Start searching for externals...}] ${searchterm}"
     set ::deken::progressvar 0
+    ::deken::progressstatus ""
     if { [ catch {
         set results [::deken::search_for ${searchterm}]
     } stdout ] } {
@@ -1723,8 +1743,11 @@ proc ::deken::clicked_link {URL filename} {
     if { "$fullpkgfile" eq "" } {
         ::deken::utilities::debug [_ {aborting.}]
         ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
+        ::deken::progressstatus [_ "Download failed!" ]
+        ::deken::progress 0
         return
     }
+    ::deken::progressstatus [_ "Download completed! Verifying..." ]
     ::deken::utilities::debug ""
     if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
         ::deken::status [format [_ "Checksum mismatch for '%s'" ] $filename] 0
@@ -1737,6 +1760,7 @@ proc ::deken::clicked_link {URL filename} {
                 -message [format [_ "SHA256 verification of %s failed!" ] $fullpkgfile ] \
                 -icon error -type ok \
                 -parent .externals_searchui
+            ::deken::progress 0
             return
         }
     }
