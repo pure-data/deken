@@ -82,16 +82,19 @@ proc ::deken::versioncheck {version} {
         set v1 [split $version "."]
         foreach x $v0 y $v1 {
             if { $x > $y } {
-                ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s\] > %2$s...skipping!} ] $::deken::version $version ]\n"
+                set msg [format [_ "\[deken\] installed version \[%1\$s\] > %2\$s...skipping!" ] $::deken::version $version ]
+                ::pdwindow::debug "${msg}\n"
                 return 0
             }
             if { $x < $y } {
-                ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s] < %2$s...overwriting!} ] $::deken::version $version ]\n"
+                set msg [format [_ "\[deken\] installed version \[%1\$s\] < %2\$s...overwriting!" ] $::deken::version $version ]
+                ::pdwindow::debug "$msg\n"
                 set ::deken::version $version
                 return 1
             }
         }
-        ::pdwindow::debug "[format [_ {\[deken\] installed version \[%1$s\] == %2$s...skipping!} ] $::deken::version $version ]\n"
+        set msg [format [_ "\[deken\] installed version \[%1\$s\] == %2\$s...skipping!" ] $::deken::version $version ]
+        ::pdwindow::debug "${msg}\n"
         return 0
     }
     set ::deken::version $version
@@ -436,15 +439,25 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
     } else {
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
+        set msg [_ "\[deken\] Unable to extract package automatically." ]
+        ::pdwindow::error "${msg}\n"
         set msg ""
+        append msg [_ "Please perform the following steps manually:" ]
+        append msg "\n"
+        append msg [format [_ "1. Unzip %s." ]  $fullpkgfile ]
+        append msg "\n"
         if { [string match "*.dek" $fullpkgfile] } {
-            set msg "\n  [_ {You might need to change the file-extension from .dek to .zip} ]"
+            append msg "  "
+            append msg [_ "You might need to change the file-extension from .dek to .zip" ]
+            append msg "\n"
         }
-        ::pdwindow::error "[_ {\[deken\] Unable to extract package automatically.} ]\n"
-        ::pdwindow::post "[_ {Please perform the following steps manually:} ]
-[format [_ {1. Unzip %s.} ]  $fullpkgfile ]${msg}
-[format [_ {2. Copy the contents into %s.} ] $installdir]
-[format [_ {3. Remove %s. (optional)} ]  $fullpkgfile ]"
+        append msg [format [_ "2. Copy the contents into %s." ] $installdir]
+        append msg "\n"
+        append msg [format [_ "3. Remove %s. (optional)" ]  $fullpkgfile ]
+        append msg "\n"
+
+        ::pdwindow::post "$msg"
+
         pd_menucommands::menu_openfile $fullpkgfile
         pd_menucommands::menu_openfile $installdir
     }
@@ -455,11 +468,12 @@ proc ::deken::utilities::uninstall {path library} {
     # recursively remove ${path}/${library} if it exists
     set fullpath [file join ${path} ${library}]
     if {[file exists ${fullpath}]} {
-        ::deken::utilities::debug [format [_ {\[deken\] uninstalling '%s'} ] ${fullpath} ]
+        ::deken::utilities::debug [format [_ "\[deken\] uninstalling '%s'" ] ${fullpath} ]
         if { [catch {
             file delete -force "${fullpath}"
         } stdout ] } {
-            ::deken::utilities::debug "[format [_ {Uninstalling %1$s from %2$s failed!}] ${library} ${path}]\n    $stdout"
+            set msg [format [_ "Uninstalling %1\$s from %2\$s failed!"] ${library} ${path}]
+            ::deken::utilities::debug "$msg\n    $stdout"
             return 0
         }
     }
@@ -541,7 +555,8 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
         if {$ncode != 200} {
             ## FIXXME: we probably should handle redirects correctly (following them...)
             set err [::http::code $httpresult]
-            ::pdwindow::error "[format [_ {\[deken\] Unable to download from %1$s \[%2$s\]} ] $url $err ]\n"
+            set msg [format [_ "\[deken\] Unable to download from %1\$s \[%2\$s\]" ] $url $err ]
+            ::pdwindow::error "$msg\n"
             set outputfilename ""
         }
         ::http::cleanup $httpresult
@@ -561,13 +576,13 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
     if { "$outputfilename" != "" } {
         catch { file delete $outputfilename }
         if {[file exists $outputfilename]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to remove stray file %s} ] $outputfilename ]
+            ::deken::utilities::debug [format [_ "\[deken\] Unable to remove stray file %s" ] $outputfilename ]
             set outputfilename ""
         }
     }
     if { $outputfilename != "" && "$outputfilename" != "$downloadfilename" } {
         if {[catch { file rename $downloadfilename $outputfilename}]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to rename downloaded file to %s} ] $outputfilename ]
+            ::deken::utilities::debug [format [_ "\[deken\] Unable to rename downloaded file to %s" ] $outputfilename ]
             set outputfilename ""
         }
     }
@@ -1086,7 +1101,7 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(bits) ${bits}
         set ::deken::platform(floatsize) ${floatsize}
 
-        ::deken::utilities::verbose 1 "[format [_ {Platform re-detected: %s} ] [::deken::platform2string 1] ]"
+        ::deken::utilities::verbose 1 [format [_ "Platform re-detected: %s" ] [::deken::platform2string 1] ]
     }
 }
 
@@ -1183,7 +1198,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
                 file mkdir $deldir
                 file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
             } ] } {
-                ::deken::utilities::debug [format [_ {\[deken\] temporarily moving %1$s into %2$s failed.} ] $extname $deldir ]
+                ::deken::utilities::debug [format [_ "\[deken\] temporarily moving %1\$s into %2\$s failed." ] $extname $deldir ]
                 set deldir ""
             }
         }
@@ -1251,7 +1266,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         # add to the search paths? bail if the version of pd doesn't support it
         if {[uplevel 1 info procs add_to_searchpaths] eq ""} {return}
         if {![file exists $extpath]} {
-            ::deken::utilities::debug [format [_ {\[deken\] Unable to add %s to search paths}] $extname]
+            ::deken::utilities::debug [format [_ "\[deken\] Unable to add %s to search paths"] $extname]
             return
         }
         set result yes
@@ -1266,7 +1281,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         switch -- "${result}" {
             yes {
                 add_to_searchpaths [file join $installdir $extname]
-                ::deken::utilities::debug [format [_ {\[deken\] Added %s to search paths}] $extname]
+                ::deken::utilities::debug [format [_ "\[deken\] Added %s to search paths"] $extname]
                 # if this version of pd supports it, try refreshing the helpbrowser
                 if {[uplevel 1 info procs ::helpbrowser::refresh] ne ""} {
                     ::helpbrowser::refresh
@@ -1465,9 +1480,11 @@ proc ::deken::open_searchui {winid} {
     }
     ::deken::clearpost
     ::deken::post [_ "Enter an exact library or object name."] info
-    ::deken::post "\t[_ {e.g. 'freeverb~'}]" info
+    set msg [_ "e.g. 'freeverb~'"]
+    ::deken::post "\t${msg}" info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
-    ::deken::post "\t[_ {e.g. '*-plugin' will match 'deken-plugin' (and more).}]" info
+    set msg [_ "e.g. '*-plugin' will match 'deken-plugin' (and more)."]
+    ::deken::post "\t${msg}" info
     ::deken::post [_ "You can restrict the search to only-libraries or only-objects."] info
     ::deken::post [_ "To get a list of all available externals, try an empty search."] info
     ::deken::post "" info
@@ -1587,14 +1604,14 @@ proc ::deken::initiate_search {winid} {
     set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
     ::deken::clearpost
-    ::deken::utilities::debug "[_ {\[deken\] Start searching for externals...}] ${searchterm}"
+    ::deken::utilities::debug [format [_ "\[deken\] Start searching for externals... %s" ] ${searchterm}]
     set ::deken::progressvar 0
     ::deken::progressstatus ""
     if { [ catch {
         set results [::deken::search_for ${searchterm}]
     } stdout ] } {
-        ::deken::utilities::debug [format [_ {\[deken\] online? %s} ] $stdout ]
-        ::deken::status "[_ {Unable to perform search.} ] [_ {Are you online?} ]"
+        ::deken::utilities::debug [format [_ "\[deken\] online? %s" ] $stdout ]
+        ::deken::status [_ "Unable to perform search. Are you online?" ]
     } else {
         # delete all text in the results
         ::deken::clearpost
@@ -1604,7 +1621,8 @@ proc ::deken::initiate_search {winid} {
             ::deken::show_results $winid
         } else {
             ::pdwindow::post [_ "\[deken\] No matching externals found." ]
-            ::pdwindow::debug " [_ {Try using the full name e.g. 'freeverb'.} ]"
+            set msg [_ "Try using the full name e.g. 'freeverb~'." ]
+            ::pdwindow::debug " ${msg}"
             ::pdwindow::post "\n"
             ::deken::status [_ "No matching externals found." ]
         }
@@ -1751,7 +1769,7 @@ proc ::deken::clicked_link {URL filename} {
     ::deken::syncgui
     set fullpkgfile [::deken::utilities::download_file $URL $fullpkgfile "::deken::download_progress"]
     if { "$fullpkgfile" eq "" } {
-        ::deken::utilities::debug [_ {aborting.}]
+        ::deken::utilities::debug [_ "aborting."]
         ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
         ::deken::progressstatus [_ "Download failed!" ]
         ::deken::progress 0
@@ -1849,9 +1867,10 @@ proc ::deken::initialize {} {
     # console message to let them know we're loaded
     ## but only if we are being called as a plugin (not as built-in)
     if { "" != "$::current_plugin_loadpath" } {
-        ::deken::utilities::debug [format [_ {\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s.} ] $::current_plugin_loadpath ]
+        ::deken::utilities::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ] $::current_plugin_loadpath ]
     }
-    ::pdwindow::verbose 0 "[format [_ {\[deken\] Platform detected: %s} ] [::deken::platform2string 1] ]"
+    set msg [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
+    ::pdwindow::verbose 0 "${msg}\n"
 
     # try to set install path when plugin is loaded
     set ::deken::installpath [::deken::find_installpath]
@@ -1969,7 +1988,8 @@ proc ::deken::search::puredata.info::search {term} {
     set ncode [::http::ncode $token]
     if { $ncode != 200 } {
         set err [::http::code $token]
-        ::deken::utilities::debug "[_ {\[deken\] Unable to perform search.}]\n   ${err}"
+        set msg [_ "\[deken\] Unable to perform search."]
+        ::deken::utilities::debug "$msg\n   ${err}"
         return {}
     }
     set contents [::http::data $token]
