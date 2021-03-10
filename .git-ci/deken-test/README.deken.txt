@@ -1,7 +1,7 @@
 deken-test
 ==========
 
-version: 0.7.4
+version: 0.7.6
 
 this is just a library for testing the internal workings of the deken framework.
 
