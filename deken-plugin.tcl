@@ -1577,6 +1577,12 @@ proc ::deken::open_search_libraries {args}  {
     ::deken::open_search_xxx "libraries" $args
 }
 
+
+proc ::deken::open_search_missing_libraries {args}  {
+    # LATER this should only display not-installed libraries
+    ::deken::open_search_xxx "libraries" $args
+}
+
 proc ::deken::initiate_search {winid} {
     set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
