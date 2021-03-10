@@ -639,6 +639,14 @@
          (get-pe-archs (pefile.PE filename :fast_load True) pefile.MACHINE_TYPE))
        (except [e Exception] (list))))
 
+(defn unhexmunge [filename]
+  (defn --unhexmunge-- [filename hexlist]
+    (if
+      (= filename (.join "" (re.findall "0x[0-9a-fA-F][0-9a-fA-F]" filename)))
+      (.join "" (lfor c hexlist (chr (int c 16))))
+      filename))
+  (--unhexmunge-- filename (re.findall "0x[0-9a-fA-F][0-9a-fA-F]" filename)))
+
 (defn get-description-from-helpfile [helpfile]
 "get a short-description of an object from the 'DESCRIPTION' section
 of it's help-patch (if it exists);
@@ -691,7 +699,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (lfor f input
           :if (f.endswith "-help.pd")
           (% "%s\t%s\n"
-             (, (cut (os.path.basename f) 0 -8) (get-description-from-helpfile f)))))
+             (, (unhexmunge (cut (os.path.basename f) 0 -8)) (get-description-from-helpfile f)))))
   (defn readobjs [input]
     (if (not (os.path.isdir input))
         (try
