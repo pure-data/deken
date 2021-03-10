@@ -6,7 +6,7 @@ plugin_version := $(shell egrep "^if.*::deken::versioncheck" deken-plugin.tcl  |
 dek: deken-plugin-$(plugin_version)--externals.zip
 
 .PHONY: dek deken-plugin
-deken-plugin: deken-plugin.tcl README.plugin.txt LICENSE.txt
+deken-plugin: deken-plugin.tcl README.plugin.txt LICENSE.txt README.deken.pd
 	rm -rf $@
 	mkdir -p $@
 	cp $^ $@
