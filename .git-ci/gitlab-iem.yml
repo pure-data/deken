@@ -201,7 +201,7 @@ upload2deken:
 # create source package
     - deken systeminfo
     - export DEKEN_VERSION=$(deken --version)
-    - echo "${DEKEN_VERSION}"
+    - .git-ci/git-version "${DEKEN_VERSION}"
     - mkdir deken-plugin
     - cp deken-plugin.tcl LICENSE.txt README.deken.pd deken-plugin/
     - cp README.plugin.txt deken-plugin/README.txt
