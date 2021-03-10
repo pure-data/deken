@@ -10,6 +10,7 @@ if [ -n "${DEKEN_VERSION}" ]; then
   sed -i'' -e "s|\(DEKEN_VERSION\)=\".*\"|\1=\"${DEKEN_VERSION}\"|g" developer/deken
   sed -i'' -e "s|\[\(::deken::versioncheck\) [^]]*\]|[\1 ${DEKEN_VERSION}]|g" deken-plugin.tcl
   sed -i'' -e "s|^\(version\):.*|\1: ${DEKEN_VERSION}|g" .git-ci/deken-test/README.deken.txt
+  sed -i'' -e "s|\(version: \)v.*;|\1v${DEKEN_VERSION};|g" README.deken.pd
 fi
 
 echo "${DEKEN_VERSION}"
