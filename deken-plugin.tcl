@@ -1232,7 +1232,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     if { ${install_failed} } { return }
 
     if { "$::deken::show_readme" } {
-        foreach ext {pd html txt} {
+        foreach ext {pd html pdf txt} {
             set r [file join $extpath "README.deken.$ext"]
             if {[file exists $r]} {
                 if { "$ext" == "pd" } {
