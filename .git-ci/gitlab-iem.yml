@@ -203,7 +203,7 @@ upload2deken:
     - export DEKEN_VERSION=$(deken --version)
     - echo "${DEKEN_VERSION}"
     - mkdir deken-plugin
-    - cp deken-plugin.tcl LICENSE.txt deken-plugin/
+    - cp deken-plugin.tcl LICENSE.txt README.deken.pd deken-plugin/
     - cp README.plugin.txt deken-plugin/README.txt
     - deken package --no-sign-gpg --version="${DEKEN_VERSION#v}" deken-plugin
     - find . -maxdepth 1 -name "*.dek*"
