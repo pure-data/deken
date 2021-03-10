@@ -1,0 +1,9 @@
+#N canvas 88 150 489 239 12;
+#X text 49 42 deken: library package manager for Pd;
+#X text 47 53 ======================================;
+#X obj 49 175 cnv 15 400 30 empty empty empty 20 12 0 14 -233017 -66577
+0;
+#X text 56 179 you MUST RESTART Pd \, in order to use the new version.
+;
+#X text 47 77 version: v0.7.4;
+#X text 47 139 thank you for installing the deken-plugin.;
