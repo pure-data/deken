@@ -666,7 +666,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                               (with [f (open helpfile :errors "ignore")]
                                                 (.read f))
                                               (except [e OSError] "")) ";\n")
-                                    (try-get (description_pattern.match (.join " " (.splitlines _))) 1 None))))
+                                    (try-get (description_pattern.match (re.sub r"([^\\]), f [0-9]+$" r"\1" (.join " " (.splitlines _)))) 1 None))))
                 0 "DEKEN GENERATED")
               "\t" " ") "\n" " "))
 
