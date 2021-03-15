@@ -2014,17 +2014,18 @@ proc ::deken::search::puredata.info::search {term} {
 
                 if { ${match} } {
                     catch { set olddate [dict get ${latestrelease1} $pkgname] }
+
+                    set oldversion {}
+                    catch { set oldversion [dict get ${newestversion} $pkgname]}
+                    if { [::deken::versioncompare $version $oldversion] > 0 } {
+                        dict set newestversion $pkgname $version
+                    }
                 } else {
                     catch { set olddate [dict get ${latestrelease0} $pkgname] }
                 }
 
                 if { $date > $olddate } {
                     dict set latestrelease${match} $pkgname $date
-                }
-                set oldversion {}
-                catch { set oldversion [dict get ${newestversion} $pkgname] }
-                if { [::deken::versioncompare $version $oldversion] > 0 } {
-                    dict set newestversion $pkgname $version
                 }
             }
         }
