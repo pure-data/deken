@@ -663,7 +663,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                 (list (filter None
                               (lfor _
                                     (.split (try
-                                              (with [f (open helpfile)]
+                                              (with [f (open helpfile :errors "ignore")]
                                                 (.read f))
                                               (except [e OSError] "")) ";\n")
                                     (try-get (description_pattern.match (.join " " (.splitlines _))) 1 None))))
