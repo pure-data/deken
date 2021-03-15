@@ -2007,14 +2007,17 @@ proc ::deken::search::puredata.info::search {term} {
                 foreach {name URL creator date} [ split $ele "\t" ] {break}
                 set filename [ file tail $URL ]
                 foreach {pkgname version archs} [ ::deken::utilities::parse_filename $filename ] {break}
+
                 #if { $version eq "0.0.extended" } { set date "0000-00-00 00:02:00" }
                 set olddate {}
                 set match [::deken::architecture_match "$archs" ]
+
                 if { ${match} } {
                     catch { set olddate [dict get ${latestrelease1} $pkgname] }
                 } else {
                     catch { set olddate [dict get ${latestrelease0} $pkgname] }
                 }
+
                 if { $date > $olddate } {
                     dict set latestrelease${match} $pkgname $date
                 }
@@ -2050,7 +2053,7 @@ proc ::deken::search::puredata.info::search {term} {
                 catch { set sortprefix [dict get ${latestrelease0} $pkgname] }
             } else {
                 if { "${::deken::hideoldversions}" } {
-                    # if this version is not the newest one, mark it as unmatched
+                    # If this version is not the newest one, mark it as unmatched
                     catch {
                         set oldversion [dict get ${newestversion} $pkgname]
                         if { [::deken::versioncompare $version $oldversion] < 0 } {
