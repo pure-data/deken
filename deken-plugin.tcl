@@ -833,24 +833,24 @@ proc ::deken::preferences::create {winid} {
     labelframe $winid.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
     pack $winid.install -side top -fill "x" -anchor "w"
 
-    checkbutton $winid.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them?"] \
+    checkbutton $winid.install.verify256 -text [_ "Try to verify the libraries' checksum before (re)installing them"] \
         -variable ::deken::preferences::verify_sha256
     pack $winid.install.verify256 -anchor "w"
 
-    checkbutton $winid.install.remove -text [_ "Try to remove libraries before (re)installing them?"] \
+    checkbutton $winid.install.remove -text [_ "Try to remove libraries before (re)installing them"] \
         -variable ::deken::preferences::remove_on_install
     pack $winid.install.remove -anchor "w"
 
-    checkbutton $winid.install.readme -text [_ "Show README of newly installed libraries (if present)?"] \
+    checkbutton $winid.install.readme -text [_ "Show README of newly installed libraries (if present)"] \
         -variable ::deken::preferences::show_readme
     pack $winid.install.readme -anchor "w"
 
-    checkbutton $winid.install.keeppackage -text [_ "Keep package files after installation?"] \
+    checkbutton $winid.install.keeppackage -text [_ "Keep package files after installation"] \
         -variable ::deken::preferences::keep_package
     pack $winid.install.keeppackage -anchor "w"
 
 
-    checkbutton $winid.install.add_to_path -text [_ "Should newly installed libraries be added to Pd's search path?"] \
+    checkbutton $winid.install.add_to_path -text [_ "Add newly installed libraries to Pd's search path"] \
         -variable ::deken::preferences::add_to_path
     catch { $winid.install.add_to_path configure \
                 -tristatevalue 1 \
@@ -891,10 +891,10 @@ proc ::deken::preferences::create {winid} {
     # hide non-matching architecture?
     ::deken::preferences::create_packpad $winid.platform 2 10
 
-    checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures?"] \
+    checkbutton $winid.platform.hide_foreign -text [_ "Hide foreign architectures"] \
         -variable ::deken::preferences::hideforeignarch
     pack $winid.platform.hide_foreign -anchor "w"
-    checkbutton $winid.platform.only_newest -text [_ "Only show the newest version of a library?\n(treats other versions like foreign architectures)"] \
+    checkbutton $winid.platform.only_newest -text [_ "Only show the newest version of a library\n(treats other versions like foreign architectures)"] \
         -variable ::deken::preferences::hideoldversions -justify "left"
     pack $winid.platform.only_newest -anchor "w"
 
