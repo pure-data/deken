@@ -1525,7 +1525,11 @@ proc ::deken::create_dialog {winid} {
     foreach x {label libraries objects both} {
         pack $winid.objlib.$x -side left -padx 6
     }
-
+    # for Pd that supports it, add a 'translation' radio
+    if {[uplevel 2 info procs add_to_helppaths] ne ""} {
+        radiobutton $winid.objlib.translations -text [_ "translations"] -variable ::deken::searchtype -value translations
+        pack $winid.objlib.translations -side left -padx 6
+    }
     frame $winid.warning
     pack $winid.warning -side top -fill "x"
     label $winid.warning.label -text [_ "Only install externals uploaded by people you trust."]
@@ -1592,6 +1596,9 @@ proc ::deken::open_search_objects {args}  {
 
 proc ::deken::open_search_libraries {args}  {
     ::deken::open_search_xxx "libraries" $args
+}
+proc ::deken::open_search_translations {args}  {
+    ::deken::open_search_xxx "translations" $args
 }
 
 
@@ -1804,6 +1811,17 @@ proc ::deken::download_progress {token total current} {
 
 # test for platform match with our current platform
 proc ::deken::architecture_match {archs} {
+    if { "translations" eq "${::deken::searchtype}" } {
+        foreach arch $archs {
+            if { "i18n" eq "${arch}" } {
+                return 1
+            }
+            if {[string match "i18n-*" ${arch}] } {
+                return 1
+            }
+        }
+        return 0
+    }
     # if there are no architecture sections this must be arch-independent
     if { ! [llength $archs] } { return 1}
     set OS "$::deken::platform(os)"
@@ -1955,6 +1973,10 @@ proc ::deken::search::puredata.info::search {term} {
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set queryterm {}
+    if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
+        # special handling of searching for all translations (so we ONLY get translations)
+        set term {*}
+    }
     foreach x $term {lappend queryterm ${::deken::searchtype} $x}
     if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stdout ] } {
         set queryterm [ join $term "&${::deken::searchtype}=" ]
