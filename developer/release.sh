@@ -5,7 +5,8 @@ cd ${0%/*}/..
 version=$1
 version=${version#v}
 if [ "x${version}" = "x" ]; then
- echo "usage: $0 <version>"
+ echo "usage: $0 <version>" 1>&2
+ exit 1
 fi
 
 sed \
