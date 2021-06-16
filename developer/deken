@@ -11,7 +11,7 @@
 # variable declarations
 ##############################################################################
 
-export DEKEN_VERSION="0.7.8"
+export DEKEN_VERSION="0.8.0"
 export DEKEN_HOME="${DEKEN_HOME:-"${HOME}/.deken"}"
 DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-master}"
 if [ "x${DEKEN_BASE_URL}" = "x" ]; then
