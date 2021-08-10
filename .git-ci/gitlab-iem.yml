@@ -35,7 +35,7 @@ variables:
     - echo "${DEKEN_VERSION}"
     - ${PYTHON} -m pip install --upgrade pip
     - ${PYTHON} -m pip install ${PIPFLAGS} -r developer/requirements.txt
-    - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller
+    - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller~=4.3.0
     - for d in ~/Library/Python/*/bin; do test -d "${d}" && PATH=${PATH}:${d}; done || true
     - echo $PATH
     - (cd developer; pyinstaller deken.spec)
