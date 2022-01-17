@@ -55,8 +55,9 @@ namespace eval ::deken:: {
     # whether to use http:// or https://
     variable protocol
 
-    # results
+    # results: {{title} {cmd} {description} {url} {ctxmenu}}
     variable results
+    # selected: {library} {cmd} ...
     variable selected {}
 }
 
