@@ -1409,6 +1409,13 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
             incr counter
         }
     }
+    if { [winfo exists $winid.status.install] } {
+        if { [llength $::deken::selected] > 0 } {
+            $winid.status.install configure -state normal
+        } else {
+            $winid.status.install configure -state disabled
+        }
+    }
 }
 proc ::deken::menu_installselected {winid} {
     set counter 0
