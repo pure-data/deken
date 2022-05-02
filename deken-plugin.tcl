@@ -222,9 +222,9 @@ proc ::deken::utilities::expandpath {path} {
     string map $map $path
 }
 
-proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""}} {
+proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""} {prefix dekentmp}} {
     for {set i 0} {true} {incr i} {
-        set tmpfile [file join ${path} dekentmp.${i}${ext}]
+        set tmpfile [file join ${path} ${prefix}.${i}${ext}]
         if {![file exists $tmpfile]} {
             return $tmpfile
         }
