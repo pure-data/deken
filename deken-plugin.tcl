@@ -1794,7 +1794,8 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::status [format [_ "Installing to non-existant directory failed" ] $filename]
         return
     }
-    set fullpkgfile [file join $installdir $filename]
+    set parsedfilename [::deken::utilities::parse_filename $filename]
+    set fullpkgfile [::deken::utilities::get_tmpfilename $installdir [::deken::utilities::get_filenameextension $filename] "[lindex $parsedfilename 0]\[[lindex $parsedfilename 1]\]" ]
     ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
     ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
     ::deken::syncgui
