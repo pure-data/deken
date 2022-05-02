@@ -644,6 +644,15 @@ proc ::deken::utilities::parse_filename {filename} {
     list $pkgname $version $archs
 }
 
+# split filename extension from deken-packagefilename
+proc ::deken::utilities::get_filenameextension {filename} {
+    if { [ regexp {.*(\.tar\.[^.]*)$} $filename _ ext ] } {
+        return $ext
+    }
+    return [file extension $filename]
+}
+
+
 
 # ######################################################################
 # ################ preferences #########################################
