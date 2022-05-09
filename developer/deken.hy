@@ -363,7 +363,7 @@
   (defn split-arch [arch fixdek0]
     (setv t (.split arch "-"))
     (if (and fixdek0 (> (len t) 2))
-        (assoc t 2 "32"))
+        (setv (get t 2) "32"))
     (tuple t))
   (if archstring
       (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
@@ -393,7 +393,7 @@
   (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
   (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
   (setv archdict {})
-  (for [(, os cpu floatsize) archs] (assoc archdict (, os cpu) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
+  (for [(, os cpu floatsize) archs] (setv (get archdict (, os cpu)) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
   (.union (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
 
 ;; takes the externals architectures and turns them into a string)
@@ -902,7 +902,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   ;; returns a tuple (library, version, comparator)
   (setv result (try (get-values (re.split "(.+)([>=]=)(.+)" spec) [1 3 2])
                     (except [e IndexError] [spec None None])))
-  (assoc result 2 (try-get {"==" str.startswith ">=" >=} (get result 2) (fn [a b] True)))
+  (setv (get result 2) (try-get {"==" str.startswith ">=" >=} (get result 2) (fn [a b] True)))
   (tuple result))
 
 (defn make-requirement-matcher [parsedspec]
@@ -951,7 +951,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (do
         (setv pkgname (get lib "package"))
         (if (not (in pkgname pkgdict))
-            (assoc pkgdict pkgname []))
+            (setv (get pkgdict pkgname) []))
         (setv l (get pkgdict pkgname))
         (l.append lib)))
     ;; sort and truncate each dictvalue
@@ -1324,8 +1324,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                "uploader" uploader
                "timestamp" date}
               (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
-      (assoc result
-             "architectures"
+      (setv (get result "architectures")
              (split-archstring
                (get result "architectures")
                (not (.endswith URL ".dek"))))
