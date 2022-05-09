@@ -184,6 +184,11 @@
        (except [e KeyError] default)
        (except [e IndexError] default)))
 
+(defn first [coll]
+  "Return first item from `coll`."
+  (for [f coll] (return f)))
+
+
 ;; replace multiple words (given as pairs in <repls>) in a string <s>
 (defn replace-words [s repls]
   "replace multiple words (given as pairs in <repls>) in a string <s>"
