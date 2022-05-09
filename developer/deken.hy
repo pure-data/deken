@@ -46,7 +46,7 @@
 (import io [StringIO])
 (import urllib.parse [urlparse])
 
-(require hy.contrib.loop)
+;(require hy.contrib.loop)
 
 ;; setup logging
 (setv log (logging.getLogger "deken"))
