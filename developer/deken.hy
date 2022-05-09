@@ -42,7 +42,7 @@
 (import datetime)
 (import logging)
 
-(import [configparser [ConfigParser :as SafeConfigParser]])
+(import [configparser [ConfigParser]])
 (import [io [StringIO]])
 (import [urllib.parse [urlparse]])
 
@@ -230,7 +230,7 @@
 
 
 ;; read in the config file if present
-(defn read-config [configstring &optional [config-file (SafeConfigParser)]]
+(defn read-config [configstring &optional [config-file (ConfigParser)]]
   "reads the configuration into a dictionary"
   (try (config-file.read_file (StringIO configstring))
        (except [e AttributeError] (config-file.readfp (StringIO configstring))))
