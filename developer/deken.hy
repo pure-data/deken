@@ -46,6 +46,8 @@
 (import io [StringIO])
 (import urllib.parse [urlparse])
 
+(setv flatten chain.from_iterable)
+
 ;(require hy.contrib.loop)
 
 ;; setup logging
@@ -308,7 +310,7 @@
         (lfor line (.readlines f) (.strip line)))
       (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
   (defn reqs2pkgs [reqs]
-    (chain.from-iterable (lfor f reqs (req2pkg f))))
+    (flatten (lfor f reqs (req2pkg f))))
   (.union (set packages) (reqs2pkgs requirement-files)))
 
 (defn native-arch []
@@ -399,7 +401,7 @@
   (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
   (setv archdict {})
   (for [(, os cpu floatsize) archs] (setv (get archdict (, os cpu)) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
-  (.union (set (chain.from-iterable (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
+  (.union (set (flatten (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder [recurse-subdirs False] [extra-files []]]
@@ -608,7 +610,7 @@
       (lfor
         floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])
         (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)))
-    (list (chain.from_iterable (lfor hdr macho.headers (get-macho-headerarchs hdr)))))
+    (list (flatten (lfor hdr macho.headers (get-macho-headerarchs hdr)))))
   (try (do
          (import macholib.MachO [MachO])
          (get-macho-arch (MachO filename)))
@@ -685,7 +687,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (except [e Exception] (log.debug e))))
   (defn get-files-from-dir [directory [recursive False] [full_path False]]
     (if recursive
-        (list (chain.from_iterable
+        (list (flatten
                 (lfor (, root dirs files) (os.walk directory) (if full_path
                                                                   (lfor f files (os.path.join root f))
                                                                   files))))
