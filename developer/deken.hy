@@ -42,9 +42,9 @@
 (import datetime)
 (import logging)
 
-(import [configparser [ConfigParser]])
-(import [io [StringIO]])
-(import [urllib.parse [urlparse]])
+(import configparser [ConfigParser])
+(import io [StringIO])
+(import urllib.parse [urlparse])
 
 (require hy.contrib.loop)
 
@@ -569,7 +569,7 @@
              (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
              floatsize)))
   (try (do
-         (import [elftools.elf.elffile [ELFFile]])
+         (import elftools.elf.elffile [ELFFile])
          (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
        (except [e Exception] (or (log.debug e) (list)))))
 
@@ -596,7 +596,7 @@
                    })
   (defn get-macho-arch [macho]
     (defn get-macho-floatsizes [header]
-      (import [macholib.SymbolTable [SymbolTable]])
+      (import macholib.SymbolTable [SymbolTable])
       (list (filter-none
               (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
                     (--pdfunction-to-floatsize-- (.decode name))))))
@@ -606,7 +606,7 @@
         (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)))
     (list (chain.from_iterable (lfor hdr macho.headers (get-macho-headerarchs hdr)))))
   (try (do
-         (import [macholib.MachO [MachO]])
+         (import macholib.MachO [MachO])
          (get-macho-arch (MachO filename)))
        (except [e Exception] (or (log.debug e) (list)))))
 
