@@ -34,7 +34,6 @@
 ;; IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 ;; THE POSSIBILITY OF SUCH DAMAGE.
 
-
 (import sys)
 (import os)
 (import re)
@@ -46,6 +45,7 @@
 (import io [StringIO])
 (import urllib.parse [urlparse])
 
+(import itertools [chain])
 (setv flatten chain.from_iterable)
 
 ;(require hy.contrib.loop)
