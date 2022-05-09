@@ -53,7 +53,7 @@
 (log.addHandler (logging.StreamHandler))
 
 ;; do nothing
-(defn nop [&rest args] "does nothing; returns None" None)
+(defn nop [#* ignored_args] "does nothing; returns None" None)
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] "print the argument and return it" (log.debug x) x)
@@ -153,7 +153,7 @@
   (.join joiner (lfor x elements :if x (str x))))
 
 ;; concatenate dictionaries - hylang's assoc is broken
-(defn dict-merge [dict0 &rest dicts]
+(defn dict-merge [dict0 #* dicts]
   "merge several dictionaries; if a key exists in more than one dict, the latet takes precedence"
   (defn dict-merge-aux [dict0 dicts]
     (for [d dicts] (if d (dict0.update d)))
@@ -190,7 +190,7 @@
   (reduce (fn [a kv] (a.replace #* kv)) repls s))
 
 ;; execute a command inside a directory
-(defn in-dir [destination f &rest args]
+(defn in-dir [destination f #* args]
   "execute a command f(args) inside a directory"
   (setv last-dir (os.getcwd))
   (os.chdir destination)
@@ -239,7 +239,7 @@
 (setv config (read-config (+ "[default]\n" (try (.read (open config-file-path "r"))(except [e Exception] "")))))
 ;; try to obtain a value from environment, then config file, then prompt user
 
-(defn get-config-value [name &rest default]
+(defn get-config-value [name #* default]
   "tries to get a value first from the envvars, then from the config-file and finally falls back to a default"
   (first (filter (fn [x] (not (is x None)))
                  [
@@ -1316,7 +1316,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                      [URL None]
                      [uploader None]
                      [date None]
-                     &rest args]
+                     #* args]
       (setv result
             (dict-merge
               {"description" description
