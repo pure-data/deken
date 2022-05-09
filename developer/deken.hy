@@ -940,10 +940,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   "creates a boolean function to check whether a given package-dict matches any of the given requirements"
   (if specs
       (fn [libdict] (any
-                      (lfor match (lfor spec specs
+                      (lfor req-match (lfor spec specs
                                         :if spec
                                         (make-requirement-matcher spec))
-                            (match libdict))))
+                            (req-match libdict))))
       (fn [libdict] True)))
 
 
