@@ -1690,12 +1690,12 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                         :easywebdav2 (fn []
                                  (import easywebdav2)
                                  (fix-easywebdav2 easywebdav2 :exit None))})
-                  (setv fixnames (lfor k (.keys fixes) (cut (str k) 1)))
+                  (setv fixnames (lfor k fixes k.name))
                   (defn try-call [x] (if x (x)))
                   (if args.all
                       (if args.fix (fatal "'--all' and named fixes are exclusive. Choose one.")
                                    (setv args.fix fixnames)))
-                  (if args.fix (lfor f args.fix (try-call (.get fixes (hy.model.Keyword f))))
+                  (if args.fix (lfor f args.fix (try-call (.get fixes (hy.models.Keyword f))))
                                (fatal (% "Known systemfixes: %s" (.join "," fixnames)) 0)))
        :update upgrade
        :upgrade upgrade})
