@@ -1682,7 +1682,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                   (if args.all
                       (if args.fix (fatal "'--all' and named fixes are exclusive. Choose one.")
                                    (setv args.fix fixnames)))
-                  (if args.fix (lfor f args.fix (try-call (.get fixes (keyword f))))
+                  (if args.fix (lfor f args.fix (try-call (.get fixes (hy.model.Keyword f))))
                                (fatal (% "Known systemfixes: %s" (.join "," fixnames)) 0)))
        :update upgrade
        :upgrade upgrade})
@@ -2020,7 +2020,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     :nargs "*"
     :help "run the named system-fix")
   (setv arguments (parse-args arg-parser))
-  (setv command (.get commands (keyword arguments.command)))
+  (setv command (.get commands (hy.models.Keyword arguments.command)))
   ;;(print "Deken" version)
   (log.debug (.join " " sys.argv))
   (if command (command arguments) (.print_help arg-parser)))
