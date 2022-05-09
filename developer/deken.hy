@@ -42,12 +42,9 @@
 (import datetime)
 (import logging)
 
-(try (import [configparser [ConfigParser :as SafeConfigParser]])
-     (except [e ImportError] (import [ConfigParser [SafeConfigParser]])))
-(try (import [io [StringIO]])
-     (except [e ImportError] (import [StringIO [StringIO]])))
-(try (import [urllib.parse [urlparse]])
-     (except [e ImportError] (import [urlparse [urlparse]])))
+(import [configparser [ConfigParser :as SafeConfigParser]])
+(import [io [StringIO]])
+(import [urllib.parse [urlparse]])
 
 (require hy.contrib.loop)
 
