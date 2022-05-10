@@ -765,7 +765,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                 blocksize))
 
 (defn hash-verify-file [filename [hashfilename None] [blocksize -1]]
-  "verify that the hash if the <filename> file is the same as stored in the <hashfilename>"
+  "verify that the hash of the <filename> file is the same as stored in the <hashfilename>"
   (import hashlib)
   (defn filename2algo [filename]
     (cut (get (os.path.splitext filename) 1) 1 None))
