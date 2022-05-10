@@ -59,11 +59,16 @@
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x] "print the argument and return it" (log.debug x) x)
+(defn log_exception [])
+(defn log_error [msg] (log.error msg) (log_exception))
+(defn log_warning [msg] (log.warning msg) (log_exception))
+(defn log_debug [msg] (log.debug msg) (log_exception))
 
 ;; print a fatal error and exit with an error code
 (defn fatal [x [exit 1]]
   "print argument as an error message and exit"
   (log.fatal x)
+  (log_exception)
   (if (not (is exit None))
       (sys.exit exit)))
 
@@ -131,7 +136,7 @@
         (with [f (open filename "rb")]
           (contains? f (str-to-bytes "\0")))
         (except [e Exception]
-          (log.debug e)))))
+          (log_debug e)))))
 
 (defn stringify-tuple [t]
   (if t
@@ -237,9 +242,10 @@
                 (log.error "The 'easywebdav2' module is broken, and trying to fix the problem failed,")
                 (log.error "so I will not be able to create directories on the remote server.")
                 (log.error "As a workaround, please manually create any required directory on the remote server.")
-                (log.error "For more information see https://github.com/zabuldon/easywebdav/pull/1")))
+                (log.error "For more information see https://github.com/zabuldon/easywebdav/pull/1")
+                (log_exception)))
             )))
-    (except [e Exception] (log.debug (% "Unable to patch 'easywebdav2'\n%s" e)))))
+    (except [e Exception] (log_debug (% "Unable to patch 'easywebdav2'\n%s" e)))))
 
 
 ;; read in the config file if present
@@ -347,7 +353,8 @@
           (cpu-compat (get need-arch 1) (get have-arch 1))
           ;; floatsize = floatsize
           (simple-compat (get need-arch 2) (get have-arch 2))))
-      (except [e Exception] (log.error (% "%s != %s" (, need-arch have-arch))))))
+      (except [e Exception]
+              (log_error (% "incompatible archs: %s != %s" (, need-arch have-arch))))))
   (defn compat-generator [need-arch have-archs]
     (setv na (stringify-tuple need-arch))
     (for [ha have-archs] (yield (compat? na (stringify-tuple ha)))))
@@ -583,7 +590,7 @@
   (try (do
          (import elftools.elf.elffile [ELFFile])
          (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
-       (except [e Exception] (or (log.debug e) (list)))))
+       (except [e Exception] (or (log_debug e) (list)))))
 
 
 ;; macOS MachO file
@@ -620,7 +627,7 @@
   (try (do
          (import macholib.MachO [MachO])
          (get-macho-arch (MachO filename)))
-       (except [e Exception] (or (log.debug e) (list)))))
+       (except [e Exception] (or (log_debug e) (list)))))
 
 ;; Windows PE file
 (defn get-windows-archs [filename]
@@ -690,7 +697,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (defn get-files-from-zip [archive]
     (import zipfile)
     (try (.namelist (zipfile.ZipFile archive "r"))
-         (except [e Exception] (log.debug e))))
+         (except [e Exception] (log_debug e))))
   (defn get-files-from-dir [directory [recursive False] [full_path False]]
     (if recursive
         (list (flatten
@@ -713,13 +720,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (if (not (os.path.isdir input))
         (try
           (with [f (open input)] (.readlines f))
-          (except [e Exception] (log.debug e)))))
+          (except [e Exception] (log_debug e)))))
   (defn writeobjs [output data]
     (if data
         (try (do
                (with [f (open output :mode "w")] (.write f (.join "" data)))
                output)
-             (except [e Exception] (log.debug e)))))
+             (except [e Exception] (log_debug e)))))
   (defn  do-make-objects-file [dekfilename objfilename]
     (cond
       [(not dekfilename) None]
@@ -997,7 +1004,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (zipfile.ZipFile archive-file)]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log.debug (% "unzipping '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "unzipping '%s' failed" (, archive-file))) False))))
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file [extension ".tar.gz"]]
@@ -1018,7 +1025,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (tarfile.open archive-file "r")]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log.debug (% "untaring '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "untaring '%s' failed" (, archive-file))) False))))
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
@@ -1057,7 +1064,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (do
         (with [f (open outfile "wb")] (.write f content))
         outfile)
-      (except [e OSError] (log.warning (% "Unable to download file: %s" (, e))))))
+      (except [e OSError] (log_warning (% "Unable to download file: %s" (, e))))))
   (import requests)
   (log.info (% "Downloading '%s' as %s" (, url filename)))
   (setv r (requests.get url))
@@ -1271,8 +1278,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           (or (try (do
                      (import keyring)
                      (keyring.get_password "deken" username))
-                   (except [e RuntimeError] (log.debug e))
-                   (except [e Exception] (log.warning e)))
+                   (except [e RuntimeError] (log_debug e))
+                   (except [e Exception] (log_warning e)))
               (get-config-value "password")))
       (askpass (% "Please enter password for uploading as '%s': " username))))
 
@@ -1478,7 +1485,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (if filename
         (try
           (os.remove filename)
-          (except [e Exception] (log.debug e))))
+          (except [e Exception] (log_debug e))))
     None)
   (defn try-download [url]
     (setv pkg (download-file url))
@@ -1565,7 +1572,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                        (try (do
                               (import keyring)
                               (keyring.set_password "deken" username password))
-                            (except [e Exception] (log.warning e)))))
+                            (except [e Exception] (log_warning e)))))
                  (defn mk-pkg-ifneeded [x]
                    (cond [(os.path.isfile x)
                           (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
@@ -2036,4 +2043,4 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 (if (= __name__ "__main__")
     (try
       (main)
-      (except [e KeyboardInterrupt] (log.warning "\n[interrupted by user]"))))
+      (except [e KeyboardInterrupt] (log_warning "\n[interrupted by user]"))))
