@@ -1383,7 +1383,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (print (% "%s/%s uploaded by %s on %s for %s"
               (,
                (get result "package")
-                 (get result "version")
+                 (or (get result "version") "<unknown.version>")
                  (get result "uploader")
                  (get result "timestamp")
                  (or
