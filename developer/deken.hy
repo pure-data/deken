@@ -757,11 +757,11 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (defn do-hash-file [filename hashfilename hasher blocksize]
     (.write (open hashfilename :mode "w")
             (hash-file (open filename :mode "rb" :buffering blocksize)
-                       (hasher))
+                       hasher))
     hashfilename)
   (do-hash-file filename
                 (% "%s.%s" (, filename algorithm))
-                (.get hashlib.__dict__ algorithm)
+                (hashlib.new algorithm)
                 blocksize))
 
 (defn hash-verify-file [filename [hashfilename None] [blocksize -1]]
@@ -772,7 +772,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (setv hashfilename (or hashfilename (+ filename ".sha256")))
   (try
     (= (hash-file (open filename :mode "rb" :buffering blocksize)
-                  ((.get hashlib.__dict__ (filename2algo hashfilename))))
+                  (hashlib.new (filename2algo hashfilename)))
        (.strip (get (.split (.read (open hashfilename "r"))) 0)))
     (except [e OSError] None)
     (except [e TypeError] None)))
