@@ -1740,15 +1740,16 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       :default 1
       :required False)
     (parser.add_argument
-      "--no-sign-gpg"
-      :help "Do not sign the package (DEFAULT: False)."
-      :action "store_true"
-      :required False)
-    (parser.add_argument
       "--sign-gpg"
       :help "Sign the package (DEFAULT: True)."
       :action "store_false"
       :dest "no_sign_gpg"
+      :required False)
+    (parser.add_argument
+      "--no-sign-gpg"
+      :help "Do not sign the package."
+      :action "store_true"
+      :default None
       :required False))
   (defn add-noverify-flags [parser]
     (parser.add_argument
