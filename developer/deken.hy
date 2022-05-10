@@ -1500,9 +1500,14 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           (except [e Exception] (log_debug e))))
     None)
   (defn try-download [url]
-    (setv pkg (download-file url))
-    (setv gpg (download-file (+ url ".asc")))
-    (setv hsh (download-file (+ url ".sha256")))
+    (defn --verbose-download-- [url msg]
+      (log.info msg)
+      (setv outfile (download-file url))
+      (if outfile (log.info "downloaded %s" outfile) (log.info "failed to download %s" url))
+      outfile)
+    (setv pkg (--verbose-download-- url "downloading package"))
+    (setv gpg (--verbose-download-- (+ url ".asc") "downloading GPG signature"))
+    (setv hsh (--verbose-download-- (+ url ".sha256") "downloading SHA256 hash"))
     (if (and
           (not (verify
                  pkg gpg hsh
