@@ -1824,7 +1824,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
     (del args.verbose)
     (del args.quiet)
-    (if (and (hasattr args "no_sign_gpg") args.no-sign-gpg)
+    (if (if (and (hasattr args "no_sign_gpg") (is-not args.no-sign-gpg None))
+            args.no-sign-gpg
+          (not (str-to-bool (get-config-value "sign_gpg" True))))
       (do (global gpg-sign-file)
           (defn gpg-sign-file [filename])))
     args)
