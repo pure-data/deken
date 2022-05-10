@@ -1468,20 +1468,20 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                    extension
                    fail
                    [errstring "verification of '%s' failed"]
-                   [missstring "verification file of '%s' missing"]]
+                   [missstring "verification file '%s' for '%s' missing"]]
     (verify-result (verifun dekfile
                             (or reffile (+ dekfile extension)))
                    fail
                    (% errstring (, dekfile))
-                   (% missstring (, dekfile))))
+                   (% missstring (, reffile dekfile))))
   (setv vgpg  (do-verify gpg-verify-file  dekfile gpgfile
                          ".asc"    gpg
                          "GPG-verification failed for '%s'"
-                         "GPG-signature missing for '%s'"))
+                         "GPG-signature '%s' missing for '%s'"))
   (setv vhash (do-verify hash-verify-file dekfile hashfile
                          ".sha256" hash
                          "hashsum mismatch for '%s'"
-                         "hash file missing for '%s'"))
+                         "hash file '%s' missing for '%s'"))
   (log.debug (% "GPG-verification : %s" (, vgpg)))
   (log.debug (% "hash-verification: %s" (, vhash)))
   (and vgpg vhash))
