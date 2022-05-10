@@ -146,7 +146,8 @@
 
 (defn str-to-bool [s]
   "convert a string into a bool, based on its value"
-  (and (not (is s None)) (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))))
+  (try (not (in (.lower s) ["false" "f" "no" "n" "0" "nil" "none"]))
+       (except [e AttributeError] (not (not s)))))
 
 (defn byte-to-int [b]
   "convert a single byte (e.g. an element of bytes()) into an integer"
