@@ -1917,12 +1917,12 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     "--version"
     :action "version"
     :version version
-    :help "Outputs the version number of Deken.")
+    :help "Outputs the version number of Deken and exits.")
   (arg-parser.add_argument
     "--platform"
     :action "version"
     :version (.join "-" (native-arch))
-    :help "Outputs a guess of the current architecture.")
+    :help "Outputs a guess of the current architecture and exits.")
 
   (arg-package.add_argument
     "source"
