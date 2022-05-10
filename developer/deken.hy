@@ -746,39 +746,33 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (do-make-objects-file dekfilename objfile)))
 
 ;; calculate the sha256 hash of a file
-(defn hash-file [file hashfn [blocksize 65535]]
+(defn hash-file [file hashfn]
   "calculate the hash of a file"
-  (setv read-chunk (fn [] (.read file blocksize)))
-  (while True
-    (setv buf (read-chunk))
-    (if-not buf (break))
-    (hashfn.update buf))
+  (for [buf file] (hashfn.update buf))
   (hashfn.hexdigest))
 
-(defn hash-sum-file [filename [algorithm "sha256"] [blocksize 65535]]
+(defn hash-sum-file [filename [algorithm "sha256"] [blocksize -1]]
   "calculates the (sha256) hash of a file and stores it into a separate file"
   (import hashlib)
   (defn do-hash-file [filename hashfilename hasher blocksize]
     (.write (open hashfilename :mode "w")
-            (hash-file (open filename :mode "rb")
-                       (hasher)
-                       blocksize))
+            (hash-file (open filename :mode "rb" :buffering blocksize)
+                       (hasher))
     hashfilename)
   (do-hash-file filename
                 (% "%s.%s" (, filename algorithm))
                 (.get hashlib.__dict__ algorithm)
                 blocksize))
 
-(defn hash-verify-file [filename [hashfilename None] [blocksize 65535]]
+(defn hash-verify-file [filename [hashfilename None] [blocksize -1]]
   "verify that the hash if the <filename> file is the same as stored in the <hashfilename>"
   (import hashlib)
   (defn filename2algo [filename]
     (cut (get (os.path.splitext filename) 1) 1))
   (setv hashfilename (or hashfilename (+ filename ".sha256")))
   (try
-    (= (hash-file (open filename :mode "rb")
-                  ((.get hashlib.__dict__ (filename2algo hashfilename)))
-                  blocksize)
+    (= (hash-file (open filename :mode "rb" :buffering blocksize)
+                  ((.get hashlib.__dict__ (filename2algo hashfilename))))
        (.strip (get (.split (.read (open hashfilename "r"))) 0)))
     (except [e OSError] None)
     (except [e TypeError] None)))
