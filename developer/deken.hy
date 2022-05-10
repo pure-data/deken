@@ -768,7 +768,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   "verify that the hash if the <filename> file is the same as stored in the <hashfilename>"
   (import hashlib)
   (defn filename2algo [filename]
-    (cut (get (os.path.splitext filename) 1) 1))
+    (cut (get (os.path.splitext filename) 1) 1 None))
   (setv hashfilename (or hashfilename (+ filename ".sha256")))
   (try
     (= (hash-file (open filename :mode "rb" :buffering blocksize)
