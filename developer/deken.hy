@@ -563,6 +563,12 @@
                     "armv8M_BASE"
                     "armv8M_MAIN"
                     ])
+  (defn --get-elf-sysv-- [elffile]
+    "try to guess the OS of a generic SysV elf file"
+    (or
+     (if (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD")
+     (if (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
+     None))
   (defn do-get-elf-archs [elffile oshint]
                                 ; get the size of t_float in the elffile
     (defn get-elf-floatsizes [elffile]
@@ -584,7 +590,11 @@
         cpu))
     (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
           (,
-           (or (elf-osabi.get elffile.header.e_ident.EI_OSABI) oshint "Linux")
+           (or
+            (elf-osabi.get elffile.header.e_ident.EI_OSABI)
+            (if (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV") (--get-elf-sysv-- elffile))
+            oshint
+            "Linux")
              (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
              floatsize)))
   (try (do
