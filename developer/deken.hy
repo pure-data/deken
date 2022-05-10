@@ -1479,7 +1479,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          ".asc"    gpg
                          "GPG-verification failed for '%s'"
                          "GPG-signature '%s' missing for '%s'"))
-  (setv vhash (do-verify hash-verify-file
+  (setv vhash (do-verify (fn [dfile hfile] (hash-verify-file dfile hfile :algorithm "sha256"))
                          dekfile hashfile
                          ".sha256" hash
                          "hashsum mismatch for '%s'"
