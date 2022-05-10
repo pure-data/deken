@@ -1836,6 +1836,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           (not (str-to-bool (get-config-value "sign_gpg" True))))
       (do (global gpg-sign-file)
           (defn gpg-sign-file [filename])))
+    (if (and (hasattr args "debug") args.debug)
+        (do
+         (global log_exception)
+         (defn log_exception [] (log.exception ""))))
     args)
 
   (setv arg-parser
@@ -1904,6 +1908,11 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     :help "Lower verbosity"
     :action "count"
     :default 0)
+  (arg-parser.add_argument
+    "--debug"
+    :help "Enable debugging output"
+    :action "store_true"
+    :required False)
   (arg-parser.add_argument
     "--version"
     :action "version"
