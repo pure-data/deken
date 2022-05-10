@@ -1023,7 +1023,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
-  "default extension for dekformat.v0: if the architecture is Windows are any, w euse 'zip', else 'tar.gz'"
+  "default extension for dekformat.v0: if the architecture includes Windows, we use 'zip', else 'tar.gz'"
   (if (or (in "(Windows" rootname) (not (in "(" rootname))) ".zip" ".tar.gz"))
 
 ;; v1: all archives are ZIP-files with .dek extension
