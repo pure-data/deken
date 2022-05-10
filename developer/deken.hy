@@ -780,17 +780,19 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                 (hashlib.new algorithm)
                 blocksize))
 
-(defn hash-verify-file [filename [hashfilename None] [blocksize -1]]
+(defn hash-verify-file [filename [hashfilename None] [blocksize -1] [algorithm None]]
   "verify that the hash of the <filename> file is the same as stored in the <hashfilename>"
   (import hashlib)
   (defn filename2algo [filename]
     (cut (get (os.path.splitext filename) 1) 1 None))
   (setv hashfilename (or hashfilename (+ filename ".sha256")))
+  (setv algorithm (or algorithm (filename2algo hashfilename)))
   (try
     (= (hash-file (open filename :mode "rb" :buffering blocksize)
-                  (hashlib.new (filename2algo hashfilename)))
+                  (hashlib.new algorithm))
        (.strip (get (.split (.read (open hashfilename "r"))) 0)))
-    (except [e (, OSError TypeError ValueError)] None)))
+    (except [e (, OSError TypeError ValueError)]
+            (log_exception))))
 
 ;; handling GPG signatures
 (try (import gnupg)
