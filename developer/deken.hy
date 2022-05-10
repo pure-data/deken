@@ -973,7 +973,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (setv result
             (+ result (cut (sorted (get pkgdict key)
                                    :reverse True
-                                   :key (fn [d] (, (or (get d "version")) (or (get d "timestamp")))))
+                                   :key (fn [d] (, (or (get d "version") "") (or (get d "timestamp") ""))))
                            0 depth))))
     result)
   (if depth
