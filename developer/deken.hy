@@ -495,11 +495,11 @@
                    "ELFOSABI_IRIX" "Irix"
                    "ELFOSABI_FREEBSD" "FreeBSD"
                    "ELFOSABI_TRU64" "Tru64"
-                   "ELFOSABI_MODESTO" None
+                   "ELFOSABI_MODESTO" "Modesto" ; Novell Modesto
                    "ELFOSABI_OPENBSD" "OpenBSD"
                    "ELFOSABI_OPENVMS" "OpenVMS"
-                   "ELFOSABI_NSK" None
-                   "ELFOSABI_AROS" None
+                   "ELFOSABI_NSK" "NonStop" ; NonStop Kernel
+                   "ELFOSABI_AROS" "AROS" ; AROS Research Operating System (AmigaOS-like)
                    "ELFOSABI_ARM_AEABI" None
                    "ELFOSABI_ARM" None
                    "ELFOSABI_STANDALONE" None})
