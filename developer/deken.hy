@@ -50,8 +50,6 @@
 (import itertools [chain])
 (setv flatten chain.from_iterable)
 
-;(require hy.contrib.loop)
-
 ;; setup logging
 (setv log (logging.getLogger "deken"))
 (log.addHandler (logging.StreamHandler))
