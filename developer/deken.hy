@@ -774,8 +774,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (= (hash-file (open filename :mode "rb" :buffering blocksize)
                   (hashlib.new (filename2algo hashfilename)))
        (.strip (get (.split (.read (open hashfilename "r"))) 0)))
-    (except [e OSError] None)
-    (except [e TypeError] None)))
+    (except [e (, OSError TypeError ValueError)] None)))
 
 ;; handling GPG signatures
 (try (import gnupg)
