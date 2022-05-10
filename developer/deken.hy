@@ -1474,11 +1474,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                    fail
                    (% errstring (, dekfile))
                    (% missstring (, reffile dekfile))))
-  (setv vgpg  (do-verify gpg-verify-file  dekfile gpgfile
+  (setv vgpg  (do-verify gpg-verify-file
+                         dekfile gpgfile
                          ".asc"    gpg
                          "GPG-verification failed for '%s'"
                          "GPG-signature '%s' missing for '%s'"))
-  (setv vhash (do-verify hash-verify-file dekfile hashfile
+  (setv vhash (do-verify hash-verify-file
+                         dekfile hashfile
                          ".sha256" hash
                          "hashsum mismatch for '%s'"
                          "hash file '%s' missing for '%s'"))
