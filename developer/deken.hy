@@ -917,7 +917,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   ;; <parsedspec> is the output of (parse-requirement): a (library, version, comparator) tuple
   ;; currently the only valid compatrators are ">=" and "=="
   ;; returns a tuple (library, version, comparator)
-                                ;(setv parsedspec (parse-requirement spec))
+  ; (setv parsedspec (parse-requirement spec))
   (setv package (get parsedspec 0))
   (setv version (get parsedspec 1))
   (setv compare (get parsedspec 2))
