@@ -34,7 +34,7 @@
 ;; IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 ;; THE POSSIBILITY OF SUCH DAMAGE.
 
-(import hy.pyops [>=])
+(import hy.pyops [>= =])
 
 (import sys)
 (import os)
@@ -923,11 +923,11 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 (defn parse-requirement [spec]
   "parse a requirement-string "
   ;; spec can be a library, or a library with version, e.g. "library==0.2.1" or "library>=1.2.3"
-  ;; currently the only valid compatrators are ">=" and "=="
+  ;; currently the only valid compatrators are: ">=", "==", "~="
   ;; returns a tuple (library, version, comparator)
-  (setv result (try (get-values (re.split "(.+)([>=]=)(.+)" spec) [1 3 2])
+  (setv result (try (get-values (re.split "(.+)([~>=]=)(.+)" spec) [1 3 2])
                     (except [e IndexError] [spec None None])))
-  (setv (get result 2) (try-get {"==" str.startswith ">=" >=} (get result 2) (fn [a b] True)))
+  (setv (get result 2) (try-get {"~=" str.startswith "==" = ">=" >=} (get result 2) (fn [a b] True)))
   (tuple result))
 
 (defn make-requirement-matcher [parsedspec]
