@@ -1552,41 +1552,54 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     (unzip-file pkgfile installdir)
     (untar-file pkgfile installdir)))
 
+(defn package [args]
+  ;; are they asking to package a directory?
+  (defn int-dekformat [value]
+    (try (int value)
+         (except [e ValueError]
+                 (fatal (% "Illegal dekformat '%s'" value)))))
+  (defn set-default-floatsize [value [valid [None 0 32 64]]]
+    (if (in value valid)
+        (do
+         (global default-floatsize)
+         (setv default-floatsize args.default-floatsize))
+      (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
+                (, value (join-nonempty ", " valid))))))
+  (set-default-floatsize args.default-floatsize)
+  (lfor name args.source
+        (if (os.path.isdir name)
+            ;; if asking for a directory just package it up
+            (archive-extra
+             (archive-dir
+              name
+              (make-archive-name
+               (os.path.normpath name)
+               (os.path.basename (os.path.normpath (or args.name name)))
+               args.version
+               :output-dir args.output-dir
+               :filenameversion (int-dekformat args.dekformat)
+               :recurse-subdirs args.search-subdirs
+               :extra-arch-files args.extra-arch-files))
+             (if (is args.objects None) name args.objects))
+          (fatal (% "Not a directory '%s'!" name)))))
+
+(defn uninstall [packages installdir]
+  (import shutil)
+  (lfor pkg packages :if pkg
+        (do
+         (setv pkgdir (os.path.join installdir pkg))
+         (if (os.path.isdir pkgdir)
+             (do
+              (log.info (% "removing package directory '%s'" (, pkgdir)))
+              (shutil.rmtree pkgdir True)
+              pkgdir)
+           (log.warning (% "skipping non-existent directory '%s'" (, pkgdir)))))))
+
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
       {
        ;; zip up a set of built externals
-       :package (fn [args]
-                  ;; are they asking to package a directory?
-                  (defn int-dekformat [value]
-                    (try (int value)
-                         (except [e ValueError]
-                           (fatal (% "Illegal dekformat '%s'" value)))))
-                  (defn set-default-floatsize [value [valid [None 0 32 64]]]
-                    (if (in value valid)
-                        (do
-                          (global default-floatsize)
-                          (setv default-floatsize args.default-floatsize))
-                        (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
-                                  (, value (join-nonempty ", " valid))))))
-                  (set-default-floatsize args.default-floatsize)
-                  (bool (lfor name args.source
-                        (if (os.path.isdir name)
-                            ;; if asking for a directory just package it up
-                            (archive-extra
-                              (archive-dir
-                                name
-                                (make-archive-name
-                                  (os.path.normpath name)
-                                  (os.path.basename (os.path.normpath (or args.name name)))
-                                  args.version
-                                  :output-dir args.output-dir
-                                  :filenameversion (int-dekformat args.dekformat)
-                                  :recurse-subdirs args.search-subdirs
-                                  :extra-arch-files args.extra-arch-files))
-                              (if (is args.objects None) name args.objects))
-                            (fatal (% "Not a directory '%s'!" name)))
-                        )))
+      :package (fn [args] (bool (package args)))
        ;; upload packaged external to pure-data.info
        :upload (fn [args]
                  (defn set-nonempty-password [username password]
@@ -1600,9 +1613,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                           (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
                          [(os.path.isdir x)
                           (do
-                            (import copy)
-                            (get ((:package commands)
-                                   (set-attr (copy.deepcopy args) "source" [x])) 0))]
+                           (import copy)
+                            (get (package (set-attr (copy.deepcopy args) "source" [x])) 0))]
                          [True (fatal (% "Unable to process '%s'!" x))]))
                  (defn do-upload-username [packages destination username check-sources?]
                    (upload-packages packages
@@ -1623,12 +1635,14 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                        check-sources?))
                  ;; do-upload returns the username (on success)...
                  ;; so let's try storing the (non-empty) password in the keyring
-                 (set-nonempty-password #*
-                                        (do-upload (lfor x args.source (mk-pkg-ifneeded x))
-                                                   (urlparse
-                                                     (or (getattr args "destination")
-                                                         (get-config-value "destination" "")))
-                                                   args.no-source-error)))
+                 (setv userpass
+                       (do-upload (lfor x args.source (mk-pkg-ifneeded x))
+                                  (urlparse
+                                   (or (getattr args "destination")
+                                       (get-config-value "destination" "")))
+                                  args.no-source-error))
+                 (set-nonempty-password #* userpass)
+                 (bool userpass))
        ;; search for externals
        :find (fn [args] (bool (find args)))
        :search  (fn [args] (bool (find args)))
@@ -1656,17 +1670,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
        :uninstall (fn [args]
                     (if args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
-                    (defn uninstall-pkgs [pkgs installdir]
-                      (import shutil)
-                      (for [pkg pkgs :if pkg]
-                        (setv pkgdir (os.path.join installdir pkg))
-                        (if (os.path.isdir pkgdir)
-                            (do
-                              (log.info (% "removing package directory '%s'" (, pkgdir)))
-                              (shutil.rmtree pkgdir True))
-                            (log.warning (% "skipping non-existent directory '%s'" (, pkgdir))))))
-                    (setv pkgs (--packages-from-args-- args.package args.requirement))
-                    (uninstall-pkgs pkgs args.installdir))
+                    (any (filter None (uninstall (--packages-from-args-- args.package args.requirement) args.installdir))))
        :install (fn [args]
                   (if (and (not args.package) (not args.requirement))
                       (fatal "self-'install' not implemented for this platform!"))
@@ -2075,5 +2079,5 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
 (if (= __name__ "__main__")
     (try
-      (main)
+      (sys.exit (not (main)))
       (except [e KeyboardInterrupt] (log_warning "\n[interrupted by user]"))))
