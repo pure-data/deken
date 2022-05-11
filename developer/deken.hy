@@ -1694,7 +1694,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                   (setv downloaded-pkgs
                         (if pkgs
                             (download-verified
-                                   (categorize-search-terms (.difference pkgs (set file-pkgs)) True False)
+                                   (categorize-search-terms pkgs :objects False)
                                    :architecture (or args.architecture None)
                                    :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                    :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
