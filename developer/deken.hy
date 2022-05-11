@@ -1652,7 +1652,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
            :verify-none args.no-verify
            :search-url  args.search-url) 1)))
-       :uninstall (fn [args] None
+       :uninstall (fn [args]
                     (if args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
                     (defn uninstall-pkgs [pkgs installdir]
@@ -1666,7 +1666,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                             (log.warning (% "skipping non-existent directory '%s'" (, pkgdir))))))
                     (setv pkgs (--packages-from-args-- args.package args.requirement))
                     (uninstall-pkgs pkgs args.installdir))
-       :install (fn [args] None
+       :install (fn [args]
                   (if (and (not args.package) (not args.requirement))
                       (fatal "self-'install' not implemented for this platform!"))
                   (defn install-pkgs [pkgs installdir]
@@ -1707,7 +1707,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                   )
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
-       :systemfix (fn [args] None
+       :systemfix (fn [args]
                   (setv fixes {
                         :easywebdav2 (fn []
                                  (import easywebdav2)
