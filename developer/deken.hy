@@ -1527,12 +1527,14 @@ returns a tuple of a (list of verified files) and the number of failed verificat
           (log.info (% "Downloaded: %s" (, pkg)))
           pkg)))
   (setv foundurls
-        (lfor x (find-packages searchterms
+        (if (sum (lfor t ["libraries" "objects"] (len (.get searchterms t []))))
+            (lfor x (find-packages searchterms
                                :architectures architecture
                                :versioncount 1
                                :searchurl search-url)
-              :if (package-uri? (try-get x "URL" ""))
-              (get x "URL")))
+                  :if (package-uri? (try-get x "URL" ""))
+                  (get x "URL"))
+          []))
   (setv urls
         (lfor x (+ foundurls (try-get searchterms "urls" []))
               :if (or
