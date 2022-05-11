@@ -1389,7 +1389,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 
 (defn find [args] ;; TODO: this used to be '&optional args'
   "searches the server for deken-packages and prints the results"
-  (defn print-result [result [index None]]
+  (defn print-result [result]
     (setv url (get result "URL"))
     (setv description (get result "description"))
     (print (% "%s/%s uploaded by %s on %s for %s"
