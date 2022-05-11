@@ -302,6 +302,7 @@
   (print "System      :" sys.platform)
   (try (print "Windows     :" (sys.getwindowsversion)) (except [e Exception]))
   (print "PATH        :" (.get os.environ "PATH"))
+  True
   )
 
 
@@ -1411,7 +1412,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (setv both (= args.libraries args.objects))
   (setv searchterms (categorize-search-terms args.search (or both args.libraries) (or both args.objects)))
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
-  (for [result
+  (lfor result
         (sort-searchresults
           (find-packages searchterms
                          :architectures (if args.architecture
@@ -1421,8 +1422,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                             [(native-arch)])
                          :versioncount (if (is args.depth None) (if (in "*" args.architecture) 0 1) args.depth)
                          :searchurl (or args.search_url default-searchurl))
-          args.reverse)]
-    (print-result result)))
+          args.reverse)
+          (or (print-result result) result)))
 
 ;; instruct the user how to manually upgrade 'deken'
 (defn upgrade [#* args]
@@ -1551,7 +1552,6 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     (unzip-file pkgfile installdir)
     (untar-file pkgfile installdir)))
 
-
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
       {
@@ -1570,7 +1570,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                         (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
                                   (, value (join-nonempty ", " valid))))))
                   (set-default-floatsize args.default-floatsize)
-                  (lfor name args.source
+                  (bool (lfor name args.source
                         (if (os.path.isdir name)
                             ;; if asking for a directory just package it up
                             (archive-extra
@@ -1586,7 +1586,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                   :extra-arch-files args.extra-arch-files))
                               (if (is args.objects None) name args.objects))
                             (fatal (% "Not a directory '%s'!" name)))
-                        ))
+                        )))
        ;; upload packaged external to pure-data.info
        :upload (fn [args]
                  (defn set-nonempty-password [username password]
@@ -1630,8 +1630,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                                          (get-config-value "destination" "")))
                                                    args.no-source-error)))
        ;; search for externals
-       :find find
-       :search find
+       :find (fn [args] (bool (find args)))
+       :search  (fn [args] (bool (find args)))
        ;; verify downloaded files
        :verify (fn [args]
                  (for [p args.dekfile]
@@ -1641,7 +1641,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                p
                                :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                           (fatal (% "verification of '%s' failed" (, p)))))))
+                           (fatal (% "verification of '%s' failed" (, p))))))
+                 (bool (len args.dekfile)))
        ;; download a package (but don't install it)
        :download (fn [args]
          (not (get (download-verified
@@ -1703,21 +1704,21 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                           (, [] 0)))
                   (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
                       (not (get downloaded-pkgs 1))
-                    False)
-                  )
+                    False))
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
        :systemfix (fn [args]
                   (setv fixes {
                         :easywebdav2 (fn []
                                  (import easywebdav2)
-                                 (fix-easywebdav2 easywebdav2 :exit None))})
+                                 (fix-easywebdav2 easywebdav2 :exit None)
+                                 True)})
                   (setv fixnames (lfor k fixes k.name))
                   (defn try-call [x] (if x (x)))
                   (if args.all
                       (if args.fix (fatal "'--all' and named fixes are exclusive. Choose one.")
                                    (setv args.fix fixnames)))
-                  (if args.fix (lfor f args.fix (try-call (.get fixes (hy.models.Keyword f))))
+                  (if args.fix (all (lfor f args.fix (try-call (.get fixes (hy.models.Keyword f)))))
                                (fatal (% "Known systemfixes: %s" (.join "," fixnames)) 0)))
        :update upgrade
        :upgrade upgrade})
