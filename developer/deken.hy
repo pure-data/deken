@@ -1494,7 +1494,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          [verify-hash True]
                          [verify-none False]
                          [search-url None]]
-  "search for files using the <searchterms>, download any results and verify them. returns a list of verified files; unverified files are removed (pendig the verify-... flags)"
+  "search for files using the <searchterms>, download any results and verify them.
+unverified files are removed (pendig the verify-... flags)
+returns a tuple of a (list of verified files) and the number of failed verifications"
   (defn try-remove [filename]
     (if filename
         (try
@@ -1538,9 +1540,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                     (log.info (+ "Skipping non-package URL" x)))
               x))
   ;; return a list of successfully downloaded (and verified) files
-  (lfor x (lfor url urls (try-download url))
-        :if x
-        x))
+  (setv result (lfor url urls (try-download url)))
+  (, (list (filter None result)) (.count result None)))
 
 (defn install-package [pkgfile installdir]
   "unpack a <pkgfile> into <installdir>"
@@ -1640,16 +1641,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
                            (fatal (% "verification of '%s' failed" (, p)))))))
        ;; download a package (but don't install it)
-       :download
-       (fn [args]
-         (download-verified
+       :download (fn [args]
+         (not (get (download-verified
            ;; parse package specifiers
            (categorize-search-terms args.package True False)
            :architecture (or args.architecture None)
            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
            :verify-none args.no-verify
-           :search-url  args.search-url))
+           :search-url  args.search-url) 1)))
        :uninstall (fn [args] None
                     (if args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
@@ -1691,15 +1691,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                   (setv pkgs (.difference pkgs (set file-pkgs)))
                   (setv downloaded-pkgs
                         (if pkgs
-                            (set (download-verified
+                            (download-verified
                                    (categorize-search-terms (.difference pkgs (set file-pkgs)) True False)
                                    :architecture (or args.architecture None)
                                    :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                    :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
                                    :verify-none args.no-verify
-                                   :search-url args.search-url))
-                            (set [])))
-                  (install-pkgs (.union file-pkgs downloaded-pkgs) args.installdir)
+                                   :search-url args.search-url)
+                          (, [] 0)))
+                  (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
                   )
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
