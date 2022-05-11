@@ -1701,7 +1701,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :verify-none args.no-verify
                                    :search-url args.search-url)
                           (, [] 0)))
-                  (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
+                  (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
+                      (not (get downloaded-pkgs 1))
+                    False)
                   )
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
