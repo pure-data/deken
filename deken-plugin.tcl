@@ -108,6 +108,9 @@ if { [::deken::versioncheck 0.8.1] } {
 namespace eval ::deken:: {
     namespace export open_searchui
     variable winid .externals_searchui
+    variable resultsid ${winid}.results
+    variable infoid ${winid}.results
+
     variable platform
     variable architecture_substitutes
     variable installpath
@@ -1336,54 +1339,77 @@ proc ::deken::syncgui {} {
     update idletasks
 }
 proc ::deken::scrollup {} {
-    variable winid
-    if { [winfo exists $winid] } {
-        $winid.results see 0.0
+    variable infoid
+    if { [winfo exists $infoid] } {
+        $infoid see 0.0
     }
 }
 proc ::deken::post {msg {tag ""}} {
-    variable winid
-    if { [winfo exists $winid] } {
-        $winid.results insert end "$msg\n" $tag
-        $winid.results see end
+    variable infoid
+    if { [winfo exists $infoid] } {
+        $infoid insert end "$msg\n" $tag
+        $infoid see end
     }
 }
 proc ::deken::clearpost {} {
-    variable winid
-    if { [winfo exists $winid] } {
-        $winid.results delete 1.0 end
+    variable infoid
+    if { [winfo exists $infoid] } {
+        $infoid delete 1.0 end
     }
     set ::deken::selected {}
 }
-proc ::deken::bind_posttag {tagname key cmd} {
-    variable winid
-    if { [winfo exists $winid] } {
-        $winid.results tag bind $tagname $key $cmd
+
+proc ::deken::scrollup_results {} {
+    variable resultsid
+    if { [winfo exists $resultsid] } {
+        $resultsid see 0.0
     }
 }
-proc ::deken::highlightable_posttag {tagname} {
-    variable winid
-    if { [winfo exists $winid] } {
-        ::deken::bind_posttag $tagname <Enter> \
-            "$winid.results tag add highlight [ $winid.results tag ranges $tagname ]"
-        ::deken::bind_posttag $tagname <Leave> \
-            "$winid.results tag remove highlight [ $winid.results tag ranges $tagname ]"
+proc ::deken::post_result {msg {tag ""}} {
+    variable resultsid
+    if { [winfo exists $resultsid] } {
+        $resultsid insert end "$msg\n" $tag
+        $resultsid see end
+    }
+}
+proc ::deken::clear_results {} {
+    variable resultsid
+    if { [winfo exists $resultsid] } {
+        $resultsid delete 1.0 end
+    }
+    set ::deken::selected {}
+}
+proc ::deken::bind_resulttag {tagname key cmd} {
+    variable resultsid
+    if { [winfo exists $resultsid] } {
+        $resultsid tag bind $tagname $key $cmd
+    }
+}
+proc ::deken::highlightable_resulttag {tagname} {
+    variable resultsid
+    if { [winfo exists $resultsid] } {
+        ::deken::bind_resulttag $tagname <Enter> \
+            "$resultsid tag add highlight [ $resultsid tag ranges $tagname ]"
+        ::deken::bind_resulttag $tagname <Leave> \
+            "$resultsid tag remove highlight [ $resultsid tag ranges $tagname ]"
         # make sure that the 'highlight' tag is topmost
-        $winid.results tag raise highlight
+        $resultsid tag raise sel
+        $resultsid tag raise highlight
     }
 }
-proc ::deken::bind_contextmenu {winid tagname cmd} {
-    if { [winfo exists $winid] } {
+proc ::deken::bind_contextmenu {resultsid tagname cmd} {
+    if { [winfo exists $resultsid] } {
         if {$::windowingsystem eq "aqua"} {
-            $winid.results tag bind $tagname <2> $cmd
+            $resultsid tag bind $tagname <2> $cmd
         } else {
-            $winid.results tag bind $tagname <3> $cmd
+            $resultsid tag bind $tagname <3> $cmd
         }
     }
 }
 
 proc ::deken::menu_selectpackage {winid pkgname installcmd} {
     set results ${winid}.results
+    set installbutton ${winid}.status.install
 
     # set/unset the selection in a "dict"
     set state {}
@@ -1418,7 +1444,7 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
             incr counter
         }
     }
-    if { [winfo exists $winid.status.install] } {
+    if { [winfo exists $installbutton] } {
         set counter 0
         foreach {a b} $::deken::selected {
             if {$b ne {} } {
@@ -1427,13 +1453,13 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
             }
         }
         if { $counter > 0 } {
-            $winid.status.install configure -state normal
+            $installbutton configure -state normal
         } else {
-            $winid.status.install configure -state disabled
+            $installbutton configure -state disabled
         }
     }
 }
-proc ::deken::menu_installselected {winid} {
+proc ::deken::menu_installselected {resultsid} {
     set counter 0
     foreach {k v} $::deken::selected {
         if { $v ne {} } {
@@ -1448,7 +1474,7 @@ proc ::deken::menu_installselected {winid} {
     }
     # clear the selection
     set ::deken::selected {}
-    foreach {a b} [${winid}.results tag ranges sel] {${winid}.results tag remove sel $a $b}
+    foreach {a b} [${resultsid} tag ranges sel] {${resultsid} tag remove sel $a $b}
 }
 
 
@@ -1492,15 +1518,17 @@ proc ::deken::open_searchui {winid} {
         wm deiconify $winid
         raise $winid
     } else {
+        variable resultsid
+        variable infoid
         ::deken::create_dialog $winid
         ::deken::bind_globalshortcuts $winid
         ::deken::utilities::dnd_init $winid.results
-        $winid.results tag configure error -foreground red
-        $winid.results tag configure warn -foreground orange
-        $winid.results tag configure info -foreground grey
-        $winid.results tag configure highlight -foreground blue
-        $winid.results tag configure archmatch
-        $winid.results tag configure noarchmatch -foreground grey
+        $infoid tag configure error -foreground red
+        $infoid tag configure warn -foreground orange
+        $infoid tag configure info -foreground grey
+        $resultsid tag configure highlight -foreground blue
+        $resultsid tag configure archmatch
+        $resultsid tag configure noarchmatch -foreground grey
     }
     ::deken::clearpost
     ::deken::post [_ "Enter an exact library or object name."] info
@@ -1645,11 +1673,12 @@ proc ::deken::initiate_search {winid} {
         ::deken::status [_ "Unable to perform search. Are you online?" ]
     } else {
         # delete all text in the results
-        ::deken::clearpost
+        ::deken::clear_results
 
         set ::deken::results $results
         if {[llength $results] != 0} {
-            ::deken::show_results $winid
+            variable resultsid
+            ::deken::show_results $resultsid
         } else {
             ::pdwindow::post [_ "\[deken\] No matching externals found." ]
             set msg [_ "Try using the full name e.g. 'freeverb~'." ]
@@ -1661,7 +1690,7 @@ proc ::deken::initiate_search {winid} {
 }
 
 # display a single found entry
-proc ::deken::show_result {winid counter result showmatches} {
+proc ::deken::show_result {resultsid counter result showmatches} {
     foreach {title cmd match comment status contextcmd pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr ${match}?"archmatch":"noarchmatch" ] ]
@@ -1669,22 +1698,22 @@ proc ::deken::show_result {winid counter result showmatches} {
 
     if {($match == $showmatches)} {
         set comment [string map {"\n" "\n\t"} $comment]
-        ::deken::post "$title\n\t$comment\n" $tags
-        ::deken::highlightable_posttag $tag
-        ::deken::bind_posttag $tag <Enter> "+::deken::status {$status}"
-        ::deken::bind_posttag $tag <1> "$cmd"
+        ::deken::post_result "$title\n\t$comment\n" $tags
+        ::deken::highlightable_resulttag $tag
+        ::deken::bind_resulttag $tag <Enter> "+::deken::status {$status}"
+        ::deken::bind_resulttag $tag <1> "$cmd"
         if { "" ne $contextcmd } {
-            ::deken::bind_contextmenu $winid $tag $contextcmd
+            ::deken::bind_contextmenu $resultsid $tag $contextcmd
         }
     }
 }
 
 # display all found entry
-proc ::deken::show_results {winid} {
+proc ::deken::show_results {resultsid} {
     set counter 0
     # build the list UI of results
     foreach r $::deken::results {
-        ::deken::show_result $winid $counter $r 1
+        ::deken::show_result $resultsid $counter $r 1
         incr counter
     }
     if { "${::deken::hideforeignarch}" } {
@@ -1692,13 +1721,11 @@ proc ::deken::show_results {winid} {
     } else {
         set counter 0
         foreach r $::deken::results {
-            ::deken::show_result $winid $counter $r 0
+            ::deken::show_result $resultsid $counter $r 0
             incr counter
         }
     }
-    ::deken::scrollup
-    $winid.results tag raise sel
-    $winid.results tag raise highlight
+    ::deken::scrollup_results
 }
 
 proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
@@ -2160,7 +2187,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     $m add command -label "${selmsg}" -command "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}"
     $m add separator
     if { $selcount } {
-        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected .externals_searchui"
+        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected .externals_searchui.results"
     } else {
         $m add command -label [_ "Install package" ] -command $cmd
     }
