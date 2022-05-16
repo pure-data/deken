@@ -1963,7 +1963,7 @@ proc ::deken::initialize {} {
     # console message to let them know we're loaded
     ## but only if we are being called as a plugin (not as built-in)
     if { "" != "$::current_plugin_loadpath" } {
-        ::deken::utilities::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ] $::current_plugin_loadpath ]
+        ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ] $::current_plugin_loadpath ]
     }
     set msg [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
     ::pdwindow::verbose 0 "${msg}\n"
