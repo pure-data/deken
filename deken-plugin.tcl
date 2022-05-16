@@ -1444,11 +1444,11 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
 
     # set/unset the visual representation (via tags)
     set counter 0
-    foreach {a b} [$results tag ranges /$pkgname] {$results tag remove sel $a $b}
+    foreach {a b} [$resultsid tag ranges /$pkgname] {$resultsid tag remove sel $a $b}
     if { $state } {
         foreach r $::deken::results {
             if { [lindex $r 1] eq ${installcmd} } {
-                foreach {a b} [$results tag ranges ch$counter] {$results tag add sel $a $b}
+                foreach {a b} [$resultsid tag ranges ch$counter] {$resultsid tag add sel $a $b}
             }
             incr counter
         }
