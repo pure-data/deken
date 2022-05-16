@@ -1417,6 +1417,9 @@ proc ::deken::bind_contextmenu {resultsid tagname cmd} {
 
 proc ::deken::menu_selectpackage {winid pkgname installcmd} {
     set resultsid ${winid}.results
+    if {[winfo exists ${winid}.tab.results]} {
+        set resultsid ${winid}.tab.results
+    }
     set installbutton ${winid}.status.install
 
     # set/unset the selection in a "dict"
