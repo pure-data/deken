@@ -2081,6 +2081,8 @@ proc ::deken::search::puredata.info::search {term} {
         set latestrelease1 {}
         set newestversion {}
     }
+    set vsep "\u0001"
+
     foreach ele $splitCont {
         set ele [ string trim $ele ]
         if { "" ne $ele } {
@@ -2111,7 +2113,7 @@ proc ::deken::search::puredata.info::search {term} {
                 }
             }
             catch { set sortprefix [dict get ${latestrelease1} $pkgname] }
-            set sortname "${sortprefix}/${pkgname}/${version}/${date}"
+            set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version}${vsep}${date}"
             set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
             lappend searchresults $res
