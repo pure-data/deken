@@ -982,8 +982,7 @@ proc ::deken::preferences::apply {winid} {
 }
 proc ::deken::preferences::cancel {winid} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
-    if {[winfo exists .deken_preferences]} {destroy .deken_preferences}
-    #destroy $winid
+    destroy .deken_preferences
 }
 proc ::deken::preferences::ok {winid} {
     ::deken::preferences::apply $winid
@@ -1644,9 +1643,7 @@ proc ::deken::create_dialog {winid} {
     pack $winid.status.label -side bottom -fill "x"
 
     set m .deken_moremenu
-    if { [winfo exists $m] } {
-        destroy $m
-    }
+    destroy $m
     set m [menu $m]
     $m add command -label [_ "Preferences..." ]  -command "::deken::preferences::show"
     $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
@@ -2206,9 +2203,8 @@ proc ::deken::search::puredata.info::search {term} {
 }
 proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     set m .dekenresults_contextMenu
-    if { [winfo exists $m] } {
-        destroy $m
-    }
+    destroy $m
+
     menu $m
 
     set saveURL [string map {"[" "%5B" "]" "%5D"} $URL]
