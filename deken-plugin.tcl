@@ -1110,8 +1110,8 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(machine) ${machine}
         set ::deken::platform(bits) ${bits}
         set ::deken::platform(floatsize) ${floatsize}
-
-        ::deken::utilities::verbose 1 [format [_ "Platform re-detected: %s" ] [::deken::platform2string 1] ]
+        set msg [format [_ "Platform re-detected: %s" ] [::deken::platform2string 1] ]
+        ::pdwindow::verbose 0 "\[deken\] ${msg}\n"
     }
 }
 
