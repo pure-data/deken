@@ -1538,7 +1538,8 @@ proc ::deken::open_searchui {winid} {
         }
         $infoid tag configure error -foreground red
         $infoid tag configure warn -foreground orange
-        $infoid tag configure info -foreground grey
+        $infoid tag configure info -foreground black
+        $infoid tag configure debug -foreground grey
         $resultsid tag configure highlight -foreground blue
         $resultsid tag configure archmatch
         $resultsid tag configure noarchmatch -foreground grey
