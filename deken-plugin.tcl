@@ -305,7 +305,12 @@ proc ::deken::utilities::verbose {level message} {
     ::pdwindow::verbose ${level} "\[deken\] ${message}\n"
 }
 proc ::deken::utilities::debug {message} {
-    ::pdwindow::debug "${message}\n"
+    set winid ${::deken::winid}
+    if {[winfo exists ${winid}.tab.info]} {
+        ::deken::post $message debug
+    } else {
+        ::pdwindow::debug "\[deken\] ${message}\n"
+    }
 }
 
 if { [catch {package require tkdnd} ] } {
@@ -319,13 +324,11 @@ proc ::deken::utilities::dnd_drop_files {files} {
     foreach f $files {
         if { [regexp -all -nocase "\.(zip|dek|tgz|tar\.gz)$" ${f} ] } {
             set msg [format [_ "installing deken package '%s'" ] $f]
-            ::deken::status ${msg}
-            ::deken::utilities::verbose -1 ${msg}
+            ::deken::statuspost ${msg}
             ::deken::install_package_from_file $f
         } else {
             set msg [format [_ "ignoring '%s': doesn't look like a deken package" ] $f]
-            ::deken::status ${msg}
-            ::deken::utilities::verbose -1 ${msg}
+            ::deken::statuspost ${msg}
         }
     }
     return "link"
@@ -407,7 +410,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
     if { ! [ file isdirectory "${installdir}" ] } {
         return 0
     }
-    ::deken::status [format [_ "Installing %s" ] $filename ]
+    ::deken::statuspost [format [_ "Installing '%s'" ] $filename ] debug
     set PWD [ pwd ]
     cd $installdir
     set success 1
@@ -444,6 +447,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
         # Open both the fullpkgfile folder and the zipfile itself
         # NOTE: in tcl 8.6 it should be possible to use the zlib interface to actually do the unzip
         set msg [_ "Unable to extract package automatically." ]
+        ::deken::post "${msg}" warn
         ::pdwindow::error "${msg}\n"
         set msg ""
         append msg [_ "Please perform the following steps manually:" ]
@@ -460,7 +464,7 @@ proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 
         append msg [format [_ "3. Remove %s. (optional)" ]  $fullpkgfile ]
         append msg "\n"
 
-        ::pdwindow::post "$msg"
+        ::deken::post "$msg"
 
         pd_menucommands::menu_openfile $fullpkgfile
         pd_menucommands::menu_openfile $installdir
@@ -486,14 +490,13 @@ proc ::deken::utilities::uninstall {path library} {
 
 if { [catch {package require sha256} ] } {
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
-        set msg [format [_ "skipping SHA256 verification of %s." ] $url ]
-        ::deken::status $msg
-        ::deken::utilities::verbose 0 $msg
+        set msg [format [_ "Skipping SHA256 verification of '%s'." ] $url ]
+        ::deken::statuspost $msg
         return 1
     }
 } else {  # successfully imported sha256
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
-        ::deken::status [format [_ "SHA256 verification of %s" ] $pkgfile ]
+        ::deken::statuspost [format [_ "SHA256 verification of '%s'" ] $pkgfile ] debug
         ::deken::syncgui
 
         set retval 1
@@ -513,7 +516,7 @@ if { [catch {package require sha256} ] } {
                 set hashfile [::deken::utilities::download_file ${url}.sha256 [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".sha256" ] ]
             }
             if { "$hashfile" eq "" } {
-                ::deken::utilities::verbose 0 [format [_ "unable to fetch reference SHA256 for %s." ] $url ]
+                ::deken::utilities::verbose 0 [format [_ "Unable to fetch reference SHA256 for '%s'." ] $url ]
                 set retval 1
             } else {
                 set fp [open $hashfile r]
@@ -534,7 +537,7 @@ if { [catch {package require sha256} ] } {
         } stdout ] } {
             ::deken::utilities::verbose 0 "${stdout}"
             # unable to verify
-            ::deken::utilities::verbose 0 [format [_ "unable to perform SHA256 verification for %s." ] $url ]
+            ::deken::utilities::verbose 0 [format [_ "Unable to perform SHA256 verification for '%s'." ] $url ]
             set retval 1
         }
         return ${retval}
@@ -560,7 +563,7 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
             ## FIXXME: we probably should handle redirects correctly (following them...)
             set err [::http::code $httpresult]
             set msg [format [_ "Unable to download from %1\$s \[%2\$s\]" ] $url $err ]
-            ::pdwindow::error "$msg\n"
+            ::deken::post "$msg" debug
             set outputfilename ""
         }
         ::http::cleanup $httpresult
@@ -1165,8 +1168,8 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
 
     if { "$::deken::verify_sha256" } {
         if { ! [::deken::utilities::verify_sha256 ${pkgfile} ${pkgfile}] } {
-            ::deken::status [format [_ "Checksum mismatch for '%s'" ] $pkgfile] 0
-            set msg [format [_ "SHA256 verification of %s failed!" ] $pkgfile ]
+            ::deken::statuspost [format [_ "Checksum mismatch for '%s'" ] $pkgfile] warn 0
+            set msg [format [_ "SHA256 verification of '%s' failed!" ] $pkgfile ]
 
             set result "retry"
             while { "$result" eq "retry" } {
@@ -1200,7 +1203,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
     set deldir ""
     if { "$::deken::remove_on_install" } {
-        ::deken::status [format [_ "Removing %s" ] $extname ]
+        ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] $extname ] info
 
         if { ! [::deken::utilities::uninstall $installdir $extname] } {
             # ouch uninstalling failed.
@@ -1217,19 +1220,20 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         }
     }
 
-    ::deken::status [format [_ "Installing package %s" ] $extname ] 0
+    ::deken::statuspost [format [_ "Installing package '%s'" ] $extname ] {} 0
     ::deken::syncgui
     ::deken::progress 0
     if { [::deken::utilities::extract $installdir $filename $fullpkgfile $keep] > 0 } {
         ::deken::progressstatus [_ "Installation completed!" ]
-        set msg [format [_ "Successfully installed %s!" ] $extname ]
-        ::deken::status "${msg}" 0
+        set msg [format [_ "Successfully installed '%s'!" ] $extname ]
+        ::deken::statuspost "${msg}" {} 0
+        ::deken::post ""
         ::pdwindow::post "\[deken\] $msg\n"
         set install_failed 0
     } else {
         ::deken::progressstatus [_ "Installation failed!" ]
-        set msg [format [_ "Failed to install %s!" ] $extname ]
-        ::deken::status ${msg} 0
+        set msg [format [_ "Failed to install '%s'!" ] $extname ]
+        ::deken::statuspost ${msg} error 0
         tk_messageBox \
             -title [_ "Package installation failed" ] \
             -message "${msg}" \
@@ -1351,6 +1355,11 @@ proc ::deken::post {msg {tag ""}} {
         $infoid see end
     }
 }
+proc ::deken::statuspost {msg {tag info} {timeout 5000}} {
+    post $msg $tag
+    status $msg $timeout
+}
+
 proc ::deken::clearpost {} {
     variable infoid
     if { [winfo exists $infoid] } {
@@ -1468,9 +1477,9 @@ proc ::deken::menu_installselected {resultsid} {
         }
     }
     if { $counter == 0 } {
-        ::deken::status [_ "No packages selected for installation."]
+        ::deken::statuspost [_ "No packages selected for installation."]
     } elseif { $counter > 1 } {
-        ::deken::status [format [_ "Processed %d packages selected for installation."] $counter ]
+        ::deken::statuspost [format [_ "Processed %d packages selected for installation."] $counter ]
     }
     # clear the selection
     set ::deken::selected {}
@@ -1509,7 +1518,7 @@ proc ::deken::update_searchbutton {winid} {
 }
 
 proc ::deken::progress {x} {
-    ::deken::status [format [_ "%s%% of download completed"] ${x}]
+    ::deken::statuspost [format [_ "%s%% of download completed"] ${x}]
 }
 
 # this function gets called when the menu is clicked
@@ -1696,7 +1705,7 @@ proc ::deken::initiate_search {winid} {
         set results [::deken::search_for ${searchterm}]
     } stdout ] } {
         ::deken::utilities::debug [format [_ "online? %s" ] $stdout ]
-        ::deken::status [_ "Unable to perform search. Are you online?" ]
+        ::deken::statuspost [_ "Unable to perform search. Are you online?" ] error
     } else {
         # delete all text in the results
         ::deken::clear_results
@@ -1705,12 +1714,17 @@ proc ::deken::initiate_search {winid} {
         if {[llength $results] != 0} {
             variable resultsid
             ::deken::show_results $resultsid
+            ::deken::post [format [_ "Found %d results." ] [llength $results]]
+            if {[winfo exists ${winid}.tab.results]} {
+                ${winid}.tab select ${winid}.tab.results
+            }
         } else {
             set msg [_ "Try using the full name e.g. 'freeverb~'." ]
             ::deken::statuspost [_ "No matching externals found." ]
-            ::pdwindow::debug " ${msg}"
-            ::pdwindow::post "\n"
-            ::deken::status [_ "No matching externals found." ]
+            ::deken::post " ${msg}"
+            if {[winfo exists ${winid}.tab.info]} {
+                ${winid}.tab select ${winid}.tab.info
+            }
         }
     }
 }
@@ -1841,40 +1855,48 @@ proc ::deken::clicked_link {URL filename} {
     ### if ::deken::installpath is set, use the first writable item
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
+    variable winid
+    if {[winfo exists ${winid}.tab.info]} {
+        ${winid}.tab select ${winid}.tab.info
+    }
+
     set installdir [::deken::ensure_installdir "" ${filename}]
     if { "${installdir}" == "" } {
-        ::deken::utilities::debug [format [_ "Cancelling download of %s: No installation directory given." ] $filename]
-        ::deken::status [format [_ "Installing to non-existant directory failed" ] $filename]
+        ::deken::utilities::debug [format [_ "Cancelling download of '%s': No installation directory given." ] $filename]
+        ::deken::statuspost [format [_ "Installing to non-existant directory failed" ] $filename] error
         return
     }
     set parsedfilename [::deken::utilities::parse_filename $filename]
     set fullpkgfile [::deken::utilities::get_tmpfilename $installdir [::deken::utilities::get_filenameextension $filename] "[lindex $parsedfilename 0]\[[lindex $parsedfilename 1]\]" ]
-    ::pdwindow::debug [format [_ "Commencing downloading of:\n%1\$s\nInto %2\$s..." ] $URL $installdir]
-    ::deken::status [format [_ "Downloading '%s'" ] $filename] 0
+    ::deken::statuspost [format [_ "Downloading '%s'" ] $filename] info 0
+    ::deken::utilities::debug [format [_ "Commencing download of '%1\$s' into '%2\$s'..." ] $URL $installdir]
     ::deken::syncgui
     set fullpkgfile [::deken::utilities::download_file $URL $fullpkgfile "::deken::download_progress"]
     if { "$fullpkgfile" eq "" } {
         ::deken::utilities::debug [_ "aborting."]
-        ::deken::status [format [_ "Downloading '%s' failed" ] $filename]
+        ::deken::statuspost [format [_ "Downloading '%s' failed" ] $filename] error
         ::deken::progressstatus [_ "Download failed!" ]
         ::deken::progress 0
         return
     }
-    ::deken::progressstatus [_ "Download completed! Verifying..." ]
-    ::deken::utilities::debug ""
+    set msg [_ "Download completed! Verifying..." ]
+    ::deken::progressstatus $msg
+    ::deken::post "$msg" info
     if { ! [::deken::utilities::verify_sha256 ${URL} $fullpkgfile] } {
-        ::deken::status [format [_ "Checksum mismatch for '%s'" ] $filename] 0
+        ::deken::statuspost [format [_ "Checksum mismatch for '%s'" ] $filename] warn 0
         if { "$::deken::verify_sha256" } {
             if { ! "$::deken::keep_package" } {
                 catch { file delete $fullpkgfile }
             }
             tk_messageBox \
                 -title [_ "SHA256 verification failed" ] \
-                -message [format [_ "SHA256 verification of %s failed!" ] $fullpkgfile ] \
+                -message [format [_ "SHA256 verification of '%s' failed!" ] $fullpkgfile ] \
                 -icon error -type ok \
                 -parent .externals_searchui
             ::deken::progress 0
             return
+        } else {
+            ::deken::statuspost [_ "Ignoring checksum mismatch" ] info 0
         }
     }
     ::deken::install_package ${fullpkgfile} ${filename} ${installdir} ${::deken::keep_package}
@@ -1936,7 +1958,7 @@ proc ::deken::architecture_match {archs} {
 }
 
 proc ::deken::search_for {term} {
-    ::deken::status [format [_ "searching for '%s'" ] $term ]
+    ::deken::statuspost [format [_ "searching for '%s'" ] $term ]
 
     set result [list]
     foreach searcher $::deken::backends {
@@ -2205,15 +2227,19 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
         }
     }
 
+    set winid ${::deken::winid}
+    set resultsid ${::deken::resultsid}
+
     if { $selected } {
         set selmsg [_ "Deselect package" ]
     } else {
         set selmsg [_ "Select package for installation" ]
     }
-    $m add command -label "${selmsg}" -command "::deken::menu_selectpackage .externals_searchui $pkgname {$cmd}"
+
+    $m add command -label "${selmsg}" -command "::deken::menu_selectpackage $winid $pkgname {$cmd}"
     $m add separator
     if { $selcount } {
-        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected .externals_searchui.results"
+        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected $resultsid"
     } else {
         $m add command -label [_ "Install package" ] -command $cmd
     }
