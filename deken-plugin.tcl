@@ -1495,6 +1495,10 @@ proc ::deken::open_searchui {winid} {
         $infoid tag configure warn -foreground orange
         $infoid tag configure info -foreground black
         $infoid tag configure debug -foreground grey
+        $infoid tag configure dekenurl -foreground blue
+        $infoid tag bind dekenurl <1> "pd_menucommands::menu_openfile https://deken.puredata.info/"
+        $infoid tag bind dekenurl <Enter> "$infoid tag configure dekenurl -underline 1"
+        $infoid tag bind dekenurl <Leave> "$infoid tag configure dekenurl -underline 0"
         $resultsid tag configure highlight -foreground blue
         $resultsid tag configure archmatch
         $resultsid tag configure noarchmatch -foreground grey
@@ -1510,6 +1514,9 @@ proc ::deken::open_searchui {winid} {
     ::deken::post [_ "To get a list of all available externals, try an empty search."] info
     ::deken::post "" info
     ::deken::post [_ "Right-clicking a search result will give you more options..." ] info
+    ::deken::post "" info
+    ::deken::post [_ "You can also search for libraries & objects in via your browser:" ] info
+    ::deken::post "https://deken.puredata.info" dekenurl
 }
 
 # build the externals search dialog window
