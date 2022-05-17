@@ -1352,10 +1352,10 @@ proc ::deken::scrollup {} {
         $infoid see 0.0
     }
 }
-proc ::deken::post {msg {tag ""}} {
+proc ::deken::post {msg args} {
     variable infoid
     if { [winfo exists $infoid] } {
-        $infoid insert end "$msg\n" $tag
+        $infoid insert end "$msg\n" $args
         $infoid see end
     }
 }
