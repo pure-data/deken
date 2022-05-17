@@ -1378,13 +1378,6 @@ proc ::deken::post_result {msg {tag ""}} {
         $resultsid see end
     }
 }
-proc ::deken::clear_results {} {
-    variable resultsid
-    if { [winfo exists $resultsid] } {
-        $resultsid delete 1.0 end
-    }
-    set ::deken::selected {}
-}
 proc ::deken::bind_resulttag {tagname key cmd} {
     variable resultsid
     if { [winfo exists $resultsid] } {
@@ -1708,11 +1701,12 @@ proc ::deken::initiate_search {winid} {
         ::deken::statuspost [_ "Unable to perform search. Are you online?" ] error
     } else {
         # delete all text in the results
-        ::deken::clear_results
+        variable resultsid
+        ::deken::clear_results $resultsid
+        set ::deken::selected {}
 
         set ::deken::results $results
         if {[llength $results] != 0} {
-            variable resultsid
             ::deken::show_results $resultsid
             ::deken::post [format [_ "Found %d packages." ] [llength $results]]
             if {[winfo exists ${winid}.tab.results]} {
@@ -1774,12 +1768,10 @@ proc ::deken::textresults::show {resultsid} {
     }
 }
 
-proc ::deken::textresults::clear_results {} {
-    set resultsid $::deken::resultsid
+proc ::deken::textresults::clear {resultsid} {
     if { [winfo exists $resultsid] } {
         $resultsid delete 1.0 end
     }
-    set ::deken::selected {}
 }
 }
 
@@ -1787,6 +1779,10 @@ proc ::deken::textresults::clear_results {} {
 proc ::deken::show_results {resultsid} {
     ::deken::textresults::show $resultsid
 }
+proc ::deken::clear_results {resultsid} {
+    ::deken::textresults::clear $resultsid
+}
+
 
 proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
     ## make sure that the destination path exists
