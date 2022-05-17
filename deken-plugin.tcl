@@ -1730,8 +1730,8 @@ proc ::deken::initiate_search {winid} {
     }
 }
 
-# display a single found entry
-proc ::deken::show_result {resultsid counter result showmatches} {
+# display a single found entry in a simple text widget
+proc ::deken::show_result_txt {resultsid counter result showmatches} {
     foreach {title cmd match comment status contextcmd pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr ${match}?"archmatch":"noarchmatch" ] ]
@@ -1749,12 +1749,12 @@ proc ::deken::show_result {resultsid counter result showmatches} {
     }
 }
 
-# display all found entry
-proc ::deken::show_results {resultsid} {
+# display all found entries in a simple text widget
+proc ::deken::show_results_txt {resultsid} {
     set counter 0
     # build the list UI of results
     foreach r $::deken::results {
-        ::deken::show_result $resultsid $counter $r 1
+        ::deken::show_result_txt $resultsid $counter $r 1
         incr counter
     }
     if { "${::deken::hideforeignarch}" } {
@@ -1762,11 +1762,15 @@ proc ::deken::show_results {resultsid} {
     } else {
         set counter 0
         foreach r $::deken::results {
-            ::deken::show_result $resultsid $counter $r 0
+            ::deken::show_result_txt $resultsid $counter $r 0
             incr counter
         }
     }
     ::deken::scrollup_results
+}
+
+proc ::deken::show_results {resultsid} {
+    ::deken::show_results_txt $resultsid
 }
 
 proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
