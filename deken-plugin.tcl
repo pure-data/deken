@@ -1057,6 +1057,8 @@ proc ::deken::normalize_result {title
                                 {statusline ""}
                                 {contextcmd {}}
                                 {pkgname ""}
+                                {uploader ""}
+                                {timestamp ""}
                                 args} {
     ## normalize a search-result
     # the function parameters are guaranteed to be a stable API (with the exception or args)
@@ -1068,9 +1070,11 @@ proc ::deken::normalize_result {title
     # - <statusline> additional text to be shown in the STATUS line if the mouse hovers over the result
     # - <contextcmd> the full command to be executed when the user right-clicks the menu-entry
     # - <pkgname> the library name (typically this gets parsed from the package filename)
+    # - <uploader> who provided the package
+    # - <timestamp> the upload date of the package
     # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    list "" $title $cmd $match $subtitle $statusline $contextcmd $pkgname
+    list "" $title $cmd $match $subtitle $statusline $contextcmd $pkgname $uploader $timestamp
 }
 
 
@@ -2198,14 +2202,14 @@ proc ::deken::search::puredata.info::search {term} {
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
             set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
-            set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
+            set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname $creator $date]
             lappend searchresults $res
         }
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {sortname filename title cmd match comment status menus pkgname} $r {
-            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname]
+        foreach {sortname filename title cmd match comment status menus pkgname creator date} $r {
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname $creator $date]
             break
         }
     }
