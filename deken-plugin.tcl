@@ -1573,9 +1573,34 @@ proc ::deken::create_dialog {winid} {
         scrollbar $winid.tab.info.ys -orient vertical -command "$winid.tab.info yview"
         pack $winid.tab.info.ys -side right -fill "y"
 
-        text $winid.tab.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$winid.tab.results.ys set"
-        scrollbar $winid.tab.results.ys -orient vertical -command "$winid.tab.results yview"
-        pack $winid.tab.results.ys -side right -fill "y"
+        if { [catch {
+            set treeid $winid.tab.results
+            ttk::treeview $treeid \
+                -height 10 \
+                -selectmode browse \
+                -columns {version title uploader date}
+            $treeid heading #0 -text [_ "Library" ] -anchor center -command "::deken::treeresults::columnsort $treeid"
+            $treeid heading version -text [_ "Version" ] -anchor center -command "::deken::treeresults::columnsort $treeid version"
+            $treeid heading title -text [_ "Title" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
+            $treeid heading uploader -text [_ "Uploader" ] -anchor center -command "::deken::treeresults::columnsort $treeid uploader"
+            $treeid heading date -text [_ "Date" ] -anchor center -command "::deken::treeresults::columnsort $treeid date"
+            $treeid tag configure library -background lightgrey
+            $treeid tag configure noarchmatch -foreground lightgrey
+            $treeid tag configure selpkg -background lightblue
+
+            bind $treeid <<TreeviewSelect>> "::deken::treeresults::selection_changed %W"
+            bind $treeid <<TreeviewOpen>> "::deken::treeresults::selection_skip %W 1"
+            bind $treeid <<TreeviewClose>> "::deken::treeresults::selection_skip %W 1"
+            bind $treeid <Motion> "::deken::treeresults::motionevent %W %x %y"
+
+            proc ::deken::show_results {resultsid} { ::deken::treeresults::show $resultsid}
+            proc ::deken::clear_results {resultsid} { ::deken::treeresults::clear $resultsid}
+            proc ::deken::clear_selection {resultsid} { ::deken::treeresults::clear_selection $resultsid }
+        } ] } {
+            text $winid.tab.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$winid.tab.results.ys set"
+            scrollbar $winid.tab.results.ys -orient vertical -command "$winid.tab.results yview"
+            pack $winid.tab.results.ys -side right -fill "y"
+        }
 
         $winid.tab add $winid.tab.results -text [_ "Search Results"]
         $winid.tab add $winid.tab.info -text [_ "Log"]
@@ -1784,7 +1809,243 @@ proc ::deken::textresults::clear_selection {resultsid} {
         foreach {a b} [${resultsid} tag ranges sel] {${resultsid} tag remove sel $a $b}
     }
 }
+
+
+## deken::treeresults: show versions of libraries in a tree-view
+# TASKs
+# - each library (distinguished by name) is a separate (expandable/collapsable) node
+# - expanding a library node shows all versions
+# - the library node shows which version of the library is going to be installed (if any)
+# - the tree can be sorted in both directions by clicking on any of the headings
+# SELECTING which library to install
+# - clicking on a version
+#   - if the version was currently selected for installation, it is now deselected
+#   - otherwise select this version to be installed
+# - clicking on a library node
+#   - if no version of the given library has been selected, this selects the most recent compatible version
+#   - otherwise the library is deselected from installation
+# - multiple selections
+#   - ideally we would just forbid ctrl-clicking for multiple selections
+#   - otherwise, this would select the the most recent compatible version
+#
+# CAVEATs
+# - interaccting with the selection for library 'x' should not interfere with the selection of library 'y'
+# - incompatible archs should be marked somehow
+# - incompatible archs must always be explicitely selected
+# - TODO: what about multi-selecting incompatible archs of only a single library?
+# - TODO: what about multi-selecting a couple of libraries where some only have incompatible archs?
+
+namespace eval ::deken::treeresults:: {
 }
+array set ::deken::treeresults::colsort {}
+array set ::deken::treeresults::skipclick {}
+
+proc ::deken::treeresults::columnsort {treeid {col "#0"}} {
+    # do we want to sort increasing or decreasing?
+    variable colsort
+    if {! [info exists colsort($col) ] } {
+        set colsort($col) 1
+    }
+    set colsort($col) [expr ! $colsort($col)]
+
+    set dir -increasing
+    if { $colsort($col) } {
+        set dir -decreasing
+    }
+
+    # do the actual sorting
+    if { $col eq "#0" } {
+        set sortable {}
+        foreach lib [$treeid children {}] {
+            lappend sortable [list [$treeid item $lib -text] $lib]
+        }
+        set pkgs {}
+        foreach x [lsort -nocase $dir -index 0 $sortable] {
+            lappend pkgs [lindex $x 1]
+        }
+        $treeid children {} $pkgs
+    } else {
+        foreach lib [$treeid children {}] {
+            set sortable {}
+            foreach pkg [$treeid children $lib]  {
+                lappend sortable [list [$treeid set $pkg $col] $pkg]
+            }
+            set pkgs {}
+            foreach x [lsort -nocase $dir -index 0 $sortable] {
+                lappend pkgs [lindex $x 1]
+            }
+            $treeid children $lib $pkgs
+        }
+    }
+
+
+    ## add some decoration to the header indicating the sort-direction
+    set label_incr "\u2b07"
+    set label_decr "\u2b06"
+    set dirsym "${label_incr}"
+
+    # clear all the increasing/decreasing indicators from the headings
+    if { $dir eq "-decreasing" } {
+        set dirsym "${label_decr}"
+    }
+    foreach c [$treeid cget -columns] {
+        $treeid heading $c -text [regsub "(${label_decr}|${label_incr})$" [$treeid heading $c -text] {}]
+    }
+    set c "#0"
+    $treeid heading $c -text [regsub "(${label_decr}|${label_incr})$" [$treeid heading $c -text] {}]
+
+    # and finally set the increasing/decreasing indicator for the sorted column
+    $treeid heading $col -text [$treeid heading $col -text]$dirsym
+}
+
+
+proc ::deken::treeresults::focusbyindex {treeid index} {
+    # make sure that the entry <index> is visible
+    $treeid yview $index
+}
+
+proc ::deken::treeresults::getselected {treeid} {
+    set sel {}
+    foreach id [$treeid children {}] {
+        set data [$treeid item $id -values]
+        if { "${data}" eq {} } { continue }
+        lappend sel [linsert $data 0 [$treeid item $id -text]]
+    }
+    return $sel
+}
+
+proc ::deken::treeresults::selection_skip {treeid {state 1}} {
+    # expanding/collapsing a node results in a selection message
+    # so we set a flag to skip it
+    variable skipclick
+    if { ! [info exists skipclick($treeid)] } {
+        set skipclick($treeid) 0
+    }
+    set skip $skipclick($treeid)
+    set skipclick($treeid) $state
+    return $skip
+}
+
+proc ::deken::treeresults::selection_changed {treeid} {
+    if { [::deken::treeresults::selection_skip $treeid 0] } { return }
+
+    $treeid tag remove selpkg
+    foreach sel [$treeid selection] {
+        set lib [$treeid parent $sel]
+        if { $lib eq {} } {
+            # library node
+            set lib $sel
+            if { [$treeid item $sel -values] eq {} } {
+                # currently no data, find the best match!
+                foreach sel [$treeid children $lib] {break}
+                $treeid item $lib -values [$treeid item $sel -values]
+                $treeid tag add selpkg $sel
+            } else {
+                $treeid item $lib -values {}
+            }
+
+        } else {
+            # package (leaf)
+            set data [$treeid item $sel -values]
+            if { $data eq [$treeid item $lib -values] } {
+                # we were already selected, so deselect us
+                $treeid item $lib -values {}
+            } else {
+                $treeid item $lib -values $data
+                $treeid tag add selpkg $sel
+            }
+        }
+    }
+
+    ## fixup the selection
+    set bound [bind $treeid <<TreeviewSelect>>]
+    bind $treeid <<TreeviewSelect>> {}
+    # unselect the old ones, and select the new ones
+    $treeid selection remove [$treeid selection]
+    set counter 0
+
+    set ::deken::selected {}
+    foreach id [$treeid children {}] {
+        set data [$treeid item $id -values]
+        if { $data eq {} } { continue }
+        $treeid selection add $id
+        lappend ::deken::selected [$treeid item $id -text] [lindex $data 5]
+    }
+    ::deken::update_installbutton [winfo toplevel $treeid]
+    after idle "bind $treeid <<TreeviewSelect>> \{$bound\}"
+}
+
+proc ::deken::treeresults::presorter {A B} {
+    # <a>, <b>: [<pkgname> <version> <title> <uploader> <timestamp> <match> <cmd> <contextcmd>]
+    # compare to library lists: <pkgname> (ascending), <match> (descending), <version> (descending), <date> (descending)
+    foreach {a_name a_ver _ _ a_time a_match} $A {break}
+    foreach {b_name b_ver _ _ b_time b_match} $B {break}
+
+    if {$a_name < $b_name} { return 1 } elseif {$a_name > $b_name} { return -1 }
+
+    if {$a_match < $b_match} { return -1 } elseif {$a_match > $b_match} { return 1 }
+
+    set v [::deken::versioncompare $a_ver $b_ver]
+    if { $v != "0" } {return $v}
+
+    if {$a_time < $b_time} { return -1 } elseif {$a_time > $b_time} { return 1 }
+
+    return 0
+}
+
+proc ::deken::treeresults::motionevent {treeid x y} {
+    set item [$treeid identify item $x $y]
+    set data [$treeid item $item -values]
+    set msg [lindex $data 7]
+    if { "$msg" != "" } {
+        ::deken::status $msg
+    }
+}
+
+proc ::deken::treeresults::show {treeid} {
+    # shown: library, version, title, uploader, date
+    set libraries {}
+    foreach r $::deken::results {
+        foreach {title cmd match subtitle statusline contextcmd pkgname version uploader timestamp} $r {break}
+        lappend libraries [list $pkgname $version $title $uploader $timestamp $match $cmd $contextcmd $statusline]
+    }
+    # sort the libraries
+    set libraries [lsort -decreasing -command ::deken::treeresults::presorter $libraries]
+
+    set lastlib {}
+    set index {}
+    foreach lib $libraries {
+        set l [lindex $lib 0]
+        set data [lrange $lib 1 end]
+        if {$l ne $lastlib} {
+            set lastlib $l
+            set index [$treeid insert {} end -text $l -open 1 -tags {library}]
+        }
+        set x [$treeid insert $index end -values $data -tags [list package]]
+        if { [lindex $lib 5] } {
+            $treeid tag add archmatch $x
+        } else {
+            $treeid tag add noarchmatch $x
+        }
+        $treeid tag add $x $x
+        ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
+    }
+}
+
+
+proc ::deken::treeresults::clear {resultsid} {
+    $resultsid delete [$resultsid children {}]
+}
+proc ::deken::treeresults::clear_selection {treeid} {
+    if { ! [winfo exists $treeid] } { return }
+
+    set bound [bind $treeid <<TreeviewSelect>>]
+    bind $treeid <<TreeviewSelect>> {}
+    # unselect the old ones, and select the new ones
+    $treeid selection remove [$treeid selection]
+    after idle "bind $treeid <<TreeviewSelect>> \{$bound\}"
+}
+
 
 ########################################################
 proc ::deken::show_results {resultsid} {
@@ -2240,6 +2501,12 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
     set with_installmenu 1
+
+    catch {
+        # don't show the select/install entries when using a treeview
+        $resultsid identify item 0 0
+        set with_installmenu 0
+    }
 
     set m .dekenresults_contextMenu
     destroy $m
