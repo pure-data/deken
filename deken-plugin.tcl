@@ -1085,7 +1085,7 @@ proc ::deken::find_installpath {{ignoreprefs false}} {
     set installpath ""
     if { [ info exists ::deken::installpath ] && !$ignoreprefs } {
         ## any previous choice?
-        set installpath [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
+        return $::deken::installpath
     }
     if { "$installpath" == "" } {
         ## search the default paths
