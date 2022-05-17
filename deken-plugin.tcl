@@ -1561,9 +1561,18 @@ proc ::deken::create_dialog {winid} {
     wm transient $winid
     $winid configure -padx 10 -pady 5
 
-    if {$::windowingsystem eq "aqua"} {
-        $winid configure -menu $::dialog_menubar
-    }
+    set m ${winid}_menu
+    destroy $m
+    menu $m
+    if {$::windowingsystem eq "aqua"} {create_apple_menu $m}
+    menu $m.file
+    $m add cascade -label [_ [string totitle "file"]] -underline 0 -menu $m.file
+    $m.file add command -label [_ "Install DEK file..." ] -command "::deken::install_package_from_file"
+    menu $m.edit
+    $m add cascade -label [_ [string totitle "edit"]] -underline 0 -menu $m.edit
+    $m.edit add command -label [_ "Preferences..." ] -command "::deken::preferences::show"
+
+    $winid configure -menu $m
 
     frame $winid.searchbit
     pack $winid.searchbit -side top -fill "x"
@@ -1638,13 +1647,7 @@ proc ::deken::create_dialog {winid} {
     label $winid.status.label -textvariable ::deken::statustext -relief sunken -anchor "w"
     pack $winid.status.label -side bottom -fill "x"
 
-    set m .deken_moremenu
-    destroy $m
-    set m [menu $m]
-    $m add command -label [_ "Preferences..." ]  -command "::deken::preferences::show"
-    $m add command -label [_ "Install DEK file..." ]  -command "::deken::install_package_from_file"
-
-    button $winid.status.installdek -text [_ "More..." ] -command "tk_popup $m \[winfo pointerx $winid\] \[winfo pointery $winid\]"
+    button $winid.status.installdek -text [_ "Install" ] -command "::deken::menu_installselected $resultsid"
     pack $winid.status.installdek -side right -padx 6 -pady 3 -ipadx 10
 }
 
