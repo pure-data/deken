@@ -2009,6 +2009,12 @@ proc ::deken::treeresults::show {treeid} {
     set libraries {}
     foreach r $::deken::results {
         foreach {title cmd match subtitle statusline contextcmd pkgname version uploader timestamp} $r {break}
+        if { "${::deken::hideforeignarch}" }  {
+            if { ! ${match} } {
+                continue
+            }
+        }
+
         lappend libraries [list $pkgname $version $title $uploader $timestamp $match $cmd $contextcmd $statusline]
     }
     # sort the libraries
