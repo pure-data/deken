@@ -2266,14 +2266,6 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
 
         $m add command -label "${msg}" -command "::deken::menu_selectpackage $winid $pkgname {$cmd}"
         $m add separator
-
-        set msg  [_ "Install package" ]
-        if { $selcount } {
-            set cmd "::deken::menu_installselected $resultsid"
-            set msg [_ "Install selected packages" ]
-        }
-        $m add command -label $msg -command $cmd
-        $m add separator
     }
 
     $m add command -label [_ "Open package webpage" ] -command "pd_menucommands::menu_openfile https://deken.puredata.info/info?[::http::formatQuery url ${URL}]"
