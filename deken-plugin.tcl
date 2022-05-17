@@ -1706,8 +1706,10 @@ proc ::deken::initiate_search {winid} {
                 ${winid}.tab select ${winid}.tab.results
             }
         } else {
-            set msg [_ "Try using the full name e.g. 'freeverb~'." ]
             ::deken::statuspost [_ "No matching externals found." ]
+            set msg [_ "Try using the full name e.g. 'freeverb~'." ]
+            ::deken::post " ${msg}"
+            set msg [_ "Or use wildcards like 'freeverb*'." ]
             ::deken::post " ${msg}"
             if {[winfo exists ${winid}.tab.info]} {
                 ${winid}.tab select ${winid}.tab.info
