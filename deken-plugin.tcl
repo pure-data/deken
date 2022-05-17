@@ -1532,7 +1532,6 @@ proc ::deken::create_dialog {winid} {
     set m ${winid}_menu
     destroy $m
     menu $m
-    if {$::windowingsystem eq "aqua"} {create_apple_menu $m}
     menu $m.file
     $m add cascade -label [_ [string totitle "file"]] -underline 0 -menu $m.file
     $m.file add command -label [_ "Install DEK file..." ] -command "::deken::install_package_from_file"
