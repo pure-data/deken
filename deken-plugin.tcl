@@ -1462,7 +1462,7 @@ proc ::deken::menu_installselected {resultsid} {
     }
     # clear the selection
     set ::deken::selected {}
-    foreach {a b} [${resultsid} tag ranges sel] {${resultsid} tag remove sel $a $b}
+    ::deken::clear_selection $resultsid
 }
 
 
@@ -1781,6 +1781,12 @@ proc ::deken::textresults::clear {resultsid} {
         $resultsid delete 1.0 end
     }
 }
+
+proc ::deken::textresults::clear_selection {resultsid} {
+    if { [winfo exists $resultsid] } {
+        foreach {a b} [${resultsid} tag ranges sel] {${resultsid} tag remove sel $a $b}
+    }
+}
 }
 
 ########################################################
@@ -1789,6 +1795,9 @@ proc ::deken::show_results {resultsid} {
 }
 proc ::deken::clear_results {resultsid} {
     ::deken::textresults::clear $resultsid
+}
+proc ::deken::clear_selection {resultsid} {
+    ::deken::textresults::clear_selection $resultsid
 }
 
 
