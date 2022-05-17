@@ -2633,7 +2633,12 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
         $m add separator
     }
 
-    $m add command -label [_ "Open package webpage" ] -command "pd_menucommands::menu_openfile https://deken.puredata.info/info?[::http::formatQuery url ${URL}]"
+    set infoq "url=${URL}"
+    if {$::tcl_platform(platform) ne "windows"} {
+        set infoq [::http::formatQuery url ${URL}]
+    }
+
+    $m add command -label [_ "Open package webpage" ] -command "pd_menucommands::menu_openfile \{https://deken.puredata.info/info?$infoq\}"
     $m add command -label [_ "Copy package URL" ] -command "clipboard clear; clipboard append $saveURL"
     $m add command -label [_ "Copy SHA256 checksum URL" ] -command "clipboard clear; clipboard append ${saveURL}.sha256"
     $m add command -label [_ "Copy OpenGPG signature URL" ] -command "clipboard clear; clipboard append ${saveURL}.asc"
