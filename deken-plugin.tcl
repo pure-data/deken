@@ -2080,6 +2080,7 @@ proc ::deken::treeresults::show {treeid} {
             set archtag archmatch
         }
         set x [$treeid insert $index end -values $data -tags [list package $archtag]]
+        $treeid tag add $x $x
         ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
     }
 }
