@@ -169,6 +169,14 @@ set ::deken::architecture_substitutes(armv7l) [list "armv7" "armv6l" "armv6" "ar
 set ::deken::architecture_substitutes(PowerPC) [list "ppc"]
 set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
 
+set ::deken::architecture_normalize(x86_64) "amd64"
+set ::deken::architecture_normalize(i686) "i386"
+set ::deken::architecture_normalize(i586) "i386"
+set ::deken::architecture_normalize(i486) "i386"
+set ::deken::architecture_normalize(armv6l) "armv6"
+set ::deken::architecture_normalize(armv7l) "armv7"
+set ::deken::architecture_normalize(PowerPC) "ppc"
+
 # normalize W32 OSs
 if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
     # we are not interested in the w32 flavour, so we just use 'Windows' for all of them
@@ -180,6 +188,10 @@ if { "Windows" eq "$::deken::platform(os)" } {
     if { "intel" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "i686" }
     # ... and all 64bit CPUs are manufactured by amd
     #if { "amd64" eq "$::deken::platform(machine)" } { set ::deken::platform(machine) "x86_64" }
+}
+
+catch {
+    set ::deken::platform(machine) $::deken::architecture_normalize($::deken::platform(machine))
 }
 
 
