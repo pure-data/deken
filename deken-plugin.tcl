@@ -2082,29 +2082,9 @@ proc ::deken::clear_results {resultsid} {
 proc ::deken::clear_selection {resultsid} {
     ::deken::textresults::clear_selection $resultsid
 }
+########################################################
 
-
-proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
-    ## make sure that the destination path exists
-    ### if ::deken::installpath is set, use the first writable item
-    ### if not, get a writable item from one of the searchpaths
-    ### if this still doesn't help, ask the user
-    if { "$installdir" != "" } {return $installdir}
-
-    set installdir [::deken::find_installpath]
-    if { "$installdir" != "" } {return $installdir}
-
-    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        # if the docspath is set, try the externals subdir
-        set installdir [::pd_docsdir::get_externals_path]
-    }
-    if { "$installdir" != "" } {return $installdir}
-
-    # ask the user (and remember the decision)
-    ::deken::prompt_installdir
-    set installdir [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
-
-    set installdir [::deken::utilities::expandpath $installdir ]
+proc ::deken::ask_installdir {{installdir ""} {extname ""}} {
     while {1} {
         if { "$installdir" == "" } {
             set result [tk_messageBox \
@@ -2165,6 +2145,29 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
     return $installdir
 }
 
+proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
+    ## make sure that the destination path exists
+    ### if ::deken::installpath is set, use the first writable item
+    ### if not, get a writable item from one of the searchpaths
+    ### if this still doesn't help, ask the user
+    if { "$installdir" != "" } {return $installdir}
+
+    set installdir [::deken::find_installpath]
+    if { "$installdir" != "" } {return $installdir}
+
+    if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
+        # if the docspath is set, try the externals subdir
+        set installdir [::pd_docsdir::get_externals_path]
+    }
+    if { "$installdir" != "" } {return $installdir}
+
+    # ask the user (and remember the decision)
+    ::deken::prompt_installdir
+    set installdir [ ::deken::utilities::get_writabledir [list $::deken::installpath ] ]
+
+    return [::deken::ask_installdir [::deken::utilities::expandpath $installdir ] $extname]
+}
+
 # handle a clicked link
 proc ::deken::clicked_link {URL filename} {
     ## make sure that the destination path exists
@@ -2182,6 +2185,19 @@ proc ::deken::clicked_link {URL filename} {
         ::deken::statuspost [format [_ "Installing to non-existant directory failed" ] $filename] error
         return
     }
+    if { ! [file exists $installdir] } {
+        ::deken::post [format [_ "Unable to install to '%s'" ]  $installdir ] error
+        set msg [_ "Directory does not exist!" ]
+        ::deken::post "\t$msg" error
+        return
+    }
+    if { [::deken::utilities::get_writabledir [list $installdir]] == "" } {
+        ::deken::post [format [_ "Unable to install to '%s'" ]  $installdir ] error
+        set msg [_ "Directory is not writable!" ]
+        ::deken::post "\t$msg" error
+        return
+    }
+
     set parsedfilename [::deken::utilities::parse_filename $filename]
     set fullpkgfile [::deken::utilities::get_tmpfilename $installdir [::deken::utilities::get_filenameextension $filename] "[lindex $parsedfilename 0]\[[lindex $parsedfilename 1]\]" ]
     ::deken::statuspost [format [_ "Downloading '%s'" ] $filename] info 0
