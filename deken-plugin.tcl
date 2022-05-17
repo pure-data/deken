@@ -2097,10 +2097,15 @@ proc ::deken::treeresults::show {treeid} {
         $treeid tag add $x $x
         ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
     }
-    foreach v {"#0" version title uploader date} {
-        incr width($v) 10
-        $treeid column $v -width $width($v)
-    }
+    ### setting the width as a few caveats
+    ## - we end up with cut off texts anyhow
+    ##   (i guess this is mostly a problem with requiring too much text)
+    ## - the widths don#t get fully applied automatically
+    ##   (as soon as you drag one of the column delimiters, the other snap into place)
+    #foreach v {version title uploader date} {
+    #    incr width($v) 10
+    #    $treeid column $v -width $width($v)
+    #}
 
 }
 
