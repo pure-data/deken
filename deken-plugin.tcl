@@ -2197,7 +2197,7 @@ proc ::deken::search::puredata.info::search {term} {
             # the space (or some other character that sorts after "\t") after the ${version} is important,
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
-            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL 1]
+            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
             lappend searchresults $res
         }
@@ -2211,9 +2211,10 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
-proc ::deken::search::puredata.info::contextmenu {widget theX theY URL with_installmenu} {
+proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
+    set with_installmenu 1
 
     set m .dekenresults_contextMenu
     destroy $m
