@@ -1057,6 +1057,7 @@ proc ::deken::normalize_result {title
                                 {statusline ""}
                                 {contextcmd {}}
                                 {pkgname ""}
+                                {version ""}
                                 {uploader ""}
                                 {timestamp ""}
                                 args} {
@@ -1074,7 +1075,7 @@ proc ::deken::normalize_result {title
     # - <timestamp> the upload date of the package
     # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    list "" $title $cmd $match $subtitle $statusline $contextcmd $pkgname $uploader $timestamp
+    list "" $title $cmd $match $subtitle $statusline $contextcmd $pkgname $version $uploader $timestamp
 }
 
 
@@ -2209,14 +2210,14 @@ proc ::deken::search::puredata.info::search {term} {
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
             set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
-            set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname $creator $date]
+            set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname $version $creator $date]
             lappend searchresults $res
         }
     }
     set sortedresult []
     foreach r [lsort -command ::deken::versioncompare -decreasing -index 0 $searchresults ] {
-        foreach {sortname filename title cmd match comment status menus pkgname creator date} $r {
-            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname $creator $date]
+        foreach {sortname filename title cmd match comment status menus pkgname version creator date} $r {
+            lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $menus $pkgname $version $creator $date]
             break
         }
     }
