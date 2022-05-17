@@ -1699,7 +1699,7 @@ proc ::deken::initiate_search {winid} {
     set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
     ::deken::clearpost
-    ::deken::utilities::debug [format [_ "Start searching for externals... \"%s\"" ] ${searchterm}]
+    ::deken::statuspost [format [_ "Searching for \"%s\"..." ] ${searchterm} ]
     set ::deken::progressvar 0
     ::deken::progressstatus ""
     if { [ catch {
@@ -1715,7 +1715,7 @@ proc ::deken::initiate_search {winid} {
         if {[llength $results] != 0} {
             variable resultsid
             ::deken::show_results $resultsid
-            ::deken::post [format [_ "Found %d results." ] [llength $results]]
+            ::deken::post [format [_ "Found %d packages." ] [llength $results]]
             if {[winfo exists ${winid}.tab.results]} {
                 ${winid}.tab select ${winid}.tab.results
             }
@@ -1959,8 +1959,6 @@ proc ::deken::architecture_match {archs} {
 }
 
 proc ::deken::search_for {term} {
-    ::deken::statuspost [format [_ "searching for '%s'" ] $term ]
-
     set result [list]
     foreach searcher $::deken::backends {
         if {[catch {
@@ -1987,6 +1985,7 @@ proc ::deken::initialize {} {
     ## but only if we are being called as a plugin (not as built-in)
     if { "" != "$::current_plugin_loadpath" } {
         ::pdwindow::debug [format [_ "\[deken\] deken-plugin.tcl (Pd externals search) loaded from %s." ] $::current_plugin_loadpath ]
+        ::pdwindow::debug "\n"
     }
     set msg [format [_ "\[deken\] Platform detected: %s" ] [::deken::platform2string 1] ]
     ::pdwindow::verbose 0 "${msg}\n"
