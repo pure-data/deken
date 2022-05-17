@@ -2021,13 +2021,11 @@ proc ::deken::treeresults::show {treeid} {
             set lastlib $l
             set index [$treeid insert {} end -text $l -open 1 -tags {library}]
         }
-        set x [$treeid insert $index end -values $data -tags [list package]]
+        set archtag noarchmatch
         if { [lindex $lib 5] } {
-            $treeid tag add archmatch $x
-        } else {
-            $treeid tag add noarchmatch $x
+            set archtag archmatch
         }
-        $treeid tag add $x $x
+        set x [$treeid insert $index end -values $data -tags [list package $archtag]]
         ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
     }
 }
