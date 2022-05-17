@@ -1591,6 +1591,7 @@ proc ::deken::create_dialog {winid} {
             $treeid heading title -text [_ "Description" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
             $treeid heading uploader -text [_ "Uploader" ] -anchor center -command "::deken::treeresults::columnsort $treeid uploader"
             $treeid heading date -text [_ "Date" ] -anchor center -command "::deken::treeresults::columnsort $treeid date"
+            $treeid column #0 -stretch 0
             $treeid tag configure library -background lightgrey
             $treeid tag configure noarchmatch -foreground lightgrey
             $treeid tag configure selpkg -background lightblue
@@ -2068,21 +2069,39 @@ proc ::deken::treeresults::show {treeid} {
 
     set lastlib {}
     set index {}
+
+    foreach v {"#0" version title uploader date} {
+        set width($v) 0
+    }
+
     foreach lib $libraries {
         set l [lindex $lib 0]
         set data [lrange $lib 1 end]
         if {$l ne $lastlib} {
             set lastlib $l
-            set index [$treeid insert {} end -text $l -open 1 -tags {library}]
+            set index [$treeid insert {} end -text $l -open 0 -tags {library}]
+            set w [font measure {-underline false} -displayof $treeid $l]
+            if {$w > $width(#0)} {set width(#0) $w}
         }
         set archtag noarchmatch
         if { [lindex $lib 5] } {
             set archtag archmatch
         }
         set x [$treeid insert $index end -values $data -tags [list package $archtag]]
+        set vidx 0
+        foreach v {version title uploader date} {
+            set w [font measure {-underline false} -displayof $treeid [lindex $data $vidx]]
+            incr vidx
+            if { $w > $width($v) } {set width($v) $w }
+        }
         $treeid tag add $x $x
         ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
     }
+    foreach v {"#0" version title uploader date} {
+        incr width($v) 10
+        $treeid column $v -width $width($v)
+    }
+
 }
 
 
