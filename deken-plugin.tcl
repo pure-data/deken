@@ -1753,7 +1753,7 @@ proc ::deken::textresults::show_result {resultsid counter result showmatches} {
 }
 
 # display all found entries in a simple text widget
-proc ::deken::textresults::show_results {resultsid} {
+proc ::deken::textresults::show {resultsid} {
     set counter 0
     # build the list UI of results
     foreach r $::deken::results {
@@ -1783,8 +1783,9 @@ proc ::deken::textresults::clear_results {} {
 }
 }
 
+########################################################
 proc ::deken::show_results {resultsid} {
-    ::deken::textresults::show_results $resultsid
+    ::deken::textresults::show $resultsid
 }
 
 proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
