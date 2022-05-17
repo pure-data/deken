@@ -1412,8 +1412,6 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
     if {[winfo exists ${winid}.tab.results]} {
         set resultsid ${winid}.tab.results
     }
-    set installbutton ${winid}.status.install
-
     # set/unset the selection in a "dict"
     set state {}
     set counter 1
@@ -1447,20 +1445,7 @@ proc ::deken::menu_selectpackage {winid pkgname installcmd} {
             incr counter
         }
     }
-    if { [winfo exists $installbutton] } {
-        set counter 0
-        foreach {a b} $::deken::selected {
-            if {$b ne {} } {
-                incr counter
-                break
-            }
-        }
-        if { $counter > 0 } {
-            $installbutton configure -state normal
-        } else {
-            $installbutton configure -state disabled
-        }
-    }
+    ::deken::update_installbutton ${winid}
 }
 proc ::deken::menu_installselected {resultsid} {
     set counter 0
@@ -1508,6 +1493,22 @@ proc ::deken::update_searchbutton {winid} {
         $winid.searchbit.button configure -text [_ "Show all" ]
     } else {
         $winid.searchbit.button configure -text [_ "Search" ]
+    }
+}
+
+proc ::deken::update_installbutton {winid} {
+    set installbutton ${winid}.status.install
+    if { ! [winfo exists $installbutton] } { return }
+    set counter 0
+    foreach {a b} $::deken::selected {
+        if {$b ne {} } {
+            incr counter
+        }
+    }
+    if { $counter > 0 } {
+        $installbutton configure -state normal -text [format [_ "Install (%d)" ] $counter]
+    } else {
+        $installbutton configure -state disabled -text [_ "Install" ]
     }
 }
 
@@ -1647,8 +1648,11 @@ proc ::deken::create_dialog {winid} {
     label $winid.status.label -textvariable ::deken::statustext -relief sunken -anchor "w"
     pack $winid.status.label -side bottom -fill "x"
 
-    button $winid.status.installdek -text [_ "Install" ] -command "::deken::menu_installselected $resultsid"
-    pack $winid.status.installdek -side right -padx 6 -pady 3 -ipadx 10
+    button $winid.status.install -text [_ "Install" ] \
+        -state disabled \
+        -command "::deken::menu_installselected $resultsid"
+
+    pack $winid.status.install -side right -padx 6 -pady 3 -ipadx 10
 }
 
 proc ::deken::open_search_xxx {searchtype xxx}  {
