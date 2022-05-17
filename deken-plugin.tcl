@@ -2068,6 +2068,10 @@ proc ::deken::treeresults::clear_selection {treeid} {
     bind $treeid <<TreeviewSelect>> {}
     # unselect the old ones, and select the new ones
     $treeid selection remove [$treeid selection]
+    $treeid tag remove selpkg
+    foreach item [$treeid children {}] {
+        $treeid item $item -values {}
+    }
     after idle "bind $treeid <<TreeviewSelect>> \{$bound\}"
 }
 
