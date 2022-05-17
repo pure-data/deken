@@ -1619,8 +1619,9 @@ proc ::deken::create_dialog {winid} {
         scrollbar $winid.tab.results.ys -orient vertical -command "$winid.tab.results yview"
         pack $winid.tab.results.ys -side right -fill "y"
 
-        $winid.tab add $winid.tab.info -text [_ "Log"]
         $winid.tab add $winid.tab.results -text [_ "Search Results"]
+        $winid.tab add $winid.tab.info -text [_ "Log"]
+        ${winid}.tab select ${winid}.tab.info
 
         variable infoid
         variable resultsid
