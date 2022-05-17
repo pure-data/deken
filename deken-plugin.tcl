@@ -1588,7 +1588,7 @@ proc ::deken::create_dialog {winid} {
                 -columns {version title uploader date}
             $treeid heading #0 -text [_ "Library" ] -anchor center -command "::deken::treeresults::columnsort $treeid"
             $treeid heading version -text [_ "Version" ] -anchor center -command "::deken::treeresults::columnsort $treeid version"
-            $treeid heading title -text [_ "Title" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
+            $treeid heading title -text [_ "Description" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
             $treeid heading uploader -text [_ "Uploader" ] -anchor center -command "::deken::treeresults::columnsort $treeid uploader"
             $treeid heading date -text [_ "Date" ] -anchor center -command "::deken::treeresults::columnsort $treeid date"
             $treeid tag configure library -background lightgrey
