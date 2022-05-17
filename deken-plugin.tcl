@@ -1599,6 +1599,7 @@ proc ::deken::create_dialog {winid} {
             bind $treeid <<TreeviewOpen>> "::deken::treeresults::selection_skip %W 1"
             bind $treeid <<TreeviewClose>> "::deken::treeresults::selection_skip %W 1"
             bind $treeid <Motion> "::deken::treeresults::motionevent %W %x %y"
+            bind $treeid <Double-ButtonRelease-1> "::deken::treeresults::doubleclick %W %x %y"
 
             proc ::deken::show_results {resultsid} { ::deken::treeresults::show $resultsid}
             proc ::deken::clear_results {resultsid} { ::deken::treeresults::clear $resultsid}
@@ -2036,6 +2037,18 @@ proc ::deken::treeresults::motionevent {treeid x y} {
         ::deken::status $msg
     }
 }
+
+proc ::deken::treeresults::doubleclick {treeid x y} {
+    set item [$treeid identify item $x $y]
+    set data [$treeid item $item -values]
+    set cmd [lindex $data 5]
+    if { $cmd != "" } {
+        ::deken::post ""
+        eval $cmd
+    }
+
+}
+
 
 proc ::deken::treeresults::show {treeid} {
     # shown: library, version, title, uploader, date
