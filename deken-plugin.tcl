@@ -1683,6 +1683,10 @@ proc ::deken::open_search_missing_libraries {args}  {
 proc ::deken::initiate_search {winid} {
     set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
+    if {[winfo exists ${winid}.tab.info]} {
+        ${winid}.tab select ${winid}.tab.info
+    }
+
     ::deken::clearpost
     ::deken::statuspost [format [_ "Searching for \"%s\"..." ] ${searchterm} ]
     set ::deken::progressvar 0
@@ -1699,11 +1703,22 @@ proc ::deken::initiate_search {winid} {
         set ::deken::selected {}
 
         set ::deken::results $results
+        set matchcount 0
+        foreach r $results {
+            foreach {_ _ match} $r {break}
+            if { $match } {
+                incr matchcount
+            }
+        }
         if {[llength $results] != 0} {
             ::deken::show_results $resultsid
-            ::deken::post [format [_ "Found %d packages." ] [llength $results]]
-            if {[winfo exists ${winid}.tab.results]} {
-                ${winid}.tab select ${winid}.tab.results
+            ::deken::post [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
+            if { $matchcount } {
+                if {[winfo exists ${winid}.tab.results]} {
+                    ${winid}.tab select ${winid}.tab.results
+                }
+            } else {
+                ::deken::post [_ "It appears that there are no matching packages for your architecture." ] warn
             }
         } else {
             ::deken::statuspost [_ "No matching externals found." ]
@@ -1711,9 +1726,6 @@ proc ::deken::initiate_search {winid} {
             ::deken::post " ${msg}"
             set msg [_ "Or use wildcards like 'freeverb*'." ]
             ::deken::post " ${msg}"
-            if {[winfo exists ${winid}.tab.info]} {
-                ${winid}.tab select ${winid}.tab.info
-            }
         }
     }
 }
