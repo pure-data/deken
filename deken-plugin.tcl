@@ -1958,9 +1958,23 @@ proc ::deken::treeresults::selection_changed {treeid} {
             set lib $sel
             if { [$treeid item $sel -values] eq {} } {
                 # currently no data, find the best match!
-                foreach sel [$treeid children $lib] {break}
-                $treeid item $lib -values [$treeid item $sel -values]
-                $treeid tag add selpkg $sel
+                set children {}
+                foreach child [$treeid children $lib] {
+                    set data [$treeid item $child -values]
+                    if {[lindex $data 4]} {
+                        lappend children [list [lindex $data 0] $child]
+                    }
+                }
+                set children [lsort -decreasing -index 0 -command ::deken::versioncompare $children]
+                set sel {}
+                foreach child $children {
+                    foreach {version sel} $child {break}
+                    break
+                }
+                if { $sel != {}} {
+                    $treeid item $lib -values [$treeid item $sel -values]
+                    $treeid tag add selpkg $sel
+                }
             } else {
                 $treeid item $lib -values {}
             }
