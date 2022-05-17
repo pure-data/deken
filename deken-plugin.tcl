@@ -2193,7 +2193,7 @@ proc ::deken::search::puredata.info::search {term} {
             # the space (or some other character that sorts after "\t") after the ${version} is important,
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
-            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
+            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL 1]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
             lappend searchresults $res
         }
@@ -2207,46 +2207,51 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
-proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
-    set m .dekenresults_contextMenu
-    destroy $m
-
-    menu $m
-
-    set saveURL [string map {"[" "%5B" "]" "%5D"} $URL]
-    set decURL [::deken::utilities::urldecode $URL]
-    set filename [ file tail $URL ]
-    set pkgverarch [ ::deken::utilities::parse_filename $filename ]
-    set pkgname [lindex $pkgverarch 0]
-    set cmd [list ::deken::clicked_link $decURL $filename]
-
-    set selcount 0
-    set selected 0
-    foreach {k v} $::deken::selected {
-        if { ${v} != {} } {incr selcount}
-        if { ($k eq $pkgname) && ($v eq $cmd) } {
-            set selected 1
-            break
-        }
-    }
-
+proc ::deken::search::puredata.info::contextmenu {widget theX theY URL with_installmenu} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
 
-    if { $selected } {
-        set selmsg [_ "Deselect package" ]
-    } else {
-        set selmsg [_ "Select package for installation" ]
+    set m .dekenresults_contextMenu
+    destroy $m
+    menu $m
+
+    set saveURL [string map {"[" "%5B" "]" "%5D"} $URL]
+
+    if { $with_installmenu } {
+        set decURL [::deken::utilities::urldecode $URL]
+        set filename [ file tail $URL ]
+        set pkgverarch [ ::deken::utilities::parse_filename $filename ]
+        set pkgname [lindex $pkgverarch 0]
+
+        set cmd [list ::deken::clicked_link $decURL $filename]
+
+        set selcount 0
+        set selected 0
+        foreach {k v} $::deken::selected {
+            if { ${v} != {} } {incr selcount}
+            if { ($k eq $pkgname) && ($v eq $cmd) } {
+                set selected 1
+                break
+            }
+        }
+
+        set msg [_ "Select package for installation" ]
+        if { $selected } {
+            set msg [_ "Deselect package" ]
+        }
+
+        $m add command -label "${msg}" -command "::deken::menu_selectpackage $winid $pkgname {$cmd}"
+        $m add separator
+
+        set msg  [_ "Install package" ]
+        if { $selcount } {
+            set cmd "::deken::menu_installselected $resultsid"
+            set msg [_ "Install selected packages" ]
+        }
+        $m add command -label $msg -command $cmd
+        $m add separator
     }
 
-    $m add command -label "${selmsg}" -command "::deken::menu_selectpackage $winid $pkgname {$cmd}"
-    $m add separator
-    if { $selcount } {
-        $m add command -label [_ "Install selected packages" ] -command "::deken::menu_installselected $resultsid"
-    } else {
-        $m add command -label [_ "Install package" ] -command $cmd
-    }
-    $m add separator
     $m add command -label [_ "Open package webpage" ] -command "pd_menucommands::menu_openfile https://deken.puredata.info/info?[::http::formatQuery url ${URL}]"
     $m add command -label [_ "Copy package URL" ] -command "clipboard clear; clipboard append $saveURL"
     $m add command -label [_ "Copy SHA256 checksum URL" ] -command "clipboard clear; clipboard append ${saveURL}.sha256"
