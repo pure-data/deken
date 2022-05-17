@@ -1371,12 +1371,6 @@ proc ::deken::clearpost {} {
     set ::deken::selected {}
 }
 
-proc ::deken::scrollup_results {} {
-    variable resultsid
-    if { [winfo exists $resultsid] } {
-        $resultsid see 0.0
-    }
-}
 proc ::deken::post_result {msg {tag ""}} {
     variable resultsid
     if { [winfo exists $resultsid] } {
@@ -1735,8 +1729,12 @@ proc ::deken::initiate_search {winid} {
     }
 }
 
+## deken::textresults: show versions of libraries in a simple text widget
+namespace eval ::deken::textresults:: {
+}
+
 # display a single found entry in a simple text widget
-proc ::deken::show_result_txt {resultsid counter result showmatches} {
+proc ::deken::textresults::show_result {resultsid counter result showmatches} {
     foreach {title cmd match comment status contextcmd pkgname} $result {break}
     set tag ch$counter
     set tags [list $tag [expr ${match}?"archmatch":"noarchmatch" ] ]
@@ -1755,11 +1753,11 @@ proc ::deken::show_result_txt {resultsid counter result showmatches} {
 }
 
 # display all found entries in a simple text widget
-proc ::deken::show_results_txt {resultsid} {
+proc ::deken::textresults::show_results {resultsid} {
     set counter 0
     # build the list UI of results
     foreach r $::deken::results {
-        ::deken::show_result_txt $resultsid $counter $r 1
+        ::deken::textresults::show_result $resultsid $counter $r 1
         incr counter
     }
     if { "${::deken::hideforeignarch}" } {
@@ -1767,15 +1765,26 @@ proc ::deken::show_results_txt {resultsid} {
     } else {
         set counter 0
         foreach r $::deken::results {
-            ::deken::show_result_txt $resultsid $counter $r 0
+            ::deken::textresults::show_result $resultsid $counter $r 0
             incr counter
         }
     }
-    ::deken::scrollup_results
+    if { [winfo exists $resultsid] } {
+        $resultsid see 0.0
+    }
+}
+
+proc ::deken::textresults::clear_results {} {
+    set resultsid $::deken::resultsid
+    if { [winfo exists $resultsid] } {
+        $resultsid delete 1.0 end
+    }
+    set ::deken::selected {}
+}
 }
 
 proc ::deken::show_results {resultsid} {
-    ::deken::show_results_txt $resultsid
+    ::deken::textresults::show_results $resultsid
 }
 
 proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
