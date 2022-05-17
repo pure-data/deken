@@ -128,6 +128,9 @@ bail_requirements() {
 }
 
 install_virtualenv() {
+  if which virtualenv >/dev/null; then
+    virtualenv "${DEKEN_HOME}/virtualenv"
+  else
     local pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
     local virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
     echo "Downloading & installing Virtualenv for ${pyversion} using ${virtualenv_url}"
@@ -136,6 +139,7 @@ install_virtualenv() {
     ${HTTP_CLIENT} "${DEKEN_HOME}/virtualenv.pyz" "${virtualenv_url}" && \
             "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv.pyz" "${DEKEN_HOME}/virtualenv"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
+  fi
 
     [ -d "${DEKEN_HOME}/virtualenv" ] || \
             bail_install
