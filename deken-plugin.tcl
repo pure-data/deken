@@ -2188,7 +2188,11 @@ proc ::deken::search::puredata.info::search {term} {
                 }
             }
             catch { set sortprefix [dict get ${latestrelease1} $pkgname] }
-            set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version}${vsep}${date}"
+            # the ${vsep} should sort before all other characters that might appear in version strings,
+            #   as it unsures that "1.2" sorts before "1.2-1"
+            # the space (or some other character that sorts after "\t") after the ${version} is important,
+            #   as it ensures that "0.2~1" sorts before "1.2"
+            set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
             set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname]
             lappend searchresults $res
