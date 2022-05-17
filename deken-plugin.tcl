@@ -573,7 +573,7 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
             -title [_ "Download failed" ] \
             -message "${msg}\n$stdout" \
             -icon error -type ok \
-            -parent .externals_searchui
+            -parent $::deken::winid
         set outputfilename ""
     }
 
@@ -1180,7 +1180,7 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
                                 -title [_ "SHA256 verification failed" ] \
                                 -message "${msg}" \
                                 -icon error -type abortretryignore \
-                                -parent .externals_searchui]
+                                -parent $::deken::winid]
                 # we don't have a good strategy if the user selects 'retry'
                 # so we just display the dialog again...
             }
@@ -1241,7 +1241,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             -title [_ "Package installation failed" ] \
             -message "${msg}" \
             -icon error -type ok \
-            -parent .externals_searchui
+            -parent $::deken::winid
         set install_failed 1
     }
 
@@ -1254,7 +1254,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             set result [tk_messageBox \
                             -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] $extname $deldir] \
                             -icon warning -type okcancel -default ok \
-                            -parent .externals_searchui]
+                            -parent $::deken::winid]
             switch -- $result {
                 ok {
                     ::pd_menucommands::menu_openfile $deldir
@@ -1296,7 +1296,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
             set result [tk_messageBox \
                             -message [format [_ "Add %s to the Pd search paths?" ]  $extname] \
                             -icon question -type yesno -default yes \
-                            -parent .externals_searchui]
+                            -parent $::deken::winid]
         }
         switch -- "${result}" {
             yes {
@@ -1655,7 +1655,7 @@ proc ::deken::create_dialog {winid} {
 }
 
 proc ::deken::open_search_xxx {searchtype xxx}  {
-    set winid .externals_searchui
+    set winid $::deken::winid
     ::deken::open_searchui $winid
     ::deken::clearpost
 
@@ -1813,7 +1813,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
             set result [tk_messageBox \
                             -message [_ "Please select a (writable) installation directory!"] \
                             -icon warning -type retrycancel -default retry \
-                            -parent .externals_searchui]
+                            -parent $::deken::winid]
             switch -- "${result}" {
                 cancel {return}
                 retry {
@@ -1828,7 +1828,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
             set result [tk_messageBox \
                             -message [format [_ "Install %1\$s to %2\$s?" ] $extname $installdir] \
                             -icon question -type yesnocancel -default yes \
-                            -parent .externals_searchui]
+                            -parent $::deken::winid]
             switch -- "${result}" {
                 cancel {return}
                 yes { }
@@ -1911,7 +1911,7 @@ proc ::deken::clicked_link {URL filename} {
                 -title [_ "SHA256 verification failed" ] \
                 -message [format [_ "SHA256 verification of '%s' failed!" ] $fullpkgfile ] \
                 -icon error -type ok \
-                -parent .externals_searchui
+                -parent $::deken::winid
             ::deken::progress 0
             return
         } else {
@@ -2015,10 +2015,10 @@ proc ::deken::initialize {} {
     # create an entry for our search in the "help" menu (or re-use an existing one)
     set mymenu .menubar.help
     if { [catch {
-        $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+        $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui $::deken::winid}
     } _ ] } {
         $mymenu add separator
-        $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui .externals_searchui}
+        $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui $::deken::winid}
     }
     # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 }
@@ -2117,7 +2117,7 @@ proc ::deken::search::puredata.info::search {term} {
             -title [_ "Search failed" ] \
             -message "${msg}\n$stdout" \
             -icon error -type ok \
-            -parent .externals_searchui
+            -parent $::deken::winid
         return
     }
 
