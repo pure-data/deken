@@ -1407,46 +1407,6 @@ proc ::deken::bind_contextmenu {resultsid tagname cmd} {
     }
 }
 
-proc ::deken::menu_selectpackage {winid pkgname installcmd} {
-    set resultsid ${winid}.results
-    if {[winfo exists ${winid}.tab.results]} {
-        set resultsid ${winid}.tab.results
-    }
-    # set/unset the selection in a "dict"
-    set state {}
-    set counter 1
-    foreach {k v} $::deken::selected {
-        if { $k eq $pkgname } {
-            if { $v ne $installcmd } {
-                set state 1
-                lset ::deken::selected $counter $installcmd
-            } else {
-                set state 0
-                lset ::deken::selected $counter {}
-            }
-            break
-        }
-        incr counter 2
-    }
-    if { ${state} eq {} } {
-        # not found in the dict; just add it
-        lappend ::deken::selected $pkgname $installcmd
-        set state 1
-    }
-
-    # set/unset the visual representation (via tags)
-    set counter 0
-    foreach {a b} [$resultsid tag ranges /$pkgname] {$resultsid tag remove sel $a $b}
-    if { $state } {
-        foreach r $::deken::results {
-            if { [lindex $r 1] eq ${installcmd} } {
-                foreach {a b} [$resultsid tag ranges ch$counter] {$resultsid tag add sel $a $b}
-            }
-            incr counter
-        }
-    }
-    ::deken::update_installbutton ${winid}
-}
 proc ::deken::menu_installselected {resultsid} {
     set counter 0
     foreach {k v} $::deken::selected {
@@ -1780,6 +1740,43 @@ proc ::deken::textresults::clear {resultsid} {
     if { [winfo exists $resultsid] } {
         $resultsid delete 1.0 end
     }
+}
+
+proc ::deken::textresults::selectpackage {resultsid pkgname installcmd} {
+    # set/unset the selection in a "dict"
+    set state {}
+    set counter 1
+    foreach {k v} $::deken::selected {
+        if { $k eq $pkgname } {
+            if { $v ne $installcmd } {
+                set state 1
+                lset ::deken::selected $counter $installcmd
+            } else {
+                set state 0
+                lset ::deken::selected $counter {}
+            }
+            break
+        }
+        incr counter 2
+    }
+    if { ${state} eq {} } {
+        # not found in the dict; just add it
+        lappend ::deken::selected $pkgname $installcmd
+        set state 1
+    }
+
+    # set/unset the visual representation (via tags)
+    set counter 0
+    foreach {a b} [$resultsid tag ranges /$pkgname] {$resultsid tag remove sel $a $b}
+    if { $state } {
+        foreach r $::deken::results {
+            if { [lindex $r 1] eq ${installcmd} } {
+                foreach {a b} [$resultsid tag ranges ch$counter] {$resultsid tag add sel $a $b}
+            }
+            incr counter
+        }
+    }
+    ::deken::update_installbutton [winfo toplevel $resultsid]
 }
 
 proc ::deken::textresults::clear_selection {resultsid} {
@@ -2273,7 +2270,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
             set msg [_ "Deselect package" ]
         }
 
-        $m add command -label "${msg}" -command "::deken::menu_selectpackage $winid $pkgname {$cmd}"
+        $m add command -label "${msg}" -command "::deken::textresults::selectpackage $resultsid $pkgname {$cmd}"
         $m add separator
     }
 
