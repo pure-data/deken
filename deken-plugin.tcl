@@ -1533,6 +1533,7 @@ proc ::deken::open_searchui {winid} {
 
 # build the externals search dialog window
 proc ::deken::create_dialog {winid} {
+    variable resultsid
     toplevel $winid -class DialogWindow
     set ::deken::winid $winid
     set title  [_ "Find externals"]
@@ -1635,7 +1636,6 @@ proc ::deken::create_dialog {winid} {
         ${winid}.tab select ${winid}.tab.info
 
         variable infoid
-        variable resultsid
         set resultsid $winid.tab.results
         set infoid $winid.tab.info
     } ] } {
