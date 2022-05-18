@@ -1527,7 +1527,7 @@ proc ::deken::open_searchui {winid} {
     ::deken::post "" info
     ::deken::post [_ "Right-clicking a search result will give you more options..." ] info
     ::deken::post "" info
-    ::deken::post [_ "You can also search for libraries & objects in via your browser:" ] info
+    ::deken::post [_ "You can also search for libraries & objects via your web browser:" ] info
     ::deken::post "https://deken.puredata.info" dekenurl
 }
 
