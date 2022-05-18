@@ -10,6 +10,7 @@ COPY deken.hy /usr/local/share/deken/
 
 # we are runnign as root, so set this
 ENV DEKEN_ROOT=yes
+ENV DEKEN_SIGN_GPG=no
 
 # install all the required stuff
 COPY requirements.txt /tmp
