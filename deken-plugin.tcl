@@ -2110,38 +2110,45 @@ proc ::deken::treeresults::show {treeid} {
     set lastlib {}
     set index {}
 
-    foreach v {"#0" version title uploader date} {
-        set width($v) 0
-    }
+    ##foreach v {"#0" version title uploader date} {
+    ##    set width($v) 0
+    ##}
 
+    #puts [time {
     foreach lib $libraries {
         set l [lindex $lib 0]
         set data [lrange $lib 1 end]
         if {$l ne $lastlib} {
             set lastlib $l
             set index [$treeid insert {} end -text $l -open 0 -tags {library}]
-            set w [font measure {-underline false} -displayof $treeid $l]
-            if {$w > $width(#0)} {set width(#0) $w}
+            ##set w [font measure {-underline false} -displayof $treeid $l]
+            ##if {$w > $width(#0)} {set width(#0) $w}
         }
         set archtag noarchmatch
         if { [lindex $lib 5] } {
             set archtag archmatch
         }
         set x [$treeid insert $index end -values $data -tags [list package $archtag]]
-        set vidx 0
-        foreach v {version title uploader date} {
-            set w [font measure {-underline false} -displayof $treeid [lindex $data $vidx]]
-            incr vidx
-            if { $w > $width($v) } {set width($v) $w }
-        }
+        ##set vidx 0
+        ##foreach v {version title uploader date} {
+        ##    set w [font measure {-underline false} -displayof $treeid [lindex $data $vidx]]
+        ##    incr vidx
+        ##    if { $w > $width($v) } {set width($v) $w }
+        ##}
         $treeid tag add $x $x
         ::deken::bind_contextmenu $treeid $x [lindex $lib 7]
     }
+    #}]
+
     ### setting the width as a few caveats
     ## - we end up with cut off texts anyhow
     ##   (i guess this is mostly a problem with requiring too much text)
     ## - the widths don#t get fully applied automatically
     ##   (as soon as you drag one of the column delimiters, the other snap into place)
+    ## - it takes forever.
+    ##   (simply calculating the required widths for 148 entries takes ~7200ms,
+    ##   as opposed to ~1.2ms for not calculating them)
+    ##
     #foreach v {version title uploader date} {
     #    incr width($v) 10
     #    $treeid column $v -width $width($v)
