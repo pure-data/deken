@@ -60,6 +60,10 @@ And to upload packages:
 $ docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken upload *.dek
 ~~~
 
+
+Note: within the container, `deken` will not attempt to GPG-sign your packages by default.
+If your container has access to your GPG keys, you can enable signing by passing the `--sign-gpg` flag to `deken package` (resp. `deken upload`).
+
 ### Manual bootstrap
 
 ~~~sh
