@@ -1598,7 +1598,8 @@ proc ::deken::create_dialog {winid} {
                 -height 10 \
                 -selectmode browse \
                 -columns {version title uploader date} \
-                -displaycolumns {version uploader date}
+                -displaycolumns {version uploader date} \
+                -yscrollcommand "$winid.tab.results.ys set"
             $treeid heading #0 -text [_ "Library" ] -anchor center -command "::deken::treeresults::columnsort $treeid"
             $treeid heading version -text [_ "Version" ] -anchor center -command "::deken::treeresults::columnsort $treeid version"
             $treeid heading title -text [_ "Description" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
@@ -1619,6 +1620,10 @@ proc ::deken::create_dialog {winid} {
             proc ::deken::show_results {resultsid} { ::deken::treeresults::show $resultsid}
             proc ::deken::clear_results {resultsid} { ::deken::treeresults::clear $resultsid}
             proc ::deken::clear_selection {resultsid} { ::deken::treeresults::clear_selection $resultsid }
+
+            scrollbar $winid.tab.results.ys -orient vertical -command "$winid.tab.results yview"
+            pack $winid.tab.results.ys -side right -fill "y"
+
         } ] } {
             text $winid.tab.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$winid.tab.results.ys set"
             scrollbar $winid.tab.results.ys -orient vertical -command "$winid.tab.results yview"
@@ -1634,7 +1639,6 @@ proc ::deken::create_dialog {winid} {
         set resultsid $winid.tab.results
         set infoid $winid.tab.info
     } ] } {
-
         text $winid.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "$winid.results.ys set"
         scrollbar $winid.results.ys -orient vertical -command "$winid.results yview"
         pack $winid.results.ys -side right -fill "y"
