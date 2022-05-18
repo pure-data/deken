@@ -1596,7 +1596,8 @@ proc ::deken::create_dialog {winid} {
             ttk::treeview $treeid \
                 -height 10 \
                 -selectmode browse \
-                -columns {version title uploader date}
+                -columns {version title uploader date} \
+                -displaycolumns {version uploader date}
             $treeid heading #0 -text [_ "Library" ] -anchor center -command "::deken::treeresults::columnsort $treeid"
             $treeid heading version -text [_ "Version" ] -anchor center -command "::deken::treeresults::columnsort $treeid version"
             $treeid heading title -text [_ "Description" ] -anchor center -command "::deken::treeresults::columnsort $treeid title"
