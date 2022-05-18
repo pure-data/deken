@@ -2151,6 +2151,45 @@ proc ::deken::clear_selection {resultsid} {
 }
 ########################################################
 
+
+## tooltips
+# code based on example by Donal Fellows in 2001
+# https://groups.google.com/g/comp.lang.tcl/c/IhNlXBxL1_I/m/sF4sNhpi7XQJ
+namespace eval ::deken::balloon {
+}
+
+proc ::deken::balloon::show {winid x y msg} {
+    set ::deken::balloon::message($winid) $msg
+    if {![winfo exist $winid]} {
+        toplevel ${winid}
+        wm overrideredirect ${winid} 1
+        label ${winid}.label \
+            -highlightthick 0 -relief solid -borderwidth 1 \
+            -textvariable ::deken::balloon::message($winid)
+        pack ${winid}.label -expand 1 -fill x
+    }
+
+    if { $msg == {} } {
+        wm withdraw ${winid}
+        return
+    }
+
+    set g [format +%d+%d $x $y]
+    # This is probably overdoing it, but better too much than too little
+    wm geometry ${winid} $g
+    wm deiconify ${winid}
+    wm geometry ${winid} $g
+    raise ${winid}
+    after idle "[list wm geometry $winid $g]; raise $winid"
+}
+proc ::deken::balloon::hide {winid} {
+    if {[winfo exist ${winid}]} {
+        wm withdraw ${winid}
+    }
+}
+
+########################################################
+
 proc ::deken::ask_installdir {{installdir ""} {extname ""}} {
     while {1} {
         if { "$installdir" == "" } {
