@@ -138,9 +138,10 @@ bail_upgrade() {
     fi
     cat >/dev/stderr <<EOF
 It seems your version of deken is out of sync.
-
+($script has version ${DEKEN_VERSION}, but your installation is $1)
 You can run 'deken install' or 'deken upgrade' anytime to
  re-install (or upgrade) your Deken installation.
+
 EOF
 }
 
@@ -241,7 +242,7 @@ tryrun_deken() {
     # check if the 'deken' script and the actual implementation match
     local dekversion=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
     if test -n "${dekversion}" && test "x${dekversion}" != "x${DEKEN_VERSION}"; then
-        bail_upgrade
+        bail_upgrade "${dekversion}"
     fi
 
     if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
