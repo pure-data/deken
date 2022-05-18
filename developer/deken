@@ -6,6 +6,8 @@
 
 # Much of this code is pilfered from Clojure's Leiningen tool
 
+script="$0"
+script_args="$@"
 
 ##############################################################################
 # variable declarations
@@ -185,8 +187,19 @@ upgrade_deken() {
       exit 1
     fi
     # first upgrade this script itself
-    echo "Upgrading $0."
-    ${HTTP_CLIENT} "$0" "${DEKEN_BASE_URL}/deken"
+    echo "Upgrading ${script}."
+    ${HTTP_CLIENT} "${DEKEN_HOME}/.upgrade-deken" "${DEKEN_BASE_URL}/deken" || ( error "Error upgrading deken"; exit 1; )
+    if diff -q "${DEKEN_HOME}/.upgrade-deken" "$self" >/dev/null; then
+	    # launcher script is already up-to-date
+	    rm "${DEKEN_HOME}/.upgrade-deken"
+    else
+	    mv "${DEKEN_HOME}/.upgrade-deken" "{script}"
+	    error "The deken-installer has changed."
+	    error "Please re-run the last command"
+	    error ""
+	    error "hint: ${script} ${script_args}"
+	    exit
+    fi
     # next upgrade our dependencies
     for f in requirements.txt deken.hy
     do
