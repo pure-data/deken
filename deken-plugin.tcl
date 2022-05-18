@@ -1535,7 +1535,8 @@ proc ::deken::open_searchui {winid} {
 proc ::deken::create_dialog {winid} {
     toplevel $winid -class DialogWindow
     set ::deken::winid $winid
-    wm title $winid [_ "Find externals"]
+    set title  [_ "Find externals"]
+    wm title $winid "deken - $title"
     wm geometry $winid 670x550
     wm minsize $winid 230 360
     wm transient $winid
