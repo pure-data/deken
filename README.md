@@ -1,8 +1,8 @@
 A minimal package management system for Pure Data externals.
 
-![Animated GIF demonstration of the Deken plugin user interface](https://raw.githubusercontent.com/pure-data/deken/master/deken.gif)
+![Animated GIF demonstration of the Deken plugin user interface](https://raw.githubusercontent.com/pure-data/deken/main/deken.gif)
 
-Packages are stored on <http://puredata.info/> and can be installed using the `Help -> Find Packages` menu after installing the [GUI plugin](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl).
+Packages are stored on <http://puredata.info/> and can be installed using the `Help -> Find Packages` menu after installing the [GUI plugin](https://raw.githubusercontent.com/pure-data/deken/main/deken-plugin.tcl).
 
 ## README.1st ##
 
@@ -29,7 +29,7 @@ Just search for `deken-plugin` and install the latest and greatest release of th
 
 
 For manual installation (e.g. because you want to test a developer version of the plugin),
-click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/master/deken-plugin.tcl)
+click to download [deken-plugin.tcl](https://raw.githubusercontent.com/pure-data/deken/main/deken-plugin.tcl)
 and save it to your Pd folder:
 
  * Linux = `~/.local/lib/pd/extra/deken-plugin/` (with Pd<0.47 try `~/pd-externals/deken-plugin/`)

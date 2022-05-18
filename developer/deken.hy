@@ -1436,7 +1436,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
            (log.debug "Trying to open the page for you...")
            (webbrowser.open_new(page)))
          (except [e Exception])))
-  (open-webpage "https://github.com/pure-data/deken/tree/master/developer")
+  (open-webpage "https://github.com/pure-data/deken/tree/main/developer")
   (sys.exit "'update' not implemented for this platform!"))
 
 ;; verifies a dekfile by checking it's GPG-signature (if possible) the SHA256

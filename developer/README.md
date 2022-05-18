@@ -1,7 +1,7 @@
 # External Developers #
 
 You can use the [`deken` command line
-tool](https://raw.githubusercontent.com/pure-data/deken/master/developer/deken)
+tool](https://raw.githubusercontent.com/pure-data/deken/main/developer/deken)
 to create packaged zipfiles with the correct searchable architectures in the
 filename, for example `freeverb~-v0.1-(Linux-amd64-64)-externals.zip`.
 
@@ -15,8 +15,8 @@ files yourself. See the "Filename format" section below.
 If you don't want to install Python3, bash (MSYS),... as described below, you can also download
 self-contained binaries from our Continuous Integration setup:
 
-- [Windows 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/master/download?job=windows)
-- [macOS 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/master/download?job=osx)
+- [Windows 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/main/download?job=windows)
+- [macOS 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/main/download?job=osx)
 
 If they don't work for you, you might want to check the [releases page](https://github.com/pure-data/deken/releases)
 for downloads that have been tested by humans.
@@ -40,7 +40,7 @@ Get the latest and greatest release:
 docker pull registry.git.iem.at/pd/deken
 ~~~
 
-(For the more daring, you can also grab the lastest development snapshot under the `master` tag).
+(For the more daring, you can also grab the lastest development snapshot under the `main` tag).
 
 To use it to create your packages:
 
@@ -64,7 +64,7 @@ $ docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd
 
 ~~~sh
 $ mkdir -p ~/bin/
-$ curl https://raw.githubusercontent.com/pure-data/deken/master/developer/deken > ~/bin/deken
+$ curl https://raw.githubusercontent.com/pure-data/deken/main/developer/deken > ~/bin/deken
 $ chmod 755 ~/bin/deken
 $ deken
 This is your first time running deken on this machine.
