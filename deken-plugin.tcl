@@ -1633,7 +1633,7 @@ proc ::deken::create_dialog {winid} {
 
         $winid.tab add $winid.tab.results -text [_ "Search Results"]
         $winid.tab add $winid.tab.info -text [_ "Log"]
-        ${winid}.tab select ${winid}.tab.info
+        ::deken::show_tab $winid info
 
         variable infoid
         set resultsid $winid.tab.results
@@ -1665,6 +1665,12 @@ proc ::deken::create_dialog {winid} {
         -command "::deken::menu_installselected $resultsid"
 
     pack $winid.status.install -side right -padx 6 -pady 3 -ipadx 10
+}
+
+proc ::deken::show_tab {winid tab} {
+    if { [winfo exists ${winid}.tab.${tab}] } {
+        ${winid}.tab select ${winid}.tab.${tab}
+    }
 }
 
 proc ::deken::open_search_xxx {searchtype xxx}  {
@@ -1710,9 +1716,7 @@ proc ::deken::open_search_missing_libraries {args}  {
 proc ::deken::initiate_search {winid} {
     set searchterm [$winid.searchbit.entry get]
     # let the user know what we're doing
-    if {[winfo exists ${winid}.tab.info]} {
-        ${winid}.tab select ${winid}.tab.info
-    }
+    ::deken::show_tab $winid info
 
     ::deken::clearpost
     ::deken::statuspost [format [_ "Searching for \"%s\"..." ] ${searchterm} ]
@@ -1741,9 +1745,7 @@ proc ::deken::initiate_search {winid} {
             ::deken::show_results $resultsid
             ::deken::post [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
             if { $matchcount } {
-                if {[winfo exists ${winid}.tab.results]} {
-                    ${winid}.tab select ${winid}.tab.results
-                }
+                ::deken::show_tab $winid results
             } else {
                 ::deken::post [_ "It appears that there are no matching packages for your architecture." ] warn
             }
@@ -2317,9 +2319,7 @@ proc ::deken::clicked_link {URL filename} {
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     variable winid
-    if {[winfo exists ${winid}.tab.info]} {
-        ${winid}.tab select ${winid}.tab.info
-    }
+    ::deken::show_tab $winid info
 
     set installdir [::deken::ensure_installdir "" ${filename}]
     if { "${installdir}" == "" } {
