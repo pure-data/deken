@@ -2666,7 +2666,7 @@ proc ::deken::search::puredata.info::search {term} {
             # the space (or some other character that sorts after "\t") after the ${version} is important,
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
-            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $URL]
+            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $pkgname $URL]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname $version $creator $date]
             lappend searchresults $res
         }
@@ -2680,7 +2680,7 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
-proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
+proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
     set with_installmenu 1
@@ -2733,6 +2733,14 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY URL} {
     $m add command -label [_ "Copy package URL" ] -command "clipboard clear; clipboard append $saveURL"
     $m add command -label [_ "Copy SHA256 checksum URL" ] -command "clipboard clear; clipboard append ${saveURL}.sha256"
     $m add command -label [_ "Copy OpenGPG signature URL" ] -command "clipboard clear; clipboard append ${saveURL}.asc"
+
+    set installpath [::deken::find_installpath]
+    if { "$installpath" ne {} } {
+        if { [file isdir [file join $installpath $pkgname]] } {
+            $m add separator
+            $m add command -label [_ "Uninstall package" ] -command "::deken::show_tab $winid info; ::deken::utilities::uninstall \{$installpath\} \{$pkgname\}"
+        }
+    }
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
 }
 
