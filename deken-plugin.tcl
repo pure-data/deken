@@ -1611,6 +1611,7 @@ proc ::deken::create_dialog {winid} {
             bind $treeid <<TreeviewOpen>> "::deken::treeresults::selection_skip %W 1"
             bind $treeid <<TreeviewClose>> "::deken::treeresults::selection_skip %W 1"
             bind $treeid <Motion> "::deken::treeresults::motionevent %W %x %y"
+            bind $treeid <Leave> "::deken::treeresults::leaveevent %W"
             bind $treeid <Double-ButtonRelease-1> "::deken::treeresults::doubleclick %W %x %y"
 
             proc ::deken::show_results {resultsid} { ::deken::treeresults::show $resultsid}
@@ -1873,6 +1874,7 @@ namespace eval ::deken::treeresults:: {
 }
 array set ::deken::treeresults::colsort {}
 array set ::deken::treeresults::skipclick {}
+array set ::deken::treeresults::activecell {}
 
 proc ::deken::treeresults::columnsort {treeid {col "#0"}} {
     # do we want to sort increasing or decreasing?
@@ -2044,10 +2046,31 @@ proc ::deken::treeresults::presorter {A B} {
 proc ::deken::treeresults::motionevent {treeid x y} {
     set item [$treeid identify item $x $y]
     set data [$treeid item $item -values]
-    set msg [lindex $data 7]
-    if { "$msg" != "" } {
-        ::deken::status $msg
+    if {! [info exists ::deken::treeresults::activecell($treeid) ] } {
+        set ::deken::treeresults::activecell($treeid) {}
     }
+
+    set title [lindex $data 1]
+    set status [lindex $data 7]
+    set subtitle [lindex $data 8]
+
+    # the status bar
+    if { "$status" != "" } {
+        ::deken::status $status
+    }
+
+    # the balloon
+    if { $::deken::treeresults::activecell($treeid) != $item } {
+        set ::deken::treeresults::activecell($treeid) $item
+        set X [expr "[winfo rootx $treeid] + 10"]
+        set Y [expr "[winfo rooty $treeid] + $y + 10"]
+
+        ::deken::balloon::show ${treeid}_balloon $X $Y [string trim "$title\n$subtitle"]
+    }
+}
+proc ::deken::treeresults::leaveevent {treeid} {
+    set ::deken::treeresults::activecell($treeid) {}
+    ::deken::balloon::hide ${treeid}_balloon
 }
 
 proc ::deken::treeresults::doubleclick {treeid x y} {
@@ -2073,7 +2096,7 @@ proc ::deken::treeresults::show {treeid} {
             }
         }
 
-        lappend libraries [list $pkgname $version $title $uploader $timestamp $match $cmd $contextcmd $statusline]
+        lappend libraries [list $pkgname $version $title $uploader $timestamp $match $cmd $contextcmd $statusline $subtitle]
     }
     # sort the libraries
     set libraries [lsort -decreasing -command ::deken::treeresults::presorter $libraries]
