@@ -131,6 +131,19 @@ EOF
     exit 1
 }
 
+bail_upgrade() {
+    if ${systeminstalled}; then
+      # on Debian we don't want the user to run upgrades themselves
+      return
+    fi
+    cat >/dev/stderr <<EOF
+It seems your version of deken is out of sync.
+
+You can run 'deken install' or 'deken upgrade' anytime to
+ re-install (or upgrade) your Deken installation.
+EOF
+}
+
 install_virtualenv() {
   if which virtualenv >/dev/null; then
     virtualenv "${DEKEN_HOME}/virtualenv"
@@ -177,6 +190,7 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ] || (\
         echo "Installing deken library dependencies." && \
         "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements)
+    echo "${DEKEN_VERSION}" > "${DEKEN_HOME}/version.txt"
 }
 
 upgrade_deken() {
@@ -209,6 +223,8 @@ upgrade_deken() {
     done
     # finally update the python dependencies
     "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements
+
+    echo "${DEKEN_VERSION}" > "${DEKEN_HOME}/version.txt"
     echo "Successfully upgraded."
 }
 
@@ -217,6 +233,13 @@ tryrun_deken() {
        hy3 "${DEKENHY}" "$@"
        exit $?
     fi
+
+    # check if the 'deken' script and the actual implementation match
+    local dekversion=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
+    if test -n "${dekversion}" && test "x${dekversion}" != "x${DEKEN_VERSION}"; then
+        bail_upgrade
+    fi
+
     if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
        error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
        error "Try running '$0 install --self' or '$0 upgrade --self'"
