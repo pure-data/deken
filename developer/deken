@@ -208,7 +208,9 @@ upgrade_deken() {
         # launcher script is already up-to-date
         rm "${DEKEN_HOME}/.upgrade-deken"
     else
-        if mv "${DEKEN_HOME}/.upgrade-deken" "{script}"; then
+        if test -w "${script}"; then
+            cat "${DEKEN_HOME}/.upgrade-deken" > "{script}"
+            rm "${DEKEN_HOME}/.upgrade-deken"
             error "The deken-installer has changed."
             error "Please re-run the last command"
             error ""
