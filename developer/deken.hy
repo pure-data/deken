@@ -1659,9 +1659,12 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                  (bool (len args.dekfile)))
        ;; download a package (but don't install it)
        :download (fn [args]
+         (setv packages (--packages-from-args-- args.package args.requirement))
+         (if (not packages)
+             (fatal "nothing to download"))
          (not (get (download-verified
            ;; parse package specifiers
-           (categorize-search-terms (--packages-from-args-- args.package args.requirement) True False)
+           (categorize-search-terms packages True False)
            :architecture (or args.architecture None)
            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
@@ -2004,7 +2007,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (add-noverify-flags arg-download)
   (arg-download.add_argument
     "package"
-    :nargs "+"
+    :nargs "*"
     :help "package specifier or URL to download")
 
   (add-search-flags arg-install)
