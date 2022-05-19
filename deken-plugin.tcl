@@ -1468,6 +1468,7 @@ proc ::deken::menu_installselected {resultsid} {
 
 proc ::deken::menu_uninstall_package {winid pkgname installpath} {
     ::deken::show_tab $winid info
+    ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] $pkgname ] info
     ::deken::utilities::uninstall $installpath $pkgname
 }
 
