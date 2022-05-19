@@ -1061,7 +1061,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (test-extensions filename [".dek" ".zip" ".tar.gz" ".tgz"]))
 
 ;; download a file
-(defn download-file [url [filename None]]
+(defn download-file [url [filename None] [output-dir "."]]
   "downloads a file from <url>, saves it as <filename> (or a sane default); returns the filename or None; makes sure that no file gets overwritten"
   (defn unique-filename [filename]
     (defn unique-filename-number [filename number]
@@ -1084,13 +1084,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (if (= 200 r.status_code)
       (save-data
         (unique-filename
-          (or
+          (os.path.join (or output-dir ".") (or
             filename
             (try
               (.strip (first (re.findall "filename=(.+)" (try-get r.headers "content-disposition" ""))) "\"")
               (except [e AttributeError] None))
             (os.path.basename url)
-            "downloaded_file"))
+            "downloaded_file")))
         r.content)
       (log.warning (% "Downloading '%s' failed with '%s'" (, url r.status_code)))))
 
@@ -1494,7 +1494,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          [verify-gpg True]
                          [verify-hash True]
                          [verify-none False]
-                         [search-url None]]
+                         [search-url None]
+                         [download-dir "."]]
   "search for files using the <searchterms>, download any results and verify them.
 unverified files are removed (pendig the verify-... flags)
 returns a tuple of a (list of verified files) and the number of failed verifications"
@@ -1507,7 +1508,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (defn try-download [url]
     (defn --verbose-download-- [url msg]
       (log.info msg)
-      (setv outfile (download-file url))
+      (setv outfile (download-file url :output-dir download-dir))
       (if outfile (log.info "downloaded %s" outfile) (log.info "failed to download %s" url))
       outfile)
     (setv pkg (--verbose-download-- url "downloading package"))
@@ -1669,7 +1670,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
            :verify-none args.no-verify
-           :search-url  args.search-url) 1)))
+           :search-url  args.search-url
+           :download-dir args.downloaddir) 1)))
        :uninstall (fn [args]
                     (if args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
@@ -2005,6 +2007,11 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :action "store_true"
     :help "Don't abort download on verification errors")
   (add-noverify-flags arg-download)
+  (arg-download.add_argument
+    "--download-dir"
+    :default "."
+    :dest "downloaddir"
+    :help "Target directory to download packages to (DEFAULT: .)")
   (arg-download.add_argument
     "package"
     :nargs "*"
