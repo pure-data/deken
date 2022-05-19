@@ -2232,7 +2232,7 @@ proc ::deken::clear_selection {resultsid} {
 namespace eval ::deken::balloon {
 }
 
-proc ::deken::balloon::show {winid x y msg} {
+proc ::deken::balloon::show {winid x y msg {x_offset 0} {y_offset 0}} {
     set ::deken::balloon::message($winid) $msg
     if {![winfo exist $winid]} {
         toplevel ${winid}
@@ -2248,7 +2248,7 @@ proc ::deken::balloon::show {winid x y msg} {
         return
     }
 
-    set g [format +%d+%d $x $y]
+    set g [format +%d+%d [expr $x + $x_offset] [expr $y + $y_offset]]
     # This is probably overdoing it, but better too much than too little
     wm geometry ${winid} $g
     wm deiconify ${winid}
