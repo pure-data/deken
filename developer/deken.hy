@@ -1410,7 +1410,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (print ""))
 
   (setv both (= args.libraries args.objects))
-  (setv searchterms (categorize-search-terms args.search (or both args.libraries) (or both args.objects)))
+  (setv searchterms (categorize-search-terms (--packages-from-args-- args.search args.requirement) (or both args.libraries) (or both args.objects)))
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (lfor result
         (sort-searchresults
@@ -1661,7 +1661,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
        :download (fn [args]
          (not (get (download-verified
            ;; parse package specifiers
-           (categorize-search-terms args.package True False)
+           (categorize-search-terms (--packages-from-args-- args.package args.requirement) True False)
            :architecture (or args.architecture None)
            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
@@ -1823,7 +1823,13 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                (, (.join "-" (native-arch))))
       :action "append"
       :default []
-      :required False))
+      :required False)
+    (parser.add_argument
+      "--requirement" "-r"
+      :action "append"
+      :default []
+      :help "Install/find/download from the given requirements file. This option can be used multiple times.")
+      )
   (defn add-find-flags [parser]
     (add-search-flags parser)
     (parser.add_argument
@@ -2007,11 +2013,6 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :action "store_true"
     :help "Don't abort download on verification errors")
   (add-noverify-flags arg-install)
-  (arg-install.add_argument
-    "--requirement" "-r"
-    :action "append"
-    :default []
-    :help "Install from the given requirements file. This option can be used multiple times.")
   (arg-install.add_argument
     "--install-dir"
     :default default-installpath
