@@ -1709,7 +1709,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                    :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
                                    :verify-none args.no-verify
-                                   :search-url args.search-url)
+                                   :search-url args.search-url
+                                   :download-dir args.installdir)
                           (, [] 0)))
                   (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
                       (not (get downloaded-pkgs 1))
