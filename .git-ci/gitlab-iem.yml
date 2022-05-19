@@ -65,6 +65,10 @@ variables:
       # test installing/uninstalling the package
     - ${DEKEN_EXE} install *.dek
     - ${DEKEN_EXE} uninstall "${DEKEN_TEST}"
+      # test downloading the package
+    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
+    - ${DEKEN_EXE} download --ignore-missing-gpg --download-dir=.git-ci/tmp/ "${DEKEN_TEST}==${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
+    - ls -lha .git-ci/tmp/
 
 fetch-testdata:
   stage: build
