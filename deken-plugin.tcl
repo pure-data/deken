@@ -500,13 +500,39 @@ proc ::deken::utilities::uninstall {path library} {
     return 1
 }
 
-if { [catch {package require sha256} ] } {
-    proc ::deken::utilities::verify_sha256 {url pkgfile} {
-        set msg [format [_ "Skipping SHA256 verification of '%s'." ] $url ]
-        ::deken::statuspost $msg
-        return 1
-    }
-} else {  # successfully imported sha256
+proc ::deken::utilities::sha256_sha256sum {filename} {
+    set hash {}
+    catch { set hash [lindex [exec sha256sum $filename] 0] }
+    return $hash
+}
+proc ::deken::utilities::sha256_shasum {filename} {
+    set hash {}
+    catch { set hash [lindex [exec shasum -a 256 $filename] 0] }
+    return $hash
+}
+proc ::deken::utilities::sha256_msw {filename} {
+    set hash {}
+    catch { set hash [join [exec certUtil -hashfile $filename SHA256 | findstr /v "hash"] ""] }
+    return $hash
+}
+if { [catch {package require sha256} ] } { proc ::deken::utilities::sha256_tcllib {filename} {} } else {
+proc ::deken::utilities::sha256_tcllib {filename} {
+    set hash {}
+    catch { set hash [::sha2::sha256 -hex -filename $filename] }
+    return $hash
+}
+}
+
+
+proc ::deken::utilities::verify_sha256 {url pkgfile} {
+    set msg [format [_ "Skipping SHA256 verification of '%s'." ] $url ]
+    ::deken::statuspost $msg
+    return 1
+}
+
+
+foreach impl {sha256sum shasum msw tcllib} {
+    if { [::deken::utilities::sha256_${impl} $::argv0] ne "" } {
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
         ::deken::statuspost [format [_ "SHA256 verification of '%s'" ] $pkgfile ] debug
         ::deken::syncgui
@@ -538,7 +564,7 @@ if { [catch {package require sha256} ] } {
                     catch { file delete $hashfile }
                 }
 
-                set hash [string trim [string tolower [ ::sha2::sha256 -hex -filename $pkgfile ] ] ]
+                set hash [string trim [string tolower [ ::deken::utilities::sha256_${impl} $pkgfile ] ] ]
                 if { "${hash}" eq "${reference}" } {
                     set retval 1
                 } else {
@@ -554,6 +580,9 @@ if { [catch {package require sha256} ] } {
         }
         return ${retval}
     }
+# it seems we found a working sha256 implementation, don't try to other ones...
+break
+}
 }
 
 # download a file to a location
