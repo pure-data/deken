@@ -1437,6 +1437,12 @@ proc ::deken::menu_installselected {resultsid} {
     ::deken::clear_selection $resultsid
 }
 
+proc ::deken::menu_uninstall_package {winid pkgname installpath} {
+    ::deken::show_tab $winid info
+    ::deken::utilities::uninstall $installpath $pkgname
+}
+
+
 
 proc ::deken::do_prompt_installdir {path {winid {}}} {
     set msg [_ "Install externals to directory:"]
@@ -2738,7 +2744,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} 
     if { "$installpath" ne {} } {
         if { [file isdir [file join $installpath $pkgname]] } {
             $m add separator
-            $m add command -label [_ "Uninstall package" ] -command "::deken::show_tab $winid info; ::deken::utilities::uninstall \{$installpath\} \{$pkgname\}"
+            $m add command -label [format [_ "Uninstall '%s'" ] $pkgname] -command [list ::deken::menu_uninstall_package $winid $pkgname $installpath]
         }
     }
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
