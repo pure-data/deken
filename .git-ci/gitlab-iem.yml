@@ -63,13 +63,12 @@ variables:
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
       # upload the deken-test package
-    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || "${DEKEN_EXE}" upload --no-sign-gpg --no-source-error ./*.dek
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ${DEKEN_EXE} -v upload --no-sign-gpg --no-source-error ./*.dek
       # test installing/uninstalling the package
     - ${DEKEN_EXE} -v install *.dek
     - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST}"
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - echo ${DEKEN_EXE} -v download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
     - ${DEKEN_EXE} --debug -vv download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
       # test installing/uninstalling the package (from remote; into extra installation directory))
