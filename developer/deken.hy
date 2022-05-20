@@ -1393,13 +1393,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   "finds packages and filters them according to architecture, requirements and versioncount"
   (log.debug "find-packages.search terms : %s" searchterms)
   (log.debug "find-packages.architectures: %s" architectures)
+  (setv unversioned-libs (.difference (set (try-get searchterms "libraries" [])) (lfor x (try-get searchterms "versioned-libraries" []) (try-get x 0))) )
+  (log.debug "find-packages.unversioned  : %s" unversioned-libs)
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (filter-older-versions
     (lfor x (search (or searchurl default-searchurl)
                     (try-get searchterms "libraries" [])
                     (try-get searchterms "objects" []))
           :if (and
-                (version-match? x)
+                (or (in (get x "package") unversioned-libs) (version-match? x))
                 (compatible-archs? (or architectures [(native-arch)]) (get x "architectures")))
           x)
     versioncount))
