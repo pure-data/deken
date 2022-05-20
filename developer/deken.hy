@@ -1062,6 +1062,17 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   "(naive) check if the given filename is a (known) archive: just check the file extension"
   (test-extensions filename [".dek" ".zip" ".tar.gz" ".tgz"]))
 
+
+;; try to remove a file (but keep running if things go wrong)
+(defn try-remove-file [filename]
+  "try to delete <filename>, but don't complain if things fail"
+  (if filename
+    (try
+     (os.remove filename)
+     (except [e Exception] (log_debug e))))
+  None)
+
+
 ;; download a file
 (defn download-file [url [filename None] [output-dir "."]]
   "downloads a file from <url>, saves it as <filename> (or a sane default); returns the filename or None; makes sure that no file gets overwritten"
@@ -1503,12 +1514,6 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   "search for files using the <searchterms>, download any results and verify them.
 unverified files are removed (pendig the verify-... flags)
 returns a tuple of a (list of verified files) and the number of failed verifications"
-  (defn try-remove [filename]
-    (if filename
-        (try
-          (os.remove filename)
-          (except [e Exception] (log_debug e))))
-    None)
   (defn try-download [url]
     (defn --verbose-download-- [url msg]
       (log.info msg)
@@ -1525,9 +1530,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                  :hash verify-hash))
           (not verify-none))
         (do
-          (try-remove pkg)
-          (try-remove gpg)
-          (try-remove hsh)
+          (try-remove-file pkg)
+          (try-remove-file gpg)
+          (try-remove-file hsh)
           None)
         (do
           (log.info (% "Downloaded: %s" (, pkg)))
