@@ -49,14 +49,16 @@ variables:
     - ${DEKEN_EXE} systeminfo
     - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
+    - PKGVERSION="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
+    - echo "${PKGVERSION}"
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
     - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST}
       # check whether renaming working
-    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST}"
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${PKGVERSION}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST}"
     - find . -maxdepth 1 -name "*.dek*" -print
     - rm decken-test*.dek*
       # check whether automatic names work
-    - ${DEKEN_EXE} package --no-sign-gpg --version="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}" ".git-ci/tmp/${DEKEN_TEST}"
+    - ${DEKEN_EXE} package --no-sign-gpg --version="${PKGVERSION}" ".git-ci/tmp/${DEKEN_TEST}"
     - find . -maxdepth 1 -name "*.dek*"
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
@@ -67,13 +69,13 @@ variables:
     - ${DEKEN_EXE} uninstall "${DEKEN_TEST}"
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
-      # test installing/uninstalling the package (from remote; into extra
-      # installation directory))
-    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} install --ignore-missing-gpg --install-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
+    - ${DEKEN_EXE} download -v --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
-    - ${DEKEN_EXE} uninstall --install-dir=.git-ci/tmp/ "${DEKEN_TEST}"
+      # test installing/uninstalling the package (from remote; into extra installation directory))
+    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
+    - ${DEKEN_EXE} install  -v --ignore-missing-gpg --install-dir=.git-ci/tmp/  --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
+    - ls -lha .git-ci/tmp/
+    - ${DEKEN_EXE} uninstall -v --install-dir=.git-ci/tmp/ "${DEKEN_TEST}"
     - ls -lha .git-ci/tmp/
 
 fetch-testdata:
