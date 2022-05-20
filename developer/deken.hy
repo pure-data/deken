@@ -1374,7 +1374,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (parse-data r.text (get r.headers "content-type"))))
 
 (defn find-packages [searchterms ;; as returned by categorize-search-terms
-                     [architectures []] ;; defaults to 'native'; use '*' for any architecture
+                     [architectures []] ;; a list of architecture tuples (e.g. [("Linux", "amd64", "32")]); defaults to 'native'; use ['*'] for any architecture
                      [versioncount 0]   ;; how many versions of a given library should be returned
                      [searchurl default-searchurl] ;; where to search
                      ]
