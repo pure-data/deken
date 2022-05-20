@@ -114,7 +114,6 @@ osx:
     name: deken
     paths:
       - deken
-    expire_in: 1 week
 
 osx-test:
   extends:
@@ -145,7 +144,6 @@ windows:
     name: deken
     paths:
       - deken.exe
-    expire_in: 1 week
 
 windows-test:
   extends:
