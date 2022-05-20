@@ -45,6 +45,9 @@ variables:
   variables:
     DEKEN_EXE: ./deken
     DEKEN_TEST: XXX-deken-test
+  allow_failure:
+    exit_codes:
+      - 75
   script:
     - ${DEKEN_EXE} -v systeminfo
     - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
@@ -66,6 +69,11 @@ variables:
       # test installing/uninstalling the package
     - ${DEKEN_EXE} -v install *.dek
     - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST}"
+      # test finding the package (so we can then download it)
+    - starttime=$(date +%s)
+    - endtime=$((starttime+180))
+    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST}==${PKGVERSION}"; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
+    - echo $(($(date +%s) - starttime))
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
     - ${DEKEN_EXE} --debug -vv download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
