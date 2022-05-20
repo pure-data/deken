@@ -55,11 +55,10 @@ variables:
     - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST}
       # check whether renaming working
     - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST}"
-    - find . -maxdepth 1 -name "*.dek*" -print
-    - rm decken-test*.dek*
+    - find . -maxdepth 1 "(" -name "*.dek" -or -name "*.dek.*" ")" -print -delete
       # check whether automatic names work
     - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" ".git-ci/tmp/${DEKEN_TEST}"
-    - find . -maxdepth 1 -name "*.dek*"
+    - find . -maxdepth 1 "(" -name "*.dek" -or -name "*.dek.*" ")" -print
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
       # upload the deken-test package
