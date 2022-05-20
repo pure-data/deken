@@ -75,12 +75,12 @@ variables:
     - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST}==${PKGVERSION}"; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
     - echo $(($(date +%s) - starttime))
       # test downloading the package
-    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} --debug -vv download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
+    - rm -rf .git-ci/tmp/
+    - ${DEKEN_EXE} -v download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
       # test installing/uninstalling the package (from remote; into extra installation directory))
-    - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} --debug -vv install  --ignore-missing-gpg --install-dir=.git-ci/tmp/  --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
+    - rm -rf .git-ci/tmp/
+    - ${DEKEN_EXE} -v install  --ignore-missing-gpg --install-dir=.git-ci/tmp/  --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
     - ${DEKEN_EXE} -v uninstall --install-dir=.git-ci/tmp/ "${DEKEN_TEST}"
     - ls -lha .git-ci/tmp/
