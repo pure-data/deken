@@ -2047,7 +2047,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-install.add_argument
     "--self"
     :action "store_true"
-    :help "(Re)install the 'deken' cmdline-utility (and dependencies) itself")
+    :help "(Re)install the 'deken' cmdline-utility (and dependencies) itself (ignores all other arguments)")
   (arg-install.add_argument
     "package"
     :nargs "*"
@@ -2057,12 +2057,12 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     "--self"
     :action "store_true"
     :required True
-    :help "Update the 'deken' cmdline-utility (and dependencies) itself")
+    :help "Update the 'deken' cmdline-utility (and dependencies) itself (ignores all other arguments)")
   (arg-upgrade.add_argument
     "--self"
     :action "store_true"
     :required True
-    :help "Update the 'deken' cmdline-utility (and dependencies) itself")
+    :help "Update the 'deken' cmdline-utility (and dependencies) itself (ignores all other arguments)")
 
 
   (arg-uninstall.add_argument
@@ -2081,7 +2081,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-uninstall.add_argument
     "--self"
     :action "store_true"
-    :help "Remove the 'deken' cmdline-utility (and dependencies) itself")
+    :help "Remove the 'deken' cmdline-utility (and dependencies) itself (ignores all other arguments)")
   (arg-uninstall.add_argument
     "package"
     :nargs "*"
