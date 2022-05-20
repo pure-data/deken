@@ -360,6 +360,7 @@
   (defn compat-generator [need-arch have-archs]
     (setv na (stringify-tuple need-arch))
     (for [ha have-archs] (yield (compat? na (stringify-tuple ha)))))
+  (log.debug "compatible-arch? %s IN %s" need-arch have-archs)
   (cond
     [(not have-archs) True] ; archs is 'all' which matches any architecture
     [(= need-arch "*") True] ; we don't care
@@ -1378,6 +1379,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                      [searchurl default-searchurl] ;; where to search
                      ]
   "finds packages and filters them according to architecture, requirements and versioncount"
+  (log.debug "find-packages.search terms : %s" searchterms)
+  (log.debug "find-packages.architectures: %s" architectures)
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (filter-older-versions
     (lfor x (search (or searchurl default-searchurl)
@@ -1529,6 +1532,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
         (do
           (log.info (% "Downloaded: %s" (, pkg)))
           pkg)))
+  (log.debug "download search terms : %s" searchterms)
+  (log.debug "download architectures: %s" architecture)
+  (log.debug "download have-terms   : %s" (sum (lfor t ["libraries" "objects"] (len (.get searchterms t [])))))
   (setv foundurls
         (if (sum (lfor t ["libraries" "objects"] (len (.get searchterms t []))))
             (lfor x (find-packages searchterms
@@ -1538,12 +1544,14 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                   :if (package-uri? (try-get x "URL" ""))
                   (get x "URL"))
           []))
+  (log.debug "download found        : %s" foundurls)
   (setv urls
         (lfor x (+ foundurls (try-get searchterms "urls" []))
               :if (or
                     (package-uri? x)
                     (log.info (+ "Skipping non-package URL" x)))
               x))
+  (log.debug "download URLs         : %s" urls)
   ;; return a list of successfully downloaded (and verified) files
   (setv result (lfor url urls (try-download url)))
   (, (list (filter None result)) (.count result None)))
