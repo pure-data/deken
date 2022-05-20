@@ -1538,7 +1538,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (setv foundurls
         (if (sum (lfor t ["libraries" "objects"] (len (.get searchterms t []))))
             (lfor x (find-packages searchterms
-                               :architectures architecture
+                               :architectures  (if architecture
+                                                 (if (in "*" architecture)
+                                                   ["*"]
+                                                   (split-archstring (.join "" (lfor a architecture (% "(%s)" a))))))
                                :versioncount 1
                                :searchurl search-url)
                   :if (package-uri? (try-get x "URL" ""))
