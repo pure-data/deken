@@ -1013,7 +1013,6 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   zip-filename)
 (defn unzip-file [archive-file [targetdir "."]]
   "extract all members of the zip archive into targetdir"
-  (print archive-file)
   (try (do
          (import zipfile)
          (with [f (zipfile.ZipFile archive-file)]
@@ -1573,6 +1572,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
 (defn install-package [pkgfile installdir]
   "unpack a <pkgfile> into <installdir>"
+  (log.info "installing into '%s': %s" installdir pkgfile)
   (or
     (unzip-file pkgfile installdir)
     (untar-file pkgfile installdir)))
