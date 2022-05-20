@@ -1510,6 +1510,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          [verify-hash True]
                          [verify-none False]
                          [search-url None]
+                         [keep-verification-files True]
                          [download-dir "."]]
   "search for files using the <searchterms>, download any results and verify them.
 unverified files are removed (pendig the verify-... flags)
@@ -1536,6 +1537,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
           None)
         (do
           (log.info (% "Downloaded: %s" (, pkg)))
+          (if (not keep-verification-files)
+            (do
+             (try-remove-file gpg)
+             (try-remove-file hsh)))
           pkg)))
   (log.debug "download search terms : %s" searchterms)
   (log.debug "download architectures: %s" architecture)
@@ -1688,6 +1693,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
            :verify-none args.no-verify
            :search-url  args.search-url
+           :keep-verification-files args.keep-files
            :download-dir args.downloaddir) 1)))
        :uninstall (fn [args]
                     (if args.self
@@ -1727,10 +1733,13 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
                                    :verify-none args.no-verify
                                    :search-url args.search-url
+                                   :keep-verification-files args.keep-files
                                    :download-dir args.installdir)
                           (, [] 0)))
                   (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
-                      (not (get downloaded-pkgs 1))
+                      (do
+                         (if (not args.keep-files) (for [f (get downloaded-pkgs 0)] (try-remove-file f)))
+                         (not (get downloaded-pkgs 1)))
                     False))
        :systeminfo print-system-info
        ;; the rest should have been caught by the wrapper script
@@ -2026,6 +2035,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :help "Don't abort download on verification errors")
   (add-noverify-flags arg-download)
   (arg-download.add_argument
+    "--keep-files"
+    :action "store_true"
+    :help "Keep verification files after downloading them (DEFAULT: remove files)")
+  (arg-download.add_argument
     "--download-dir"
     :default "."
     :dest "downloaddir"
@@ -2049,6 +2062,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-install.add_argument
     "--installdir"
     :help argparse.SUPPRESS)
+  (arg-install.add_argument
+    "--keep-files"
+    :action "store_true"
+    :help "Keep files after downloading them (DEFAULT: remove files)")
   (arg-install.add_argument
     "--self"
     :action "store_true"
