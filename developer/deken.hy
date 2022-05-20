@@ -290,6 +290,7 @@
   (print "Version     :" version)
   (print "Config      :" config-file-path)
   (print "Install-path:" default-installpath)
+  (print "LogLevel    :" (logging.getLevelName (log.getEffectiveLevel)))
   (print "Platform    :" (.join "-" (native-arch)))
   (print)
   (print "============= SYSTEM ============")
