@@ -1076,6 +1076,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; download a file
 (defn download-file [url [filename None] [output-dir "."]]
   "downloads a file from <url>, saves it as <filename> (or a sane default); returns the filename or None; makes sure that no file gets overwritten"
+  (try (os.makedirs output-dir)
+       (except [e Exception] (if (not (os.path.isdir output-dir)) (raise e))))
   (defn unique-filename [filename]
     (defn unique-filename-number [filename number]
       (setv filename0 (% "%s.%s" (, filename number)))
