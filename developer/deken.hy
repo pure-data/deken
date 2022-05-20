@@ -1875,7 +1875,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       "search"
       :nargs "*"
       :metavar "TERM"
-      :help "libraries/objects to search for")
+      :help "Libraries/objects to search for")
     )
 
   (defn parse-args [parser]
@@ -2028,7 +2028,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-download.add_argument
     "package"
     :nargs "*"
-    :help "package specifier or URL to download")
+    :help "Package specifier or URL to download")
 
   (add-search-flags arg-install)
   (arg-install.add_argument
@@ -2051,7 +2051,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-install.add_argument
     "package"
     :nargs "*"
-    :help "package specifier or URL to install")
+    :help "Package specifier or URL to install")
 
   (arg-update.add_argument
     "--self"
@@ -2085,16 +2085,16 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-uninstall.add_argument
     "package"
     :nargs "*"
-    :help "package to uninstall")
+    :help "Package to uninstall")
   (arg-systemfix.add_argument
     "--all"
     :action "store_true"
-    :help "run all system-fixes")
+    :help "Run all system-fixes")
   (arg-systemfix.add_argument
     "fix"
     :metavar "FIX"
     :nargs "*"
-    :help "run the named system-fix")
+    :help "Tun the named system-fix")
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (hy.models.Keyword arguments.command)))
   ;;(print "Deken" version)
