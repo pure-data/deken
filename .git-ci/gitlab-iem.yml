@@ -72,7 +72,7 @@ variables:
       # test finding the package (so we can then download it)
     - starttime=$(date +%s)
     - endtime=$((starttime+180))
-    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST}==${PKGVERSION}"; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
+    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST}==${PKGVERSION}" | grep .; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
     - echo $(($(date +%s) - starttime))
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
