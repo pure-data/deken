@@ -147,7 +147,7 @@ EOF
 
 install_virtualenv() {
   if which virtualenv >/dev/null; then
-    virtualenv "${DEKEN_HOME}/virtualenv"
+    virtualenv --system-site-packages "${DEKEN_HOME}/virtualenv"
   else
     local pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
     local virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
