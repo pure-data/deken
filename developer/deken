@@ -88,6 +88,17 @@ countdown() {
   printf "\r  \r"
 }
 
+fetch_file() {
+  local dst="$1"
+  local src="$2"
+  src=${src#file://}
+  if test -e "${src}"; then
+     cp "${src#file://}" "${dst}"
+  else
+     ${HTTP_CLIENT} "${dst}" "${src}"
+  fi
+}
+
 uninstall_deken() {
     if ${systeminstalled}; then
       # on Debian we disallow uninstalling
@@ -154,7 +165,7 @@ install_virtualenv() {
     echo "Downloading & installing Virtualenv for ${pyversion} using ${virtualenv_url}"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
     mkdir -p "${DEKEN_HOME}"
-    ${HTTP_CLIENT} "${DEKEN_HOME}/virtualenv.pyz" "${virtualenv_url}" && \
+    fetch_file "${DEKEN_HOME}/virtualenv.pyz" "${virtualenv_url}" && \
             "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv.pyz" "${DEKEN_HOME}/virtualenv"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
   fi
@@ -181,11 +192,11 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
     mkdir -p "${DEKEN_HOME}"
     [ -e "${DEKEN_HOME}/requirements.txt" ] || (\
         ( echo "Fetching Python requirements file: ${DEKEN_BASE_URL}/requirements.txt" && \
-        ${HTTP_CLIENT} "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
+        fetch_file "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
     [ -e "${DEKEN_HOME}/requirements.txt" ] || bail_install
     [ -e "${DEKENHY}" ] || (\
         ( echo "Fetching main hylang file: ${DEKEN_BASE_URL}/deken.hy" && \
-        ${HTTP_CLIENT} "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
+        fetch_file "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
     [ -e "${DEKENHY}" ] || bail_install
     [ -d "${DEKEN_HOME}/virtualenv" ] || install_virtualenv
     [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ] || (\
@@ -203,7 +214,7 @@ upgrade_deken() {
     fi
     # first upgrade this script itself
     echo "Upgrading ${script}."
-    ${HTTP_CLIENT} "${DEKEN_HOME}/.upgrade-deken" "${DEKEN_BASE_URL}/deken" || ( error "Error upgrading deken"; exit 1; )
+    fetch_file "${DEKEN_HOME}/.upgrade-deken" "${DEKEN_BASE_URL}/deken" || ( error "Error upgrading deken"; exit 1; )
     if diff -q "${DEKEN_HOME}/.upgrade-deken" "$script" >/dev/null; then
         # launcher script is already up-to-date
         rm "${DEKEN_HOME}/.upgrade-deken"
@@ -225,7 +236,7 @@ upgrade_deken() {
     for f in requirements.txt deken.hy
     do
         echo "Fetching ${f} file: ${DEKEN_BASE_URL}/${f}"
-        ${HTTP_CLIENT} "${DEKEN_HOME}/.upgrade-${f}" "${DEKEN_BASE_URL}/${f}" || ( error "Error upgrading ${f}"; exit 1; )
+        fetch_file "${DEKEN_HOME}/.upgrade-${f}" "${DEKEN_BASE_URL}/${f}" || ( error "Error upgrading ${f}"; exit 1; )
         mv "${DEKEN_HOME}/.upgrade-${f}" "${DEKEN_HOME}/${f}"
     done
     # finally update the python dependencies
