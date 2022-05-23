@@ -45,7 +45,7 @@
 
 (import configparser [ConfigParser])
 (import io [StringIO])
-(import urllib.parse [urlparse])
+(import urllib.parse [urlparse urlunparse])
 
 (import itertools [chain])
 (setv flatten chain.from_iterable)
@@ -205,7 +205,7 @@
   ;pattern = re.compile("|".join(rep.keys()))
   ;text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
   (setv repls (dfor (, k v) repls [(re.escape k) v]))
-  (.sub (re.compile (.join "|" repls)) (fn [m] (get repls (re.escape (.group m 0)))) "/Members/%u/software/%p/%v"))
+  (.sub (re.compile (.join "|" repls)) (fn [m] (get repls (re.escape (.group m 0)))) s))
 
 ;; execute a command inside a directory
 (defn in-dir [destination f #* args]
@@ -283,6 +283,20 @@
   """prompt the user for a password"""
   (import getpass)
   (getpass.getpass prompt))
+
+(defn merge-url [url fallback-url]
+  """merge multiple URLs"""
+  ; replace (schema, netloc) of url with fallback-url (if they are missing in url)
+  ; "", "https://pd.info/pizza/salami" -> "https://pd.info/pizza/salami"
+  ; "/foo/bar", "https://pd.info/pizza/salami" -> "https://pd.info/foo/bar"
+  ; "https://pd.info/", ... -> "https://pd.info/"
+  ; "https://pd.info/x/y", ... -> "https://pd.info/x/y"
+
+  (if (any url)
+    (if (any (cut url 2))
+      url
+      (urlparse (urlunparse (+ (list (cut fallback-url 2)) (list (cut url 2 None)))))) ; url has no scheme://netloc component
+    fallback-url))
 
 (defn print-system-info [args]
   """print information about the environment we are running in"""
@@ -1143,7 +1157,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
         (setv path
               (str
                 (replace-words
-                  (or (.rstrip destination.path "/") default-destination.path)
+                  (.rstrip destination.path "/")
                   (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
         (do-upload-file
           (easywebdav.connect host #** {"username" username
@@ -1664,9 +1678,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                  ;; so let's try storing the (non-empty) password in the keyring
                  (setv userpass
                        (do-upload (lfor x args.source (mk-pkg-ifneeded x))
-                                  (urlparse
+                                  (merge-url (urlparse
                                    (or (getattr args "destination")
-                                       (get-config-value "destination" "")))
+                                       (get-config-value "destination" ""))) default-destination)
                                   args.no-source-error))
                  (set-nonempty-password #* userpass)
                  (bool userpass))
