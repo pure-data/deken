@@ -237,8 +237,8 @@ cleanup-testdata:
   dependencies: []
   script:
     - apt-get update -y
-    - apt-get install -y --no-install-recommends cadaver
-    - rm ~/.netrc
+    - apt-get install -y --no-install-recommends cadaver ca-certificates
+    - rm -f ~/.netrc
     - echo "machine puredata.info" > ~/.netrc
     - echo "login ${DEKEN_USERNAME}" >> ~/.netrc
     - echo "password ${DEKEN_PASSWORD}" >> ~/.netrc
