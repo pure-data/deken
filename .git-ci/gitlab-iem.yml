@@ -237,6 +237,7 @@ cleanup-testdata:
   stage: deploy
   image: curlimages/curl
   dependencies: []
-  script:
+  before_script:
     - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID}"
-    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" "https://puredata.info/Members/${DEKEN_USERNAME}/software/XXX-deken-test/${CI_PIPELINE_ID}" --anyauth
+  script:
+    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID}" --anyauth
