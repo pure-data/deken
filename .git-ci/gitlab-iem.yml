@@ -65,7 +65,7 @@ variables:
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
       # upload the deken-test package
-    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ${DEKEN_EXE} -v upload --no-sign-gpg --no-source-error ./*.dek
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ${DEKEN_EXE} -v upload --no-sign-gpg --no-source-error --destination /Members/%u/software/%p/${CI_PIPELINE_ID}/%v ./*.dek
       # test installing/uninstalling the package
     - ${DEKEN_EXE} -v install *.dek
     - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST}"
@@ -232,8 +232,10 @@ upload2deken:
       - ./*.dek
 
 cleanup-testdata:
+  extends:
+    - .deken-test
   stage: deploy
   image: curlimages/curl
   dependencies: []
   script:
-    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" https://puredata.info/Members/${DEKEN_USERNAME}/software/XXX-deken-test --anyauth
+    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID} --anyauth
