@@ -2131,7 +2131,21 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
         # the user doubleclicked on a column heading
         set column [$treeid identify column $x $y]
         if { $column eq "#0" } {
-            # we don't want to sort by column one
+            # we don't want to sort by column#0
+            # instead we open/close the items
+            set have_open 0
+            set have_close 0
+            foreach lib [$treeid children {}] {
+                if { [$treeid item $lib -open] } {
+                    incr have_open
+                } else {
+                    incr have_close
+                }
+            }
+            set do_open [expr $have_close > $have_open]
+            foreach lib [$treeid children {}] {
+                $treeid item $lib -open $do_open
+            }
             return
         }
         set column [$treeid column $column -id]
