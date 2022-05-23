@@ -65,7 +65,7 @@ variables:
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
       # upload the deken-test package
-    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ${DEKEN_EXE} -v upload --destination "/Members/%u/software/%p/${CI_DEKEN_PIPELINE}/%v" --no-sign-gpg --no-source-error ./*.dek
+    - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || ${DEKEN_EXE} -v upload --destination "/Members/%u/software/%p/${CI_PIPELINE_ID}/%v" --no-sign-gpg --no-source-error ./*.dek
       # test installing/uninstalling the package
     - ${DEKEN_EXE} -v install *.dek
     - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST}"
