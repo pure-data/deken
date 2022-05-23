@@ -230,3 +230,18 @@ upload2deken:
     name: deken-package
     paths:
       - ./*.dek
+
+cleanup-testdata:
+  stage: deploy
+  image: debian:latest
+  dependencies: []
+  script:
+    - apt-get update -y
+    - apt-get install -y --no-install-recommends cadaver
+    - rm ~/.netrc
+    - echo "machine puredata.info" > ~/.netrc
+    - echo "login ${DEKEN_USERNAME}" >> ~/.netrc
+    - echo "password ${DEKEN_PASSWORD}" >> ~/.netrc
+    - echo "rmcol XXX-deken-test" | cadaver https://puredata.info/Members/${DEKEN_USERNAME}/software
+
+
