@@ -2122,6 +2122,50 @@ proc ::deken::treeresults::leaveevent {treeid} {
 
 proc ::deken::treeresults::doubleclick {treeid x y} {
     set item [$treeid identify item $x $y]
+    set installitem $item
+    if { [$treeid bbox $item] eq {} } {
+        set installitem {}
+    }
+
+    if { $installitem eq {} } {
+        # the user doubleclicked on a column heading
+        set column [$treeid identify column $x $y]
+        if { $column eq "#0" } {
+            # we don't want to sort by column one
+            return
+        }
+        set column [$treeid column $column -id]
+
+        # do we want to sort increasing or decreasing?
+        variable colsort
+        if {! [info exists colsort($column) ] } {
+            set colsort($column) 1
+        }
+        set dir -increasing
+        if { $colsort($column) } {
+            set dir -decreasing
+        }
+
+        set sortable {}
+        foreach lib [$treeid children {}] {
+            foreach pkg [$treeid children $lib] {
+                lappend sortable [list [$treeid set $pkg $column] $lib]
+                break
+            }
+        }
+        set pkgs {}
+        foreach x [lsort -nocase $dir -index 0 -command ::deken::versioncompare $sortable] {
+            lappend pkgs [lindex $x 1]
+        }
+        $treeid children {} $pkgs
+        if { $item eq {} } {
+            # yikes: if we are not scrolled down, the doubleclick will trigger columnsort twice
+            # so we do an extra round here...
+            ::deken::treeresults::columnsort $treeid $column
+        }
+
+        return
+    }
     set data [$treeid item $item -values]
     set cmd [lindex $data 5]
     if { $cmd != "" } {
