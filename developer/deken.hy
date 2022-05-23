@@ -286,14 +286,14 @@
 
 (defn merge-url [url fallback-url]
   """merge multiple URLs"""
-  ; replace (schema, netloc) of url with fallback-url (if they are missing in url)
+  ; replace (scheme, netloc) of url with fallback-url (if they are missing in url)
   ; "", "https://pd.info/pizza/salami" -> "https://pd.info/pizza/salami"
   ; "/foo/bar", "https://pd.info/pizza/salami" -> "https://pd.info/foo/bar"
   ; "https://pd.info/", ... -> "https://pd.info/"
   ; "https://pd.info/x/y", ... -> "https://pd.info/x/y"
 
   (if (any url)
-    (if (any (cut url 2))
+    (if url.netloc ; we can't check the scheme, as on windows it might be "C:" (if destination is a simple "/foo/bar")
       url
       (urlparse (urlunparse (+ (list (cut fallback-url 2)) (list (cut url 2 None)))))) ; url has no scheme://netloc component
     fallback-url))
