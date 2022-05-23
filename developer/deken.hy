@@ -2008,7 +2008,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (add-package-flags arg-upload)
   (arg-upload.add_argument
     "--destination" "-d"
-    :help "The destination folder to upload the package to (DEFAULT: /Members/USER/software/PKGNAME/VERSION/)."
+    :help (% "The destination folder to upload the package to (DEFAULT: %s)." (.replace default-destination.path "%" "%%"))
     :default ""
     :required False)
   (arg-upload.add_argument
