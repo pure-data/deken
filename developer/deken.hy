@@ -1131,8 +1131,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (fix-easywebdav2 easywebdav2)
          (setv easywebdav easywebdav2))
        (except [e ImportError] (import easywebdav)))
-  (defn do-upload-file [dav path filename url host]
-    (log.info (% "Uploading '%s' to %s" (, filename url)))
+  (defn do-upload-file [dav path filename]
+    (log.info (% "Uploading '%s' to %s://%s%s" (, filename destination.scheme destination.hostname path)))
     (try
       (do
         ;; make sure all directories exist
@@ -1143,8 +1143,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
         (fatal (+
                  (str e)
                  "\n"
-                 (% "Couldn't upload to %s!\n" url)
-                 (% "Are you sure you have the correct username and password set for '%s'?\n" host)
+                 (% "Couldn't upload to %s://%s%s!\n" (, destination.scheme destination.hostname path))
+                 (% "Are you sure you have the correct username and password set for '%s'?\n" destination.hostname)
                  (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
   (if filepath
       (do
@@ -1152,21 +1152,17 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
         (setv [pkg ver _ _] (parse-filename filename))
         (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
         (setv ver (.strip (or ver "") "[]"))
-        (setv proto (or destination.scheme default-destination.scheme))
-        (setv host (or destination.hostname default-destination.hostname))
         (setv path
               (str
                 (replace-words
                   (.rstrip destination.path "/")
                   (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
         (do-upload-file
-          (easywebdav.connect host #** {"username" username
+          (easywebdav.connect destination.hostname #** {"username" username
                                         "password" password
-                                        "protocol" proto})
+                                        "protocol" destination.scheme})
           path
-          filename
-          (+ proto "://" host path)
-          (+ proto "://" host)))))
+          filename))))
 
 ;; upload an archive (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
 ;; returns a (username, password) tuple in case of success
