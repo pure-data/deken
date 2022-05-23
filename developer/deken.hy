@@ -292,11 +292,11 @@
   ; "https://pd.info/", ... -> "https://pd.info/"
   ; "https://pd.info/x/y", ... -> "https://pd.info/x/y"
   (log.debug "merge-url '%s' '%s'" url fallback-url)
-  (if (any url)
+  (debug (if (any url)
     (if url.netloc ; we can't check the scheme, as on windows it might be "C:" (if destination is a simple "/foo/bar")
       url
       (urlparse (urlunparse (+ (list (cut fallback-url 2)) (list (cut url 2 None)))))) ; url has no scheme://netloc component
-    fallback-url))
+    fallback-url)))
 
 (defn print-system-info [args]
   """print information about the environment we are running in"""
