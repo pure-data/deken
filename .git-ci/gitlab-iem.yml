@@ -232,9 +232,11 @@ upload2deken:
       - ./*.dek
 
 cleanup-testdata:
+  extends:
+    - .deken-test
   stage: deploy
   image: curlimages/curl
   dependencies: []
   script:
-    - echo "${CI_PIPELINE_ID}"
+    - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID}"
     - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" https://puredata.info/Members/${DEKEN_USERNAME}/software/XXX-deken-test --anyauth
