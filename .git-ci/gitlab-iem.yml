@@ -233,15 +233,7 @@ upload2deken:
 
 cleanup-testdata:
   stage: deploy
-  image: debian:latest
+  image: curlimages/curl
   dependencies: []
   script:
-    - apt-get update -y
-    - apt-get install -y --no-install-recommends cadaver ca-certificates
-    - rm -f ~/.netrc
-    - echo "machine puredata.info" > ~/.netrc
-    - echo "login ${DEKEN_USERNAME}" >> ~/.netrc
-    - echo "password ${DEKEN_PASSWORD}" >> ~/.netrc
-    - echo "rmcol XXX-deken-test" | cadaver https://puredata.info/Members/${DEKEN_USERNAME}/software
-
-
+    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" https://puredata.info/Members/${DEKEN_USERNAME}/software/XXX-deken-test --anyauth
