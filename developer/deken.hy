@@ -291,7 +291,7 @@
   ; "/foo/bar", "https://pd.info/pizza/salami" -> "https://pd.info/foo/bar"
   ; "https://pd.info/", ... -> "https://pd.info/"
   ; "https://pd.info/x/y", ... -> "https://pd.info/x/y"
-
+  (log.debug "merge-url '%s' '%s'" url fallback-url)
   (if (any url)
     (if url.netloc ; we can't check the scheme, as on windows it might be "C:" (if destination is a simple "/foo/bar")
       url
