@@ -1955,7 +1955,7 @@ proc ::deken::treeresults::columnsort {treeid {col "#0"}} {
                 lappend sortable [list [$treeid set $pkg $col] $pkg]
             }
             set pkgs {}
-            foreach x [lsort -nocase $dir -index 0 $sortable] {
+            foreach x [lsort -nocase $dir -index 0 -command ::deken::versioncompare $sortable] {
                 lappend pkgs [lindex $x 1]
             }
             $treeid children $lib $pkgs
