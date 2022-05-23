@@ -1962,16 +1962,15 @@ proc ::deken::treeresults::columnsort {treeid {col "#0"}} {
         }
     }
 
-
     ## add some decoration to the header indicating the sort-direction
     set label_incr "\u2b07"
     set label_decr "\u2b06"
-    set dirsym "${label_incr}"
 
-    # clear all the increasing/decreasing indicators from the headings
+    set dirsym "${label_incr}"
     if { $dir eq "-decreasing" } {
         set dirsym "${label_decr}"
     }
+    # clear all the increasing/decreasing indicators from the headings
     foreach c [$treeid cget -columns] {
         $treeid heading $c -text [regsub "(${label_decr}|${label_incr})$" [$treeid heading $c -text] {}]
     }
