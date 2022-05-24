@@ -1927,14 +1927,16 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
     (del args.verbose)
     (del args.quiet)
+
+    ;; rewrite some functions, based on the args
     ; no-sign-gpg
-    (if (not args.sign-gpg)
+    (if (not (getattr args "sign_gpg" default-sign-gpg))
       (do (global gpg-sign-file)
           (defn gpg-sign-file [filename])))
-    (if (and (hasattr args "debug") args.debug)
-        (do
-         (global log_exception)
-         (defn log_exception [] (log.exception ""))))
+    ; debug
+    (if args.debug
+        (do (global log_exception)
+            (defn log_exception [] (log.exception ""))))
     args)
 
   (setv arg-parser
