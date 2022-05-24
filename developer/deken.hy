@@ -1679,7 +1679,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                   (merge-url (urlparse
                                    (or (getattr args "destination")
                                        (get-config-value "destination" ""))) default-destination)
-                                  args.no-source-error))
+                                  (not args.source-error)))
                  (set-nonempty-password #* userpass)
                  (bool userpass))
        ;; search for externals
@@ -1707,7 +1707,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :architecture (or args.architecture None)
            :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
            :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
-           :verify-none args.no-verify
+           :verify-none (not args.verify)
            :search-url  args.search-url
            :keep-verification-files args.keep-files
            :download-dir args.output-dir) 1)))
@@ -1747,7 +1747,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :architecture (or args.architecture None)
                                    :verify-gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                    :verify-hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))
-                                   :verify-none args.no-verify
+                                   :verify-none (not args.verify)
                                    :search-url args.search-url
                                    :keep-verification-files args.keep-files
                                    :download-dir args.installdir)
@@ -1778,6 +1778,76 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 ;; kick things off by using argparse to check out the arguments supplied by the user
 (defn main []
   """run deken"""
+  (defn --get-boolean-config-value-- [name [default None]]
+    (setv v (get-config-value "sign-gpg" None))
+    (if (is v None) default (str-to-bool v)))
+
+  (setv default-sign-gpg (--get-boolean-config-value-- "sign-gpg" True))
+  (setv default-debug False)
+  (setv default-search-subdirs False)
+  (setv default-source-error True)
+  (setv default-output-dir ".")
+
+  (setv default-verify (--get-boolean-config-value-- "verify" True))
+  (setv default-ignore-missing (--get-boolean-config-value-- "ignore-missing" None))
+  (setv default-ignore-gpg (--get-boolean-config-value-- "ignore-gpg" None))
+  (setv default-ignore-missing-gpg (--get-boolean-config-value-- "ignore-missing-gpg" None))
+  (setv default-ignore-hash (--get-boolean-config-value-- "ignore-hash" None))
+  (setv default-ignore-missing-hash (--get-boolean-config-value-- "ignore-missing-hash" None))
+
+  (setv default-keep-files (--get-boolean-config-value-- "keep-files" True))
+
+  (defn add-arg-yesno [parser flag default helpyes helpno]
+    (parser.add_argument
+      (% "--%s" flag)
+      :action "store_true"
+      :default default
+      :help (% "%s (DEFAULT: %s)." (, helpyes default))
+      :required False)
+    (parser.add_argument
+      (% "--no-%s" flag)
+      :action "store_false"
+      :dest (.replace flag "-" "_")
+      :help helpno
+      :required False))
+
+  (defn add-noverify-flags [parser]
+      (add-arg-yesno parser "ignore-gpg" default-ignore-gpg
+                     "Ignore an invalid (or no) GPG-signature"
+                     "Dont't ignore invalid GPG-signatures")
+      (add-arg-yesno parser "ignore-hash" default-ignore-hash
+                     "Ignore an unverifiable hashsum"
+                     "Fail if the hashsum is unverifiable")
+      (add-arg-yesno parser "ignore-missing" default-ignore-missing
+                     "Don't fail if detached verification files are missing"
+                     "Fail if detached verification files are missing")
+      (add-arg-yesno parser "ignore-missing-gpg" default-ignore-missing-gpg
+                     "Don't fail if there is no GPG-signature. Overrides '--ignore-missing'"
+                     "Fail if there is no GPG-signature")
+      (add-arg-yesno parser "ignore-missing-hash" default-ignore-missing-hash
+                     "Don't fail if there is no hashsum file"
+                     "Fail if there is no hashsum file"))
+
+  (defn add-search-flags [parser]
+      (parser.add_argument
+       "--search-url"
+       :help "URL to query for deken-packages"
+       :default ""
+       :required False)
+      (parser.add_argument
+       "--architecture" "--arch"
+       :help (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
+                (, (.join "-" (native-arch))))
+       :action "append"
+       :default []
+       :required False)
+      (parser.add_argument
+       "--requirement" "-r"
+       :action "append"
+       :default []
+       :help "Install/find/download from the given requirements file. This option can be used multiple times."))
+
+
   (defn add-package-flags [parser]
     (parser.add_argument
       "--name" "-n"
@@ -1794,11 +1864,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       :help "Specify a tsv-file that lists all the objects of the library (DEFAULT: generate it)."
       :default None
       :required False)
-    (parser.add_argument
-      "--search-subdirs"
-      :help "EXPERT: Search subdirectories for externals to determine architecture string (DEFAULT: only search one level)."
-      :action "store_true"
-      :required False)
+    (add-arg-yesno parser "search-subdirs" default-search-subdirs
+                   "EXPERT: Search subdirectories for externals to determine architecture string"
+                   "EXPERT: Only search the given directory for externals to determine architecture string (without descending into subdirectories).")
     (parser.add_argument
       "--extra-arch-files"
       :help "EXPERT: Additionally take the given files into account for determining the package architecture (DEFAULT: use externals found in the package directory)."
@@ -1821,63 +1889,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       :help "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
       :default 1
       :required False)
-    (parser.add_argument
-      "--sign-gpg"
-      :help "Sign the package (DEFAULT: True)."
-      :action "store_false"
-      :dest "no_sign_gpg"
-      :required False)
-    (parser.add_argument
-      "--no-sign-gpg"
-      :help "Do not sign the package."
-      :action "store_true"
-      :default None
-      :required False))
-  (defn add-noverify-flags [parser]
-    (parser.add_argument
-      "--ignore-missing"
-      :action "store_true"
-      :help "Don't fail if detached verification files are missing"
-      :required False)
-    (parser.add_argument
-      "--ignore-missing-gpg"
-      :action "store_true"
-      :help "Don't fail if there is no GPG-signature"
-      :required False)
-    (parser.add_argument
-      "--ignore-gpg"
-      :action "store_true"
-      :help "Ignore an unverifiable (or no) GPG-signature"
-      :required False)
-    (parser.add_argument
-      "--ignore-missing-hash"
-      :action "store_true"
-      :help "Don't fail if there is no hashsum file"
-      :required False)
-    (parser.add_argument
-      "--ignore-hash"
-      :action "store_true"
-      :help "Ignore an unverifiable hashsum"
-      :required False))
-  (defn add-search-flags [parser]
-    (parser.add_argument
-      "--search-url"
-      :help "URL to query for deken-packages"
-      :default ""
-      :required False)
-    (parser.add_argument
-      "--architecture" "--arch"
-      :help (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
-               (, (.join "-" (native-arch))))
-      :action "append"
-      :default []
-      :required False)
-    (parser.add_argument
-      "--requirement" "-r"
-      :action "append"
-      :default []
-      :help "Install/find/download from the given requirements file. This option can be used multiple times.")
-      )
+    (add-arg-yesno parser "sign-gpg" default-sign-gpg
+                   "Sign the package"
+                   "Do not sign the package"))
+
   (defn add-find-flags [parser]
     (add-search-flags parser)
     (parser.add_argument
@@ -1905,17 +1920,15 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       "search"
       :nargs "*"
       :metavar "TERM"
-      :help "Libraries/objects to search for")
-    )
+      :help "Libraries/objects to search for"))
 
   (defn parse-args [parser]
     (setv args (.parse_args parser))
     (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
     (del args.verbose)
     (del args.quiet)
-    (if (if (and (hasattr args "no_sign_gpg") (is-not args.no-sign-gpg None))
-            args.no-sign-gpg
-          (not (str-to-bool (get-config-value "sign_gpg" True))))
+    ; no-sign-gpg
+    (if (not args.sign-gpg)
       (do (global gpg-sign-file)
           (defn gpg-sign-file [filename])))
     (if (and (hasattr args "debug") args.debug)
@@ -1992,8 +2005,15 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :default 0)
   (arg-parser.add_argument
     "--debug"
-    :help "Enable debugging output"
+    :help (% "Enable debugging output (DEFAULT: %s)" default-debug)
+    :default default-debug
     :action "store_true"
+    :required False)
+  (arg-parser.add_argument
+    "--no-debug"
+    :help "Disable debugging output"
+    :dest "debug"
+    :action "store_false"
     :required False)
   (arg-parser.add_argument
     "--version"
@@ -2029,12 +2049,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :help "Ask for upload password (rather than using a password-manager)."
     :default ""
     :required False)
-  (arg-upload.add_argument
-    "--no-source-error"
-    :action "store_true"
-    :help "Force-allow uploading of packages without sources."
-    :required False)
-
+  (add-arg-yesno arg-upload "source-error" default-source-error
+                 "Prevent uploading of packages without sources"
+                 "Force-allow uploading of packages without sources")
   (add-find-flags arg-find)
   (add-find-flags arg-search)
 
@@ -2045,42 +2062,39 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :nargs "*"
     :help "deken package to verify")
   (add-search-flags arg-download)
-  (arg-download.add_argument
-    "--no-verify"
-    :action "store_true"
-    :help "Don't abort download on verification errors")
+
+  (add-arg-yesno arg-download "verify" default-verify
+                 "Abort download on verification errors"
+                 "Don't abort download on verification errors")
   (add-noverify-flags arg-download)
-  (arg-download.add_argument
-    "--keep-files"
-    :action "store_true"
-    :help "Keep verification files after downloading them (DEFAULT: remove files)")
+  (add-arg-yesno arg-download "keep-files" default-keep-files
+                 "Keep verification files after downloading them"
+                 "Remove verification files after downloading them")
   (arg-download.add_argument
     "--output-dir"
-    :default "."
-    :help "Output directory for downloaded package files (DEFAULT: .).")
+    :default default-output-dir
+    :help (% "Output directory for downloaded package files (DEFAULT: %s)." default-output-dir))
   (arg-download.add_argument
     "package"
     :nargs "*"
     :help "Package specifier or URL to download")
 
   (add-search-flags arg-install)
-  (arg-install.add_argument
-    "--no-verify"
-    :action "store_true"
-    :help "Don't abort download on verification errors")
+  (add-arg-yesno arg-install "verify" default-verify
+                 "Abort download/installation on verification errors"
+                 "Don't abort download/installation on verification errors")
   (add-noverify-flags arg-install)
   (arg-install.add_argument
     "--install-dir"
     :default default-installpath
     :dest "installdir"
-    :help (% "Target directory to install packages to (DEFAULT: %s)" (, default-installpath)))
+    :help (% "Target directory to install packages to (DEFAULT: %s)" default-installpath))
   (arg-install.add_argument
     "--installdir"
     :help argparse.SUPPRESS)
-  (arg-install.add_argument
-    "--keep-files"
-    :action "store_true"
-    :help "Keep files after downloading them (DEFAULT: remove files)")
+  (add-arg-yesno arg-install "keep-files" default-keep-files
+                 "Keep files after downloading them"
+                 "Remove files after downloading them")
   (arg-install.add_argument
     "--self"
     :action "store_true"
@@ -2111,7 +2125,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     "--install-dir"
     :default default-installpath
     :dest "installdir"
-    :help (% "Directory to find installed packages (DEFAULT: %s)" (, default-installpath)))
+    :help (% "Directory to find installed packages (DEFAULT: %s)" default-installpath))
   (arg-uninstall.add_argument
     "--installdir"
     :help argparse.SUPPRESS)
@@ -2131,7 +2145,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     "fix"
     :metavar "FIX"
     :nargs "*"
-    :help "Tun the named system-fix")
+    :help "Run the named system-fix")
   (setv arguments (parse-args arg-parser))
   (setv command (.get commands (hy.models.Keyword arguments.command)))
   ;;(print "Deken" version)
