@@ -420,7 +420,7 @@
   (if default-floatsize
       (doit default-floatsize filename)
       (log.error (+ "OUCH: "
-                    (% "couldn't detect float-size%s" (if filename (% " for '%s'" filename) ""))
+                    (% "Couldn't detect float-size%s" (if filename (% " for '%s'" filename) ""))
                     "\n      and no default set, assuming None"
                     "\n      use '--default-floatsize <N>' to override)"))))
 
@@ -771,7 +771,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (setv dekfilename (% "%s.txt" dekfilename))
   (if (os.path.exists dekfilename)
       (do ;; already exists
-        (log.info (% "objects file '%s' already exists" dekfilename))
+        (log.info (% "Objects file '%s' already exists" dekfilename))
         (if warn-exists
             (log.warning (% "WARNING: delete '%s' to re-generate objects file" dekfilename)))
         dekfilename)
@@ -1031,7 +1031,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (zipfile.ZipFile archive-file)]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log_debug (% "unzipping '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "Unzipping '%s' failed" (, archive-file))) False))))
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file [extension ".tar.gz"]]
@@ -1052,7 +1052,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (tarfile.open archive-file "r")]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log_debug (% "untaring '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "Untaring '%s' failed" (, archive-file))) False))))
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
@@ -1238,7 +1238,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (if objects
       (if (dekfile.endswith ".dek")
           (make-objects-file dekfile objects)
-          (log.warning "object-file generation is only enabled for dekformat>=1...skipping!")))
+          (log.warning "Objects file generation is only enabled for dekformat>=1...skipping!")))
   (gpg-sign-file dekfile)
   dekfile)
 
@@ -1496,8 +1496,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                    reffile
                    extension
                    fail
-                   [errstring "verification of '%s' failed"]
-                   [missstring "verification file '%s' for '%s' missing"]]
+                   [errstring "Verification of '%s' failed!"]
+                   [missstring "Verification file '%s' for '%s' is missing."]]
     (setv reference-file (or reffile (+ dekfile extension)))
     (if (or fail (os.path.exists reference-file))
         (verify-result (verifun dekfile reference-file)
@@ -1513,8 +1513,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (setv vhash (do-verify (fn [dfile hfile] (hash-verify-file dfile hfile :algorithm "sha256"))
                          dekfile hashfile
                          ".sha256" hash
-                         "hashsum mismatch for '%s'"
-                         "hash file '%s' missing for '%s'"))
+                         "Hashsum mismatch for '%s'"
+                         "Hash file '%s' missing for '%s'"))
   (log.debug (% "GPG-verification : %s" (, vgpg)))
   (log.debug (% "hash-verification: %s" (, vhash)))
   (and vgpg vhash))
@@ -1534,11 +1534,11 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     (defn --verbose-download-- [url msg]
       (log.info msg)
       (setv outfile (download-file url :output-dir download-dir))
-      (if outfile (log.info "downloaded %s" outfile) (log.info "failed to download %s" url))
+      (if outfile (log.info "Downloaded '%s'" outfile) (log.info "Failed to download '%s'" url))
       outfile)
-    (setv pkg (--verbose-download-- url "downloading package"))
-    (setv gpg (--verbose-download-- (+ url ".asc") "downloading GPG signature"))
-    (setv hsh (--verbose-download-- (+ url ".sha256") "downloading SHA256 hash"))
+    (setv pkg (--verbose-download-- url "Downloading package"))
+    (setv gpg (--verbose-download-- (+ url ".asc") "Downloading GPG signature"))
+    (setv hsh (--verbose-download-- (+ url ".sha256") "Downloading SHA256 hash"))
     (if (and
           (not (verify
                  pkg gpg hsh
@@ -1586,7 +1586,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
 (defn install-package [pkgfile installdir]
   """unpack a <pkgfile> into <installdir>"""
-  (log.info "installing into '%s': %s" installdir pkgfile)
+  (log.info "Installing '%s' into '%s'" pkgfile installdir)
   (or
     (unzip-file pkgfile installdir)
     (untar-file pkgfile installdir)))
@@ -1629,10 +1629,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
          (setv pkgdir (os.path.join installdir pkg))
          (if (os.path.isdir pkgdir)
              (do
-              (log.info (% "removing package directory '%s'" (, pkgdir)))
+              (log.info (% "Removing package directory '%s'" (, pkgdir)))
               (shutil.rmtree pkgdir True)
               pkgdir)
-           (log.warning (% "skipping non-existent directory '%s'" (, pkgdir)))))))
+           (log.warning (% "Skipping non-existent directory '%s'" (, pkgdir)))))))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
@@ -1694,13 +1694,13 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                p
                                :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                           (fatal (% "verification of '%s' failed" (, p))))))
+                           (fatal (% "Verification of '%s' failed" (, p))))))
                  (bool (len args.dekfile)))
        ;; download a package (but don't install it)
        :download (fn [args]
          (setv packages (--packages-from-args-- args.package args.requirement))
          (if (not packages)
-             (fatal "nothing to download"))
+             (fatal "Nothing to download!"))
          (not (get (download-verified
            ;; parse package specifiers
            (categorize-search-terms packages True False)
@@ -1728,7 +1728,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                           (lfor pkg pkgs
                                 :if (or
                                       (os.path.isfile pkg)
-                                      (log.warning (% "skipping non-existing file '%s'" (, pkg))))
+                                      (log.warning (% "Skipping non-existing file '%s'" (, pkg))))
                                 (install-package pkg installdir)))))
                   (setv pkgs (--packages-from-args-- args.package args.requirement))
 
