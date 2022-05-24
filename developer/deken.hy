@@ -1707,7 +1707,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :verify-none args.no-verify
            :search-url  args.search-url
            :keep-verification-files args.keep-files
-           :download-dir args.downloaddir) 1)))
+           :download-dir args.output-dir) 1)))
        :uninstall (fn [args]
                     (if args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
@@ -2023,7 +2023,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (arg-upload.add_argument
     "--ask-password" "-P"
     :action "store_true"
-    :help "Ask for upload password (rather than using password-manager."
+    :help "Ask for upload password (rather than using a password-manager)."
     :default ""
     :required False)
   (arg-upload.add_argument
@@ -2052,10 +2052,9 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     :action "store_true"
     :help "Keep verification files after downloading them (DEFAULT: remove files)")
   (arg-download.add_argument
-    "--download-dir"
+    "--output-dir"
     :default "."
-    :dest "downloaddir"
-    :help "Target directory to download packages to (DEFAULT: .)")
+    :help "Output directory for downloaded package files (DEFAULT: .).")
   (arg-download.add_argument
     "package"
     :nargs "*"
