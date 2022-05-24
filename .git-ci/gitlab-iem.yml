@@ -6,6 +6,9 @@
 # build::windows, build::osx -- create standalone 'deken' cmdline-utilities
 # build::docker-build        -- create a docker-container with the 'deken'
 #                               cmdline utility ready to be used
+# pretest::fetch-testdata    -- fetch some external binaries (for rare
+#                               architectures) that can be used to test
+#                               deken's format-detection and upload caps
 # test::docker-test          -- test the docker-container by using it to
 #                               create and upload a 'deken-test' package
 # test::windows-test         -- test the Windows binaries by using it to
@@ -15,6 +18,8 @@
 # release::docker-release    -- tag the docker-container as 'latest'
 # deploy::upload2deken       -- create a 'deken-plugin' package
 #                               upload the package if this is a tagged release
+# posttest::cleanup-testdata -- remove the deken-test packages (created in
+#                               the 'test' stage) from puredata.info
 
 stages:
   - build
@@ -28,6 +33,7 @@ variables:
  GIT_SUBMODULE_STRATEGY: normal
  PYTHON: python3
  PIPFLAGS: ""
+ DEKEN_TEST_PACKAGE: XXX-deken-test
 
 .build_script: &build_script
   script:
@@ -45,7 +51,6 @@ variables:
   stage: test
   variables:
     DEKEN_EXE: ./deken
-    DEKEN_TEST: XXX-deken-test
   allow_failure:
     exit_codes:
       - 75
@@ -56,12 +61,12 @@ variables:
     - PKGVERSION="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
     - echo "${PKGVERSION}"
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST}
+    - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST_PACKAGE}
       # check whether renaming working
-    - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST}"
+    - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" --name "decken-test" ".git-ci/tmp/${DEKEN_TEST_PACKAGE}"
     - find . -maxdepth 1 "(" -name "*.dek" -or -name "*.dek.*" ")" -print -delete
       # check whether automatic names work
-    - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" ".git-ci/tmp/${DEKEN_TEST}"
+    - ${DEKEN_EXE} -v package --no-sign-gpg --version="${PKGVERSION}" ".git-ci/tmp/${DEKEN_TEST_PACKAGE}"
     - find . -maxdepth 1 "(" -name "*.dek" -or -name "*.dek.*" ")" -print
       # remove floatsize=0 packages, in case they were wrongly created...
     - find . -maxdepth 1 -name "*.dek" -name "*-0)*" -print -delete
@@ -69,21 +74,21 @@ variables:
     - test -z "${DEKEN_USERNAME}" || test -z "${DEKEN_PASSWORD}" || MSYS_NO_PATHCONV=1 ${DEKEN_EXE} -v upload --destination "/Members/%u/software/%p/${CI_PIPELINE_ID}/%v" --no-sign-gpg --no-source-error ./*.dek
       # test installing/uninstalling the package
     - ${DEKEN_EXE} -v install *.dek
-    - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST}"
+    - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST_PACKAGE}"
       # test finding the package (so we can then download it)
     - starttime=$(date +%s)
     - endtime=$((starttime+180))
-    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST}==${PKGVERSION}" | grep .; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
+    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST_PACKAGE}==${PKGVERSION}" | grep .; do if [ ${endtime} -lt $(date +%s) ]; then exit 75; fi; sleep 5; echo "try again"; done
     - echo $(($(date +%s) - starttime))
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} -v download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
+    - ${DEKEN_EXE} -v download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST_PACKAGE}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
       # test installing/uninstalling the package (from remote; into extra installation directory))
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} -v install  --ignore-missing-gpg --install-dir=.git-ci/tmp/  --architecture="*" "${DEKEN_TEST}==${PKGVERSION}"
+    - ${DEKEN_EXE} -v install  --ignore-missing-gpg --install-dir=.git-ci/tmp/  --architecture="*" "${DEKEN_TEST_PACKAGE}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
-    - ${DEKEN_EXE} -v uninstall --install-dir=.git-ci/tmp/ "${DEKEN_TEST}"
+    - ${DEKEN_EXE} -v uninstall --install-dir=.git-ci/tmp/ "${DEKEN_TEST_PACKAGE}"
     - ls -lha .git-ci/tmp/
 
 fetch-testdata:
@@ -233,12 +238,10 @@ upload2deken:
       - ./*.dek
 
 cleanup-testdata:
-  extends:
-    - .deken-test
   stage: deploy
   image: curlimages/curl
   dependencies: []
   before_script:
-    - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID}"
+    - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}"
   script:
-    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST}/${CI_PIPELINE_ID}" --anyauth
+    - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}" --anyauth
