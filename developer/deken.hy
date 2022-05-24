@@ -1498,11 +1498,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                    fail
                    [errstring "verification of '%s' failed"]
                    [missstring "verification file '%s' for '%s' missing"]]
-    (verify-result (verifun dekfile
-                            (or reffile (+ dekfile extension)))
+    (setv reference-file (or reffile (+ dekfile extension)))
+    (if (or fail (os.path.exists reference-file))
+        (verify-result (verifun dekfile reference-file)
                    fail
                    (% errstring (, dekfile))
-                   (% missstring (, reffile dekfile))))
+                   (% missstring (, reffile dekfile)))
+        (or (log.info "Skipping verification with non-existing file '%s'" reference-file) True)))
   (setv vgpg  (do-verify gpg-verify-file
                          dekfile gpgfile
                          ".asc"    gpg
