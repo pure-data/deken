@@ -82,7 +82,7 @@ variables:
     - echo $(($(date +%s) - starttime))
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
-    - ${DEKEN_EXE} -v download --ignore-missing-gpg --download-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST_PACKAGE}==${PKGVERSION}"
+    - ${DEKEN_EXE} -v download --ignore-missing-gpg --output-dir=.git-ci/tmp/ --architecture="*" "${DEKEN_TEST_PACKAGE}==${PKGVERSION}"
     - ls -lha .git-ci/tmp/
       # test installing/uninstalling the package (from remote; into extra installation directory))
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
