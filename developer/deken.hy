@@ -58,7 +58,7 @@
 (defn nop [#* ignored_args] "does nothing; returns None" None)
 
 ;; simple debugging helper: prints an object and returns it
-(defn debug [x] "print the argument and return it" (log.debug x) x)
+(defn debug [x #* more] "print the argument and return it" (if more (log.debug (+ (, x) more)) (log.debug x)) x)
 (defn log_exception [])
 (defn log_error [msg] (log.error msg) (log_exception))
 (defn log_warning [msg] (log.warning msg) (log_exception))
