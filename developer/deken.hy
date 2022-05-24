@@ -1475,14 +1475,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; the 'gpg/hash' arg can modify the result: False: always return True
 ;;                                           None: return True if None
 (defn verify [dekfile [gpgfile None] [hashfile None] [gpg True] [hash True]]
-  "verifies a dekfile by checking it's GPG-signature (if possible) the SHA256; if gpg/hash is False, verification failure is ignored, if its None the reference file is allowed to miss"
+  "verifies a dekfile by checking it's GPG-signature (if possible), resp. the SHA256;
+   if gpg/hash is False, verification failure is ignored, if its None the reference file is allowed to miss"
   (defn verify-result [result fail errstring missstring]
-    ;; result==True: OK
+    ;; result==True : OK
     ;; result==False: KO
-    ;; result==None: verification failed (no signature file,...)
-    ;; fail==True: fail on any error
-    ;; fail==False: never fail
-    ;; fail==None: only fail on verification errors
+    ;; result==None : verification failed (no signature file,...)
+    ;; fail==True   : fail on any error
+    ;; fail==False  : never fail
+    ;; fail==None   : only fail on verification errors
     (cond
       [(is result None)(log.fatal missstring)]
       [(not result)(log.fatal errstring)])
