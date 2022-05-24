@@ -1795,7 +1795,35 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (setv default-ignore-hash (--get-boolean-config-value-- "ignore-hash" None))
   (setv default-ignore-missing-hash (--get-boolean-config-value-- "ignore-missing-hash" None))
 
-  (setv default-keep-files (--get-boolean-config-value-- "keep-files" True))
+  (setv default-keep-files (--get-boolean-config-value-- "keep-files" False))
+
+  (defn parse-args [parser]
+    (setv args (.parse_args parser))
+    (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
+    (del args.verbose)
+    (del args.quiet)
+
+    ;; rewrite some functions, based on the args
+    ; no-sign-gpg
+    (if (not (getattr args "sign_gpg" default-sign-gpg))
+      (do (global gpg-sign-file)
+          (defn gpg-sign-file [filename])))
+    ; debug
+    (if args.debug
+        (do (global log_exception)
+            (defn log_exception [] (log.exception ""))))
+
+    ;; practically no GPG signatures are verifiable
+    ; - there are *very* few
+    ; - those that are there, are not available in any public keyring
+    ; so the default is to *not* verify GPG-signatures
+    ; (unless explicitely requested via --verify or --no-ignore-gpg)
+    (if (is None (getattr args "ignore_gpg" None))
+        (setv args.ignore-gpg (if (is None (getattr args "verify" None))
+                                  True
+                                  args.verify)))
+
+    args)
 
   (defn add-arg-yesno [parser flag default helpyes helpno]
     (parser.add_argument
@@ -1921,23 +1949,6 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       :nargs "*"
       :metavar "TERM"
       :help "Libraries/objects to search for"))
-
-  (defn parse-args [parser]
-    (setv args (.parse_args parser))
-    (log.setLevel (max 1 (+ logging.WARN (* 10 (- args.quiet args.verbose)))))
-    (del args.verbose)
-    (del args.quiet)
-
-    ;; rewrite some functions, based on the args
-    ; no-sign-gpg
-    (if (not (getattr args "sign_gpg" default-sign-gpg))
-      (do (global gpg-sign-file)
-          (defn gpg-sign-file [filename])))
-    ; debug
-    (if args.debug
-        (do (global log_exception)
-            (defn log_exception [] (log.exception ""))))
-    args)
 
   (setv arg-parser
         (argparse.ArgumentParser
