@@ -84,7 +84,7 @@ docker run --rm -ti                        \
     --user $(id -u) --volume $(pwd):/deken \
     --volume ${HOME}/.gnupg/:/.gnupg/:ro --volume /run/user/$(id -u)/:/run/user/$(id -u)/:ro \
     registry.git.iem.at/pd/deken           \
-    package --sign-gpg --version 1.2.3 deken-test
+    deken package --sign-gpg --version 1.2.3 deken-test
 ```
 
 
