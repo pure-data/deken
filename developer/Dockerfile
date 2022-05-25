@@ -14,8 +14,9 @@ ENV DEKEN_SIGN_GPG=no
 
 # install all the required stuff
 COPY requirements.txt /tmp
-RUN mkdir -p /usr/local/bin/ /usr/local/share/deken/ ~/.deken \
+RUN apt-get update && apt-get install -y --no-install-recommends gpg && apt-get clean \
 	&& pip install --no-cache-dir --trusted-host pypi.python.org -r /tmp/requirements.txt \
 	&& pip uninstall -y cryptography pip \
+	&& chmod a+rw . \
 	&& rm /tmp/requirements.txt \
 	&& deken systemfix --all
