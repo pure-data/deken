@@ -58,7 +58,9 @@ fi
 if ${systeminstalled}; then
     DEKEN_HOME="${0%/*}/../share/deken"
 fi
-: "${DEKENHY:=${DEKEN_HOME}/deken.hy}"
+
+: "${DEKEN_HY:=${DEKEN_HOME}/deken.hy}"
+: "${DEKENHY:=${DEKEN_HOME}/virtualenv/bin/hy}"
 
 
 ##############################################################################
@@ -190,12 +192,12 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         ( echo "Fetching Python requirements file: ${DEKEN_BASE_URL}/requirements.txt" && \
         fetch_file "${DEKEN_HOME}/requirements.txt" "${DEKEN_BASE_URL}/requirements.txt" ) || bail_install)
     [ -e "${DEKEN_HOME}/requirements.txt" ] || bail_install
-    [ -e "${DEKENHY}" ] || (\
+    [ -e "${DEKEN_HY}" ] || (\
         ( echo "Fetching main hylang file: ${DEKEN_BASE_URL}/deken.hy" && \
-        fetch_file "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
-    [ -e "${DEKENHY}" ] || bail_install
+        fetch_file "${DEKEN_HY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
+    [ -e "${DEKEN_HY}" ] || bail_install
     [ -d "${DEKEN_HOME}/virtualenv" ] || install_virtualenv
-    if ! [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
+    if ! [ -x "${DEKENHY}" ]; then
         echo "Installing deken library dependencies."
         "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements
     fi
@@ -245,7 +247,7 @@ upgrade_deken() {
 
 tryrun_deken() {
     if ${systeminstalled}; then
-       hy3 "${DEKENHY}" "$@"
+       hy3 "${DEKEN_HY}" "$@"
        exit $?
     fi
 
@@ -256,18 +258,18 @@ tryrun_deken() {
     fi
     unset _tryrun_deken_version
 
-    if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
-       error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
-       error "Try running '$0 install --self' or '$0 upgrade --self'"
-       exit 1
-    fi
-    if [ ! -e "${DEKENHY}" ]; then
+    if [ ! -x "${DEKENHY}" ]; then
        error "Unable to find '${DEKENHY}'"
        error "Try running '$0 install --self' or '$0 upgrade --self'"
        exit 1
     fi
+    if [ ! -e "${DEKEN_HY}" ]; then
+       error "Unable to find '${DEKEN_HY}'"
+       error "Try running '$0 install --self' or '$0 upgrade --self'"
+       exit 1
+    fi
 
-    "${DEKEN_HOME}/virtualenv/bin/hy" "${DEKENHY}" "$@"
+    "${DEKENHY}" "${DEKEN_HY}" "$@"
 }
 
 ##############################################################################
