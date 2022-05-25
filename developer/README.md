@@ -47,7 +47,7 @@ To use it to create your packages:
 ~~~sh
 $ ls -d deken-test*
 deken-test/
-$ docker run --rm -ti --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken package --version 1.2.3 deken-test
+$ docker run --rm -ti --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken package --version 1.2.3 deken-test
 $ ls -d deken-test*
 deken-test/
 'deken-test[v1.2.3].dek'
@@ -57,7 +57,7 @@ $
 
 And to upload packages:
 ~~~sh
-$ docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken deken upload *.dek
+docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd):/deken registry.git.iem.at/pd/deken upload *.dek
 ~~~
 
 
