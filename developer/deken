@@ -7,7 +7,7 @@
 # Much of this code is pilfered from Clojure's Leiningen tool
 
 script="$0"
-script_args="$@"
+script_args=$*
 
 ##############################################################################
 # variable declarations
@@ -15,33 +15,24 @@ script_args="$@"
 
 export DEKEN_VERSION="0.9"
 
-: ${DEKEN_HOME:=${HOME}/.deken}
-: ${DEKEN_GIT_BRANCH:=main}
-: ${DEKEN_BASE_URL:=https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer}
+: "${DEKEN_HOME:=${HOME}/.deken}"
+: "${DEKEN_GIT_BRANCH:=main}"
+: "${DEKEN_BASE_URL:=https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer}"
 # allow the user to override the default python
-: ${PYTHON_BIN:=python3}
+: "${PYTHON_BIN:=python3}"
 
 export DEKEN_HOME
 
 VIRTUALENV_URL="https://bootstrap.pypa.io/virtualenv/@pyversion@/virtualenv.pyz"
 
-if [ "${OSTYPE}" = "cygwin" ] || [ "${OSTYPE}" = "msys" ]; then
-    delimiter=";"
-else
-    delimiter=":"
-fi
-
 if [ "${OSTYPE}" = "cygwin" ]; then
-  cygwin=true
-  export DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
-else
-  cygwin=false
+  DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
 fi
 
 # This needs to be defined before we call HTTP_CLIENT below
 if [ "${HTTP_CLIENT}" = "" ]; then
     if which curl >/dev/null; then
-        if [ "${https_proxy}" != "" ]; then
+        if [ -n "${https_proxy}" ]; then
             CURL_PROXY="-x ${https_proxy}"
         fi
         HTTP_CLIENT="curl ${CURL_PROXY} -f -L -o"
@@ -63,7 +54,7 @@ fi
 if ${systeminstalled}; then
     DEKEN_HOME="${0%/*}/../share/deken"
 fi
-: ${DEKENHY:="${DEKEN_HOME}/deken.hy"}
+: "${DEKENHY:=${DEKEN_HOME}/deken.hy}"
 
 
 ##############################################################################
@@ -158,8 +149,10 @@ install_virtualenv() {
   if which virtualenv >/dev/null; then
     virtualenv --system-site-packages "${DEKEN_HOME}/virtualenv"
   else
-    local pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
-    local virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
+    local pyversion
+    local virtualenv_url
+    pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
+    virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
     echo "Downloading & installing Virtualenv for ${pyversion} using ${virtualenv_url}"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
     mkdir -p "${DEKEN_HOME}"
@@ -197,9 +190,10 @@ You can specify an alternative Python interpreter via the PYTHON_BIN envvar"
         fetch_file "${DEKENHY}" "${DEKEN_BASE_URL}/deken.hy" ) || bail_install)
     [ -e "${DEKENHY}" ] || bail_install
     [ -d "${DEKEN_HOME}/virtualenv" ] || install_virtualenv
-    [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ] || (\
-        echo "Installing deken library dependencies." && \
-        "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements)
+    if ! [ -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
+        echo "Installing deken library dependencies."
+        "${DEKEN_HOME}/virtualenv/bin/pip" install -r "${DEKEN_HOME}/requirements.txt" || bail_requirements
+    fi
     echo "${DEKEN_VERSION}" > "${DEKEN_HOME}/version.txt"
 }
 
@@ -251,7 +245,8 @@ tryrun_deken() {
     fi
 
     # check if the 'deken' script and the actual implementation match
-    local dekversion=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
+    local dekversion
+    dekversion=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
     if test -n "${dekversion}" && test "x${dekversion}" != "x${DEKEN_VERSION}"; then
         bail_upgrade "${dekversion}"
     fi
@@ -276,22 +271,22 @@ tryrun_deken() {
 
 
 # catch 'uninstall --self' early, so we don't run into the "installed" checks
-if [ $# -eq 2  ] && [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
+if [ $# -eq 2  ] && [ "$1" = "uninstall" ] && [ "$2" = "--self" ]; then
   uninstall_deken
   exit
 fi
 
-if [ $# -eq 1  ] && [ "x$1" = "x--version" ]; then
+if [ $# -eq 1  ] && [ "$1" = "--version" ]; then
   echo "${DEKEN_VERSION}"
   exit
 fi
 
 
-if [ $(id -u) -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
+if [ "$(id -u)" -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
     error "WARNING: You're currently running as root; probably by accident."
     error "Press Control-C to abort or Enter to continue as root."
     error "Set DEKEN_ROOT=yes to disable this warning."
-    read _
+    read -r _
 fi
 
 # make sure we are deployed
@@ -301,7 +296,7 @@ fi
 [ -d "${DEKEN_HOME}" ] || bail_install
 
 # catch the special "upgrade" command
-if [ $# -eq 2  ] && [ "x$2" = "x--self" ]; then
+if [ $# -eq 2  ] && [ "$2" = "--self" ]; then
 	case "$1" in
 		install)
 			install_deken
