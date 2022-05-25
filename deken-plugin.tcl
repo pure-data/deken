@@ -2639,55 +2639,34 @@ proc ::deken::register {fun} {
 ## searching puredata.info
 namespace eval ::deken::search::puredata.info { }
 proc ::deken::search::puredata.info::search {term} {
-    set searchresults [list]
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
-    set queryterm {}
-    if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
-        # special handling of searching for all translations (so we ONLY get translations)
-        set term {*}
-    }
-    foreach x $term {lappend queryterm ${::deken::searchtype} $x}
-    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stdout ] } {
-        set queryterm [ join $term "&${::deken::searchtype}=" ]
-        set queryterm "${::deken::searchtype}=${queryterm}"
-    }
+    set servers [list $dekenserver]
 
-    # deken-specific socket config
-    set httpaccept [::http::config -accept]
-    set httpagent [::http::config -useragent]
-    set pdversion "Pd/$::PD_MAJOR_VERSION.$::PD_MINOR_VERSION.$::PD_BUGFIX_VERSION$::PD_TEST_VERSION"
-    ::http::config -accept text/tab-separated-values
-    ::http::config -useragent "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
+    # search all the servers
+    array set results {}
+    set servercount 0
+    foreach s $servers {
+        # skip empty servers
+        if { $s eq {} } { continue }
+        ::deken::post [format [_ "Searching on %s..."] $s ] debug
 
-    # fetch search result
-    if { [catch {
-        set token [::http::geturl "${dekenserver}?${queryterm}"]
-    } stdout ] } {
-        set msg [format [_ "Searching for '%s' failed!" ] $term ]
-        tk_messageBox \
-            -title [_ "Search failed" ] \
-            -message "${msg}\n$stdout" \
-            -icon error -type ok \
-            -parent $::deken::winid
-        return
+        # get the results from the given server, and add them to our results set
+        foreach r [::deken::search::puredata.info::search_server $term $s] {
+            set results($r) {}
+        }
+        incr servercount
     }
 
-    # restore http settings
-    ::http::config -accept $httpaccept
-    ::http::config -useragent $httpagent
-
-    set ncode [::http::ncode $token]
-    if { $ncode != 200 } {
-        set err [::http::code $token]
-        set msg [_ "Unable to perform search."]
-        ::deken::utilities::debug "$msg\n   ${err}"
-        return {}
+    if { $servercount == 0 } {
+        ::deken::post [format [_ "No usable servers for searching found..."] $s ] debug
     }
-    set contents [::http::data $token]
-    ::http::cleanup $token
+    set splitCont [array names results]
+    if { [llength $splitCont] == 0 } {
+        return $splitCont
+    }
 
-    set splitCont [split $contents "\n"]
+    set searchresults [list]
     # loop through the resulting tab-delimited table
     if { [catch {
         set latestrelease0 [dict create]
@@ -2777,6 +2756,56 @@ proc ::deken::search::puredata.info::search {term} {
     }
     return $sortedresult
 }
+
+proc ::deken::search::puredata.info::search_server {term dekenserver} {
+    set queryterm {}
+    if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
+        # special handling of searching for all translations (so we ONLY get translations)
+        set term {*}
+    }
+    foreach x $term {lappend queryterm ${::deken::searchtype} $x}
+    if { [ catch {set queryterm [::http::formatQuery {*}$queryterm ] } stdout ] } {
+        set queryterm [ join $term "&${::deken::searchtype}=" ]
+        set queryterm "${::deken::searchtype}=${queryterm}"
+    }
+
+    # deken-specific socket config
+    set httpaccept [::http::config -accept]
+    set httpagent [::http::config -useragent]
+    set pdversion "Pd/$::PD_MAJOR_VERSION.$::PD_MINOR_VERSION.$::PD_BUGFIX_VERSION$::PD_TEST_VERSION"
+    ::http::config -accept text/tab-separated-values
+    ::http::config -useragent "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
+
+    # fetch search result
+    if { [catch {
+        set token [::http::geturl "${dekenserver}?${queryterm}"]
+    } stdout ] } {
+        set msg [format [_ "Searching for '%s' failed!" ] $term ]
+        tk_messageBox \
+            -title [_ "Search failed" ] \
+            -message "${msg}\n$stdout" \
+            -icon error -type ok \
+            -parent $::deken::winid
+        return
+    }
+
+    # restore http settings
+    ::http::config -accept $httpaccept
+    ::http::config -useragent $httpagent
+
+    set ncode [::http::ncode $token]
+    if { $ncode != 200 } {
+        set err [::http::code $token]
+        set msg [_ "Unable to perform search."]
+        ::deken::utilities::debug "$msg\n   ${err}"
+        return {}
+    }
+    set contents [::http::data $token]
+    ::http::cleanup $token
+
+    return [split $contents "\n"]
+}
+
 proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
