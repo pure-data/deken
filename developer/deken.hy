@@ -263,7 +263,7 @@
   (first (filter (fn [x] (not (is x None)))
                  [
                   ;; try to get the value from an environment variable
-                  (os.environ.get (+ "DEKEN_" (name.upper)))
+                  (os.environ.get (+ "DEKEN_" (.replace (.upper name) "-" "_")))
                   ;; try to get the value from the config file
                   (config.get name)
                   ;; finally, try the default

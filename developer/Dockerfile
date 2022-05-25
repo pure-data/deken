@@ -10,6 +10,7 @@ COPY deken.hy /usr/local/share/deken/
 
 # we are runnign as root, so set this
 ENV DEKEN_ROOT=yes
+# gpg-signing in the Docker-container is a bit complicated
 ENV DEKEN_SIGN_GPG=no
 
 # install all the required stuff
