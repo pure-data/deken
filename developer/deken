@@ -70,26 +70,27 @@ error() {
 }
 
 countdown() {
-  local t
-  t=$1
-  t=$((t))
-  while [ $t -gt 0 ]; do
-     printf "\r%2d" $((t))
+  _countdown_t=$1
+  _countdown_t=$((_countdown_t))
+  while [ $_countdown_t -gt 0 ]; do
+     printf "\r%2d" $((_countdown_t))
      sleep 1
-     t=$((t-1))
+     _countdown_t=$((_countdown_t-1))
   done
   printf "\r  \r"
+  unset _countdown_t
 }
 
 fetch_file() {
-  local dst="$1"
-  local src="$2"
-  src=${src#file://}
-  if test -e "${src}"; then
-     cp "${src#file://}" "${dst}"
+  _fetch_file_dst=${1#file://}
+  _fetch_file_src=${2#file://}
+  if test -e "${_fetch_file_src}"; then
+     cp -v "${_fetch_file_src}" "${_fetch_file_dst}"
   else
-     ${HTTP_CLIENT} "${dst}" "${src}"
+     ${HTTP_CLIENT} "${_fetch_file_dst}" "${_fetch_file_src}"
   fi
+  unset _fetch_file_dst
+  unset _fetch_file_src
 }
 
 uninstall_deken() {
@@ -153,16 +154,16 @@ install_virtualenv() {
   if which virtualenv >/dev/null; then
     virtualenv --system-site-packages "${DEKEN_HOME}/virtualenv"
   else
-    local pyversion
-    local virtualenv_url
-    pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
-    virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${pyversion}|g")
-    echo "Downloading & installing Virtualenv for ${pyversion} using ${virtualenv_url}"
+    _install_virtualenv_pyversion=$("${PYTHON_BIN}" -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
+    _install_virtualenv_url=$(echo "${VIRTUALENV_URL}" | sed -e "s|@pyversion@|${_install_virtualenv_pyversion}|g")
+    echo "Downloading & installing Virtualenv for ${_install_virtualenv_pyversion} using ${_install_virtualenv_url}"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
     mkdir -p "${DEKEN_HOME}"
-    fetch_file "${DEKEN_HOME}/virtualenv.pyz" "${virtualenv_url}" && \
+    fetch_file "${DEKEN_HOME}/virtualenv.pyz" "${_install_virtualenv_url}" && \
             "${PYTHON_BIN}" "${DEKEN_HOME}/virtualenv.pyz" "${DEKEN_HOME}/virtualenv"
     rm -rf "${DEKEN_HOME}/virtualenv.pyz"
+    unset _install_virtualenv_pyversion
+    unset _install_virtualenv_url
   fi
 
     [ -d "${DEKEN_HOME}/virtualenv" ] || \
@@ -249,11 +250,11 @@ tryrun_deken() {
     fi
 
     # check if the 'deken' script and the actual implementation match
-    local dekversion
-    dekversion=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
-    if test -n "${dekversion}" && test "x${dekversion}" != "x${DEKEN_VERSION}"; then
-        bail_upgrade "${dekversion}"
+    _tryrun_deken_version=$(cat "${DEKEN_HOME}/version.txt" 2>/dev/null)
+    if test -n "${_tryrun_deken_version}" && test "x${_tryrun_deken_version}" != "x${DEKEN_VERSION}"; then
+        bail_upgrade "${_tryrun_deken_version}"
     fi
+    unset _tryrun_deken_version
 
     if [ ! -x "${DEKEN_HOME}/virtualenv/bin/hy" ]; then
        error "Unable to find '${DEKEN_HOME}/virtualenv/bin/hy'"
