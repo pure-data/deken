@@ -61,8 +61,22 @@ docker run --rm -ti -e DEKEN_USERNAME=mydekuser --user $(id -u) --volume $(pwd):
 ~~~
 
 
-Note: within the container, `deken` will not attempt to GPG-sign your packages by default.
-If your container has access to your GPG keys, you can enable signing by passing the `--sign-gpg` flag to `deken package` (resp. `deken upload`).
+#### GPG-signing with Docker
+
+
+Within the container, `deken` will not attempt to GPG-sign your packages by default.
+If your container has access to your GPG keys, you can enable signing by passing the `--sign-gpg` flag to `package` (resp. `upload`).
+
+
+The following assumes that you have a properly configured GPG setup in your `~/.gnupg`, and `gpg-agent` is running on your host machine:
+
+```sh
+docker run --rm -ti \
+    --user $(id -u) --volume $(pwd):/deken \
+    --volume ${HOME}/.gnupg/:/.gnupg/:ro --volume /run/user/$(id -u)/:/run/user/$(id -u)/:ro \
+    registry.git.iem.at/pd/deken package --sign-gpg --version 1.2.3 deken-test
+```
+
 
 ### Manual bootstrap
 
