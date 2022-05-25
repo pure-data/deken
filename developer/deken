@@ -25,9 +25,13 @@ export DEKEN_HOME
 
 VIRTUALENV_URL="https://bootstrap.pypa.io/virtualenv/@pyversion@/virtualenv.pyz"
 
-if [ "${OSTYPE}" = "cygwin" ]; then
-  DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
-fi
+case "$(uname -s)" in
+    CYGWIN*)
+        DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
+        ;;
+    *)
+        ;;
+esac
 
 # This needs to be defined before we call HTTP_CLIENT below
 if [ "${HTTP_CLIENT}" = "" ]; then
