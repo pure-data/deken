@@ -14,11 +14,14 @@ script_args="$@"
 ##############################################################################
 
 export DEKEN_VERSION="0.9"
-export DEKEN_HOME="${DEKEN_HOME:-"${HOME}/.deken"}"
-DEKEN_GIT_BRANCH="${DEKEN_GIT_BRANCH:-main}"
-if [ "x${DEKEN_BASE_URL}" = "x" ]; then
-    DEKEN_BASE_URL="https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer"
-fi
+
+: ${DEKEN_HOME:=${HOME}/.deken}
+: ${DEKEN_GIT_BRANCH:=main}
+: ${DEKEN_BASE_URL:=https://raw.githubusercontent.com/pure-data/deken/${DEKEN_GIT_BRANCH}/developer}
+# allow the user to override the default python
+: ${PYTHON_BIN:=python3}
+
+export DEKEN_HOME
 
 VIRTUALENV_URL="https://bootstrap.pypa.io/virtualenv/@pyversion@/virtualenv.pyz"
 
@@ -33,11 +36,6 @@ if [ "${OSTYPE}" = "cygwin" ]; then
   export DEKEN_HOME=$(cygpath -w "${DEKEN_HOME}")
 else
   cygwin=false
-fi
-
-# allow the user to override the default python
-if [ "x${PYTHON_BIN}" = x ]; then
- PYTHON_BIN=python3
 fi
 
 # This needs to be defined before we call HTTP_CLIENT below
@@ -65,7 +63,7 @@ fi
 if ${systeminstalled}; then
     DEKEN_HOME="${0%/*}/../share/deken"
 fi
-DEKENHY="${DEKEN_HOME}/deken.hy"
+: ${DEKENHY:="${DEKEN_HOME}/deken.hy"}
 
 
 ##############################################################################
@@ -277,8 +275,10 @@ tryrun_deken() {
 ##############################################################################
 
 
+# catch 'uninstall --self' early, so we don't run into the "installed" checks
 if [ $# -eq 2  ] && [ "x$1" = "xuninstall" ] && [ "x$2" = "x--self" ]; then
   uninstall_deken
+  exit
 fi
 
 if [ $# -eq 1  ] && [ "x$1" = "x--version" ]; then
@@ -289,8 +289,8 @@ fi
 
 if [ $(id -u) -eq 0 ] && [ "${DEKEN_ROOT}" = "" ]; then
     error "WARNING: You're currently running as root; probably by accident."
-    error "Press control-C to abort or Enter to continue as root."
-    error "Set DEKEN_ROOT to disable this warning."
+    error "Press Control-C to abort or Enter to continue as root."
+    error "Set DEKEN_ROOT=yes to disable this warning."
     read _
 fi
 
@@ -301,13 +301,18 @@ fi
 [ -d "${DEKEN_HOME}" ] || bail_install
 
 # catch the special "upgrade" command
-if [ $# -eq 2  ] && [ "x$1" = "xinstall" ] && [ "x$2" = "x--self" ]; then
-    install_deken
-elif [ $# -eq 2  ] && [ "x$1" = "xupgrade" ] && [ "x$2" = "x--self" ]; then
-    upgrade_deken
-elif [ $# -eq 2  ] && [ "x$1" = "xupdate" ] && [ "x$2" = "x--self" ]; then
-    upgrade_deken
-else
-    # run the real deken command with args passed through
-    tryrun_deken "$@"
+if [ $# -eq 2  ] && [ "x$2" = "x--self" ]; then
+	case "$1" in
+		install)
+			install_deken
+			exit
+			;;
+		update|upgrade)
+			upgrade_deken
+			exit
+			;;
+	esac
 fi
+
+# run the real deken command with args passed through
+tryrun_deken "$@"
