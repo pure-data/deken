@@ -16,5 +16,6 @@ ENV DEKEN_SIGN_GPG=no
 COPY requirements.txt /tmp
 RUN mkdir -p /usr/local/bin/ /usr/local/share/deken/ ~/.deken \
 	&& pip install --no-cache-dir --trusted-host pypi.python.org -r /tmp/requirements.txt \
+	&& pip uninstall -y cryptography pip \
 	&& rm /tmp/requirements.txt \
 	&& deken systemfix --all
