@@ -21,3 +21,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends gpg && apt-get 
 	&& chmod a+rw . \
 	&& rm /tmp/requirements.txt \
 	&& deken systemfix --all
+
+CMD [ "deken", "systeminfo" ]
