@@ -1626,6 +1626,14 @@ proc ::deken::create_dialog {winid} {
     pack $winid.warning.label -side left -padx 6
 
     if { [catch {
+        if {$::windowingsystem eq "aqua"
+            && [::deken::versioncompare 8.6 [info patchlevel]] < 0
+            && [::deken::versioncompare 8.6.12 [info patchlevel]] > 0
+        } {
+            ::deken::utilities::debug [_ "Disabling tabbed view: incompatible Tcl/Tk detected"]
+            error [_ "Disabling tabbed view: incompatible Tcl/Tk detected"]
+        }
+
         ttk::notebook $winid.tab
         pack $winid.tab -side top -padx 6 -pady 3 -fill both -expand true
 
