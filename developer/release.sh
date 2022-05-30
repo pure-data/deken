@@ -1,10 +1,18 @@
 #!/bin/sh
 
+## deken versioning scheme
+# - we losely follow semver
+# - releases should *always* have an even bugfix-number
+# - during development, we use an odd bugfix-number
+
 # files that contain the version number
 # - ./developer/deken
 # - ./deken-plugin.tcl
 # - ./README.deken.pd
 # - .git-ci/deken-test/README.deken.txt
+
+
+version_script=".git-ci/git-version"
 
 cd ${0%/*}/..
 
@@ -21,26 +29,13 @@ if git diff --name-only | sed -e 's|^|CHANGED: |' | tee /dev/stderr | grep . >/d
   exit 1
 fi
 
-echo "setting version in"
-echo "- developer/deken"
-sed \
-  -e "s|^export DEKEN_VERSION=.*|export DEKEN_VERSION=\"${version}\"|" \
-  -i developer/deken
-
-echo "- deken-plugin.tcl"
-sed \
-  -e "s|^\(if *{ *\[.*::deken::versioncheck\) \([^]]*\)]|\1 ${version}]|" \
-  -i deken-plugin.tcl
-
-echo "- README.deken.pd"
-sed \
-  -e "s|\(#X text .* version: \)v[^ ]*;|\1v${version}|" \
-  -i README.deken.pd
-
-echo "- .git-ci/deken-test/README.deken.txt"
-sed \
-  -e "s|^\(version:\) [^ ]*$|\1 ${version}|" \
-  -i .git-ci/deken-test/README.deken.txt
+if [ -x "${version_script}" ]; then
+  echo "setting version to ${version}"
+  ${version_script} "${version}"
+else
+  echo "version-script '${version_script}' missing"
+  exit 1
+fi
 
 
 echo "committing changes and tagging release"
