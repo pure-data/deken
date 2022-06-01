@@ -2658,11 +2658,13 @@ proc ::deken::search::puredata.info::search {term} {
         # skip empty servers
         if { $s eq {} } { continue }
         ::deken::post [format [_ "Searching on %s..."] $s ] debug
-
+        set resultcount 0
         # get the results from the given server, and add them to our results set
         foreach r [::deken::search::puredata.info::search_server $term $s] {
             set results($r) {}
+            incr resultcount
         }
+        ::deken::post [format [_ "Searching on %1\$s returned %2\$d results"] $s $resultcount] debug
         incr servercount
     }
 
