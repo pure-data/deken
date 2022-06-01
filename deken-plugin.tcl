@@ -585,6 +585,16 @@ break
 }
 }
 
+proc ::deken::utilities::httpuseragent {} {
+    set httpagent [::http::config -useragent]
+    set pdversion "Pd/$::PD_MAJOR_VERSION.$::PD_MINOR_VERSION.$::PD_BUGFIX_VERSION$::PD_TEST_VERSION"
+    set platformstring [::deken::platform2string]
+    set tclversion "Tcl/[info patchlevel]"
+    ::http::config -useragent "Deken/${::deken::version} ($platformstring) ${pdversion} $tclversion"
+    return $httpagent
+}
+
+
 # download a file to a location
 # http://wiki.tcl.tk/15303
 proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
@@ -593,6 +603,7 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
     set f [open $downloadfilename w]
     fconfigure $f -translation binary
 
+    set httpagent [::deken::utilities::httpuseragent]
     if { [catch {
         if { $progressproc eq {} } {
             set httpresult [::http::geturl $URL -binary true -channel $f]
@@ -617,6 +628,7 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
             -parent $::deken::winid
         set outputfilename ""
     }
+    ::http::config -useragent $httpagent
 
     flush $f
     close $f
@@ -2646,6 +2658,7 @@ proc ::deken::register {fun} {
 ## ####################################################################
 ## searching puredata.info
 namespace eval ::deken::search::puredata.info { }
+
 proc ::deken::search::puredata.info::search {term} {
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
@@ -2781,10 +2794,8 @@ proc ::deken::search::puredata.info::search_server {term dekenserver} {
 
     # deken-specific socket config
     set httpaccept [::http::config -accept]
-    set httpagent [::http::config -useragent]
-    set pdversion "Pd/$::PD_MAJOR_VERSION.$::PD_MINOR_VERSION.$::PD_BUGFIX_VERSION$::PD_TEST_VERSION"
+    set httpagent [::deken::utilities::httpuseragent]
     ::http::config -accept text/tab-separated-values
-    ::http::config -useragent "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
 
     # fetch search result
     if { [catch {
