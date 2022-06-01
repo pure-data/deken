@@ -1324,7 +1324,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   ; "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
   (% "Deken/%s (%s) Python/%s"
      (, version
-        "<unknown>"
+        (.join "-" (native-arch))
         (get (.split sys.version) 0))))
 
 (defn categorize-search-terms [terms [libraries True] [objects True]]
