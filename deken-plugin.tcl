@@ -103,7 +103,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.9.2] } {
+if { [::deken::versioncheck 0.9.3] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
