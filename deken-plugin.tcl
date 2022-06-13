@@ -260,6 +260,7 @@ proc ::deken::utilities::get_tmpdir {} {
         }
     }
     set tmpdir "/tmp"
+    if {[_iswdir $tmpdir]} {return $tmpdir}
     set tmpdir [pwd]
     if {[_iswdir $tmpdir]} {return $tmpdir}
 }
