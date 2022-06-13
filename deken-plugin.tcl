@@ -253,7 +253,7 @@ proc ::deken::utilities::get_tmpdir {} {
     # TMPDIR: unices
     # TMP, TEMP: windows
     # TEPMDIR: for symmetry :-)
-    foreach {d} {TRASH_FOLDER TMPDIR TEMPDIR TMP TEMP} {
+    foreach {d} {TRASH_FOLDER TMPDIR TEMPDIR TEMP TMP} {
         if { [info exists ::env($d) ] } {
             set tmpdir $::env($d)
             if {[_iswdir $tmpdir]} {return $tmpdir}
