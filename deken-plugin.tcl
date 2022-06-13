@@ -249,12 +249,16 @@ proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""} {prefix dekentmp}} 
 proc ::deken::utilities::get_tmpdir {} {
     proc _iswdir {d} { "expr" [file isdirectory $d] * [file writable $d] }
     set tmpdir ""
-    catch {set tmpdir $::env(TRASH_FOLDER)} ;# very old Macintosh. Mac OS X doesn't have this.
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
-    catch {set tmpdir $::env(TEMP)}
-    if {[_iswdir $tmpdir]} {return $tmpdir}
+    # TRASH_FOLDER: very old Macintosh. Mac OS X doesn't have this.
+    # TMPDIR: unices
+    # TMP, TEMP: windows
+    # TEPMDIR: for symmetry :-)
+    foreach {d} {TRASH_FOLDER TMPDIR TEMPDIR TMP TEMP} {
+        if { [info exists ::env($d) ] } {
+            set tmpdir $::env($d)
+            if {[_iswdir $tmpdir]} {return $tmpdir}
+        }
+    }
     set tmpdir "/tmp"
     set tmpdir [pwd]
     if {[_iswdir $tmpdir]} {return $tmpdir}
