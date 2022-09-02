@@ -27,12 +27,10 @@ version_check() {
    local bugfix
    bugfix=$3
    if [ -n "${bugfix}" ]  && [ $((bugfix % 2)) -ne 0 ]; then
-	   echo "this seems to be a development version...exiting"
-	   exit 1
+	return 1
    fi
+   return 0
 }
-
-version_check $(echo $version | sed -e 's|[.-]| |g')
 
 if git diff --name-only | sed -e 's|^|CHANGED: |' | tee /dev/stderr | grep . >/dev/null; then
   echo "the repository contains changes!" 1>&2
@@ -49,9 +47,17 @@ else
 fi
 
 
-echo "committing changes and tagging release"
+if version_check $(echo $version | sed -e 's|[.-]| |g'); then
+echo "committing changes and tagging release" 1>&2
 git commit \
 	developer/deken deken-plugin.tcl \
 	README.deken.pd .git-ci/deken-test/README.deken.txt \
 	-m "Releasing v${version}" \
 && git tag -s -m "Released deken-v${version}" "v${version}"
+else
+echo "committing changes for development version" 1>&2
+git commit \
+	developer/deken deken-plugin.tcl \
+	README.deken.pd .git-ci/deken-test/README.deken.txt \
+	-m "Bump dev-version to v${version}"
+fi
