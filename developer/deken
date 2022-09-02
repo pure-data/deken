@@ -13,7 +13,7 @@ script_args=$*
 # variable declarations
 ##############################################################################
 
-export DEKEN_VERSION="0.9.4"
+export DEKEN_VERSION="0.9.5"
 
 : "${DEKEN_HOME:=${HOME}/.deken}"
 : "${DEKEN_GIT_BRANCH:=main}"
