@@ -58,7 +58,7 @@
 (defn nop [#* ignored_args] """does nothing; returns None""" None)
 
 ;; simple debugging helper: prints an object and returns it
-(defn debug [x #* more] """print the argument and return it""" (if more (log.debug (+ (, x) more)) (log.debug x)) x)
+(defn debug [x #* more] """print the argument and return it""" (if more (log.debug (+ #(x) more)) (log.debug x)) x)
 (defn log_exception [])
 (defn log_error [msg] (log.error msg) (log_exception))
 (defn log_warning [msg] (log.warning msg) (log_exception))
@@ -69,7 +69,7 @@
   """print argument as an error message and exit"""
   (log.fatal x)
   (log_exception)
-  (if (not (is exit None))
+  (when (not (is exit None))
       (sys.exit exit)))
 
 (defn filter-none [iterable]
@@ -80,7 +80,7 @@
 (setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
 (setv version (or
                 (.get os.environ "DEKEN_VERSION" None)
-                (if (os.path.exists
+                (when (os.path.exists
                       (os.path.join
                         (os.path.dirname (os.path.dirname
                                            (os.path.abspath __file__))) ".git"))
@@ -94,9 +94,9 @@
 (setv default-installpath
       (os.path.expandvars (os.path.expanduser
                             (cond
-                              [(= sys.platform "darwin") "~/Library/Pd"]
-                              [(= sys.platform "win32") "%AppData%/Pd"]
-                              [True "~/.local/lib/pd/extra/"]))))
+                              (= sys.platform "darwin") "~/Library/Pd"
+                              (= sys.platform "win32") "%AppData%/Pd"
+                              True "~/.local/lib/pd/extra/"))))
 
 (setv architecture-substitutes
       {
@@ -127,9 +127,9 @@
   (defn contains? [f [needle "\0"]]
     (setv data (f.read 1024))
     (cond
-      [(not data) False]
-      [(in needle data) True]
-      [True (contains? f needle)]))
+      (not data) False
+      (in needle data) True
+      True (contains? f needle)))
   (if (os.path.isdir filename)
       False
       (try
@@ -164,7 +164,7 @@
 (defn dict-merge [dict0 #* dicts]
   """merge several dictionaries; if a key exists in more than one dict, the latet takes precedence"""
   (defn dict-merge-aux [dict0 dicts]
-    (for [d dicts] (if d (dict0.update d)))
+    (for [d dicts] (when d (dict0.update d)))
     dict0)
   ;; we need the aux just to prevent side-effects on dict0
   (dict-merge-aux (.copy dict0) dicts))
@@ -204,7 +204,7 @@
   ;rep = dict((re.escape(k), v) for k, v in rep.iter())
   ;pattern = re.compile("|".join(rep.keys()))
   ;text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
-  (setv repls (dfor (, k v) repls [(re.escape k) v]))
+  (setv repls (dfor #( k v) repls [(re.escape k) v]))
   (.sub (re.compile (.join "|" repls)) (fn [m] (get repls (re.escape (.group m 0)))) s))
 
 ;; execute a command inside a directory
@@ -228,14 +228,14 @@
       (setv filename (os.path.join (os.path.dirname pkg.__file__) "client.py"))
       (with [f (open filename "r")]
         (setv data (f.read)))
-      (if (in broken data)
+      (when (in broken data)
           (try
             (do
               (with [f (open filename "w")]
                 (f.write (.replace data broken fixed)))
               ;; TODO: stop execution and require the user to re-start
               (setv msg ["Fixing a problem with the 'easywebdav2' module succeeded."])
-              (if (not (is exit None)) (.append msg "Please re-run your command!"))
+              (when (not (is exit None)) (.append msg "Please re-run your command!"))
               (fatal (.join "\n" msg) exit))
             (except [e OSError]
               (do
@@ -277,7 +277,7 @@
          "Environment variable DEKEN_%s is not set and the config file %s does not contain a '%s = ...' entry.\n"
          "To avoid this prompt in future please add a setting to the config or environment.\n"
          "Please enter %s %s:: ")
-       (, (name.upper) config-file-path name name forstring))))
+       #( (name.upper) config-file-path name name forstring))))
 
 (defn askpass [[prompt "Password: "]]
   """prompt the user for a password"""
@@ -335,7 +335,7 @@
     (try
       (with [f (open req "r")]
         (lfor line (.readlines f) (.strip line)))
-      (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" (, req))))))
+      (except [e OSError] (fatal (% "Unable to open requirements-file '%s'" #( req))))))
   (defn reqs2pkgs [reqs]
     (flatten (lfor f reqs (req2pkg f))))
   (.union (set packages) (reqs2pkgs requirement-files)))
@@ -344,7 +344,7 @@
   """guesstimate on the native architecture"""
   (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
   (import platform)
-  (, (platform.system) (amd64? (platform.machine)) "32"))
+  #( (platform.system) (amd64? (platform.machine)) "32"))
 
 (defn compatible-arch? [need-arch have-archs]
   """check whether <have-archs> contains an architecture that is compatible with <need-arch>"""
@@ -369,15 +369,15 @@
           ;; floatsize = floatsize
           (simple-compat (get need-arch 2) (get have-arch 2))))
       (except [e Exception]
-              (log_error (% "incompatible archs: %s != %s" (, need-arch have-arch))))))
+              (log_error (% "incompatible archs: %s != %s" #( need-arch have-arch))))))
   (defn compat-generator [need-arch have-archs]
     (setv na (stringify-tuple need-arch))
     (for [ha have-archs] (yield (compat? na (stringify-tuple ha)))))
   (log.debug "compatible-arch? %s IN %s" need-arch have-archs)
   (cond
-    [(not have-archs) True] ; archs is 'all' which matches any architecture
-    [(= need-arch "*") True] ; we don't care
-    [True (any (compat-generator need-arch have-archs))]))
+    (not have-archs) True ; archs is 'all' which matches any architecture
+    (= need-arch "*") True ; we don't care
+    True (any (compat-generator need-arch have-archs))))
 
 (defn compatible-archs? [need-archs have-archs]
   """checks whether <have-archs> contains *any* of the architectures listed in <need-archs>"""
@@ -398,10 +398,10 @@
                                 ; if fixdek0 is True, this forces the floatsize to "32"
   (defn split-arch [arch fixdek0]
     (setv t (.split arch "-"))
-    (if (and fixdek0 (> (len t) 2))
+    (when (and fixdek0 (> (len t) 2))
         (setv (get t 2) "32"))
     (tuple t))
-  (if archstring
+  (when archstring
       (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
       []))
 (defn arch-to-string [arch]
@@ -411,11 +411,11 @@
 (defn --archs-default-floatsize-- [[filename None]]
   (defn doit [floatsize filename]
     (log.warning
-      (if filename
+      (when filename
           (% "'%s' has no relevant symbols!...assuming floatsize=%s"
-             (, filename floatsize))
+             #( filename floatsize))
           (% "No relevant symbols found!...assuming floatsize=%s"
-             (, filename))))
+             #( filename))))
     floatsize)
   (if default-floatsize
       (doit default-floatsize filename)
@@ -429,8 +429,8 @@
   (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
   (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
   (setv archdict {})
-  (for [(, os cpu floatsize) archs] (setv (get archdict (, os cpu)) (.union (try-get archdict (, os cpu) (set)) [floatsize])))
-  (.union (set (flatten (lfor (, (, os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) (, os cpu fs))))) others))
+  (for [#( os cpu floatsize) archs] (setv (get archdict #( os cpu)) (.union (try-get archdict #( os cpu) (set)) [floatsize])))
+  (.union (set (flatten (lfor #( #( os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) #( os cpu fs))))) others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder [recurse-subdirs False] [extra-files []]]
@@ -470,7 +470,7 @@
   """examine a folder for external binaries (and sources) and return the architectures of those found"""
   (defn listdir [folder [recurse-subdirs True]]
     (if recurse-subdirs
-        (lfor (, dirname subdirs filenames) (os.walk folder) f filenames (os.path.join dirname f))
+        (lfor #( dirname subdirs filenames) (os.walk folder) f filenames (os.path.join dirname f))
         (lfor f (os.listdir folder) (os.path.join folder f))))
   (sum (+
          (if (test-extensions-under-dir folder [".c" ".cpp" ".cxx" ".cc"])
@@ -479,22 +479,22 @@
            f (+ (listdir folder recurse-subdirs) extra-files)
            :if (os.path.exists f)
            (cond
-             [(re.search "\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")]
-             [(re.search "\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")]
-             [(re.search "\.(pd_darwin|d_[^.]*|dylib)$" f) (get-mach-archs f)]
-             [(re.search "\.(dll|m_[^.]*)$" f) (get-windows-archs f)]
-             [True []])))
+             (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")
+             (re.search r"\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")
+             (re.search r"\.(pd_darwin|d_[^.]*|dylib)$" f) (get-mach-archs f)
+             (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f)
+             True [])))
        []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --pdfunction-to-floatsize-- [function-name]
   """detect Pd-floatsize based on the list of <function-name> used in the binary"""
   (cond
-    [(in function-name ["_class_new" "class_new"]) 32]
-    [(in function-name ["_class_new64" "class_new64"]) 64]
-    [(in function-name ["_class_addmethod" "class_addmethod"
-                         "_sys_register_loader" "sys_register_loader"]) 0]
-    [True None]))
+    (in function-name ["_class_new" "class_new"]) 32
+    (in function-name ["_class_new64" "class_new64"]) 64
+    (in function-name ["_class_addmethod" "class_addmethod"
+                         "_sys_register_loader" "sys_register_loader"]) 0
+    True None))
 
 
 ;; Linux ELF file
@@ -520,43 +520,43 @@
                    "ELFOSABI_ARM" None
                    "ELFOSABI_STANDALONE" None})
   (setv elf-cpu {
-                 ;; format: (, CPU elfsize littlendian) "id"
-                 (, "EM_386" 32 True) "i386"
-                 (, "EM_X86_64" 64 True) "amd64"
-                 (, "EM_X86_64" 32 True) "x32"
-                 (, "EM_ARM" 32 True) "arm" ;; needs more
-                 (, "EM_AARCH64" 64 True) "arm64"
+                 ;; format: #( CPU elfsize littlendian) "id"
+                 #( "EM_386" 32 True) "i386"
+                 #( "EM_X86_64" 64 True) "amd64"
+                 #( "EM_X86_64" 32 True) "x32"
+                 #( "EM_ARM" 32 True) "arm" ;; needs more
+                 #( "EM_AARCH64" 64 True) "arm64"
                  ;; more or less exotic archs
-                 (, "EM_IA_64" 64 False) "ia64"
-                 (, "EM_IA_64" 64 True) "ia64el"
-                 (, "EM_68K" 32 False) "m68k"
-                 (, "EM_PARISC" 32 False) "hppa"
-                 (, "EM_PPC" 32 False) "ppc"
-                 (, "EM_PPC64" 64 False) "ppc64"
-                 (, "EM_PPC64" 64 True) "ppc64el"
-                 (, "EM_S390" 32 False) "s390" ;; 31bit!?
-                 (, "EM_S390" 64 False) "s390x"
-                 (, "EM_SH" 32 True) "sh4"
-                 (, "EM_SPARC" 32 False) "sparc"
-                 (, "EM_SPARCV9" 64 False) "sparc64"
-                 (, "EM_ALPHA" 64 True) "alpha" ;; can also be big-endian
-                 (, 36902 64 True) "alpha"
-                 (, "EM_MIPS" 32 False) "mips"
-                 (, "EM_MIPS" 32 True) "mipsel"
-                 (, "EM_MIPS" 64 False) "mips64"
-                 (, "EM_MIPS" 64 True) "mips64el"
+                 #( "EM_IA_64" 64 False) "ia64"
+                 #( "EM_IA_64" 64 True) "ia64el"
+                 #( "EM_68K" 32 False) "m68k"
+                 #( "EM_PARISC" 32 False) "hppa"
+                 #( "EM_PPC" 32 False) "ppc"
+                 #( "EM_PPC64" 64 False) "ppc64"
+                 #( "EM_PPC64" 64 True) "ppc64el"
+                 #( "EM_S390" 32 False) "s390" ;; 31bit!?
+                 #( "EM_S390" 64 False) "s390x"
+                 #( "EM_SH" 32 True) "sh4"
+                 #( "EM_SPARC" 32 False) "sparc"
+                 #( "EM_SPARCV9" 64 False) "sparc64"
+                 #( "EM_ALPHA" 64 True) "alpha" ;; can also be big-endian
+                 #( 36902 64 True) "alpha"
+                 #( "EM_MIPS" 32 False) "mips"
+                 #( "EM_MIPS" 32 True) "mipsel"
+                 #( "EM_MIPS" 64 False) "mips64"
+                 #( "EM_MIPS" 64 True) "mips64el"
                  ;; microcontrollers
-                 (, "EM_BLAFKIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
-                 (, "EM_BLACKFIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
-                 (, "EM_AVR" 32 True) "avr" ;; "Atmel AVR 8-bit microcontroller" e.g. arduino
+                 #( "EM_BLAFKIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                 #( "EM_BLACKFIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
+                 #( "EM_AVR" 32 True) "avr" ;; "Atmel AVR 8-bit microcontroller" e.g. arduino
                  ;; dead archs
-                 ;;  (, "EM_88K" 32 None) "m88k" ;; predecessor of PowerPC
-                 ;;  (, "EM_M32" ) "WE32100" ;; Belmac32 the world's first 32bit processor!
-                 ;;  (, "EM_S370" ) "s370" ;; terminated 1990
-                 ;;  (, "EM_MIPS_RS4_BE" ) "r4000" ;; "MIPS 4000 big-endian" ;; direct concurrent to the i486
-                 ;;  (, "EM_860" ) "i860" ;; terminated mid-90s
-                 ;;  (, "EM_NONE", None, None) None
-                 ;;  (, "RESERVED", None, None) "RESERVED"
+                 ;;  #( "EM_88K" 32 None) "m88k" ;; predecessor of PowerPC
+                 ;;  #( "EM_M32" ) "WE32100" ;; Belmac32 the world's first 32bit processor!
+                 ;;  #( "EM_S370" ) "s370" ;; terminated 1990
+                 ;;  #( "EM_MIPS_RS4_BE" ) "r4000" ;; "MIPS 4000 big-endian" ;; direct concurrent to the i486
+                 ;;  #( "EM_860" ) "i860" ;; terminated mid-90s
+                 ;;  #( "EM_NONE", None, None) None
+                 ;;  #( "RESERVED", None, None) "RESERVED"
                  })
   ;; values updated via https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=blob;f=include/elf/arm.h;hb=HEAD#l93
   (setv elf-armcpu [
@@ -582,8 +582,8 @@
   (defn --get-elf-sysv-- [elffile]
     """try to guess the OS of a generic SysV elf file"""
     (or
-     (if (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD")
-     (if (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
+     (when (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD")
+     (when (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
      None))
   (defn do-get-elf-archs [elffile oshint]
                                 ; get the size of t_float in the elffile
@@ -594,24 +594,24 @@
     (defn get-elf-armcpu [cpu]
       (defn armcpu-from-aeabi [arm aeabi]
         (defn armcpu-from-aeabi-helper [data]
-          (if data
+          (when data
               (get elf-armcpu (byte-to-int (get (get (.split
                                                        (cut data 7 None)
                                                        (str-to-bytes "\x00") 1) 1) 1)))))
         (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
       (or
-        (if (= cpu "arm") (armcpu-from-aeabi
+        (when (= cpu "arm") (armcpu-from-aeabi
                             (.data (elffile.get_section_by_name ".ARM.attributes"))
                             (str-to-bytes "aeabi")))
         cpu))
     (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
-          (,
+          #(
            (or
             (elf-osabi.get elffile.header.e_ident.EI_OSABI)
-            (if (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV") (--get-elf-sysv-- elffile))
+            (when (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV") (--get-elf-sysv-- elffile))
             oshint
             "Linux")
-             (get-elf-armcpu (elf-cpu.get (, elffile.header.e_machine elffile.elfclass elffile.little_endian)))
+             (get-elf-armcpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
              floatsize)))
   (try (do
          (import elftools.elf.elffile [ELFFile])
@@ -643,12 +643,12 @@
     (defn get-macho-floatsizes [header]
       (import macholib.SymbolTable [SymbolTable])
       (list (filter-none
-              (lfor (, _ name) (getattr (SymbolTable macho header) "undefsyms")
+              (lfor #( _ name) (getattr (SymbolTable macho header) "undefsyms")
                     (--pdfunction-to-floatsize-- (.decode name))))))
     (defn get-macho-headerarchs [header]
       (lfor
         floatsize (or (get-macho-floatsizes header)  [(--archs-default-floatsize-- filename)])
-        (, "Darwin" (macho-cpu.get header.header.cputype) floatsize)))
+        #( "Darwin" (macho-cpu.get header.header.cputype) floatsize)))
     (list (flatten (lfor hdr macho.headers (get-macho-headerarchs hdr)))))
   (try (do
          (import macholib.MachO [MachO])
@@ -661,8 +661,8 @@
 
   (defn get-pe-floatsizes [cpu floatsizes]
     (if floatsizes
-        (lfor floatsize floatsizes (, "Windows" cpu floatsize))
-        [(, "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
+        (lfor floatsize floatsizes #( "Windows" cpu floatsize))
+        [#( "Windows" cpu (or (--archs-default-floatsize-- filename) (raise (Exception))))]))
 
   (defn get-pe-archs [pef cpudict]
     (pef.parse_data_directories)
@@ -727,7 +727,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (defn get-files-from-dir [directory [recursive False] [full_path False]]
     (if recursive
         (list (flatten
-                (lfor (, root dirs files) (os.walk directory) (if full_path
+                (lfor #( root dirs files) (os.walk directory) (if full_path
                                                                   (lfor f files (os.path.join root f))
                                                                   files))))
         (try
@@ -741,24 +741,24 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (lfor f input
           :if (f.endswith "-help.pd")
           (% "%s\t%s\n"
-             (, (unhexmunge (cut (os.path.basename f) 0 -8)) (get-description-from-helpfile f)))))
+             #( (unhexmunge (cut (os.path.basename f) 0 -8)) (get-description-from-helpfile f)))))
   (defn readobjs [input]
-    (if (not (os.path.isdir input))
+    (when (not (os.path.isdir input))
         (try
           (with [f (open input)] (.readlines f))
           (except [e Exception] (log_debug e)))))
   (defn writeobjs [output data]
-    (if data
+    (when data
         (try (do
                (with [f (open output :mode "w")] (.write f (.join "" data)))
                output)
              (except [e Exception] (log_debug e)))))
   (defn  do-make-objects-file [dekfilename objfilename]
     (cond
-      [(not dekfilename) None]
-      [(not objfilename) None]
-      [(= dekfilename objfilename) dekfilename]
-      [True
+      (not dekfilename) None
+      (not objfilename) None
+      (= dekfilename objfilename) dekfilename
+      True
        (writeobjs
          dekfilename
          (or
@@ -767,12 +767,12 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                       (get-files-from-zip objfilename)))
            (if (binary-file? objfilename)
                []
-               (readobjs objfilename))))]))
+               (readobjs objfilename))))))
   (setv dekfilename (% "%s.txt" dekfilename))
   (if (os.path.exists dekfilename)
       (do ;; already exists
         (log.info (% "Objects file '%s' already exists" dekfilename))
-        (if warn-exists
+        (when warn-exists
             (log.warning (% "WARNING: delete '%s' to re-generate objects file" dekfilename)))
         dekfilename)
       (do-make-objects-file dekfilename objfile)))
@@ -792,7 +792,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                        hasher))
     hashfilename)
   (do-hash-file filename
-                (% "%s.%s" (, filename algorithm))
+                (% "%s.%s" #( filename algorithm))
                 (hashlib.new algorithm)
                 blocksize))
 
@@ -807,7 +807,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (= (hash-file (open filename :mode "rb" :buffering blocksize)
                   (hashlib.new algorithm))
        (.strip (get (.split (.read (open hashfilename "r"))) 0)))
-    (except [e (, OSError TypeError ValueError)]
+    (except [e #( OSError TypeError ValueError)]
             (log_exception))))
 
 ;; handling GPG signatures
@@ -823,14 +823,14 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (defn gpg-verify-file [signedfile signaturefile]
            """verify a file with a detached GPG signature"""
            (log.warning (.join "\n" (list
-                                      (% "Unable to GPG verify '%s'" (, signedfile))
+                                      (% "Unable to GPG verify '%s'" #( signedfile))
                                       "'gnupg' module not loaded")))
            )))
      (else
        (do
          (defn --gpg-unavail-error-- [state [ex None]]
            (log.warning (% "GPG %s failed:" state))
-           (if ex (log.warning ex))
+           (when ex (log.warning ex))
            (log.warning "Do you have 'gpg' installed?")
            (log.warning "- If you've received numerous errors during the initial installation,")
            (log.warning "  you probably should install 'python-dev', 'libffi-dev' and 'libssl-dev'")
@@ -850,16 +850,16 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                        (gnupg.GPG #** (if gnupghome {"gnupghome" gnupghome} {}))
                        "decode_errors" "replace")
                      (except [e OSError] (--gpg-unavail-error-- "init" e))))
-             (if gpg (setv gpg.encoding "utf-8"))
+             (when gpg (setv gpg.encoding "utf-8"))
              gpg)
            (defn do-verify [data sigfile]
              (setv result (gpg.verify_data signaturefile data))
-             (if (not result) (log.debug result.stderr))
+             (when (not result) (log.debug result.stderr))
              (bool result))
            (setv gpg (get-gpg))
-           (if gpg (do
+           (when gpg (do
                      (setv data (try (with [f (open signedfile "rb")] (f.read)) (except [e OSError] None)))
-                     (if (and
+                     (when (and
                            data
                            (os.path.exists signaturefile))
                          (do-verify data signaturefile)))))
@@ -882,7 +882,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
              (setv keyid (get-config-value "key_id" (gpg-get-config gpg "default-key")))
              (try
                (first (lfor k (gpg.list_keys True)
-                            :if (cond [keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) )] [True True])
+                            :if (cond keyid (.endswith (.upper (get k "keyid" )) (.upper keyid) ) True True)
                             k))
                (except [e IndexError] None)))
 
@@ -896,26 +896,26 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                         (if use-agent {"use_agent" True} {})))
                        "decode_errors" "replace")
                      (except [e OSError] (--gpg-unavail-error-- "init" e))))
-             (if gpg (do
+             (when gpg (do
                        (setv gpg.encoding "utf-8")
                        (setv [keyid uid] (lfor _ ["keyid" "uids"] (try-get (gpg-get-key gpg) _ None)))
                        (setv uid (try-get uid 0 None))
                        (setv passphrase
-                             (if (and (not use-agent) keyid)
+                             (when (and (not use-agent) keyid)
                                  (do
                                    (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
-                                             (, uid keyid filename)))
+                                             #( uid keyid filename)))
                                    (askpass "Enter GPG passphrase: " ))))
                        (setv signconfig (dict-merge
                                           {"detach" True}
                                           (if keyid {"keyid" keyid} {})
                                           (if passphrase {"passphrase" passphrase} {})))
-                       (if (and (not use-agent) (not passphrase))
+                       (when (and (not use-agent) (not passphrase))
                            (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
                        (try
                          (do
-                           (setv sig (if gpg (gpg.sign_file (open filename "rb") #** signconfig)))
-                           (if (hasattr sig "stderr")
+                           (setv sig (when gpg (gpg.sign_file (open filename "rb") #** signconfig)))
+                           (when (hasattr sig "stderr")
                                (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
                            (if (not sig)
                                (log.warning "Could not GPG sign the package.")
@@ -978,7 +978,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   """sort <libdicts> (list of dictionaries)"""
   (sorted libdicts
           :reverse reverse
-          :key (fn [d] (,
+          :key (fn [d] #(
                         (.lower (or (get d "package") ""))
                           (.lower (or (get d "version") ""))
                           (.lower (or (get d "timestamp") ""))))))
@@ -991,7 +991,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (for [lib libdicts]
       (do
         (setv pkgname (get lib "package"))
-        (if (not (in pkgname pkgdict))
+        (when (not (in pkgname pkgdict))
             (setv (get pkgdict pkgname) []))
         (setv l (get pkgdict pkgname))
         (l.append lib)))
@@ -1001,7 +1001,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (setv result
             (+ result (cut (sorted (get pkgdict key)
                                    :reverse True
-                                   :key (fn [d] (, (or (get d "version") "") (or (get d "timestamp") ""))))
+                                   :key (fn [d] #( (or (get d "version") "") (or (get d "timestamp") ""))))
                            0 depth))))
     result)
   (if depth
@@ -1021,7 +1021,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (with [f (zip-file zip-filename)]
     (for [[root dirs files] (os.walk directory-to-zip)]
       (for [file-path (lfor file files (os.path.join root file))]
-        (if (os.path.exists file-path)
+        (when (os.path.exists file-path)
             (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
   zip-filename)
 (defn unzip-file [archive-file [targetdir "."]]
@@ -1031,7 +1031,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (zipfile.ZipFile archive-file)]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log_debug (% "Unzipping '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "Unzipping '%s' failed" #( archive-file))) False))))
 
 ;; tar up the directory
 (defn tar-dir [directory-to-tar archive-file [extension ".tar.gz"]]
@@ -1052,7 +1052,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (with [f (tarfile.open archive-file "r")]
            (f.extractall :path targetdir))
          True)
-       (except [e Exception] (or (log_debug (% "Untaring '%s' failed" (, archive-file))) False))))
+       (except [e Exception] (or (log_debug (% "Untaring '%s' failed" #( archive-file))) False))))
 
 ;; do we use zip or tar on this archive?
 (defn archive-extension [rootname]
@@ -1064,9 +1064,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 (defn archive-dir [directory-to-archive rootname]
   """create an archive of a directory,using a method based on the extension"""
   ((cond
-     [(.endswith rootname ".dek") zip-dir]
-     [(.endswith rootname ".zip") zip-dir]
-     [True tar-dir])
+     (.endswith rootname ".dek") zip-dir
+     (.endswith rootname ".zip") zip-dir
+     True tar-dir)
     directory-to-archive rootname ""))
 
 ;; naive check, whether we have an archive: compare against known suffixes
@@ -1078,7 +1078,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; try to remove a file (but keep running if things go wrong)
 (defn try-remove-file [filename]
   """try to delete <filename>, but don't complain if things fail"""
-  (if filename
+  (when filename
     (try
      (os.remove filename)
      (except [e Exception] (log_debug e))))
@@ -1089,10 +1089,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 (defn download-file [url [filename None] [output-dir "."]]
   """downloads a file from <url>, saves it as <filename> (or a sane default); returns the filename or None; makes sure that no file gets overwritten"""
   (try (os.makedirs output-dir)
-       (except [e Exception] (if (not (os.path.isdir output-dir)) (raise e))))
+       (except [e Exception] (when (not (os.path.isdir output-dir)) (raise e))))
   (defn unique-filename [filename]
     (defn unique-filename-number [filename number]
-      (setv filename0 (% "%s.%s" (, filename number)))
+      (setv filename0 (% "%s.%s" #( filename number)))
       (if (not (os.path.exists filename0))
           filename0
           (unique-filename-number filename (+ number 1))))
@@ -1104,9 +1104,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (do
         (with [f (open outfile "wb")] (.write f content))
         outfile)
-      (except [e OSError] (log_warning (% "Unable to download file: %s" (, e))))))
+      (except [e OSError] (log_warning (% "Unable to download file: %s" #( e))))))
   (import requests)
-  (log.info (% "Downloading '%s' as %s" (, url filename)))
+  (log.info (% "Downloading '%s' as %s" #( url filename)))
   (setv r (requests.get url))
   (if (= 200 r.status_code)
       (save-data
@@ -1119,7 +1119,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
             (os.path.basename url)
             "downloaded_file")))
         r.content)
-      (log.warning (% "Downloading '%s' failed with '%s'" (, url r.status_code)))))
+      (log.warning (% "Downloading '%s' failed with '%s'" #( url r.status_code)))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
@@ -1131,7 +1131,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
          (setv easywebdav easywebdav2))
        (except [e ImportError] (import easywebdav)))
   (defn do-upload-file [dav path filename]
-    (log.info (% "Uploading '%s' to %s://%s%s" (, filename destination.scheme destination.hostname path)))
+    (log.info (% "Uploading '%s' to %s://%s%s" #( filename destination.scheme destination.hostname path)))
     (try
       (do
         ;; make sure all directories exist
@@ -1142,10 +1142,10 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
         (fatal (+
                  (str e)
                  "\n"
-                 (% "Couldn't upload to %s://%s%s!\n" (, destination.scheme destination.hostname path))
+                 (% "Couldn't upload to %s://%s%s!\n" #( destination.scheme destination.hostname path))
                  (% "Are you sure you have the correct username and password set for '%s'?\n" destination.hostname)
                  (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
-  (if filepath
+  (when filepath
       (do
         (setv filename (os.path.basename filepath))
         (setv [pkg ver _ _] (parse-filename filename))
@@ -1155,7 +1155,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
               (str
                 (replace-words
                   (.rstrip destination.path "/")
-                  (, (, "%u" username) (, "%p" pkg) (, "%v" (or ver ""))))))
+                  #( #( "%u" username) #( "%p" pkg) #( "%v" (or ver ""))))))
         (do-upload-file
           (easywebdav.connect destination.hostname #** {"username" username
                                         "password" password
@@ -1173,15 +1173,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (upload-file pkg destination username password)
   (upload-file (make-objects-file pkg None False) destination username password)
   (upload-file (gpg-sign-file pkg) destination username password)
-  (, username password))
+  #( username password))
 ;; upload a list of archives (with aux files)
 ;; returns a (username, password) tuple in case of success
 ;; in case of failure, this exits
 (defn upload-packages [pkgs destination username password skip-source]
   """upload multiple packages at once"""
-  (if (not skip-source) (check-sources (sfor pkg pkgs (filename-to-namever pkg))
+  (when (not skip-source) (check-sources (sfor pkg pkgs (filename-to-namever pkg))
                                        (sfor pkg pkgs (has-sources? pkg))
-                                       (if (= "puredata.info"
+                                       (when (= "puredata.info"
                                               (.lower (or destination.hostname default-destination.hostname)))
                                            username)))
   (for [pkg pkgs]
@@ -1192,7 +1192,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   (log.warning "Please note that it can take up to 24 hours before the package will appear")
   (log.warning "in deken-searches that allow others to download your package from the")
   (log.warning "Pd package repository.")
-  (, username password))
+  #( username password))
 
 ;; compute the archive filename for a particular external on this platform
 ;; v1: "<pkgname>[v<version>](<arch1>)(<arch2>).dek"
@@ -1205,27 +1205,27 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   """calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"""
   (defn do-make-name [pkgname version archs filenameversion]
     (cond
-      [(= filenameversion 1) (+ pkgname
+      (= filenameversion 1) (+ pkgname
                                 (if version (% "[v%s]" version) "")
                                 archs
-                                ".dek")]
-      [(= filenameversion 0) (+ pkgname
+                                ".dek")
+      (= filenameversion 0) (+ pkgname
                                 (if version (% "-v%s-" version) "")
                                 archs
                                 "-externals"
-                                (archive-extension archs))]
-      [True (fatal (% "Unknown dekformat '%s'" filenameversion))]))
+                                (archive-extension archs))
+      True (fatal (% "Unknown dekformat '%s'" filenameversion))))
   (setv version (if (and version (.startswith version "v")) (cut version 1 None) version))
   (do-make-name
     (os.path.normpath (os.path.join output-dir (or pkgname (os.path.basename folder))))
-    (cond [(is version None)
+    (cond (is version None)
            (fatal
              (+ (% "No version for '%s'!\n" folder)
                 " Please provide the version-number via the '--version' flag.\n"
                 (% " If '%s' doesn't have a proper version number,\n" folder)
                 (% " consider using a date-based fake version (like '0~%s')\n or an empty version ('')."
-                   (.strftime (datetime.date.today) "%Y%m%d"))))]
-          [version version])
+                   (.strftime (datetime.date.today) "%Y%m%d"))))
+          version version)
     (get-architecture-string folder :recurse-subdirs recurse-subdirs :extra-files extra-arch-files)
     filenameversion))
 
@@ -1235,7 +1235,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   """create additional files besides archive: hash-file and GPG-signature"""
   (log.info (% "Packaging %s" dekfile))
   (hash-sum-file dekfile)
-  (if objects
+  (when objects
       (if (dekfile.endswith ".dek")
           (make-objects-file dekfile objects)
           (log.warning "Objects file generation is only enabled for dekformat>=1...skipping!")))
@@ -1278,7 +1278,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
   """returns name/version if the filename contains sources (so we check whether we still need to upload sources)"""
-  (if (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
+  (when (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
@@ -1295,7 +1295,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; check if sources archs are present by comparing a SET of packagaes and a SET of packages-with-sources
 (defn check-sources [pkgs sources [puredata-info-user None]]
   """bail out if there are no sources on puredata.info yet and we don't currently upload sources"""
-  (for [pkg pkgs] (if (and
+  (for [pkg pkgs] (when (and
                         (not (in pkg sources))
                         (not (and puredata-info-user (check-sources@puredata-info pkg puredata-info-user))))
                       (fatal (+ (% "Missing sources for '%s'!\n" pkg)
@@ -1310,7 +1310,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
 ;; store the password in the password agent (for later use)
 (defn get-upload-password [username force-ask]
   """get password from keyring agent, config-file (ouch), or user-input"""
-  (or (if (not force-ask)
+  (or (when (not force-ask)
           (or (try (do
                      (import keyring)
                      (keyring.get_password "deken" username))
@@ -1323,7 +1323,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
   """get the user-agent string of this application"""
   ; "Deken/${::deken::version} ([::deken::platform2string]) ${pdversion} Tcl/[info patchlevel]"
   (% "Deken/%s (%s) Python/%s"
-     (, version
+     #( version
         (.join "-" (native-arch))
         (get (.split sys.version) 0))))
 
@@ -1342,13 +1342,13 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
       (if (getattr (urlparse t) "scheme")
           (urls.add t)
           (do
-            (if libraries
+            (when libraries
                 (if (get vlib 1)
                     (do
                       (vlibs.add vlib)
                       (libs.add (get vlib 0)))
                     (libs.add t)))
-            (if objects
+            (when objects
                 (if (get vlib 1)
                     None
                     (objs.add t)))))))
@@ -1383,15 +1383,15 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
           (parse-tsv #* (.split line "\t"))))
   (defn parse-data [data content-type]
     (cond
-      [(in "text/tab-separated-values" content-type) (parse-tab-separated-values data)]
-      [True []]))
+      (in "text/tab-separated-values" content-type) (parse-tab-separated-values data)
+      True []))
   (import requests)
   (setv r (requests.get searchurl
                         :headers {"user-agent" (user-agent)
                                   "accept" "text/tab-separated-values"}
                         :params {"libraries" libraries
                                  "objects" objects}))
-  (if (= 200 r.status_code)
+  (when (= 200 r.status_code)
       (parse-data r.text (get r.headers "content-type"))))
 
 (defn find-packages [searchterms ;; as returned by categorize-search-terms
@@ -1421,7 +1421,7 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (setv url (get result "URL"))
     (setv description (get result "description"))
     (print (% "%s/%s uploaded by %s on %s for %s"
-              (,
+              #(
                (get result "package")
                  (or (get result "version") "<unknown.version>")
                  (get result "uploader")
@@ -1485,12 +1485,12 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     ;; fail==False  : never fail
     ;; fail==None   : only fail on verification errors
     (cond
-      [(is result None)(log.fatal missstring)]
-      [(not result)(log.fatal errstring)])
+      (is result None)(log.fatal missstring)
+      (not result)(log.fatal errstring))
     (cond
-      [(= fail False) True]
-      [(and (is fail None) (is result None)) True]
-      [True result]))
+      (= fail False) True
+      (and (is fail None) (is result None)) True
+      True result))
   (defn do-verify [verifun
                    dekfile
                    reffile
@@ -1502,8 +1502,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
     (if (or fail (os.path.exists reference-file))
         (verify-result (verifun dekfile reference-file)
                    fail
-                   (% errstring (, dekfile))
-                   (% missstring (, reffile dekfile)))
+                   (% errstring #( dekfile))
+                   (% missstring #( reffile dekfile)))
         (or (log.info "Skipping verification with non-existing file '%s'" reference-file) True)))
   (setv vgpg  (do-verify gpg-verify-file
                          dekfile gpgfile
@@ -1515,8 +1515,8 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                          ".sha256" hash
                          "Hashsum mismatch for '%s'"
                          "Hash file '%s' missing for '%s'"))
-  (log.debug (% "GPG-verification : %s" (, vgpg)))
-  (log.debug (% "hash-verification: %s" (, vhash)))
+  (log.debug (% "GPG-verification : %s" #( vgpg)))
+  (log.debug (% "hash-verification: %s" #( vhash)))
   (and vgpg vhash))
 
 (defn download-verified [searchterms
@@ -1551,8 +1551,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
           (try-remove-file hsh)
           None)
         (do
-          (log.info (% "Downloaded: %s" (, pkg)))
-          (if (not keep-verification-files)
+          (log.info (% "Downloaded: %s" #( pkg)))
+          (when (not keep-verification-files)
             (do
              (try-remove-file gpg)
              (try-remove-file hsh)))
@@ -1563,7 +1563,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (setv foundurls
         (if (sum (lfor t ["libraries" "objects"] (len (.get searchterms t []))))
             (lfor x (find-packages searchterms
-                               :architectures  (if architecture
+                               :architectures  (when architecture
                                                  (if (in "*" architecture)
                                                    ["*"]
                                                    (split-archstring (.join "" (lfor a architecture (% "(%s)" a))))))
@@ -1582,7 +1582,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (log.debug "download URLs         : %s" urls)
   ;; return a list of successfully downloaded (and verified) files
   (setv result (lfor url urls (try-download url)))
-  (, (list (filter None result)) (.count result None)))
+  #( (list (filter None result)) (.count result None)))
 
 (defn install-package [pkgfile installdir]
   """unpack a <pkgfile> into <installdir>"""
@@ -1603,7 +1603,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
          (global default-floatsize)
          (setv default-floatsize args.default-floatsize))
       (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
-                (, value (join-nonempty ", " valid))))))
+                #( value (join-nonempty ", " valid))))))
   (set-default-floatsize args.default-floatsize)
   (lfor name args.source
         (if (os.path.isdir name)
@@ -1629,10 +1629,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
          (setv pkgdir (os.path.join installdir pkg))
          (if (os.path.isdir pkgdir)
              (do
-              (log.info (% "Removing package directory '%s'" (, pkgdir)))
+              (log.info (% "Removing package directory '%s'" #( pkgdir)))
               (shutil.rmtree pkgdir True)
               pkgdir)
-           (log.warning (% "Skipping non-existent directory '%s'" (, pkgdir)))))))
+           (log.warning (% "Skipping non-existent directory '%s'" #( pkgdir)))))))
 
 ;; the executable portion of the different sub-commands that make up the deken tool
 (setv commands
@@ -1642,19 +1642,19 @@ returns a tuple of a (list of verified files) and the number of failed verificat
        ;; upload packaged external to pure-data.info
        :upload (fn [args]
                  (defn set-nonempty-password [username password]
-                   (if password
+                   (when password
                        (try (do
                               (import keyring)
                               (keyring.set_password "deken" username password))
                             (except [e Exception] (log_warning e)))))
                  (defn mk-pkg-ifneeded [x]
-                   (cond [(os.path.isfile x)
-                          (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))]
-                         [(os.path.isdir x)
+                   (cond (os.path.isfile x)
+                          (if (archive? x) x (fatal (% "'%s' is not an externals archive!" x)))
+                         (os.path.isdir x)
                           (do
                            (import copy)
-                            (get (package (set-attr (copy.deepcopy args) "source" [x])) 0))]
-                         [True (fatal (% "Unable to process '%s'!" x))]))
+                            (get (package (set-attr (copy.deepcopy args) "source" [x])) 0))
+                         True (fatal (% "Unable to process '%s'!" x))))
                  (defn do-upload-username [packages destination username check-sources?]
                    (upload-packages packages
                                     destination
@@ -1669,7 +1669,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                            (get-config-value "username")
                                            (prompt-for-value "username"
                                                              (% "for %s://%s"
-                                                                (, (or destination.scheme default-destination.scheme)
+                                                                #( (or destination.scheme default-destination.scheme)
                                                                    (or destination.hostname default-destination.hostname)))))
                                        check-sources?))
                  ;; do-upload returns the username (on success)...
@@ -1688,18 +1688,18 @@ returns a tuple of a (list of verified files) and the number of failed verificat
        ;; verify downloaded files
        :verify (fn [args]
                  (for [p args.dekfile]
-                   (if (os.path.isfile p)
-                       (if (not
+                   (when (os.path.isfile p)
+                       (when (not
                              (verify
                                p
                                :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
                                :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                           (fatal (% "Verification of '%s' failed" (, p))))))
+                           (fatal (% "Verification of '%s' failed" #( p))))))
                  (bool (len args.dekfile)))
        ;; download a package (but don't install it)
        :download (fn [args]
          (setv packages (--packages-from-args-- args.package args.requirement))
-         (if (not packages)
+         (when (not packages)
              (fatal "Nothing to download!"))
          (not (get (download-verified
            ;; parse package specifiers
@@ -1712,23 +1712,23 @@ returns a tuple of a (list of verified files) and the number of failed verificat
            :keep-verification-files args.keep-files
            :download-dir args.output-dir) 1)))
        :uninstall (fn [args]
-                    (if args.self
+                    (when args.self
                         (fatal "self-'uninstall' not implemented for this platform!"))
                     (any (filter None (uninstall (--packages-from-args-- args.package args.requirement) args.installdir))))
        :install (fn [args]
-                  (if (and (not args.package) (not args.requirement))
+                  (when (and (not args.package) (not args.requirement))
                       (fatal "self-'install' not implemented for this platform!"))
                   (defn install-pkgs [pkgs installdir]
-                    (if pkgs
+                    (when pkgs
                         (do
                           (try
                             (os.makedirs installdir)
                             (except [e Exception]
-                              (if (not (os.path.isdir installdir)) (raise e))))
+                              (when (not (os.path.isdir installdir)) (raise e))))
                           (lfor pkg pkgs
                                 :if (or
                                       (os.path.isfile pkg)
-                                      (log.warning (% "Skipping non-existing file '%s'" (, pkg))))
+                                      (log.warning (% "Skipping non-existing file '%s'" #( pkg))))
                                 (install-package pkg installdir)))))
                   (setv pkgs (--packages-from-args-- args.package args.requirement))
 
@@ -1751,10 +1751,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :search-url args.search-url
                                    :keep-verification-files args.keep-files
                                    :download-dir args.installdir)
-                          (, [] 0)))
+                          #( [] 0)))
                   (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
                       (do
-                         (if (not args.keep-files) (for [f (get downloaded-pkgs 0)] (try-remove-file f)))
+                         (when (not args.keep-files) (for [f (get downloaded-pkgs 0)] (try-remove-file f)))
                          (not (get downloaded-pkgs 1)))
                     False))
        :systeminfo print-system-info
@@ -1766,8 +1766,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                  (fix-easywebdav2 easywebdav2 :exit None)
                                  True)})
                   (setv fixnames (lfor k fixes k.name))
-                  (defn try-call [x] (if x (x)))
-                  (if args.all
+                  (defn try-call [x] (when x (x)))
+                  (when args.all
                       (if args.fix (fatal "'--all' and named fixes are exclusive. Choose one.")
                                    (setv args.fix fixnames)))
                   (if args.fix (all (lfor f args.fix (try-call (.get fixes (hy.models.Keyword f)))))
@@ -1805,11 +1805,11 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
     ;; rewrite some functions, based on the args
     ; no-sign-gpg
-    (if (not (getattr args "sign_gpg" default-sign-gpg))
+    (when (not (getattr args "sign_gpg" default-sign-gpg))
       (do (global gpg-sign-file)
           (defn gpg-sign-file [filename])))
     ; debug
-    (if args.debug
+    (when args.debug
         (do (global log_exception)
             (defn log_exception [] (log.exception ""))))
 
@@ -1818,7 +1818,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     ; - those that are there, are not available in any public keyring
     ; so the default is to *not* verify GPG-signatures
     ; (unless explicitely requested via --verify or --no-ignore-gpg)
-    (if (is None (getattr args "ignore_gpg" None))
+    (when (is None (getattr args "ignore_gpg" None))
         (setv args.ignore-gpg (if (is None (getattr args "verify" None))
                                   True
                                   args.verify)))
@@ -1830,7 +1830,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       (% "--%s" flag)
       :action "store_true"
       :default default
-      :help (% "%s (DEFAULT: %s)." (, helpyes default))
+      :help (% "%s (DEFAULT: %s)." #( helpyes default))
       :required False)
     (parser.add_argument
       (% "--no-%s" flag)
@@ -1865,7 +1865,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       (parser.add_argument
        "--architecture" "--arch"
        :help (% "Filter architectures; use '*' for all architectures (DEFAULT: %s)"
-                (, (.join "-" (native-arch))))
+                #( (.join "-" (native-arch))))
        :action "append"
        :default []
        :required False)
@@ -2165,7 +2165,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (log.debug (.join " " sys.argv))
   (if command (command arguments) (.print_help arg-parser)))
 
-(if (= __name__ "__main__")
+(when (= __name__ "__main__")
     (try
       (sys.exit (not (main)))
       (except [e KeyboardInterrupt] (log_warning "\n[interrupted by user]"))))
