@@ -114,6 +114,7 @@
 
 
 (setv description_pattern (re.compile "^#X text -?[0-9]+ -?[0-9]+ DESCRIPTION (.*)"))
+(setv version_pattern (re.compile "^#X text -?[0-9]+ -?[0-9]+ VERSION (.*)"))
 
 ;; check whether a form executes or not
 (eval-when-compile
@@ -712,6 +713,32 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                 0 "DEKEN GENERATED")
               "\t" " ") "\n" " "))
 
+(defn get-version-from-metafile [metafile]
+"""get the version of a library from the 'VERSION' section
+of it's meta-patch (if it exists);
+as of now, the patch-file parser is a bit simplistic:
+- it tries to get rid of Pd's artificial line-breaks after 80 (or so) chars,
+  but probably this makes problems with escaped linebreaks,...
+- it completely ignores any subpatches (so VERSION need not be in [pd META])
+- it doesn't handle VERSIONs that span multiple 'text's
+
+if the file does not exist or doesn't contain a 'VERSION', this returns an empty string
+"""
+  (defn do-get-version [metafile]
+    (.replace (.replace
+              (try-get
+                (list (filter None
+                              (lfor _
+                                    (.split (try
+                                              (with [f (open metafile :errors "ignore")]
+                                                (.read f))
+                                              (except [e OSError] "")) ";\n")
+                                    (try-get (version_pattern.match (re.sub r"([^\\]), f [0-9]+$" r"\1" (.join " " (.splitlines _)))) 1 None))))
+                0 "")
+              "\t" " ") "\n" " "))
+  (setv version (do-get-version metafile))
+  (when version (log.warning (% "Extracted version from '%s' from %s" #(version metafile))))
+  (or version None))
 
 (defn make-objects-file [dekfilename objfile [warn-exists True]]
   """generate object-list for <filename> from <objfile>"""
@@ -1215,6 +1242,9 @@ if the file does not exist or doesn't contain a 'DESCRIPTION', this returns 'DEK
                                 "-externals"
                                 (archive-extension archs))
       True (fatal (% "Unknown dekformat '%s'" filenameversion))))
+  (setv metafile (os.path.join folder (% "%s-meta.pd" pkgname)))
+  (when (and (is None version) (os.path.exists metafile))
+    (setv version (or (get-version-from-metafile metafile) None)))
   (setv version (if (and version (.startswith version "v")) (cut version 1 None) version))
   (do-make-name
     (os.path.normpath (os.path.join output-dir (or pkgname (os.path.basename folder))))
