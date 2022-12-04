@@ -205,7 +205,7 @@
   ;rep = dict((re.escape(k), v) for k, v in rep.iter())
   ;pattern = re.compile("|".join(rep.keys()))
   ;text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
-  (setv repls (dfor #( k v) repls [(re.escape k) v]))
+  (setv repls (dfor #( k v) repls (re.escape k) v))
   (.sub (re.compile (.join "|" repls)) (fn [m] (get repls (re.escape (.group m 0)))) s))
 
 ;; execute a command inside a directory
