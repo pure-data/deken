@@ -189,7 +189,7 @@ docker-build:
   script:
     - git fetch --unshallow || true
     - ./.git-ci/git-version
-    - docker build -t $CONTAINER_TEST_IMAGE developer
+    - docker build --pull -t $CONTAINER_TEST_IMAGE developer
     - docker push $CONTAINER_TEST_IMAGE
 
 docker-test:
