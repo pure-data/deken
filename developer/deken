@@ -219,7 +219,7 @@ upgrade_deken() {
         rm "${DEKEN_HOME}/.upgrade-deken"
     else
         if test -w "${script}"; then
-            cat "${DEKEN_HOME}/.upgrade-deken" > "{script}"
+            cat "${DEKEN_HOME}/.upgrade-deken" > "${script}"
             rm "${DEKEN_HOME}/.upgrade-deken"
             error "The deken-installer has changed."
             error "Please re-run the last command"
