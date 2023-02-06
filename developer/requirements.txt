@@ -1,4 +1,4 @@
-hy==0.25.*
+hy~=0.25.0
 easywebdav2~=1.3
 keyring~=23.5
 macholib~=1.16
