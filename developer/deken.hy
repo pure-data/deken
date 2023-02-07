@@ -1559,7 +1559,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                          [keep-verification-files True]
                          [download-dir "."]]
   """search for files using the <searchterms>, download any results and verify them.
-unverified files are removed (pendig the verify-... flags)
+unverified files are removed (pending the verify-... flags)
 returns a tuple of a (list of verified files) and the number of failed verifications"""
   (defn try-download [url]
     (defn --verbose-download-- [url msg]
@@ -1848,7 +1848,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     ; - there are *very* few
     ; - those that are there, are not available in any public keyring
     ; so the default is to *not* verify GPG-signatures
-    ; (unless explicitely requested via --verify or --no-ignore-gpg)
+    ; (unless explicitly requested via --verify or --no-ignore-gpg)
     (when (is None (getattr args "ignore_gpg" None))
         (setv args.ignore-gpg (if (is None (getattr args "verify" None))
                                   True
@@ -1873,7 +1873,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (defn add-noverify-flags [parser]
       (add-arg-yesno parser "ignore-gpg" default-ignore-gpg
                      "Ignore an invalid (or no) GPG-signature"
-                     "Dont't ignore invalid GPG-signatures")
+                     "Don't ignore invalid GPG-signatures")
       (add-arg-yesno parser "ignore-hash" default-ignore-hash
                      "Ignore an unverifiable hashsum"
                      "Fail if the hashsum is unverifiable")

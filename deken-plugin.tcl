@@ -1921,7 +1921,7 @@ proc ::deken::textresults::clear_selection {resultsid} {
 
 ## deken::treeresults: show versions of libraries in a tree-view
 # TASKs
-# - each library (distinguished by name) is a separate (expandable/collapsable) node
+# - each library (distinguished by name) is a separate (expandable/collapsible) node
 # - expanding a library node shows all versions
 # - the library node shows which version of the library is going to be installed (if any)
 # - the tree can be sorted in both directions by clicking on any of the headings
@@ -1939,7 +1939,7 @@ proc ::deken::textresults::clear_selection {resultsid} {
 # CAVEATs
 # - interaccting with the selection for library 'x' should not interfere with the selection of library 'y'
 # - incompatible archs should be marked somehow
-# - incompatible archs must always be explicitely selected
+# - incompatible archs must always be explicitly selected
 # - TODO: what about multi-selecting incompatible archs of only a single library?
 # - TODO: what about multi-selecting a couple of libraries where some only have incompatible archs?
 
@@ -2153,7 +2153,7 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
     }
 
     if { $installitem eq {} } {
-        # the user doubleclicked on a column heading
+        # the user double-clicked on a column heading
         set column [$treeid identify column $x $y]
         if { $column eq "#0" } {
             # we don't want to sort by column#0
@@ -2198,7 +2198,7 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
         }
         $treeid children {} $pkgs
         if { $item eq {} } {
-            # yikes: if we are not scrolled down, the doubleclick will trigger columnsort twice
+            # yikes: if we are not scrolled down, the double-click will trigger columnsort twice
             # so we do an extra round here...
             ::deken::treeresults::columnsort $treeid $column
         }
@@ -2446,7 +2446,7 @@ proc ::deken::clicked_link {URL filename} {
     set installdir [::deken::ensure_installdir "" ${filename}]
     if { "${installdir}" == "" } {
         ::deken::utilities::debug [format [_ "Cancelling download of '%s': No installation directory given." ] $filename]
-        ::deken::statuspost [format [_ "Installing to non-existant directory failed" ] $filename] error
+        ::deken::statuspost [format [_ "Installing to non-existent directory failed" ] $filename] error
         return
     }
     if { ! [file exists $installdir] } {
