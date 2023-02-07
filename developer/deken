@@ -123,6 +123,14 @@ bail_install_msg() {
     bail_install
 }
 
+tell_reinstall() {
+cat <<EOF
+You can run 'deken install --self' or 'deken upgrade --self' anytime to
+ re-install (or upgrade) your Deken installation.
+EOF
+
+}
+
 bail_requirements() {
     rm -f "${DEKEN_HOME}/requirements.txt"
     cat >/dev/stderr <<EOF
@@ -131,10 +139,8 @@ You probably should install the following packages first:
  - 'python3-dev'
  - 'libffi-dev'
  - 'libssl-dev'
-You can run 'deken install' or 'deken upgrade' anytime to
- re-install (or upgrade) your Deken installation.
 EOF
-
+    tell_reinstall >/dev/stderr
     exit 1
 }
 
@@ -146,10 +152,9 @@ bail_upgrade() {
     cat >/dev/stderr <<EOF
 It seems your version of deken is out of sync.
 ($script has version ${DEKEN_VERSION}, but your installation is $1)
-You can run 'deken install' or 'deken upgrade' anytime to
- re-install (or upgrade) your Deken installation.
-
 EOF
+    tell_reinstall >/dev/stderr
+    echo >/dev/stderr
 }
 
 install_virtualenv() {
