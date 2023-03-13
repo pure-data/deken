@@ -208,7 +208,36 @@ set ::deken::servers_secondary {}
 ## those we expect
 set ::deken::servers_ephemeral {}
 ## those that are there
-set ::deken::servers_tmp {}
+array set ::deken::servers_tmp {}
+
+
+# ZeroConf
+namespace eval ::deken::zeroconf { }
+proc ::deken::zeroconf::add {id service hostname port} {
+    set txtrecords {path /search}
+    foreach {key value} $txtrecords {
+        if { $key eq "path" } {
+            set url "http://${hostname}:${port}${value}"
+            set ::deken::servers_tmp($id) $url
+        }
+    }
+}
+proc ::deken::zeroconf::browser {service action name domain} {
+    set id ${name}.${service}.${domain}
+    if { $action eq "add" } {
+        ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${name}.${service}.${domain}]
+    } else {
+        catch {unset ::deken::servers_tmp($id)}
+    }
+}
+proc ::deken::zeroconf::browse {service} {
+    ::servus::browse start $service [list ::deken::zeroconf::browser $service]
+}
+
+if { ! [catch {load [file join $::current_plugin_loadpath "servus.so"]} stdout ] } {
+    #::deken::zeroconf::browse _deken._sub._http._tcp
+    ::deken::zeroconf::browse _deken._tcp
+}
 
 # ######################################################################
 # ################ compatibility #######################################
@@ -2701,12 +2730,15 @@ proc ::deken::register {fun} {
 namespace eval ::deken::search::puredata.info { }
 
 proc ::deken::search::puredata.info::search {term} {
+    set tmpservers {}
+    foreach {k v} [array get ::deken::servers_tmp] {
+        lappend tmpservers $v
+    }
     set servers [concat \
                  [list $::deken::server_main] \
                  ${::deken::servers_secondary} \
-                 [::deken::utilities::lists_intersect ${::deken::servers_tmp} ${::deken::servers_ephemeral}] \
+                 [::deken::utilities::lists_intersect ${::deken::servers_ephemeral} $tmpservers] \
                 ]
-
     # search all the servers
     array set results {}
     set servercount 0
