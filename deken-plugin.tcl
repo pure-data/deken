@@ -756,7 +756,47 @@ proc ::deken::utilities::get_filenameextension {filename} {
 # ######################################################################
 
 proc ::deken::preferences::create_sources_entry {toplevel} {
+    # 3 panels
+    # - [ ] primary server
+    # - [ ] secondary servers (list editable)
+    #       (all servers are searched if checked)
+    # - [ ] ephemeral servers (list multiselectable)
+    #       (if checked, and servers are selected, only these are searched)
+    #       (if checked, and no servers are selected, all are searched)
+    set frame [::deken::preferences::newwidget ${toplevel}.servers]
+    set frame_1 [::deken::preferences::newwidget ${frame}.primary]
+    set frame_2 [::deken::preferences::newwidget ${frame}.secondary]
+    set frame_x [::deken::preferences::newwidget ${frame}.ephemeral]
 
+    labelframe $frame -text [_ "Servers" ] -padx 5 -pady 5 -borderwidth 1
+
+    labelframe $frame_1 -borderwidth 0
+    checkbutton $frame_1.use -text "${::deken::search::puredata.info::server_main}" \
+        -variable ::deken::preferences::use_server_primary
+    $frame_1 configure -labelwidget $frame_1.use
+    pack $frame_1 -anchor "w" -fill both -expand 1 -side top
+    pack $frame_1.use -anchor "w" -side left
+
+
+    labelframe $frame_2 -borderwidth 0
+    checkbutton $frame_2.use \
+        -variable ::deken::preferences::use_server_secondary
+    button $frame_2.open -text [_ "Additional Servers" ]
+    $frame_2 configure -labelwidget $frame_2.use
+    pack $frame_2 -anchor "w" -fill both -expand 1 -side left
+    pack $frame_2.use -anchor "w" -side left
+    pack $frame_2.open -anchor "w" -side left
+
+    labelframe $frame_x -borderwidth 0
+    checkbutton $frame_x.use  \
+        -variable ::deken::preferences::use_server_ephemeral
+    button $frame_x.open -text [_ "Ephemeral Servers" ]
+    $frame_x configure -labelwidget $frame_x.use
+    pack $frame_x -anchor "w" -fill both -expand 1 -side right
+    pack $frame_x.use -anchor "w" -side left
+    pack $frame_x.open -anchor "w" -side left
+
+    return $frame
 }
 
 proc ::deken::preferences::newwidget {basename} {
@@ -1015,6 +1055,10 @@ proc ::deken::preferences::create {winid} {
     checkbutton $winid.platform.only_newest -text [_ "Only show the newest version of a library\n(treats other versions like foreign architectures)"] \
         -variable ::deken::preferences::hideoldversions -justify "left"
     pack $winid.platform.only_newest -anchor "w"
+
+    # servers
+    set sourceframe [::deken::preferences::create_sources_entry $winid]
+    pack $sourceframe -anchor "w" -fill both -expand 1
 
 
     # Use two frames for the buttons, since we want them both bottom and right
