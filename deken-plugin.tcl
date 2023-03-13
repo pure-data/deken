@@ -68,6 +68,9 @@ namespace eval ::deken::preferences {
     # boolean whether non-matching archs should be hidden
     variable hideforeignarch
     variable hideoldversions
+    # deken servers to use
+    variable servers_secondary
+    variable servers_ephemeral
 }
 namespace eval ::deken::utilities { }
 
@@ -147,6 +150,8 @@ set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
 set ::deken::preferences::keep_package {}
 set ::deken::preferences::verify_sha256 {}
+set ::deken::preferences::servers {}
+set ::deken::preferences::servers_ephemeral {}
 
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
@@ -863,6 +868,9 @@ proc ::deken::preferences::create {winid} {
     set ::deken::preferences::add_to_path $::deken::add_to_path
     set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
 
+    set ::deken::preferences::servers_secondary ${::deken::search::puredata.info::servers_secondary}
+    set ::deken::preferences::servers_ephemeral ${::deken::search::puredata.info::servers_ephemeral}
+
     # this dialog allows us to select:
     #  - which directory to extract to
     #    - including all (writable) elements from $::sys_staticpath
@@ -1073,6 +1081,11 @@ proc ::deken::preferences::apply {winid} {
         "${::deken::preferences::add_to_path}" \
         "${::deken::preferences::keep_package}" \
         "${::deken::preferences::verify_sha256}"
+
+    ::deken::set_servers \
+        ${::deken::preferences::servers_secondary} \
+        ${::deken::preferences::servers_ephemeral}
+
 }
 proc ::deken::preferences::cancel {winid} {
     ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
@@ -1103,6 +1116,10 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::add_to_path [::deken::utilities::tristate $add 0 0]
         set ::deken::keep_package [::deken::utilities::bool $keep]
         set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
+    }
+    proc ::deken::set_servers {secondary ephemeral} {
+        set ::deken::search::puredata.info::servers_secondary $secondary
+        set ::deken::search::puredata.info::servers_ephemeral $ephemeral
     }
 } else {
     catch {set ::deken::installpath [lindex ${::deken::installpath} 0]}
@@ -1142,6 +1159,17 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write deken_keep_package "$::deken::keep_package"
         ::pd_guiprefs::write deken_verify_sha256 "$::deken::verify_sha256"
     }
+
+    set ::deken::search::puredata.info::servers_secondary [::pd_guiprefs::read deken_search_servers_secondary true]
+    set ::deken::search::puredata.info::servers_ephemeral [::pd_guiprefs::read deken_search_servers_ephemeral true]
+    puts "secondary: ${::deken::search::puredata.info::servers_secondary}"
+    proc ::deken::set_servers {secondary ephemeral} {
+        set ::deken::search::puredata.info::servers_secondary $secondary
+        set ::deken::search::puredata.info::servers_ephemeral $ephemeral
+        ::pd_guiprefs::write deken_search_servers_secondary $secondary true
+        ::pd_guiprefs::write deken_search_servers_ephemeral $ephemeral true
+    }
+
 }
 
 proc ::deken::normalize_result {title
@@ -2704,11 +2732,15 @@ if { ! [catch {package present tls} stdout] } {
 catch {set ::deken::search::puredata.info::server_main $::env(DEKENSERVER)}
 
 # additional (fixed) deken-servers
-set ::deken::search::puredata.info::servers_secondary {}
+if { ! [info exists ::deken::search::puredata.info::servers_secondary] } {
+    set ::deken::search::puredata.info::servers_secondary {}
+}
 
 # additional (ephemeral) deken-servers
 ## those we expect
-set ::deken::search::puredata.info::servers_ephemeral {}
+if { ! [info exists ::deken::search::puredata.info::servers_ephemeral] } {
+    set ::deken::search::puredata.info::servers_ephemeral {}
+}
 ## those that are there
 array set ::deken::search::puredata.info::servers_tmp {}
 
