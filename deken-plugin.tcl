@@ -60,6 +60,7 @@ namespace eval ::deken:: {
 
 namespace eval ::deken::preferences {
     variable installpath
+    variable installpath_x
     variable userinstallpath
     # automatically detected platform
     variable platform
@@ -139,6 +140,7 @@ set ::deken::searchtype name
 set ::deken::statustimer {}
 set ::deken::progresstimer {}
 set ::deken::preferences::installpath {}
+set ::deken::preferences::installpath_x {}
 set ::deken::preferences::userinstallpath {}
 set ::deken::preferences::platform {}
 set ::deken::preferences::userplatform {}
@@ -853,6 +855,9 @@ proc ::deken::preferences::path_doit {rdb ckb path {mkdir true}} {
     }
 }
 
+proc ::deken::preferences::update_displaypath {var value} {
+    set $var $value
+}
 proc ::deken::preferences::create_pathentry {toplevel row var path {generic false}} {
     # only add absolute paths to the pathentries
     set xpath [ ::deken::utilities::expandpath $path ]
@@ -864,7 +869,8 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     set chk [::deken::preferences::newwidget ${toplevel}.doit]
     set pad [::deken::preferences::newwidget ${toplevel}.pad]
 
-    radiobutton ${rdb} -value ${path} -text "${path}" -variable $var
+    radiobutton ${rdb} -value ${path} -text "${path}" -variable $var \
+        -command [list ::deken::preferences::update_displaypath ${var}_x ${path}]
     frame ${pad}
     button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
 
@@ -907,7 +913,9 @@ proc ::deken::preferences::create_pathframe {cnv winid} {
         -foreground blue \
         -value "USER" \
         -textvariable ::deken::preferences::userinstallpath \
-        -variable ::deken::preferences::installpath
+        -variable ::deken::preferences::installpath \
+        -command {::deken::preferences::update_displaypath ::deken::preferences::installpath_x ${::deken::preferences::userinstallpath}}
+
     [lindex $pathdoit 1] configure \
         -text "..." \
         -command "::deken::preferences::userpath_doit $winid"
@@ -951,6 +959,22 @@ proc ::deken::preferences::create_pathframe {cnv winid} {
     pack $pathsframe -fill "x"
     $cnv.cnv create window 0 0 -anchor "nw" -window $pathsframe
 }
+proc ::deken::preferences::create_pathwindow {parentwin} {
+    set winid ${parentwin}.pathwindow
+    if {[winfo exists $winid]} {
+        wm deiconify $winid
+        raise $winid
+    } else {
+        toplevel $winid -class DialogWindow
+        wm title $winid [_ "Deken Installation Target"]
+
+        frame $winid.frame
+        pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
+
+        ::deken::preferences::create_pathframe $winid.frame $parentwin
+    }
+}
+
 
 
 proc ::deken::preferences::create {winid} {
@@ -962,6 +986,7 @@ proc ::deken::preferences::create {winid} {
     ::deken::bind_globalshortcuts $winid
 
     set ::deken::preferences::installpath $::deken::installpath
+    set ::deken::preferences::installpath_x $::deken::installpath
     set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
     set ::deken::preferences::hideoldversions $::deken::hideoldversions
     if { $::deken::userplatform == "" } {
@@ -993,8 +1018,8 @@ proc ::deken::preferences::create {winid} {
     #  - whether to delete directories before re-extracting
     #  - whether to filter-out non-matching architectures
     labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    if { 0 } {
-        button $winid.installdir.but -text ${::deken::preferences::userinstallpath} \
+    if { 1 } {
+        button $winid.installdir.but -textvariable ::deken::preferences::installpath_x \
             -command [list ::deken::preferences::create_pathwindow $winid]
         pack $winid.installdir.but -side left -fill both -expand 1
     } else {
