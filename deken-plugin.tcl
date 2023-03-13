@@ -235,7 +235,7 @@ proc ::deken::zeroconf::browse {service} {
 }
 
 if { ! [catch {load [file join $::current_plugin_loadpath "servus.so"]} stdout ] } {
-    #::deken::zeroconf::browse _deken._sub._http._tcp
+    ::deken::zeroconf::browse _deken._sub._http._tcp
     ::deken::zeroconf::browse _deken._tcp
 }
 
