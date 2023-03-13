@@ -225,7 +225,7 @@ proc ::deken::zeroconf::add {id service hostname port} {
 proc ::deken::zeroconf::browser {service action name domain} {
     set id ${name}.${service}.${domain}
     if { $action eq "add" } {
-        ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${name}.${service}.${domain}]
+        ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${id}]
     } else {
         catch {unset ::deken::servers_tmp($id)}
     }
