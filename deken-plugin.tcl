@@ -201,6 +201,11 @@ if { ! [catch {package present tls} stdout] } {
 }
 catch {set ::deken::server_main $::env(DEKENSERVER)}
 
+# additional (fixed) deken-servers
+set ::deken::servers_secondary [list]
+
+# additional (ephemeral) deken-servers
+set ::deken::servers_ephemeral [list]
 
 
 # ######################################################################
@@ -2667,7 +2672,7 @@ proc ::deken::register {fun} {
 namespace eval ::deken::search::puredata.info { }
 
 proc ::deken::search::puredata.info::search {term} {
-    set servers [list $::deken::server_main]
+    set servers [concat [list $::deken::server_main] ${::deken::servers_secondary} ${::deken::servers_ephemeral}]
 
     # search all the servers
     array set results {}
