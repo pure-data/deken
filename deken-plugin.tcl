@@ -52,8 +52,8 @@ namespace eval ::deken:: {
     variable hideforeignarch
     variable hideoldversions
 
-    # whether to use http:// or https://
-    variable protocol
+    # the main deken server
+    variable server_main
 
     # results: {{title} {cmd} {description} {url} {ctxmenu}}
     variable results
@@ -194,11 +194,13 @@ catch {
     set ::deken::platform(machine) $::deken::architecture_normalize($::deken::platform(machine))
 }
 
-
-set ::deken::protocol "http"
+# the main deken-server
+set ::deken::server_main "http://deken.puredata.info/search"
 if { ! [catch {package present tls} stdout] } {
-    set ::deken::protocol "https"
+    set ::deken::server_main "https://deken.puredata.info/search"
 }
+catch {set ::deken::server_main $::env(DEKENSERVER)}
+
 
 
 # ######################################################################
@@ -2665,9 +2667,7 @@ proc ::deken::register {fun} {
 namespace eval ::deken::search::puredata.info { }
 
 proc ::deken::search::puredata.info::search {term} {
-    set dekenserver "${::deken::protocol}://deken.puredata.info/search"
-    catch {set dekenserver $::env(DEKENSERVER)} stdout
-    set servers [list $dekenserver]
+    set servers [list $::deken::server_main]
 
     # search all the servers
     array set results {}
