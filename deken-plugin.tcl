@@ -52,9 +52,6 @@ namespace eval ::deken:: {
     variable hideforeignarch
     variable hideoldversions
 
-    # the main deken server
-    variable server_main
-
     # results: {{title} {cmd} {description} {url} {ctxmenu}}
     variable results
     # selected: {library} {cmd} ...
@@ -192,51 +189,6 @@ if { "Windows" eq "$::deken::platform(os)" } {
 
 catch {
     set ::deken::platform(machine) $::deken::architecture_normalize($::deken::platform(machine))
-}
-
-# the main deken-server
-set ::deken::server_main "http://deken.puredata.info/search"
-if { ! [catch {package present tls} stdout] } {
-    set ::deken::server_main "https://deken.puredata.info/search"
-}
-catch {set ::deken::server_main $::env(DEKENSERVER)}
-
-# additional (fixed) deken-servers
-set ::deken::servers_secondary {}
-
-# additional (ephemeral) deken-servers
-## those we expect
-set ::deken::servers_ephemeral {}
-## those that are there
-array set ::deken::servers_tmp {}
-
-
-# ZeroConf
-namespace eval ::deken::zeroconf { }
-proc ::deken::zeroconf::add {id service hostname port txtrecords} {
-    foreach {key value} $txtrecords {
-        if { $key eq "path" } {
-            set url "http://${hostname}:${port}${value}"
-            set ::deken::servers_tmp($id) $url
-            break
-        }
-    }
-}
-proc ::deken::zeroconf::browser {service action name domain} {
-    set id ${name}.${service}.${domain}
-    if { $action eq "add" } {
-        ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${id}]
-    } else {
-        catch {unset ::deken::servers_tmp($id)}
-    }
-}
-proc ::deken::zeroconf::browse {service} {
-    ::servus::browse start $service [list ::deken::zeroconf::browser $service]
-}
-
-if { ! [catch {load [file join $::current_plugin_loadpath "servus.so"]} stdout ] } {
-    ::deken::zeroconf::browse _deken._sub._http._tcp
-    ::deken::zeroconf::browse _deken._tcp
 }
 
 # ######################################################################
@@ -797,6 +749,10 @@ proc ::deken::utilities::get_filenameextension {filename} {
 # ######################################################################
 # ################ preferences #########################################
 # ######################################################################
+
+proc ::deken::preferences::create_sources_entry {toplevel} {
+
+}
 
 proc ::deken::preferences::newwidget {basename} {
     # calculate a widget name that has not yet been taken
@@ -2740,15 +2696,32 @@ proc ::deken::register {fun} {
 ## searching puredata.info
 namespace eval ::deken::search::puredata.info { }
 
+# the main deken-server
+set ::deken::search::puredata.info::server_main "http://deken.puredata.info/search"
+if { ! [catch {package present tls} stdout] } {
+    set ::deken::search::puredata.info::server_main "https://deken.puredata.info/search"
+}
+catch {set ::deken::search::puredata.info::server_main $::env(DEKENSERVER)}
+
+# additional (fixed) deken-servers
+set ::deken::search::puredata.info::servers_secondary {}
+
+# additional (ephemeral) deken-servers
+## those we expect
+set ::deken::search::puredata.info::servers_ephemeral {}
+## those that are there
+array set ::deken::search::puredata.info::servers_tmp {}
+
+
 proc ::deken::search::puredata.info::search {term} {
     set tmpservers {}
-    foreach {k v} [array get ::deken::servers_tmp] {
+    foreach {k v} [array get ::deken::search::puredata.info::servers_tmp] {
         lappend tmpservers $v
     }
     set servers [concat \
-                 [list $::deken::server_main] \
-                 ${::deken::servers_secondary} \
-                 [::deken::utilities::lists_intersect ${::deken::servers_ephemeral} $tmpservers] \
+                 [list ${::deken::search::puredata.info::server_main}] \
+                 ${::deken::search::puredata.info::servers_secondary} \
+                 [::deken::utilities::lists_intersect ${::deken::search::puredata.info::servers_ephemeral} $tmpservers] \
                 ]
     # search all the servers
     array set results {}
@@ -2975,6 +2948,35 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} 
         }
     }
     tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
+}
+
+# ZeroConf
+namespace eval ::deken::zeroconf { }
+proc ::deken::zeroconf::add {id service hostname port txtrecords} {
+    foreach {key value} $txtrecords {
+        if { $key eq "path" } {
+            set url "http://${hostname}:${port}${value}"
+            set ::deken::search::puredata.info::servers_tmp($id) $url
+            puts "$id add $url"
+            break
+        }
+    }
+}
+proc ::deken::zeroconf::browser {service action name domain} {
+    set id ${name}.${service}.${domain}
+    if { $action eq "add" } {
+        ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${id}]
+    } else {
+        catch {unset ::deken::search::puredata.info::servers_tmp($id)}
+    }
+}
+proc ::deken::zeroconf::browse {service} {
+    ::servus::browse start $service [list ::deken::zeroconf::browser $service]
+}
+
+if { ! [catch {load [file join $::current_plugin_loadpath "servus.so"]} stdout ] } {
+    ::deken::zeroconf::browse _deken._sub._http._tcp
+    ::deken::zeroconf::browse _deken._tcp
 }
 
 
