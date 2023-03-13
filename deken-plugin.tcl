@@ -878,67 +878,26 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     }
     list ${rdb} ${chk}
 }
-
-proc ::deken::preferences::create {winid} {
-    # urgh...we want to know when the window gets drawn,
-    # so we can query the size of the pathentries canvas
-    # in order to get the scrolling-region right!!!
-    # this seems to be so wrong...
-    bind $winid <Map> "::deken::preferences::mapped %W"
-    ::deken::bind_globalshortcuts $winid
-
-    set ::deken::preferences::installpath $::deken::installpath
-    set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
-    set ::deken::preferences::hideoldversions $::deken::hideoldversions
-    if { $::deken::userplatform == "" } {
-        set ::deken::preferences::platform DEFAULT
-        set ::deken::preferences::userplatform [ ::deken::platform2string ]
-    } else {
-        set ::deken::preferences::platform USER
-        set ::deken::preferences::userplatform $::deken::userplatform
-    }
-
-    set ::deken::preferences::installpath USER
-    set ::deken::preferences::userinstallpath $::deken::installpath
-
-    set ::deken::preferences::show_readme $::deken::show_readme
-    set ::deken::preferences::keep_package $::deken::keep_package
-    set ::deken::preferences::verify_sha256 $::deken::verify_sha256
-    set ::deken::preferences::remove_on_install $::deken::remove_on_install
-    set ::deken::preferences::add_to_path $::deken::add_to_path
-    set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
-
-    set ::deken::preferences::servers_secondary ${::deken::search::puredata.info::servers_secondary}
-    set ::deken::preferences::servers_ephemeral ${::deken::search::puredata.info::servers_ephemeral}
-
-    # this dialog allows us to select:
-    #  - which directory to extract to
-    #    - including all (writable) elements from $::sys_staticpath
-    #      and option to create each of them
-    #    - a directory chooser
-    #  - whether to delete directories before re-extracting
-    #  - whether to filter-out non-matching architectures
-    labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
-    canvas $winid.installdir.cnv \
+proc ::deken::preferences::create_pathframe {cnv winid} {
+    canvas $cnv.cnv \
         -confine true
-    scrollbar $winid.installdir.scrollv \
-        -command "$winid.installdir.cnv yview"
-    scrollbar $winid.installdir.scrollh \
+    scrollbar $cnv.scrollv \
+        -command "$cnv.cnv yview"
+    scrollbar $cnv.scrollh \
         -orient horizontal \
-        -command "$winid.installdir.cnv xview"
-    $winid.installdir.cnv configure \
+        -command "$cnv.cnv xview"
+    $cnv.cnv configure \
         -xscrollincrement 0 \
-        -xscrollcommand " $winid.installdir.scrollh set"
-    $winid.installdir.cnv configure \
+        -xscrollcommand " $cnv.scrollh set"
+    $cnv.cnv configure \
         -yscrollincrement 0 \
-        -yscrollcommand " $winid.installdir.scrollv set" \
+        -yscrollcommand " $cnv.scrollv set" \
 
-    pack $winid.installdir.cnv -side left -fill both -expand 1
-    pack $winid.installdir.scrollv -side right -fill "y"
-    pack $winid.installdir.scrollh -side bottom -fill "x" -before  $winid.installdir.cnv
-    pack $winid.installdir -fill both
+    pack $cnv.cnv -side left -fill both -expand 1
+    pack $cnv.scrollv -side right -fill "y"
+    pack $cnv.scrollh -side bottom -fill "x" -before  $cnv.cnv
 
-    set pathsframe [frame $winid.installdir.cnv.f]
+    set pathsframe [frame $cnv.cnv.f]
     set row 0
     ### dekenpath: directory-chooser
     # FIXME: should we ask user to add chosen directory to PATH?
@@ -981,7 +940,59 @@ proc ::deken::preferences::create {winid} {
     }
 
     pack $pathsframe -fill "x"
-    $winid.installdir.cnv create window 0 0 -anchor "nw" -window $pathsframe
+    $cnv.cnv create window 0 0 -anchor "nw" -window $pathsframe
+}
+
+
+proc ::deken::preferences::create {winid} {
+    # urgh...we want to know when the window gets drawn,
+    # so we can query the size of the pathentries canvas
+    # in order to get the scrolling-region right!!!
+    # this seems to be so wrong...
+    bind $winid <Map> "::deken::preferences::mapped %W"
+    ::deken::bind_globalshortcuts $winid
+
+    set ::deken::preferences::installpath $::deken::installpath
+    set ::deken::preferences::hideforeignarch $::deken::hideforeignarch
+    set ::deken::preferences::hideoldversions $::deken::hideoldversions
+    if { $::deken::userplatform == "" } {
+        set ::deken::preferences::platform DEFAULT
+        set ::deken::preferences::userplatform [ ::deken::platform2string ]
+    } else {
+        set ::deken::preferences::platform USER
+        set ::deken::preferences::userplatform $::deken::userplatform
+    }
+
+    set ::deken::preferences::installpath USER
+    set ::deken::preferences::userinstallpath $::deken::installpath
+
+    set ::deken::preferences::show_readme $::deken::show_readme
+    set ::deken::preferences::keep_package $::deken::keep_package
+    set ::deken::preferences::verify_sha256 $::deken::verify_sha256
+    set ::deken::preferences::remove_on_install $::deken::remove_on_install
+    set ::deken::preferences::add_to_path $::deken::add_to_path
+    set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
+
+    set ::deken::preferences::servers_secondary ${::deken::search::puredata.info::servers_secondary}
+    set ::deken::preferences::servers_ephemeral ${::deken::search::puredata.info::servers_ephemeral}
+
+    # this dialog allows us to select:
+    #  - which directory to extract to
+    #    - including all (writable) elements from $::sys_staticpath
+    #      and option to create each of them
+    #    - a directory chooser
+    #  - whether to delete directories before re-extracting
+    #  - whether to filter-out non-matching architectures
+    labelframe $winid.installdir -text [_ "Install externals to directory:" ] -padx 5 -pady 5 -borderwidth 1
+    if { 0 } {
+        button $winid.installdir.but -text ${::deken::preferences::userinstallpath} \
+            -command [list ::deken::preferences::create_pathwindow $winid]
+        pack $winid.installdir.but -side left -fill both -expand 1
+    } else {
+        ::deken::preferences::create_pathframe $winid.installdir $winid
+    }
+    pack $winid.installdir -fill both
+
 
     ## installation options
     labelframe $winid.install -text [_ "Installation options:" ] -padx 5 -pady 5 -borderwidth 1
