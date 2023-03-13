@@ -2814,7 +2814,7 @@ proc ::deken::search::puredata.info::search_server {term dekenserver} {
         set msg [format [_ "Searching for '%s' failed!" ] $term ]
         tk_messageBox \
             -title [_ "Search failed" ] \
-            -message "${msg}\n$stdout" \
+            -message "${msg}\n(${dekenserver})\n$stdout" \
             -icon error -type ok \
             -parent $::deken::winid
         return
