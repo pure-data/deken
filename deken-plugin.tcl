@@ -202,11 +202,13 @@ if { ! [catch {package present tls} stdout] } {
 catch {set ::deken::server_main $::env(DEKENSERVER)}
 
 # additional (fixed) deken-servers
-set ::deken::servers_secondary [list]
+set ::deken::servers_secondary {}
 
 # additional (ephemeral) deken-servers
-set ::deken::servers_ephemeral [list]
-
+## those we expect
+set ::deken::servers_ephemeral {}
+## those that are there
+set ::deken::servers_tmp {}
 
 # ######################################################################
 # ################ compatibility #######################################
@@ -236,6 +238,33 @@ proc ::deken::utilities::bool {value {fallback 0}} {
 proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     catch {set fallback [expr (int($value) + int($offset))% 3 ]} stdout
     return $fallback
+}
+
+proc ::deken::utilities::lists_intersect {args} {
+    set numlists [llength $args]
+    if {$numlists < 1} {return {}}
+
+    set cache("") 0
+    set elements {}
+    foreach lst $args {
+        foreach _ $lst {
+            if { ! [info exists cache($_)]} {
+                lappend elements $_
+            }
+            incr cache($_)
+
+        }
+    }
+    # $elements holds a list of unique elements (as they appeared)
+    # so filter out those that were not in all lists
+    set cache("") 0
+    set result {}
+    foreach _ $elements {
+        if { $numlists == $cache($_) } {
+            lappend result $_
+        }
+    }
+    return $result
 }
 
 proc ::deken::utilities::expandpath {path} {
@@ -2672,7 +2701,11 @@ proc ::deken::register {fun} {
 namespace eval ::deken::search::puredata.info { }
 
 proc ::deken::search::puredata.info::search {term} {
-    set servers [concat [list $::deken::server_main] ${::deken::servers_secondary} ${::deken::servers_ephemeral}]
+    set servers [concat \
+                 [list $::deken::server_main] \
+                 ${::deken::servers_secondary} \
+                 [::deken::utilities::lists_intersect ${::deken::servers_tmp} ${::deken::servers_ephemeral}] \
+                ]
 
     # search all the servers
     array set results {}
