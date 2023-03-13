@@ -269,6 +269,17 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     return $fallback
 }
 
+proc ::deken::utilities::list_unique {lst} {
+    array set cache {}
+    set result {}
+    foreach _ $lst {
+        if { ! [info exists cache($_)]} {
+            lappend result $_
+        }
+        set cache($_) 1
+    }
+    return $result
+}
 proc ::deken::utilities::lists_intersect {args} {
     set numlists [llength $args]
     if {$numlists < 1} {return {}}
@@ -276,12 +287,12 @@ proc ::deken::utilities::lists_intersect {args} {
     set cache("") 0
     set elements {}
     foreach lst $args {
+        set lst [::deken::utilities::list_unique $lst]
         foreach _ $lst {
             if { ! [info exists cache($_)]} {
                 lappend elements $_
             }
             incr cache($_)
-
         }
     }
     # $elements holds a list of unique elements (as they appeared)
