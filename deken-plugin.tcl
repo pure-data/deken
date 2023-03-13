@@ -1162,7 +1162,6 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
 
     set ::deken::search::puredata.info::servers_secondary [::pd_guiprefs::read deken_search_servers_secondary true]
     set ::deken::search::puredata.info::servers_ephemeral [::pd_guiprefs::read deken_search_servers_ephemeral true]
-    puts "secondary: ${::deken::search::puredata.info::servers_secondary}"
     proc ::deken::set_servers {secondary ephemeral} {
         set ::deken::search::puredata.info::servers_secondary $secondary
         set ::deken::search::puredata.info::servers_ephemeral $ephemeral
@@ -2989,7 +2988,6 @@ proc ::deken::zeroconf::add {id service hostname port txtrecords} {
         if { $key eq "path" } {
             set url "http://${hostname}:${port}${value}"
             set ::deken::search::puredata.info::servers_tmp($id) $url
-            puts "$id add $url"
             break
         }
     }
