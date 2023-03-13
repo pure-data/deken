@@ -213,12 +213,12 @@ array set ::deken::servers_tmp {}
 
 # ZeroConf
 namespace eval ::deken::zeroconf { }
-proc ::deken::zeroconf::add {id service hostname port} {
-    set txtrecords {path /search}
+proc ::deken::zeroconf::add {id service hostname port txtrecords} {
     foreach {key value} $txtrecords {
         if { $key eq "path" } {
             set url "http://${hostname}:${port}${value}"
             set ::deken::servers_tmp($id) $url
+            break
         }
     }
 }
