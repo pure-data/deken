@@ -765,10 +765,11 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                     x))
           (except [e OSError] []))))
   (defn genobjs [input]
-    (lfor f input
-          :if (f.endswith "-help.pd")
-          (% "%s\t%s\n"
-             #( (unhexmunge (cut (os.path.basename f) 0 -8)) (get-description-from-helpfile f)))))
+    (when input
+      (lfor f input
+            :if (f.endswith "-help.pd")
+            (% "%s\t%s\n"
+               #( (unhexmunge (cut (os.path.basename f) 0 -8)) (get-description-from-helpfile f))))))
   (defn readobjs [input]
     (when (not (os.path.isdir input))
         (try
