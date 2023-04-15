@@ -243,6 +243,8 @@ cleanup-testdata:
   stage: deploy
   image: curlimages/curl
   dependencies: []
+  when: always
+  allow_failure: true
   before_script:
     - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}"
   script:
