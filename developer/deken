@@ -61,7 +61,8 @@ fi
 
 : "${DEKEN_HY:=${DEKEN_HOME}/deken.hy}"
 : "${DEKENHY:=${DEKEN_HOME}/virtualenv/bin/hy}"
-
+: "${SYSTEMHY:=$(command -v hy3 hy | head -1)}"
+: "${SYSTEMHY:=$(which hy3 hy 2>/dev/null| head -1)}"
 
 ##############################################################################
 # helper functions
@@ -252,7 +253,7 @@ upgrade_deken() {
 
 tryrun_deken() {
     if ${systeminstalled}; then
-       hy3 "${DEKEN_HY}" "$@"
+       "${SYSTEMHY}" "${DEKEN_HY}" "$@"
        exit $?
     fi
 
