@@ -16,6 +16,8 @@ ENV DEKEN_SIGN_GPG=no
 # install all the required stuff
 COPY requirements.txt /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends gpg && apt-get clean && rm -rf /var/lib/apt/lists/* \
+	&& sed -e '/\<hy\>/d' -i /tmp/requirements.txt \
+	&& pip install --no-cache-dir --trusted-host pypi.python.org --upgrade pip \
 	&& pip install --no-cache-dir --trusted-host pypi.python.org -r /tmp/requirements.txt \
 	&& pip uninstall -y cryptography pip \
 	&& chmod a+rw . \
