@@ -1082,13 +1082,23 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     # user requested platform (empty = DEFAULT)
     set ::deken::userplatform [::pd_guiprefs::read deken_platform]
     catch {set ::deken::userplatform [lindex ${deken::userplatform} 0 ]}
+    # urgh, on macOS an empty :deken::userplatform ({}, which is promoted to [list {}] on save)
+    # got saved as a literal "{}" (actually "\\\\{\\\\}")
+    # which then gets restored as "\\{\\}"...
+    # the bogus write behaviour was fixed with v0.9.8, but we need to handle old prefs...
+    set ::deken::userplatform [string trim [string trim ${::deken::userplatform} "\\\{\}" ] ]
     set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] 1]
     set ::deken::hideoldversions [::deken::utilities::bool [::pd_guiprefs::read deken_hide_old_versions] 1]
     proc ::deken::set_platform_options {platform hideforeignarch {hideoldversions 0}} {
         set ::deken::userplatform $platform
+        if { $platform == "" } {
+            set platformlist [list]
+        } else {
+            set platformlist [list $platform]
+        }
         set ::deken::hideforeignarch [::deken::utilities::bool $hideforeignarch ]
         set ::deken::hideoldversions [::deken::utilities::bool $hideoldversions ]
-        ::pd_guiprefs::write deken_platform [list $platform]
+        ::pd_guiprefs::write deken_platform $platformlist
         ::pd_guiprefs::write deken_hide_foreign_archs $::deken::hideforeignarch
         ::pd_guiprefs::write deken_hide_old_versions $::deken::hideoldversions
     }
