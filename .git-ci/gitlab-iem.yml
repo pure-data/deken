@@ -173,11 +173,11 @@ windows-test:
     - date
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker info
-    - docker images
+    #- docker images
     - apk add git || true
     - apt-get update -y && apt-get install -y git || true
   after_script:
-    - docker images
+    #- docker images
     - docker logout $CI_REGISTRY
   tags:
     - docker-builder
@@ -243,6 +243,8 @@ cleanup-testdata:
   stage: deploy
   image: curlimages/curl
   dependencies: []
+  when: always
+  allow_failure: true
   before_script:
     - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}"
   script:
