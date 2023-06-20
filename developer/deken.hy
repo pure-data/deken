@@ -1504,12 +1504,13 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                              new (get jlib old)))
           (setv (get result "architectures")
                 (lfor a (try-get jlib "archs" [])
+                      :if (bool a)
                       (normalize-arch (split-archstring a))))
           (setv (get result "extension")
                 (try-get (parse-filename (or (try-get jlib "url") "")) 3))
           result) ;; mangle-libdict
         (try
-         (lfor v (.values (get (get data "result") "libraries")) l (.values v) lib l
+         (lfor v (.values (try-get (try-get data "result" {}) "libraries" {})) l (.values v) lib l
                 (mangle-libdict lib))
          (except [e Exception] (log_error (% "Unable to parse JSON data: %s" #(e)))))) ;; parse-json-results
 
@@ -1524,12 +1525,14 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                             "accept" "application/json, text/tab-separated-values"}
                             :params {"libraries" libraries
                             "objects" objects}))
-      (when (= 200 r.status_code)
-        (setv content-type (get r.headers "content-type"))
-        (parse-data (if (in "application/json" content-type)
-                        (r.json)
-                        r.text)
-                    content-type)))
+      (if (= 200 r.status_code)
+          (do
+           (setv content-type (get r.headers "content-type"))
+           (parse-data (if (in "application/json" content-type)
+                           (r.json)
+                           r.text)
+                       content-type))
+           (log.error (% "Searching '%s' failed with %s" #(searchurl r.status_code)))))
 
 (defn find-packages [searchterms ;; as returned by categorize-search-terms
   [architectures []] ;; a list of architecture tuples (e.g. [("Linux", "amd64", "32")]); defaults to 'native'; use ['*'] for any architecture
@@ -1543,9 +1546,12 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
   (log.debug "find-packages.unversioned  : %s" unversioned-libs)
   (setv version-match? (make-requirements-matcher (try-get searchterms "versioned-libraries")))
   (filter-older-versions
-   (lfor x (search (or searchurl default-searchurl)
-                   (try-get searchterms "libraries" [])
-                   (try-get searchterms "objects" []))
+   (lfor x (or
+            (search (or searchurl default-searchurl)
+                    (try-get searchterms "libraries" [])
+                    (try-get searchterms "objects" []))
+            []
+            )
          :if (and
               (or (in (get x "package") unversioned-libs) (version-match? x))
               (compatible-archs? (or architectures [(native-arch)]) (get x "architectures")))
