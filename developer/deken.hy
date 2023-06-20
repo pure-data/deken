@@ -1493,7 +1493,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
           ;;  "architectures" <- ...
           ;;  "extension" <- ...
           (setv jsonmap [
-                #("library" "package")
+                #("name" "package")
                 #("version" "version")
                 #("description" "description")
                 #("url" "URL")
