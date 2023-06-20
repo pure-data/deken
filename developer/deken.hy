@@ -410,7 +410,7 @@
 
 (defn split-archstring [archstring fixdek0]
       """split an single archstring like 'Linux-amd64-32' into an arch-tuple"""
-      (setv t (.split arch "-"))
+      (setv t (.split archstring "-"))
       (when (and fixdek0 (> (len t) 2))
         (setv (get t 2) "32"))
       (tuple t))
