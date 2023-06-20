@@ -407,7 +407,7 @@
     (when (and fixdek0 (> (len t) 2))
         (setv (get t 2) "32"))
     (tuple t))
-  (when archstring
+  (if archstring
       (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
       []))
 (defn arch-to-string [arch]
