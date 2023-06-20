@@ -1500,8 +1500,8 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                 #("author" "uploader")
                 #("timestamp" "timestamp")
                 ])
-          (setv result (dfor #(old new) jsonmap
-                             new (get jlib old)))
+          (setv result (dfor #(web lokal) jsonmap
+                             lokal (get jlib web)))
           (setv (get result "architectures")
                 (lfor a (try-get jlib "archs" [])
                       :if (bool a)
