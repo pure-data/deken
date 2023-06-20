@@ -55,7 +55,7 @@
 (log.addHandler (logging.StreamHandler))
 
 ;; do nothing
-(defn nop [#* ignored_args] """does nothing; returns None""" None)
+(defn nop [#* ignored_args] """do nothing; return None""" None)
 
 ;; simple debugging helper: prints an object and returns it
 (defn debug [x #* more] """print the argument and return it""" (if more (log.debug (+ #(x) more)) (log.debug x)) x)
@@ -136,7 +136,7 @@
     `(try (do ~exp True) (except [] False))))
 
 (defn binary-file? [filename]
-  """checks if <filename> contains binary data"""
+  """check if <filename> contains binary data"""
   ;; files that contain '\0' are considered binary
   ;; UTF-16 can contain '\0'; but for our purposes, its a binary format :-)
   (defn contains? [f [needle "\0"]]
@@ -186,17 +186,17 @@
 
 ;; apply attributes to objects in a functional way
 (defn set-attr [obj attr value]
-      """sets an attribute of an obj in a functional way (returns the obj)"""
+      """set an attribute of an obj in a functional way; return the obj"""
       (setattr obj attr value) obj)
 
 ;; get multiple attributes as list
 (defn get-attrs [obj attributes [default None]]
-      """returns a list of values, one for each attr in <attributes>"""
+      """return a list of values, one for each attr in <attributes>"""
       (lfor _ attributes (getattr obj _default)))
 
 ;; get multiple values from a dict (give keys as list, get values as list)
 (defn get-values [coll keys]
-      """returns a list of values from a dictionary, pass the keys as list"""
+      """return a list of values from a dictionary, pass the keys as list"""
       (lfor _ keys (get coll _)))
 
 ;; get a value at an index/key or a default
@@ -208,7 +208,7 @@
            (except [e IndexError] default)))
 
 (defn first [coll]
-  """Return first item from `coll`."""
+  """return first item from `coll`."""
   (for [f coll] (return f)))
 
 
@@ -265,7 +265,7 @@
 
 ;; read in the config file if present
 (defn read-config [configstring [config-file (ConfigParser)]]
-      """reads the configuration into a dictionary"""
+      """read the configuration into a dictionary"""
       (try (config-file.read_file (StringIO configstring))
            (except [e AttributeError] (config-file.readfp (StringIO configstring))))
       (dict (config-file.items "default")))
@@ -274,7 +274,7 @@
 ;; try to obtain a value from environment, then config file, then prompt user
 
 (defn get-config-value [name #* default]
-      """tries to get a value first from the envvars, then from the config-file and finally falls back to a default"""
+      """try to get a value first from the envvars, then from the config-file and finally fall back to a default"""
       (first (filter (fn [x] (not (is x None)))
                      [
                      ;; try to get the value from an environment variable
@@ -395,7 +395,7 @@
         True (any (compat-generator need-arch have-archs))))
 
 (defn compatible-archs? [need-archs have-archs]
-      """checks whether <have-archs> contains *any* of the architectures listed in <need-archs>"""
+      """check whether <have-archs> contains *any* of the architectures listed in <need-archs>"""
       (defn compat-generator [need-archs have-archs]
             (for [na need-archs] (yield (compatible-arch? na have-archs))))
       (any (compat-generator need-archs have-archs)))
@@ -423,7 +423,7 @@
           []))
 
 (defn normalize-arch [arch]
-  """normalizes the <arch> tuple with generic CPUs"""
+  """normalize the <arch> tuple with generic CPUs"""
   (try (do
         (setv [os cpu floatsize] arch)
         #(os (try-get normalized-architectures cpu cpu) floatsize))
@@ -1017,7 +1017,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
        (except [e KeyError] None))))
 
 (defn make-requirements-matcher [specs]
-  """creates a boolean function to check whether a given package-dict matches any of the given requirements"""
+  """create a boolean function to check whether a given package-dict matches any of the given requirements"""
   (if specs
       (fn [libdict] (any
                      (lfor req-match (lfor spec specs
@@ -1140,9 +1140,9 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 
 ;; download a file
 (defn download-file [url [filename None] [output-dir "."]]
-      """downloads a file from <url>, saves it as <filename> (or a sane default);
- returns the filename or None;
- makes sure that no file gets overwritten"""
+      """download a file from <url>, save it as <filename> (or a sane default);
+ return the filename or None;
+ make sure that no file gets overwritten"""
       (try (os.makedirs output-dir)
            (except [e Exception] (when (not (os.path.isdir output-dir)) (raise e))))
       (defn unique-filename [filename]
@@ -1257,7 +1257,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
       [recurse-subdirs False]
       [extra-arch-files []]
       [output-dir "."]]
-      """calculates the dekenfilename for a given folder (embedding version and architectures in the filename)"""
+      """calculate the dekenfilename for a given folder (embedding version and architectures in the filename)"""
       (defn do-make-name [pkgname version archs filenameversion]
             (cond
               (= filenameversion 1) (+ pkgname
@@ -1303,7 +1303,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
 (defn parse-filename0 [filename]
-  """parses a dekenformat.v0 filename into a (pkgname version archs extension) tuple"""
+  """parse a dekenformat.v0 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
     ;; parse filename with a regex
@@ -1312,21 +1312,21 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
     [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename1 [filename]
-  """parses a dekenformat.v1 filename into a (pkgname version archs extension) tuple"""
+  """parse a dekenformat.v1 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
     (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek(\.[a-z0-9_.-]*)?)" filename)
     [2 4 5 7])
    (except [e IndexError] [])))
 (defn parse-filename [filename]
-  """parses a dekenformat filename (any version) into a (pkgname version archs extension) tuple"""
+  """parse a dekenformat filename (any version) into a (pkgname version archs extension) tuple"""
   (lfor x (or
            (parse-filename1 filename)
            (parse-filename0 filename)
            [None None None None])
         (or x None)))
 (defn filename-to-namever [filename]
-  """extracts a <name>/<version> string from a filename"""
+  """extract a <name>/<version> string from a filename"""
   (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
@@ -1335,7 +1335,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
   (or (not arch) (in "(Sources)" arch)))
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
-  """returns name/version if the filename contains sources (so we check whether we still need to upload sources)"""
+  """return name/version if the filename contains sources (so we check whether we still need to upload sources)"""
   (when (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
@@ -1386,7 +1386,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
        (get (.split sys.version) 0))))
 
 (defn categorize-search-terms [terms [libraries True] [objects True]]
-      """splits the <terms> into objects, libraries and versioned-libraries;
+      """split the <terms> into objects, libraries and versioned-libraries;
  returns a dict"""
       ;; versioned requirements (e.g. 'foo>=3.14') are always libraries, and go into 'libraries' (without the version) and 'versioned-libraries' (as tuples)
       ;; unversioned terms will show up in 'libraries' and/or 'objects', depending on which flag is True
@@ -1418,7 +1418,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
       )
 
 (defn search [searchurl libraries objects]
-      """searches needles in libraries (if True) and objects (if True)"""
+      """search needle in libraries (if True) and objects (if True)"""
       (defn parse-tab-separated-values [data]
         (defn parse-tsv [description
           [URL None]
@@ -1460,7 +1460,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
   [versioncount 0]   ;; how many versions of a given library should be returned
   [searchurl default-searchurl] ;; where to search
   ]
-  """finds packages and filters them according to architecture, requirements and versioncount"""
+  """find packages and filter them according to architecture, requirements and versioncount"""
   (log.debug "find-packages.search terms : %s" searchterms)
   (log.debug "find-packages.architectures: %s" architectures)
   (setv unversioned-libs (.difference (set (try-get searchterms "libraries" [])) (lfor x (try-get searchterms "versioned-libraries" []) (try-get x 0))) )
@@ -1477,7 +1477,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
    versioncount))
 
 (defn find [args] ;; TODO: this used to be '&optional args'
-  """searches the server for deken-packages and prints the results"""
+  """search the server for deken-packages and print the results"""
   (defn print-result [result]
     (setv url (get result "URL"))
     (setv description (get result "description"))
@@ -1536,8 +1536,8 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 ;; the 'gpg/hash' arg can modify the result: False: always return True
 ;;                                           None: return True if None
 (defn verify [dekfile [gpgfile None] [hashfile None] [gpg True] [hash True]]
-      """verifies a dekfile by checking it's GPG-signature (if possible), resp. the SHA256;
-if gpg/hash is False, verification failure is ignored, if its None the reference file is allowed to miss"""
+      """verify a dekfile by checking it's GPG-signature (if possible), resp. the SHA256;
+if gpg/hash is False, verification failure is ignored, if it's None the reference file is allowed to miss"""
       (defn verify-result [result fail errstring missstring]
             ;; result==True : OK
             ;; result==False: KO
