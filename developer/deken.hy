@@ -412,11 +412,11 @@
 (defn --archs-default-floatsize-- [[filename None]]
       (defn doit [floatsize filename]
             (log.warning
-             (when filename
-               (% "'%s' has no relevant symbols!...assuming floatsize=%s"
-                  #( filename floatsize))
-               (% "No relevant symbols found!...assuming floatsize=%s"
-                  #( filename))))
+             (if filename
+                 (% "'%s' has no relevant symbols!...assuming floatsize=%s"
+                    #( filename floatsize))
+                 (% "No relevant symbols found!...assuming floatsize=%s"
+                    #( filename))))
             floatsize)
       (if default-floatsize
           (doit default-floatsize filename)
@@ -601,15 +601,17 @@
                                                                 (str-to-bytes "\x00") 1) 1) 1)))))
                     (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
               (or
-               (when (= cpu "arm") (armcpu-from-aeabi
-                                    (.data (elffile.get_section_by_name ".ARM.attributes"))
-                                    (str-to-bytes "aeabi")))
+               (when (= cpu "arm")
+                 (armcpu-from-aeabi
+                  (.data (elffile.get_section_by_name ".ARM.attributes"))
+                  (str-to-bytes "aeabi")))
                cpu))
             (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
                   #(
                     (or
                      (elf-osabi.get elffile.header.e_ident.EI_OSABI)
-                     (when (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV") (--get-elf-sysv-- elffile))
+                     (when (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV")
+                       (--get-elf-sysv-- elffile))
                      oshint
                      "Linux")
                     (get-elf-armcpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
@@ -885,12 +887,12 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                    (when (not result) (log.debug result.stderr))
                    (bool result))
              (setv gpg (get-gpg))
-             (when gpg (do
-                        (setv data (try (with [f (open signedfile "rb")] (f.read)) (except [e OSError] None)))
-                        (when (and
-                               data
-                               (os.path.exists signaturefile))
-                          (do-verify data signaturefile)))))
+             (when gpg
+               (setv data (try (with [f (open signedfile "rb")] (f.read)) (except [e OSError] None)))
+               (when (and
+                      data
+                      (os.path.exists signaturefile))
+                 (do-verify data signaturefile))))
         (defn gpg-sign-file [filename]
           """sign a file with GPG (if the gnupg module is installed)"""
           (defn gpg-get-config [gpg id]
@@ -924,33 +926,32 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                                         (if use-agent {"use_agent" True} {})))
                         "decode_errors" "replace")
                        (except [e OSError] (--gpg-unavail-error-- "init" e))))
-                (when gpg (do
-                           (setv gpg.encoding "utf-8")
-                           (setv [keyid uid] (lfor _ ["keyid" "uids"] (try-get (gpg-get-key gpg) _ None)))
-                            (setv uid (try-get uid 0 None))
-                            (setv passphrase
-                                  (when (and (not use-agent) keyid)
-                                    (do
-                                     (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
-                                               #( uid keyid filename)))
-                                     (askpass "Enter GPG passphrase: " ))))
-                            (setv signconfig (dict-merge
-                                              {"detach" True}
-                                              (if keyid {"keyid" keyid} {})
-                                              (if passphrase {"passphrase" passphrase} {})))
-                            (when (and (not use-agent) (not passphrase))
-                              (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
-                            (try
-                             (do
-                              (setv sig (when gpg (gpg.sign_file (open filename "rb") #** signconfig)))
-                              (when (hasattr sig "stderr")
-                                (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
-                               (if (not sig)
-                                   (log.warning "Could not GPG sign the package.")
-                                   (do
-                                    (with [f (open signfile "w")] (f.write (str sig)))
-                                    signfile)))
-                             (except [e OSError] (--gpg-unavail-error-- "signing" e))))))
+                (when gpg
+                  (setv gpg.encoding "utf-8")
+                  (setv [keyid uid] (lfor _ ["keyid" "uids"] (try-get (gpg-get-key gpg) _ None)))
+                  (setv uid (try-get uid 0 None))
+                  (setv passphrase
+                        (when (and (not use-agent) keyid)
+                          (print (% "You need a passphrase to unlock the secret key for\nuser: %s ID: %s\nin order to sign %s"
+                                    #( uid keyid filename)))
+                          (askpass "Enter GPG passphrase: " )))
+                  (setv signconfig (dict-merge
+                                    {"detach" True}
+                                    (if keyid {"keyid" keyid} {})
+                                    (if passphrase {"passphrase" passphrase} {})))
+                  (when (and (not use-agent) (not passphrase))
+                    (log.info "No passphrase and not using gpg-agent...trying to sign anyhow"))
+                  (try
+                   (do
+                    (setv sig (when gpg (gpg.sign_file (open filename "rb") #** signconfig)))
+                    (when (hasattr sig "stderr")
+                      (log.debug (try (str sig.stderr) (except [e UnicodeEncodeError] (.encode sig.stderr "utf-8")))))
+                     (if (not sig)
+                         (log.warning "Could not GPG sign the package.")
+                         (do
+                          (with [f (open signfile "w")] (f.write (str sig)))
+                          signfile)))
+                   (except [e OSError] (--gpg-unavail-error-- "signing" e)))))
 
           ;; sign a file if it is not already signed
           (setv signfile (+ filename ".asc"))
@@ -1176,22 +1177,21 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                              (% "Are you sure you have the correct username and password set for '%s'?\n" destination.hostname)
                              (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
       (when filepath
-        (do
-         (setv filename (os.path.basename filepath))
-         (setv [pkg ver _ _] (parse-filename filename))
-          (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
-          (setv ver (.strip (or ver "") "[]"))
-          (setv path
-                (str
-                 (replace-words
-                  (.rstrip destination.path "/")
-                  #( #( "%u" username) #( "%p" pkg) #( "%v" (or ver ""))))))
-          (do-upload-file
-              (easywebdav.connect destination.hostname #** {"username" username
-                                  "password" password
-                                  "protocol" destination.scheme})
-            path
-            filename))))
+        (setv filename (os.path.basename filepath))
+        (setv [pkg ver _ _] (parse-filename filename))
+        (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
+        (setv ver (.strip (or ver "") "[]"))
+        (setv path
+              (str
+               (replace-words
+                (.rstrip destination.path "/")
+                #( #( "%u" username) #( "%p" pkg) #( "%v" (or ver ""))))))
+        (do-upload-file
+            (easywebdav.connect destination.hostname #** {"username" username
+                                "password" password
+                                "protocol" destination.scheme})
+          path
+          filename)))
 
 ;; upload an archive (given the archive-filename it will also upload some extra-files (sha256, gpg,...))
 ;; returns a (username, password) tuple in case of success
@@ -1209,11 +1209,12 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 ;; in case of failure, this exits
 (defn upload-packages [pkgs destination username password skip-source]
       """upload multiple packages at once"""
-      (when (not skip-source) (check-sources (sfor pkg pkgs (filename-to-namever pkg))
-                                             (sfor pkg pkgs (has-sources? pkg))
-                                             (when (= "puredata.info"
-                                                      (.lower (or destination.hostname default-destination.hostname)))
-                                               username)))
+      (when (not skip-source)
+        (check-sources (sfor pkg pkgs (filename-to-namever pkg))
+                       (sfor pkg pkgs (has-sources? pkg))
+                       (when (= "puredata.info"
+                                (.lower (or destination.hostname default-destination.hostname)))
+                         username)))
       (for [pkg pkgs]
            (if (get (parse-filename pkg) 0)
                (upload-package pkg destination username password)
@@ -1587,9 +1588,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
         (do
          (log.info (% "Downloaded: %s" #( pkg)))
          (when (not keep-verification-files)
-           (do
-            (try-remove-file gpg)
-            (try-remove-file hsh)))
+           (try-remove-file gpg)
+           (try-remove-file hsh))
          pkg)))
   (log.debug "download search terms : %s" searchterms)
   (log.debug "download architectures: %s" architecture)
@@ -1722,13 +1722,15 @@ returns a tuple of a (list of verified files) and the number of failed verificat
       ;; verify downloaded files
       :verify (fn [args]
                   (for [p args.dekfile]
-                       (when (os.path.isfile p)
-                         (when (not
-                                (verify
-                                 p
-                                 :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
-                                 :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True))))
-                           (fatal (% "Verification of '%s' failed" #( p))))))
+                       (when
+                           (and
+                            (os.path.isfile p)
+                            (not
+                             (verify
+                              p
+                              :gpg (and (not args.ignore-gpg) (if (or args.ignore-missing args.ignore-missing-gpg) None True))
+                              :hash (and (not args.ignore-hash) (if (or args.ignore-missing args.ignore-missing-hash) None True)))))
+                         (fatal (% "Verification of '%s' failed" #( p)))))
                   (bool (len args.dekfile)))
       ;; download a package (but don't install it)
       :download (fn [args]
@@ -1754,16 +1756,15 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                      (fatal "self-'install' not implemented for this platform!"))
                    (defn install-pkgs [pkgs installdir]
                          (when pkgs
-                           (do
-                            (try
-                             (os.makedirs installdir)
-                             (except [e Exception]
-                                     (when (not (os.path.isdir installdir)) (raise e))))
-                            (lfor pkg pkgs
-                                  :if (or
-                                       (os.path.isfile pkg)
-                                       (log.warning (% "Skipping non-existing file '%s'" #( pkg))))
-                                  (install-package pkg installdir)))))
+                           (try
+                            (os.makedirs installdir)
+                            (except [e Exception]
+                                    (when (not (os.path.isdir installdir)) (raise e))))
+                           (lfor pkg pkgs
+                                 :if (or
+                                      (os.path.isfile pkg)
+                                      (log.warning (% "Skipping non-existing file '%s'" #( pkg))))
+                                 (install-package pkg installdir))))
                    (setv pkgs (--packages-from-args-- args.package args.requirement))
 
                    ;; those search-terms that refer to local files
@@ -1788,7 +1789,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                              #( [] 0)))
                    (if (install-pkgs (.union file-pkgs (set (get downloaded-pkgs 0))) args.installdir)
                        (do
-                        (when (not args.keep-files) (for [f (get downloaded-pkgs 0)] (try-remove-file f)))
+                        (when (not args.keep-files)
+                          (for [f (get downloaded-pkgs 0)] (try-remove-file f)))
                         (not (get downloaded-pkgs 1)))
                        False))
       :systeminfo print-system-info
@@ -1840,12 +1842,12 @@ returns a tuple of a (list of verified files) and the number of failed verificat
     ;; rewrite some functions, based on the args
     ;; no-sign-gpg
     (when (not (getattr args "sign_gpg" default-sign-gpg))
-      (do (global gpg-sign-file)
-          (defn gpg-sign-file [filename])))
+      (global gpg-sign-file)
+      (defn gpg-sign-file [filename]))
     ;; debug
     (when args.debug
-      (do (global log_exception)
-          (defn log_exception [] (log.exception ""))))
+      (global log_exception)
+      (defn log_exception [] (log.exception "")))
 
     ;; practically no GPG signatures are verifiable
     ;; - there are *very* few
