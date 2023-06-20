@@ -181,7 +181,7 @@ windows-test:
     - docker logout $CI_REGISTRY
   tags:
     - docker-builder
-  
+
 docker-build:
   stage: build
   extends:
@@ -203,6 +203,62 @@ docker-test:
   needs:
     - fetch-testdata
     - docker-build
+
+docker-find-test:
+  stage: test
+  image: $CONTAINER_TEST_IMAGE
+  variables:
+    DEKEN_EXE: deken
+  needs:
+    - docker-build
+  script:
+    - ${DEKEN_EXE} --version
+    - ${DEKEN_EXE} -v systeminfo
+    # find all
+    - ${DEKEN_EXE} find
+    # find with URL
+    - ${DEKEN_EXE} find --search-url https://deken.puredata.info/search
+    - ${DEKEN_EXE} find --search-url https://deken.puredata.info/search.tsv
+    #- ${DEKEN_EXE} find --search-url https://deken.puredata.info/search.json
+
+    # find by architectures
+    - ${DEKEN_EXE} find --architecture "*"
+    - testarch="Linux-amd64-32"
+    - ${DEKEN_EXE} find --architecture "${testarch}"
+    - ! ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)"
+    - ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E " for (.*\b${testarch}\b|all)"
+    - testarch="CPM-z80-8"
+    - ! ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)"
+
+    # find only libraries
+    - testarch="Linux-amd64-64"
+    - library="zexy"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --libraries "${library}"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --libraries "iem*"
+
+    # find only objects
+    - testarch="Linux-amd64-64"
+    - object="rawprint"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --objects "${object}"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --objects "*print"
+
+    # find with depth
+    - testarch="Linux-amd64-32"
+    - library="zexy"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 0 --libraries "${library}"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 1 --libraries "${library}"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 2 --libraries "${library}"
+    - test $(${DEKEN_EXE} find --architecture="${testarch}"           --libraries "${library}" | grep -wc URL | tee /dev/stderr) -eq 1
+    - test $(${DEKEN_EXE} find --architecture="${testarch}" --depth 2 --libraries "${library}" | grep -wc URL | tee /dev/stderr) -eq 2
+
+    # find with reverse
+    - testarch="Linux-amd64-32"
+    - library="zexy"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 2 --reverse --libraries "${library}"
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 2 --reverse --libraries "${library}" | grep -w URL | tac | tee reversed.txt
+    - ${DEKEN_EXE} find --architecture="${testarch}" --depth 2           --libraries "${library}" | grep -w URL | tee sorted.txt
+    - diff reversed.txt sorted.txt
+
 
 docker-release:
   stage: release
