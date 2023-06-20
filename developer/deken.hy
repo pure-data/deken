@@ -104,10 +104,24 @@
       "amd64" ["x86_64"]
       "i686" ["i586" "i386"]
       "i586" ["i386"]
-      "armv6l" [ "armv6" "arm"]
-      "armv7l" [ "armv7" "armv6l" "armv6" "arm"]
+      "armv6l" [ "armv6KZ" "armv6" "arm"]
+      "armv7l" [ "armv7" "armv6l" "armv6KZ" "armv6" "arm"]
       "PowerPC" [ "ppc"]
       "ppc" [ "PowerPC"]
+      })
+
+(setv normalized-architectures
+      {
+      "x86_64" "amd64"
+      ;"i686" "i386"
+      ;"i586" "i386"
+      ;"i486" "i386"
+      ;"armv6l" "armv6"
+      ;"armv6KZ" "armv6" ;; arm6 + multiproKecessing + Zecurity
+      ;"armv7l" "armv7"
+      ;"arm" "armv7"  ;; all uploads using 'arm' seem to be armv7
+      ;"armv8l" "armv8"
+      ;"PowerPC" "ppc"
       })
 
 (setv default-floatsize None)
@@ -405,6 +419,14 @@
       (if archstring
           (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
           []))
+
+(defn normalize-arch [arch]
+  """normalizes the <arch> tuple with generic CPUs"""
+  (try (do
+        (setv [os cpu floatsize] arch)
+        #(os (try-get normalized-architectures cpu cpu) floatsize))
+       (except [e ValueError] arch)))
+
 (defn arch-to-string [arch]
   """convert an architecture-tuple into a string"""
   (.join "-" (stringify-tuple arch)))
@@ -1409,9 +1431,11 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                  "timestamp" date}
                  (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
           (setv (get result "architectures")
-                (split-archstring
-                 (get result "architectures")
-                 (not (.endswith URL ".dek"))))
+                (lfor a
+                      (split-archstring
+                       (get result "architectures")
+                       (not (.endswith URL ".dek")))
+                      (normalize-arch a)))
           result)
         (lfor line (.splitlines (getattr r "text"))
               :if line
