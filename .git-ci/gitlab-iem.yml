@@ -225,10 +225,10 @@ docker-find-test:
     - ${DEKEN_EXE} find --architecture "*"
     - testarch="Linux-amd64-32"
     - ${DEKEN_EXE} find --architecture "${testarch}"
-    - ! ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)"
+    - if ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)"; then false; else true; fi
     - ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E " for (.*\b${testarch}\b|all)"
     - testarch="CPM-z80-8"
-    - ! ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)"
+    - if ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)" ; then false; else true; fi
 
     # find only libraries
     - testarch="Linux-amd64-64"
