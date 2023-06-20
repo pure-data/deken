@@ -408,16 +408,18 @@
        ["Sources"]
        [])))
 
-(defn split-archstring [archstring [fixdek0 False]]
-      """splits an archstring like '(Linux-amd64-32)(Windows-i686-32)' into a list of arch-tuples"""
+(defn split-archstring [archstring fixdek0]
+      """split an single archstring like 'Linux-amd64-32' into an arch-tuple"""
+      (setv t (.split arch "-"))
+      (when (and fixdek0 (> (len t) 2))
+        (setv (get t 2) "32"))
+      (tuple t))
+
+(defn split-archstrings [archstring [fixdek0 False]]
+      """split an archstring like '(Linux-amd64-32)(Windows-i686-32)' into a list of arch-tuples"""
       ;; if fixdek0 is True, this forces the floatsize to "32"
-      (defn split-arch [arch fixdek0]
-            (setv t (.split arch "-"))
-            (when (and fixdek0 (> (len t) 2))
-              (setv (get t 2) "32"))
-            (tuple t))
       (if archstring
-          (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-arch x fixdek0))
+          (lfor x (re.findall r"\(([^()]*)\)" archstring) (split-archstring x fixdek0))
           []))
 
 (defn normalize-arch [arch]
@@ -1432,7 +1434,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                  (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
           (setv (get result "architectures")
                 (lfor a
-                      (split-archstring
+                      (split-archstrings
                        (get result "architectures")
                        (not (.endswith URL ".dek")))
                       (normalize-arch a)))
@@ -1504,7 +1506,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                         :architectures (if args.architecture
                                            (if (in "*" args.architecture)
                                                ["*"]
-                                               (split-archstring (.join "" (lfor a args.architecture (% "(%s)" a)))))
+                                               (split-archstrings (.join "" (lfor a args.architecture (% "(%s)" a)))))
                                            [(native-arch)])
                         :versioncount (if (is args.depth None) (if (in "*" args.architecture) 0 1) args.depth)
                         :searchurl (or args.search_url default-searchurl))
@@ -1624,7 +1626,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                                    :architectures  (when architecture
                                                      (if (in "*" architecture)
                                                          ["*"]
-                                                         (split-archstring (.join "" (lfor a architecture (% "(%s)" a))))))
+                                                         (split-archstrings (.join "" (lfor a architecture (% "(%s)" a))))))
                                    :versioncount 1
                                    :searchurl search-url)
                   :if (package-uri? (try-get x "URL" ""))
