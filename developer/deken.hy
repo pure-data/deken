@@ -408,7 +408,7 @@
        ["Sources"]
        [])))
 
-(defn split-archstring [archstring fixdek0]
+(defn split-archstring [archstring [fixdek0 False]]
       """split an single archstring like 'Linux-amd64-32' into an arch-tuple"""
       (setv t (.split archstring "-"))
       (when (and fixdek0 (> (len t) 2))
