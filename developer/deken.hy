@@ -1511,7 +1511,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
         (try
          (lfor v (.values (get (get data "result") "libraries")) l (.values v) lib l
                 (mangle-libdict lib))
-         (except [e Exception] (print "OUCH" e)))) ;; parse-json-results
+         (except [e Exception] (log_error (% "Unable to parse JSON data: %s" #(e)))))) ;; parse-json-results
 
       (defn parse-data [data content-type]
             (cond
