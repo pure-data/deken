@@ -34,6 +34,11 @@
 ;; IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 ;; THE POSSIBILITY OF SUCH DAMAGE.
 
+
+;; TODO (hy)
+;; - inflate '(when X (do ...))' calls to '(when X ...)' (CHECKME)
+;; - inflate '(when X (when Y ...))' calls to '(when (and X Y) ...)'
+
 (import hy.pyops [>= =])
 
 (import sys)
