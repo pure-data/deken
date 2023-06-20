@@ -116,12 +116,12 @@
       ;"i686" "i386"
       ;"i586" "i386"
       ;"i486" "i386"
-      ;"armv6l" "armv6"
+      "armv6l" "armv6"
       ;"armv6KZ" "armv6" ;; arm6 + multiproKecessing + Zecurity
-      ;"armv7l" "armv7"
+      "armv7l" "armv7"
       ;"arm" "armv7"  ;; all uploads using 'arm' seem to be armv7
-      ;"armv8l" "armv8"
-      ;"PowerPC" "ppc"
+      "armv8l" "armv8"
+      "PowerPC" "ppc"
       })
 
 (setv default-floatsize None)
