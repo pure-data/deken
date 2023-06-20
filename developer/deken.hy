@@ -1442,18 +1442,94 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
         (lfor line (.splitlines (getattr r "text"))
               :if line
               (parse-tsv #* (.split line "\t"))))
+      (defn parse-json-results [data]
+        (setv d {"query" "bla bla" "results" {"foo" "bar" "libraries"
+              {"zexy" {"1.2.3" {"library" "zexy" "author" "zmoelnig"}
+              "2.4.5" {"library" "zexy" "author" "zmoelng1"}
+              "2.4.6" {"library" "ouch" "author" "iembot"}}
+              "iemgui" {"1.42" {"library" "iemgui" "author" "musil"}}}}})
+
+        ;; {"results": {"libraries": {<libname>: {<version>: [LIBRARY,...]}}}}
+        ;; with LIBRARY like this
+        ;;  {
+        ;;    "library": <libname>,
+        ;;    "name": "zexy",
+        ;;    "description": "zexy-v0-0extended-(Darwin-i386-32)(Darwin-PowerPC-32)(Darwin-x86_64-32)-externals.tar.gz",
+        ;;    "author": "zmoelnig",
+        ;;    "timestamp": "2015-12-10 14:36:08",
+        ;;    "url": "http://puredata.info/Members/zmoelnig/software/zexy/0-0extended/zexy-v0-0extended-(Darwin-i386-32)(Darwin-PowerPC-32)(Darwin-x86_64-32)-externals.tar.gz",
+        ;;    "version": <version>,
+        ;;    "path": "http://puredata.info/Members/zmoelnig/software/zexy/0-0extended/",
+        ;;    "archs": [
+        ;;      "Darwin-i386-32",
+        ;;      "Darwin-ppc-32",
+        ;;      "Darwin-amd64-32"
+        ;;    ]
+        ;;  }
+        ;; which should then map to
+        ;;  {
+        ;;    "description": "zexy-v0-0extended-(Darwin-i386-32)(Darwin-PowerPC-32)(Darwin-x86_64-32)-externals.tar.gz",
+        ;;    "URL": "http://puredata.info/Members/zmoelnig/software/zexy/0-0extended/zexy-v0-0extended-(Darwin-i386-32)(Darwin-PowerPC-32)(Darwin-x86_64-32)-externals.tar.gz",
+        ;;    "uploader": "zmoelnig",
+        ;;    "timestamp": "2015-12-10 14:36:08",
+        ;;    "package": <libname>,
+        ;;    "version": <version>,
+        ;;    "architectures": [
+        ;;      [ "Darwin", "i386", "32" ],
+        ;;      [ "Darwin", "PowerPC", "32"],
+        ;;      [ "Darwin", "x86_64", "32"]
+        ;;    ],
+        ;;    "extension": "tar.gz"
+        ;;  }
+
+        ;; (get (get data "result") "libraries")
+        (defn mangle-libdict [jlib]
+          ;;  "description" <- "description"
+          ;;  "URL" <- "url"
+          ;;  "uploader" <- "author"
+          ;;  "timestamp" <- "timestamp"
+          ;;  "package" <- "library"
+          ;;  "version" <- "version"
+          ;;  "architectures" <- ...
+          ;;  "extension" <- ...
+          (setv jsonmap [
+                #("library" "package")
+                #("version" "version")
+                #("description" "description")
+                #("url" "URL")
+                #("author" "uploader")
+                #("timestamp" "timestamp")
+                ])
+          (setv result (dfor #(old new) jsonmap
+                             new (get jlib old)))
+          (setv (get result "architectures")
+                (lfor a (try-get jlib "architectures" [])
+                      (normalize-arch (split-archstring a))))
+          (setv (get result "extension")
+                (try-get (parse-filename (or (try-get jlib "url") "")) 3))
+          result) ;; mangle-libdict
+        (try
+         (lfor v (.values (get (get data "result") "libraries")) l (.values v) lib l
+                (mangle-libdict lib))
+         (except [e Exception] (print "OUCH" e)))) ;; parse-json-results
+
       (defn parse-data [data content-type]
             (cond
               (in "text/tab-separated-values" content-type) (parse-tab-separated-values data)
+              (in "application/json" content-type) (parse-json-results data)
               True []))
       (import requests)
       (setv r (requests.get searchurl
                             :headers {"user-agent" (user-agent)
-                            "accept" "text/tab-separated-values"}
+                            "accept" "application/json, text/tab-separated-values"}
                             :params {"libraries" libraries
                             "objects" objects}))
       (when (= 200 r.status_code)
-        (parse-data r.text (get r.headers "content-type"))))
+        (setv content-type (get r.headers "content-type"))
+        (parse-data (if (in "application/json" content-type)
+                        (r.json)
+                        r.text)
+                    content-type)))
 
 (defn find-packages [searchterms ;; as returned by categorize-search-terms
   [architectures []] ;; a list of architecture tuples (e.g. [("Linux", "amd64", "32")]); defaults to 'native'; use ['*'] for any architecture
