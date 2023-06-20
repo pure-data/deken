@@ -177,7 +177,7 @@
 
 ;; concatenate dictionaries - hylang's assoc is broken
 (defn dict-merge [dict0 #* dicts]
-      """merge several dictionaries; if a key exists in more than one dict, the latet takes precedence"""
+      """merge several dictionaries; if a key exists in more than one dict, the latest takes precedence"""
       (defn dict-merge-aux [dict0 dicts]
             (for [d dicts] (when d (dict0.update d)))
             dict0)
