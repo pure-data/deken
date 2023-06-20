@@ -231,13 +231,13 @@ docker-find-test:
     - if ${DEKEN_EXE} find --architecture="${testarch}" | grep "uploaded by" | grep -E -v " for (.*\b${testarch}\b|all)" ; then false; else true; fi
 
     # find only libraries
-    - testarch="Linux-amd64-64"
+    - testarch="Linux-amd64-32"
     - library="zexy"
     - ${DEKEN_EXE} find --architecture="${testarch}" --libraries "${library}"
     - ${DEKEN_EXE} find --architecture="${testarch}" --libraries "iem*"
 
     # find only objects
-    - testarch="Linux-amd64-64"
+    - testarch="Linux-amd64-32"
     - object="rawprint"
     - ${DEKEN_EXE} find --architecture="${testarch}" --objects "${object}"
     - ${DEKEN_EXE} find --architecture="${testarch}" --objects "*print"
