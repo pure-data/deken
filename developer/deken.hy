@@ -505,8 +505,8 @@
          :if (os.path.exists f)
          (cond
            (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")
-           (re.search r"\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")
-           (re.search r"\.(pd_darwin|d_[^.]*|dylib)$" f) (get-mach-archs f)
+           (re.search r"\.(pd_freebsd|so|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")
+           (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" f) (get-mach-archs f)
            (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f)
            True [])))
        []))
