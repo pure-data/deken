@@ -503,12 +503,12 @@
         (lfor
          f (+ (listdir folder recurse-subdirs) extra-files)
          :if (os.path.exists f)
-         (cond
-           (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux")
-           (re.search r"\.(pd_freebsd|so|b_[^.]*)$" f) (get-elf-archs f "FreeBSD")
-           (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" f) (get-mach-archs f)
-           (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f)
-           True [])))
+         (+
+           (if (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux") (list))
+           (if (re.search r"\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD") (list))
+           (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" f) (get-mach-archs f) (list))
+           (if (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f) (list))
+           [])))
        []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
