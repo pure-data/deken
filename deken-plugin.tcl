@@ -1500,6 +1500,7 @@ proc ::deken::menu_installselected {resultsid} {
     # clear the selection
     set ::deken::selected {}
     ::deken::clear_selection $resultsid
+    ::deken::update_installbutton $::deken::winid
 }
 
 proc ::deken::menu_uninstall_package {winid pkgname installpath} {
@@ -2455,6 +2456,10 @@ proc ::deken::install_link {URL filename} {
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     variable winid
+    set installbutton ${winid}.status.install
+    if {[winfo exists $installbutton]} {
+        $installbutton configure -state disabled
+    }
     ::deken::show_tab $winid info
 
     set installdir [::deken::ensure_installdir "" ${filename}]
@@ -2510,6 +2515,7 @@ proc ::deken::install_link {URL filename} {
         }
     }
     ::deken::install_package ${fullpkgfile} ${filename} ${installdir} ${::deken::keep_package}
+    ::deken::update_installbutton $winid
 }
 
 # print the download progress to the results window
