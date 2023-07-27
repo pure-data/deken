@@ -320,7 +320,9 @@ This file must be uploaded to the same directory as the `.dek` file.
 
 `deken` will try to automatically generate an objectlist file for a package.
 It looks for all "*-help.pd" files in the library directory, and creates an
-entry in the objectlists for each. The short description is set to a generic one.
+entry in the objectlists for each. The short description is taken from the
+`DESCRIPTION` comment in the `[pd META]` subpatch within the help-patch.
+If no DESCRIPTION comment can be found, a generic description is used.
 
 You can provide your own (manually maintained) objectlist file via the
 `--objects`  flag:
@@ -334,6 +336,11 @@ To prevent the creation/use of an objectlist file, pass an empty string
 ~~~sh
 $ deken package --objects "" my_external
 ~~~
+
+In general, it is preferable if the description of the object in the META
+subpatch is included in the object's help file (and let deken generate the
+objectlist from it), as this allows others (humans, Pd, plugins, ...) to
+access the same information as well.
 
 ## Troubleshooting
 

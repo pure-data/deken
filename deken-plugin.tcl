@@ -104,7 +104,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.9.7] } {
+if { [::deken::versioncheck 0.9.9] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -1331,6 +1331,8 @@ proc ::deken::platform2string {{verbose 0}} {
 
 # allow overriding deken platform from Pd-core
 proc ::deken::set_platform {os machine bits floatsize} {
+    set bits [expr int($bits)]
+    set floatsize [expr int($floatsize)]
     if { $os != $::deken::platform(os) ||
          $machine != $::deken::platform(machine) ||
          $bits != $::deken::platform(bits) ||
@@ -1342,6 +1344,9 @@ proc ::deken::set_platform {os machine bits floatsize} {
         set ::deken::platform(floatsize) ${floatsize}
         set msg [format [_ "Platform re-detected: %s" ] [::deken::platform2string 1] ]
         ::pdwindow::verbose 0 "\[deken\] ${msg}\n"
+    }
+    if { [info procs ::pdwindow::update_title] ne ""} {
+        after idle {::pdwindow::update_title .pdwindow}
     }
 }
 
