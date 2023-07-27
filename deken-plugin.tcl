@@ -1824,7 +1824,8 @@ proc ::deken::initiate_search {winid} {
         }
         if {[llength $results] != 0} {
             ::deken::show_results $resultsid
-            ::deken::post [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
+            set msg [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
+            ::deken::statuspost [format {"%s": %s} ${searchterm} ${msg}]
             if { $matchcount } {
                 ::deken::show_tab $winid results
             } else {
