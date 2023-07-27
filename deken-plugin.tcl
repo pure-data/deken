@@ -2226,7 +2226,6 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
         ::deken::post ""
         eval $cmd
     }
-
 }
 
 
@@ -2450,7 +2449,7 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
 }
 
 # handle a clicked link
-proc ::deken::clicked_link {URL filename} {
+proc ::deken::install_link {URL filename} {
     ## make sure that the destination path exists
     ### if ::deken::installpath is set, use the first writable item
     ### if not, get a writable item from one of the searchpaths
@@ -2653,7 +2652,7 @@ proc ::deken::register {fun} {
 ##        (the user will select the element by this name)
 ##        e.g. "frobscottle-1.10 (Linux/amd64)"
 ## cmd  : a command that will install the selected library
-##        e.g. "[list ::deken::clicked_link http://bfg.org/frobscottle-1.10.zip frobscottle-1.10.zip]"
+##        e.g. "[list ::deken::install_link http://bfg.org/frobscottle-1.10.zip frobscottle-1.10.zip]"
 ## match: an integer indicating whether this entry is actually usable
 ##        on this host (1) or not (0)
 ## comment: secondary line to display
@@ -2756,7 +2755,7 @@ proc ::deken::search::puredata.info::search {term} {
             foreach {name URL creator date} [ split $ele "\t" ] {break}
             set decURL [::deken::utilities::urldecode $URL]
             set filename [ file tail $URL ]
-            set cmd [list ::deken::clicked_link $decURL $filename]
+            set cmd [list ::deken::install_link $decURL $filename]
             set pkgverarch [ ::deken::utilities::parse_filename $filename ]
             set pkgname [lindex $pkgverarch 0]
             set version [lindex $pkgverarch 1]
@@ -2870,7 +2869,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} 
         set pkgverarch [ ::deken::utilities::parse_filename $filename ]
         set pkgname [lindex $pkgverarch 0]
 
-        set cmd [list ::deken::clicked_link $decURL $filename]
+        set cmd [list ::deken::install_link $decURL $filename]
 
         set selcount 0
         set selected 0
