@@ -117,7 +117,7 @@
       ;"i586" "i386"
       ;"i486" "i386"
       "armv6l" "armv6"
-      ;"armv6KZ" "armv6" ;; arm6 + multiproKecessing + Zecurity
+      ;"armv6KZ" "armv6" ;; arm6 + multiproKessing + Zecurity
       "armv7l" "armv7"
       ;"arm" "armv7"  ;; all uploads using 'arm' seem to be armv7
       "armv8l" "armv8"
