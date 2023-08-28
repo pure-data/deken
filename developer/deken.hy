@@ -1214,7 +1214,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                              (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
       (when filepath
         (setv filename (os.path.basename filepath))
-        (setv [pkg ver _ _] (parse-filename filename))
+        (setv [pkg ver _ _] (parse-dekname filename))
         (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
         (setv ver (.strip (or ver "") "[]"))
         (setv path
@@ -1252,7 +1252,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                                 (.lower (or destination.hostname default-destination.hostname)))
                          username)))
       (for [pkg pkgs]
-           (if (get (parse-filename pkg) 0)
+           (if (get (parse-dekname pkg) 0)
                (upload-package pkg destination username password)
                (log.warning (% "Skipping '%s', it is not a valid deken package" pkg))))
       (log.warning "Your upload was successful.")
@@ -1314,7 +1314,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
-(defn parse-filename0 [filename]
+(defn parse-dekname0 [filename]
   """parse a dekenformat.v0 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
@@ -1323,23 +1323,23 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
     ;; extract only the fields of interested
     [2 4 5 7])
    (except [e IndexError] [])))
-(defn parse-filename1 [filename]
+(defn parse-dekname1 [filename]
   """parse a dekenformat.v1 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
     (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek(\.[a-z0-9_.-]*)?)" filename)
     [2 4 5 7])
    (except [e IndexError] [])))
-(defn parse-filename [filename]
+(defn parse-dekname [filename]
   """parse a dekenformat filename (any version) into a (pkgname version archs extension) tuple"""
   (lfor x (or
-           (parse-filename1 filename)
-           (parse-filename0 filename)
+           (parse-dekname1 filename)
+           (parse-dekname0 filename)
            [None None None None])
         (or x None)))
 (defn filename-to-namever [filename]
   """extract a <name>/<version> string from a filename"""
-  (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
+  (join-nonempty "/" (get-values (parse-dekname filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
 (defn source-arch? [arch]
@@ -1348,7 +1348,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
   """return name/version if the filename contains sources (so we check whether we still need to upload sources)"""
-  (when (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
+  (when (source-arch? (try-get (parse-dekname filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
@@ -1443,7 +1443,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                  "URL" URL
                  "uploader" uploader
                  "timestamp" date}
-                 (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
+                 (dict (zip ["package" "version" "architectures" "extension"] (parse-dekname (or URL ""))))))
           (setv (get result "architectures")
                 (lfor a
                       (split-archstrings
@@ -1519,7 +1519,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                       :if (bool a)
                       (normalize-arch (split-archstring a))))
           (setv (get result "extension")
-                (try-get (parse-filename (or (try-get jlib "url") "")) 3))
+                (try-get (parse-dekname (or (try-get jlib "url") "")) 3))
           result) ;; mangle-libdict
         (try
          (lfor v (.values (try-get (try-get data "result" {}) "libraries" {})) l (.values v) lib l
