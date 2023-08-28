@@ -511,16 +511,74 @@
 since a single binary might hold multiple architectures,
 this returns a list of (OS, CPU, floatsize) tuples
 """
-;; new style extensions '.<os>-<cpu>-(32|64|0).(so|dll)' are a *strong* hint - complain otherwise
-;; the legacy extenions (.pd_<os>, .<os>_<arch>) can only be single-precision (or no-precision) - complain otherwise
+;; new style extensions '\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9_]+)-(?P<floatsize>(32|64|0))\.(so|dll)' are a *strong* hint - complain otherwise
+;; the legacy extenions ('\.pd_(?P<os>[a-z]+)', '\.(?P<os>[a-z])_(?P<cpu>[a-z0-9_]+)' can only be single-precision (or no-precision) - complain otherwise
 ;; the generic extensions '.so' and '.dll' are more tricky, as they might be helper-libraries
-
-  (+
-   (if (re.search r"\.(pd_linux|so|l_[^.]*)$" filename) (get-elf-archs filename "Linux") (list))
-   (if (re.search r"\.(pd_freebsd|b_[^.]*)$" filename) (get-elf-archs filename "FreeBSD") (list))
-   (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" filename) (get-mach-archs filename) (list))
-   (if (re.search r"\.(dll|m_[^.]*)$" filename) (get-windows-archs filename) (list))
-   []))
+;;
+;; we *might* want to complain if the filename says 'fat' on non-darwin
+  (defn --guess-arch-from-dekextension-- [filename]
+    (setv x (re.match r"(?:.*)\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9]+)-(?P<floatsize>(32|64|0))\.(so|dll)$" filename))
+    (when x #((.group x "os") (.group x "cpu") [(int (.group x "floatsize"))])))
+  (defn --guess-arch-from-pd_extension-- [filename]
+    (setv x (re.match r"(?:.*)\.pd_(?P<os>[a-z]*)$" filename))
+    (when x #((.group x "os") None [32 0])))
+  (defn --guess-arch-from-shortextension-- [filename]
+    (setv short-os {
+          "m" "windows"
+          "l" "linux"
+          "d" "darwin"
+          })
+    (setv x (re.match r"(?:.*)\.(?P<os>[dlm])_(?P<cpu>[a-z0-9]+)$" filename))
+    (when x #((get short-os (.group x "os")) (.group x "cpu") [32 0])))
+  (defn --get-archs-with-os-- [filename hint]
+    (setv os (get hint 0))
+    (setv cpu (get hint 1))
+    (setv fs (get hint 2))
+    (when (= "fat" cpu)
+      (do
+       (when (!= "darwin" os)
+         (log.error (% "'%s' suggests fat binary for unsupported os '%s'" #(filename os))))
+       (setv cpu None)))
+    (setv archs
+          (cond (= "windows" os) (get-windows-archs filename)
+                (= "darwin" os) (get-mach-archs filename)
+                True (get-elf-archs filename os)))
+    (lfor a archs
+       (do
+        (setv OS (.lower (get a 0)))
+        (setv CPU (.lower (get a 1)))
+        (setv FS (get a 2))
+        (when (and os (!= OS os))
+          (log.error (% "'%s' suggests %s binary, but found %s" #(filename os OS))))
+        (when (and cpu (!= CPU cpu))
+          (log.error (% "'%s' suggests %s binary, but found %s" #(filename cpu CPU))))
+        (when (and fs FS (not (in FS fs)))
+          (log.error (% "'%s' suggests floatsize %r, but found %r" #(filename fs FS))))))
+    ;; TODO: verify the hints
+    archs)
+  (cond
+   (--guess-arch-from-dekextension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-dekextension-- filename))
+   (--guess-arch-from-pd_extension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-pd_extension-- filename))
+   (--guess-arch-from-shortextension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-shortextension-- filename))
+   (re.search r".*\.dll$" filename) (--get-archs-with-os-- filename #("windows" None [0 32]))
+   (re.search r".*\.so$" filename) (+
+                                    (get-elf-archs filename "Linux")
+                                    (get-mach-archs filename))
+   True []
+   )
+;;  (+
+;;   (if (re.search r"\.(pd_linux|so|l_[^.]*)$" filename) (get-elf-archs filename "Linux") (list))
+;;   (if (re.search r"\.(pd_freebsd|b_[^.]*)$" filename) (get-elf-archs filename "FreeBSD") (list))
+;;   (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" filename) (get-mach-archs filename) (list))
+;;   (if (re.search r"\.(dll|m_[^.]*)$" filename) (get-windows-archs filename) (list))
+;;   [])
+  )
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --pdfunction-to-floatsize-- [function-name]
@@ -651,6 +709,12 @@ this returns a list of (OS, CPU, floatsize) tuples
                      "Linux")
                     (get-elf-armcpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
                     floatsize)))
+      ;; un-lowercase the OS hint
+      (setv oshint (or
+                    (first (lfor _ (.values elf-osabi)
+                                 :if (= oshint (.lower (str _)))
+                                 _))
+                    oshint))
       (try (do
             (import elftools.elf.elffile [ELFFile])
             (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
@@ -833,7 +897,8 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                              (get-files-from-zip objfilename)))
                   (if (binary-file? objfilename)
                     []
-                    (readobjs objfilename)))))))
+                    (readobjs objfilename))
+                  [])))))
       (setv dekfilename (% "%s.txt" dekfilename))
       (if (os.path.exists dekfilename)
           (do ;; already exists
