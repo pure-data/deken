@@ -503,13 +503,24 @@
         (lfor
          f (+ (listdir folder recurse-subdirs) extra-files)
          :if (os.path.exists f)
-         (+
-           (if (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux") (list))
-           (if (re.search r"\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD") (list))
-           (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" f) (get-mach-archs f) (list))
-           (if (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f) (list))
-           [])))
+         (get-external-architecture f)))
        []))
+
+(defn get-external-architecture [filename]
+  """get the architecture(s) of a single external
+since a single binary might hold multiple architectures,
+this returns a list of (OS, CPU, floatsize) tuples
+"""
+;; new style extensions '.<os>-<cpu>-(32|64|0).(so|dll)' are a *strong* hint - complain otherwise
+;; the legacy extenions (.pd_<os>, .<os>_<arch>) can only be single-precision (or no-precision) - complain otherwise
+;; the generic extensions '.so' and '.dll' are more tricky, as they might be helper-libraries
+
+  (+
+   (if (re.search r"\.(pd_linux|so|l_[^.]*)$" filename) (get-elf-archs filename "Linux") (list))
+   (if (re.search r"\.(pd_freebsd|b_[^.]*)$" filename) (get-elf-archs filename "FreeBSD") (list))
+   (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" filename) (get-mach-archs filename) (list))
+   (if (re.search r"\.(dll|m_[^.]*)$" filename) (get-windows-archs filename) (list))
+   []))
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --pdfunction-to-floatsize-- [function-name]
