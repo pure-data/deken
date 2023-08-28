@@ -815,13 +815,14 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                True
                (writeobjs
                 dekfilename
-                (or
-                 (genobjs (if (os.path.isdir objfilename)
-                              (get-files-from-dir objfilename :full_path True)
-                              (get-files-from-zip objfilename)))
-                 (if (binary-file? objfilename)
-                     []
-                     (readobjs objfilename))))))
+                (sorted
+                 (or
+                  (genobjs (if (os.path.isdir objfilename)
+                             (get-files-from-dir objfilename :full_path True)
+                             (get-files-from-zip objfilename)))
+                  (if (binary-file? objfilename)
+                    []
+                    (readobjs objfilename)))))))
       (setv dekfilename (% "%s.txt" dekfilename))
       (if (os.path.exists dekfilename)
           (do ;; already exists
