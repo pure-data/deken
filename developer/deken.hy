@@ -1812,18 +1812,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
 (defn package [args]
   ;; are they asking to package a directory?
-  (defn int-dekformat [value]
-    (try (int value)
-         (except [e ValueError]
-                 (fatal (% "Illegal dekformat '%s'" value)))))
-  (defn set-default-floatsize [value [valid [None 0 32 64]]]
-        (if (in value valid)
-            (do
-             (global default-floatsize)
-             (setv default-floatsize args.default-floatsize))
-            (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
-                      #( value (join-nonempty ", " valid))))))
-  (set-default-floatsize args.default-floatsize)
+  (global default-floatsize)
+  (setv default-floatsize args.default-floatsize)
   (lfor name args.source
         (if (os.path.isdir name)
             ;; if asking for a directory just package it up
@@ -1835,7 +1825,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                (os.path.basename (os.path.normpath (or args.name name)))
                args.version
                :output-dir args.output-dir
-               :filenameversion (int-dekformat args.dekformat)
+               :filenameversion args.dekformat
                :recurse-subdirs args.search-subdirs
                :extra-arch-files args.extra-arch-files))
              (if (is args.objects None) name args.objects))
@@ -2132,10 +2122,13 @@ returns a tuple of a (list of verified files) and the number of failed verificat
      :help "EXPERT: Use the given float-size if it cannot be determined automatically. Use with care! (DEFAULT: None)."
      :default None
      :type int
+     :choices [0 32 64]
      :required False)
     (parser.add_argument
      "--dekformat"
      :help "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
+     :type int
+     :choices  [0 1]
      :default 1
      :required False)
     (add-arg-yesno parser "sign-gpg" default-sign-gpg
