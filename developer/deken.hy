@@ -450,7 +450,7 @@
                         "\n      use '--default-floatsize <N>' to override)"))))
 
 (defn --pack-architectures-- [archs]
-  """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
+  """remove duplicate architectures; TODO remove archs with floatsize=0 if any package has a floatsize!=0"""
   (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
   (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
   (setv archdict {})
@@ -554,7 +554,6 @@ this returns a list of (OS, CPU, floatsize) tuples
           (log.error (% "'%s' suggests %s binary, but found %s" #(filename cpu CPU))))
         (when (and fs FS (not (in FS fs)))
           (log.error (% "'%s' suggests floatsize %r, but found %r" #(filename fs FS))))))
-    ;; TODO: verify the hints
     archs)
   (cond
    (--guess-arch-from-dekextension-- filename) (--get-archs-with-os--
