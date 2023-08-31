@@ -566,7 +566,8 @@ this returns a list of (OS, CPU, floatsize) tuples
    (--guess-arch-from-shortextension-- filename) (--get-archs-with-os--
                                                 filename
                                                 (--guess-arch-from-shortextension-- filename))
-   (re.search r".*\.dll$" filename) (--get-archs-with-os-- filename #("windows" None [0 32]))
+   (re.search r".*\.dll$" filename) (get-windows-archs filename)
+   (re.search r".*\.dylib$" filename) (get-mach-archs filename)
    (re.search r".*\.so$" filename) (+
                                     (get-elf-archs filename "Linux")
                                     (get-mach-archs filename))
