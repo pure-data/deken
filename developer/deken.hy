@@ -550,7 +550,7 @@ this returns a list of (OS, CPU, floatsize) tuples
         (setv FS (get a 2))
         (when (and os (!= OS os))
           (log.error (% "'%s' suggests %s binary, but found %s" #(filename os OS))))
-        (when (and cpu (!= CPU cpu))
+        (when (and cpu (not (compatible-arch? cpu [CPU])))
           (log.error (% "'%s' suggests %s binary, but found %s" #(filename cpu CPU))))
         (when (and fs FS (not (in FS fs)))
           (log.error (% "'%s' suggests floatsize %r, but found %r" #(filename fs FS))))))
