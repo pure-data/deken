@@ -451,11 +451,24 @@
 
 (defn --pack-architectures-- [archs]
   """remove duplicate architectures; TODO remove archs with floatsize=0 if any package has a floatsize!=0"""
-  (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
-  (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
+  (defn --drop-floatsize0-archspecific-- [archs others]
+    """drop entries with floatsize=0 if the same OS/cpu also has a floatsize!=0"""
+    (for [#( os cpu floatsize) archs] (setv (get archdict #( os cpu)) (.union (try-get archdict #( os cpu) (set)) [floatsize])))
+    (.union (set (flatten (lfor #( #( os cpu) floatsizes)
+                                (.items archdict)
+                                (lfor fs (or (list (filter bool floatsizes)) [0]) #( os cpu fs)))))
+            others))
+  (defn --drop-floatsize0-any-- [archs others]
+    """drop entries with fs=0, if there is *any* OS/cpu with a fs!=0"""
+    (.union (set (if (list (filter bool (set (lfor #(_ _ fs) archs fs)))) ;; true if archs has floatsizes other than 0
+                   (lfor a archs :if (get a 2) a) ;; only archs with floatsize!=0
+                   archs)) ;; only archs with floatsize==0
+            others))
+  (setv archs (set archs))
+  (setv others (sorted (lfor a archs :if (!= (len a) 3) (tuple a)))) ;; 'Sources'
+  (setv archs  (sorted (lfor a archs :if ( = (len a) 3) (tuple a)))) ;; OS/CPU/floatsize tuples
   (setv archdict {})
-  (for [#( os cpu floatsize) archs] (setv (get archdict #( os cpu)) (.union (try-get archdict #( os cpu) (set)) [floatsize])))
-  (.union (set (flatten (lfor #( #( os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) #( os cpu fs))))) others))
+  (--drop-floatsize0-any-- archs others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder [recurse-subdirs False] [extra-files []]]
