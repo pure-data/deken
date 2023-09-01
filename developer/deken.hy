@@ -512,7 +512,7 @@
             (lfor f (os.listdir folder) (os.path.join folder f))))
   (sum (+
         (if (test-extensions-under-dir folder [".c" ".cpp" ".cxx" ".cc"])
-            [[["Sources"]]] [])
+            [[#("Sources")]] [])
         (lfor
          f (+ (listdir folder recurse-subdirs) extra-files)
          :if (os.path.exists f)
