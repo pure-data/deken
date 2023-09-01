@@ -465,8 +465,8 @@
                    archs)) ;; only archs with floatsize==0
             others))
   (setv archs (set archs))
-  (setv others (sorted (lfor a archs :if (!= (len a) 3) (tuple a)))) ;; 'Sources'
-  (setv archs  (sorted (lfor a archs :if ( = (len a) 3) (tuple a)))) ;; OS/CPU/floatsize tuples
+  (setv others (sorted (lfor a archs :if (!= (len a) 3) (tuple a)) :key str)) ;; 'Sources'
+  (setv archs  (sorted (lfor a archs :if ( = (len a) 3) (tuple a)) :key str)) ;; OS/CPU/floatsize tuples
   (setv archdict {})
   (--drop-floatsize0-any-- archs others))
 
