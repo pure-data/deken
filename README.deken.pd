@@ -5,5 +5,5 @@
 0;
 #X text 56 179 you MUST RESTART Pd \, in order to use the new version.
 ;
-#X text 47 77 version: v0.9.12;
+#X text 47 77 version: v0.9.13;
 #X text 47 139 thank you for installing the deken-plugin.;
