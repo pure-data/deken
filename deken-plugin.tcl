@@ -104,7 +104,7 @@ proc ::deken::versioncheck {version} {
 }
 
 ## put the current version of this package here:
-if { [::deken::versioncheck 0.9.9] } {
+if { [::deken::versioncheck 0.9.11] } {
 
 namespace eval ::deken:: {
     namespace export open_searchui
@@ -1648,6 +1648,7 @@ proc ::deken::menu_installselected {resultsid} {
     # clear the selection
     set ::deken::selected {}
     ::deken::clear_selection $resultsid
+    ::deken::update_installbutton $::deken::winid
 }
 
 proc ::deken::menu_uninstall_package {winid pkgname installpath} {
@@ -1971,7 +1972,8 @@ proc ::deken::initiate_search {winid} {
         }
         if {[llength $results] != 0} {
             ::deken::show_results $resultsid
-            ::deken::post [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
+            set msg [format [_ "Found %1\$d usable packages (of %2\$d packages in total)." ] $matchcount [llength $results]]
+            ::deken::statuspost [format {"%s": %s} ${searchterm} ${msg}]
             if { $matchcount } {
                 ::deken::show_tab $winid results
             } else {
@@ -2374,7 +2376,6 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
         ::deken::post ""
         eval $cmd
     }
-
 }
 
 
@@ -2598,12 +2599,16 @@ proc ::deken::ensure_installdir {{installdir ""} {extname ""}} {
 }
 
 # handle a clicked link
-proc ::deken::clicked_link {URL filename} {
+proc ::deken::install_link {URL filename} {
     ## make sure that the destination path exists
     ### if ::deken::installpath is set, use the first writable item
     ### if not, get a writable item from one of the searchpaths
     ### if this still doesn't help, ask the user
     variable winid
+    set installbutton ${winid}.status.install
+    if {[winfo exists $installbutton]} {
+        $installbutton configure -state disabled
+    }
     ::deken::show_tab $winid info
 
     set installdir [::deken::ensure_installdir "" ${filename}]
@@ -2659,6 +2664,7 @@ proc ::deken::clicked_link {URL filename} {
         }
     }
     ::deken::install_package ${fullpkgfile} ${filename} ${installdir} ${::deken::keep_package}
+    ::deken::update_installbutton $winid
 }
 
 # print the download progress to the results window
@@ -2801,7 +2807,7 @@ proc ::deken::register {fun} {
 ##        (the user will select the element by this name)
 ##        e.g. "frobscottle-1.10 (Linux/amd64)"
 ## cmd  : a command that will install the selected library
-##        e.g. "[list ::deken::clicked_link http://bfg.org/frobscottle-1.10.zip frobscottle-1.10.zip]"
+##        e.g. "[list ::deken::install_link http://bfg.org/frobscottle-1.10.zip frobscottle-1.10.zip]"
 ## match: an integer indicating whether this entry is actually usable
 ##        on this host (1) or not (0)
 ## comment: secondary line to display
@@ -2930,7 +2936,7 @@ proc ::deken::search::puredata.info::search {term} {
             foreach {name URL creator date} [ split $ele "\t" ] {break}
             set decURL [::deken::utilities::urldecode $URL]
             set filename [ file tail $URL ]
-            set cmd [list ::deken::clicked_link $decURL $filename]
+            set cmd [list ::deken::install_link $decURL $filename]
             set pkgverarch [ ::deken::utilities::parse_filename $filename ]
             set pkgname [lindex $pkgverarch 0]
             set version [lindex $pkgverarch 1]
@@ -3044,7 +3050,7 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} 
         set pkgverarch [ ::deken::utilities::parse_filename $filename ]
         set pkgname [lindex $pkgverarch 0]
 
-        set cmd [list ::deken::clicked_link $decURL $filename]
+        set cmd [list ::deken::install_link $decURL $filename]
 
         set selcount 0
         set selected 0

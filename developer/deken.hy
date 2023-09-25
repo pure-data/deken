@@ -117,7 +117,7 @@
       ;"i586" "i386"
       ;"i486" "i386"
       "armv6l" "armv6"
-      ;"armv6KZ" "armv6" ;; arm6 + multiproKecessing + Zecurity
+      ;"armv6KZ" "armv6" ;; arm6 + multiproKessing + Zecurity
       "armv7l" "armv7"
       ;"arm" "armv7"  ;; all uploads using 'arm' seem to be armv7
       "armv8l" "armv8"
@@ -450,12 +450,25 @@
                         "\n      use '--default-floatsize <N>' to override)"))))
 
 (defn --pack-architectures-- [archs]
-  """remove duplicate architectures; remove archs with floatsize=0 if the same os/cpu has a floatsize!=0"""
-  (setv others (lfor a archs :if (!= (len a) 3) (tuple a)))
-  (setv archs  (lfor a archs :if ( = (len a) 3) (tuple a)))
+  """remove duplicate architectures; TODO remove archs with floatsize=0 if any package has a floatsize!=0"""
+  (defn --drop-floatsize0-archspecific-- [archs others]
+    """drop entries with floatsize=0 if the same OS/cpu also has a floatsize!=0"""
+    (for [#( os cpu floatsize) archs] (setv (get archdict #( os cpu)) (.union (try-get archdict #( os cpu) (set)) [floatsize])))
+    (.union (set (flatten (lfor #( #( os cpu) floatsizes)
+                                (.items archdict)
+                                (lfor fs (or (list (filter bool floatsizes)) [0]) #( os cpu fs)))))
+            others))
+  (defn --drop-floatsize0-any-- [archs others]
+    """drop entries with fs=0, if there is *any* OS/cpu with a fs!=0"""
+    (.union (set (if (list (filter bool (set (lfor #(_ _ fs) archs fs)))) ;; true if archs has floatsizes other than 0
+                   (lfor a archs :if (get a 2) a) ;; only archs with floatsize!=0
+                   archs)) ;; only archs with floatsize==0
+            others))
+  (setv archs (set archs))
+  (setv others (sorted (lfor a archs :if (!= (len a) 3) (tuple a)) :key str)) ;; 'Sources'
+  (setv archs  (sorted (lfor a archs :if ( = (len a) 3) (tuple a)) :key str)) ;; OS/CPU/floatsize tuples
   (setv archdict {})
-  (for [#( os cpu floatsize) archs] (setv (get archdict #( os cpu)) (.union (try-get archdict #( os cpu) (set)) [floatsize])))
-  (.union (set (flatten (lfor #( #( os cpu) floatsizes) (.items archdict) (lfor fs (or (list (filter bool floatsizes)) [0]) #( os cpu fs))))) others))
+  (--drop-floatsize0-any-- archs others))
 
 ;; takes the externals architectures and turns them into a string)
 (defn get-architecture-string [folder [recurse-subdirs False] [extra-files []]]
@@ -499,17 +512,86 @@
             (lfor f (os.listdir folder) (os.path.join folder f))))
   (sum (+
         (if (test-extensions-under-dir folder [".c" ".cpp" ".cxx" ".cc"])
-            [[["Sources"]]] [])
+            [[#("Sources")]] [])
         (lfor
          f (+ (listdir folder recurse-subdirs) extra-files)
          :if (os.path.exists f)
-         (+
-           (if (re.search r"\.(pd_linux|so|l_[^.]*)$" f) (get-elf-archs f "Linux") (list))
-           (if (re.search r"\.(pd_freebsd|b_[^.]*)$" f) (get-elf-archs f "FreeBSD") (list))
-           (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" f) (get-mach-archs f) (list))
-           (if (re.search r"\.(dll|m_[^.]*)$" f) (get-windows-archs f) (list))
-           [])))
+         (get-external-architecture f)))
        []))
+
+(defn get-external-architecture [filename]
+  """get the architecture(s) of a single external
+since a single binary might hold multiple architectures,
+this returns a list of (OS, CPU, floatsize) tuples
+"""
+;; new style extensions '\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9_]+)-(?P<floatsize>(32|64|0))\.(so|dll)' are a *strong* hint - complain otherwise
+;; the legacy extenions ('\.pd_(?P<os>[a-z]+)', '\.(?P<os>[a-z])_(?P<cpu>[a-z0-9_]+)' can only be single-precision (or no-precision) - complain otherwise
+;; the generic extensions '.so' and '.dll' are more tricky, as they might be helper-libraries
+;;
+;; we *might* want to complain if the filename says 'fat' on non-darwin
+  (defn --guess-arch-from-dekextension-- [filename]
+    (setv x (re.match r"(?:.*)\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9]+)-(?P<floatsize>(32|64|0))\.(so|dll)$" filename))
+    (when x #((.group x "os") (.group x "cpu") [(int (.group x "floatsize"))])))
+  (defn --guess-arch-from-pd_extension-- [filename]
+    (setv x (re.match r"(?:.*)\.pd_(?P<os>[a-z]*)$" filename))
+    (when x #((.group x "os") None [32 0])))
+  (defn --guess-arch-from-shortextension-- [filename]
+    (setv short-os {
+          "m" "windows"
+          "l" "linux"
+          "d" "darwin"
+          })
+    (setv x (re.match r"(?:.*)\.(?P<os>[dlm])_(?P<cpu>[a-z0-9]+)$" filename))
+    (when x #((get short-os (.group x "os")) (.group x "cpu") [32 0])))
+  (defn --get-archs-with-os-- [filename hint]
+    (setv os (get hint 0))
+    (setv cpu (get hint 1))
+    (setv fs (get hint 2))
+    (when (= "fat" cpu)
+      (do
+       (when (!= "darwin" os)
+         (log.error (% "'%s' suggests fat binary for unsupported os '%s'" #(filename os))))
+       (setv cpu None)))
+    (setv archs
+          (cond (= "windows" os) (get-windows-archs filename)
+                (= "darwin" os) (get-mach-archs filename)
+                True (get-elf-archs filename os)))
+    (lfor a archs
+       (do
+        (setv OS (.lower (get a 0)))
+        (setv CPU (.lower (get a 1)))
+        (setv FS (get a 2))
+        (when (and os (!= OS os))
+          (log.error (% "'%s' suggests %s binary, but found %s" #(filename os OS))))
+        (when (and cpu (not (compatible-arch? cpu [CPU])))
+          (log.error (% "'%s' suggests %s binary, but found %s" #(filename cpu CPU))))
+        (when (and fs FS (not (in FS fs)))
+          (log.error (% "'%s' suggests floatsize %r, but found %r" #(filename fs FS))))))
+    archs)
+  (cond
+   (--guess-arch-from-dekextension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-dekextension-- filename))
+   (--guess-arch-from-pd_extension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-pd_extension-- filename))
+   (--guess-arch-from-shortextension-- filename) (--get-archs-with-os--
+                                                filename
+                                                (--guess-arch-from-shortextension-- filename))
+   (re.search r".*\.dll$" filename) (get-windows-archs filename)
+   (re.search r".*\.dylib$" filename) (get-mach-archs filename)
+   (re.search r".*\.so$" filename) (+
+                                    (get-elf-archs filename "Linux")
+                                    (get-mach-archs filename))
+   True []
+   )
+;;  (+
+;;   (if (re.search r"\.(pd_linux|so|l_[^.]*)$" filename) (get-elf-archs filename "Linux") (list))
+;;   (if (re.search r"\.(pd_freebsd|b_[^.]*)$" filename) (get-elf-archs filename "FreeBSD") (list))
+;;   (if (re.search r"\.(pd_darwin|so|d_[^.]*|dylib)$" filename) (get-mach-archs filename) (list))
+;;   (if (re.search r"\.(dll|m_[^.]*)$" filename) (get-windows-archs filename) (list))
+;;   [])
+  )
 
 ;; class_new -> t_float=float; class_new64 -> t_float=double
 (defn --pdfunction-to-floatsize-- [function-name]
@@ -640,6 +722,12 @@
                      "Linux")
                     (get-elf-armcpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
                     floatsize)))
+      ;; un-lowercase the OS hint
+      (setv oshint (or
+                    (first (lfor _ (.values elf-osabi)
+                                 :if (= oshint (.lower (str _)))
+                                 _))
+                    oshint))
       (try (do
             (import elftools.elf.elffile [ELFFile])
             (do-get-elf-archs (ELFFile (open filename :mode "rb")) oshint))
@@ -815,13 +903,15 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                True
                (writeobjs
                 dekfilename
-                (or
-                 (genobjs (if (os.path.isdir objfilename)
-                              (get-files-from-dir objfilename :full_path True)
-                              (get-files-from-zip objfilename)))
-                 (if (binary-file? objfilename)
-                     []
-                     (readobjs objfilename))))))
+                (sorted
+                 (or
+                  (genobjs (if (os.path.isdir objfilename)
+                             (get-files-from-dir objfilename :full_path True)
+                             (get-files-from-zip objfilename)))
+                  (if (binary-file? objfilename)
+                    []
+                    (readobjs objfilename))
+                  [])))))
       (setv dekfilename (% "%s.txt" dekfilename))
       (if (os.path.exists dekfilename)
           (do ;; already exists
@@ -1202,7 +1292,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                              (% "Please ensure the folder '%s' exists on the server and is writable." path))))))
       (when filepath
         (setv filename (os.path.basename filepath))
-        (setv [pkg ver _ _] (parse-filename filename))
+        (setv [pkg ver _ _] (parse-dekname filename))
         (setv pkg (or pkg (fatal (% "'%s' is not a valid deken file(name)" filename))))
         (setv ver (.strip (or ver "") "[]"))
         (setv path
@@ -1240,7 +1330,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                                 (.lower (or destination.hostname default-destination.hostname)))
                          username)))
       (for [pkg pkgs]
-           (if (get (parse-filename pkg) 0)
+           (if (get (parse-dekname pkg) 0)
                (upload-package pkg destination username password)
                (log.warning (% "Skipping '%s', it is not a valid deken package" pkg))))
       (log.warning "Your upload was successful.")
@@ -1302,7 +1392,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 
 ;; parses a filename into a (pkgname version archs extension) tuple
 ;; missing values are None
-(defn parse-filename0 [filename]
+(defn parse-dekname0 [filename]
   """parse a dekenformat.v0 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
@@ -1311,23 +1401,23 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
     ;; extract only the fields of interested
     [2 4 5 7])
    (except [e IndexError] [])))
-(defn parse-filename1 [filename]
+(defn parse-dekname1 [filename]
   """parse a dekenformat.v1 filename into a (pkgname version archs extension) tuple"""
   (try
    (get-values
     (re.split r"(.*/)?([^\[\]\(\)]+)(\[v([^\[\]\(\)]+)\])?((\([^\[\]\(\)]+\))*)\.(dek(\.[a-z0-9_.-]*)?)" filename)
     [2 4 5 7])
    (except [e IndexError] [])))
-(defn parse-filename [filename]
+(defn parse-dekname [filename]
   """parse a dekenformat filename (any version) into a (pkgname version archs extension) tuple"""
   (lfor x (or
-           (parse-filename1 filename)
-           (parse-filename0 filename)
+           (parse-dekname1 filename)
+           (parse-dekname0 filename)
            [None None None None])
         (or x None)))
 (defn filename-to-namever [filename]
   """extract a <name>/<version> string from a filename"""
-  (join-nonempty "/" (get-values (parse-filename filename) [0 1])))
+  (join-nonempty "/" (get-values (parse-dekname filename) [0 1])))
 
 ;; check if the list of archs contains sources (or is arch-independent)
 (defn source-arch? [arch]
@@ -1336,7 +1426,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 ;; check if a package contains sources (and returns name-version to be used in a SET of packages with sources)
 (defn has-sources? [filename]
   """return name/version if the filename contains sources (so we check whether we still need to upload sources)"""
-  (when (source-arch? (try-get (parse-filename filename) 2)) (filename-to-namever filename)))
+  (when (source-arch? (try-get (parse-dekname filename) 2)) (filename-to-namever filename)))
 
 ;; check if the given package has a sources-arch on puredata.info
 (defn check-sources@puredata-info [pkg username]
@@ -1431,7 +1521,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                  "URL" URL
                  "uploader" uploader
                  "timestamp" date}
-                 (dict (zip ["package" "version" "architectures" "extension"] (parse-filename (or URL ""))))))
+                 (dict (zip ["package" "version" "architectures" "extension"] (parse-dekname (or URL ""))))))
           (setv (get result "architectures")
                 (lfor a
                       (split-archstrings
@@ -1507,7 +1597,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                       :if (bool a)
                       (normalize-arch (split-archstring a))))
           (setv (get result "extension")
-                (try-get (parse-filename (or (try-get jlib "url") "")) 3))
+                (try-get (parse-dekname (or (try-get jlib "url") "")) 3))
           result) ;; mangle-libdict
         (try
          (lfor v (.values (try-get (try-get data "result" {}) "libraries" {})) l (.values v) lib l
@@ -1735,18 +1825,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
 
 (defn package [args]
   ;; are they asking to package a directory?
-  (defn int-dekformat [value]
-    (try (int value)
-         (except [e ValueError]
-                 (fatal (% "Illegal dekformat '%s'" value)))))
-  (defn set-default-floatsize [value [valid [None 0 32 64]]]
-        (if (in value valid)
-            (do
-             (global default-floatsize)
-             (setv default-floatsize args.default-floatsize))
-            (fatal (% "Illegal default-floatsize %s. Must be one of: %s"
-                      #( value (join-nonempty ", " valid))))))
-  (set-default-floatsize args.default-floatsize)
+  (global default-floatsize)
+  (setv default-floatsize args.default-floatsize)
   (lfor name args.source
         (if (os.path.isdir name)
             ;; if asking for a directory just package it up
@@ -1758,7 +1838,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
                (os.path.basename (os.path.normpath (or args.name name)))
                args.version
                :output-dir args.output-dir
-               :filenameversion (int-dekformat args.dekformat)
+               :filenameversion args.dekformat
                :recurse-subdirs args.search-subdirs
                :extra-arch-files args.extra-arch-files))
              (if (is args.objects None) name args.objects))
@@ -2055,10 +2135,13 @@ returns a tuple of a (list of verified files) and the number of failed verificat
      :help "EXPERT: Use the given float-size if it cannot be determined automatically. Use with care! (DEFAULT: None)."
      :default None
      :type int
+     :choices [0 32 64]
      :required False)
     (parser.add_argument
      "--dekformat"
      :help "Override the deken packaging format, in case the package is created (DEFAULT: 1)."
+     :type int
+     :choices  [0 1]
      :default 1
      :required False)
     (add-arg-yesno parser "sign-gpg" default-sign-gpg
