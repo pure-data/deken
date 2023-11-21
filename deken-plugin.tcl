@@ -571,7 +571,7 @@ foreach impl {sha256sum shasum msw tcllib} {
                 }
 
                 set hash [string trim [string tolower [ ${::deken::utilities::sha256_implementation} $pkgfile ] ] ]
-                if { "${hash}" eq "${reference}" } {
+                if { [string first ${reference} ${hash}] >= 0 } {
                     set retval 1
                 } else {
                     # SHA256 verification failed...
