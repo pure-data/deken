@@ -139,6 +139,7 @@ windows:
     - windows
   variables:
     IEMCI_CONFIGURATIONS: python3
+    PYTHON: python
   stage: build
   before_script:
     - ${PYTHON} --version && true
