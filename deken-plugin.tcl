@@ -584,7 +584,19 @@ foreach impl {sha256sum shasum msw tcllib} {
                 catch { file delete $hashfile }
             }
 
+            # get hash of file
             set hash [string trim [string tolower [ ${::deken::utilities::sha256_implementation} $pkgfile ] ] ]
+            # check if hash is sane
+            if { [string length $hash] != 64 || ! [string is xdigit $hash] } {
+                ::deken::statuspost [format [_ "File checksum looks invalid: '%s'." ] $hash] warn 0
+            }
+            # check if reference is sane
+            if { [string length $reference] != 64 || ! [string is xdigit $reference] } {
+                # this is more grave than the sanity check for the file hash
+                # (since for the file hash we depend on the user's machine being able to
+                # produce a proper SHA256 hash)
+                ::deken::statuspost [format [_ "Reference checksum looks invalid: '%s'." ] $reference] error 0
+            }
 
             if { [string first ${reference} ${hash}] >= 0 } {
                 set retval 1
