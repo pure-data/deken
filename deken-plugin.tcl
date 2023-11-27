@@ -519,7 +519,7 @@ proc ::deken::utilities::sha256_powershell {filename} {
     set batscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".bat" ]
     set script {
 @echo off
-powershell -Command " & {Get-FileHash -Algorithm SHA256 %1  | Select-Object -ExpandProperty Hash}"
+powershell -Command " & {Get-FileHash -Algorithm SHA256 -LiteralPath \"%1\"  | Select-Object -ExpandProperty Hash}"
     }
     if {![catch {set fileId [open $batscript "w"]}]} {
         puts $fileId $script
