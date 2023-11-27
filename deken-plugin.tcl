@@ -613,7 +613,8 @@ foreach impl {sha256sum shasum powershell msw tcllib} {
             }
 
             # get hash of file
-            set hash [string trim [string tolower [ ${::deken::utilities::sha256_implementation} $pkgfile ] ] ]
+            set hash [${::deken::utilities::sha256_implementation} $pkgfile ]
+            set hash [string trim [string tolower $hash ] ]
             # check if hash is sane
             if { [string length $hash] != 64 || ! [string is xdigit $hash] } {
                 ::deken::statuspost [format [_ "File checksum looks invalid: '%s'." ] $hash] warn 0
