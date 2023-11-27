@@ -515,6 +515,33 @@ proc ::deken::utilities::sha256_shasum {filename} {
     catch { set hash [lindex [exec shasum -a 256 $filename] 0] }
     return $hash
 }
+proc ::deken::utilities::sha256_powershell {filename} {
+    set batscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".bat" ]
+    set script {
+@echo off
+powershell -Command " & {Get-FileHash -Algorithm SHA256 %1  | Select-Object -ExpandProperty Hash}"
+    }
+    if {![catch {set fileId [open $batscript "w"]}]} {
+        puts $fileId $script
+        close $fileId
+    }
+
+    if {![file exists $batscript]} {
+        ## still no script, give up
+        return ""
+    }
+
+    if { [ catch {
+        set hash [exec "${batscript}" "${filename}"]
+    } stdout ] } {
+        # ouch, couldn't run powershell script
+        set hash ""
+    }
+
+    catch { file delete "${batscript}" }
+
+    return $hash
+}
 proc ::deken::utilities::sha256_msw {filename} {
     set hash {}
     catch { set hash [join [exec certUtil -hashfile $filename SHA256 | findstr /v "hash"] ""] }
@@ -536,7 +563,7 @@ proc ::deken::utilities::verify_sha256 {url pkgfile} {
 }
 
 
-foreach impl {sha256sum shasum msw tcllib} {
+foreach impl {sha256sum shasum powershell msw tcllib} {
     if { [::deken::utilities::sha256_${impl} $::argv0] ne "" } {
     set ::deken::utilities::sha256_implementation ::deken::utilities::sha256_${impl}
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
