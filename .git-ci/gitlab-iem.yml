@@ -148,6 +148,9 @@ windows:
     - which python3 || true
   <<: *build_script
   after_script:
+    - echo $(dirname $(which pip)) || true
+    - ls -l $(dirname $(which pip)) || true
+    - ls -l /c/Python312/Scripts/ || true
     - cp developer/dist/deken.exe .
   artifacts:
     name: deken
