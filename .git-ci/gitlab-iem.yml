@@ -142,7 +142,10 @@ windows:
     PYTHON: python
   stage: build
   before_script:
-    - ${PYTHON} --version && true
+    - ${PYTHON} --version || true
+    - which $PYTHON || true
+    - which python || true
+    - which python3 || true
   <<: *build_script
   after_script:
     - cp developer/dist/deken.exe .
