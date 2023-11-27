@@ -535,6 +535,7 @@ powershell -Command " & {Get-FileHash -Algorithm SHA256 -LiteralPath \"%1\"  | S
         set hash [exec "${batscript}" "${filename}"]
     } stdout ] } {
         # ouch, couldn't run powershell script
+        ::deken::utilities::verbose 1 "sha256.ps1 error: $stdout"
         set hash ""
     }
 
