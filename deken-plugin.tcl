@@ -1339,7 +1339,13 @@ proc ::deken::install_package_from_file {{pkgfile ""}} {
     lappend types [list [_ "Deken Packages" ] .dek]
     lappend types [list [_ "ZIP Files" ] .zip]
     if {$::tcl_platform(platform) ne "windows"} {
-        lappend types [list [_ "TAR Files" ] {.tar.gz .tgz} ]
+        lappend types [list [_ "TAR Files" ] {.tgz} ]
+        if {$::windowingsystem eq "aqua"} {
+            # stupid bug on macOS>=12: an extension with two dots crashes the fileselector
+            lappend types [list [_ "TAR Files" ] {.gz} ]
+        } else {
+            lappend types [list [_ "TAR Files" ] {.tar.gz} ]
+        }
     }
     lappend types [list [_ "All Files" ]  *  ]
     if { "${pkgfile}" eq ""} {
