@@ -1229,7 +1229,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 
 
 ;; download a file
-(defn download-file [url [filename None] [output-dir "."]]
+(defn download-file [url [filename None] [output-dir "."] [warn-download-failure True]]
       """download a file from <url>, save it as <filename> (or a sane default);
  return the filename or None;
  make sure that no file gets overwritten"""
@@ -1264,7 +1264,8 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                                                (os.path.basename url)
                                                "downloaded_file")))
            r.content)
-          (log.warning (% "Downloading '%s' failed with '%s'" #( url r.status_code)))))
+          (when warn-download-failure
+           (log.warning (% "Downloading '%s' failed with '%s'" #( url r.status_code))))))
 
 ;; upload a zipped up package to puredata.info
 (defn upload-file [filepath destination username password]
@@ -1764,14 +1765,14 @@ if gpg/hash is False, verification failure is ignored, if it's None the referenc
 unverified files are removed (pending the verify-... flags)
 returns a tuple of a (list of verified files) and the number of failed verifications"""
   (defn try-download [url]
-    (defn --verbose-download-- [url msg]
+    (defn --verbose-download-- [url msg [warn-download-failure True]]
           (log.info msg)
-          (setv outfile (download-file url :output-dir download-dir))
+          (setv outfile (download-file url :output-dir download-dir :warn-download-failure warn-download-failure))
           (if outfile (log.info "Downloaded '%s'" outfile) (log.info "Failed to download '%s'" url))
           outfile)
     (setv pkg (--verbose-download-- url "Downloading package"))
-    (setv gpg (--verbose-download-- (+ url ".asc") "Downloading GPG signature"))
-    (setv hsh (--verbose-download-- (+ url ".sha256") "Downloading SHA256 hash"))
+    (setv gpg (--verbose-download-- (+ url ".asc") "Downloading GPG signature" :warn-download-failure verify-gpg))
+    (setv hsh (--verbose-download-- (+ url ".sha256") "Downloading SHA256 hash" :warn-download-failure verify-hash))
     (if (and
          (not (verify
                pkg gpg hsh
