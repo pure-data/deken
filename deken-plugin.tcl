@@ -2780,9 +2780,9 @@ proc ::deken::register {fun} {
 
 ## ####################################################################
 ## searching puredata.info
-namespace eval ::deken::search::puredata.info { }
+namespace eval ::deken::search::dekenserver { }
 
-proc ::deken::search::puredata.info::search {term} {
+proc ::deken::search::dekenserver::search {term} {
     set dekenserver "${::deken::protocol}://deken.puredata.info/search"
     catch {set dekenserver $::env(DEKENSERVER)} stdout
     set servers [list $dekenserver]
@@ -2796,7 +2796,7 @@ proc ::deken::search::puredata.info::search {term} {
         ::deken::post [format [_ "Searching on %s..."] $s ] debug
         set resultcount 0
         # get the results from the given server, and add them to our results set
-        foreach r [::deken::search::puredata.info::search_server $term $s] {
+        foreach r [::deken::search::dekenserver::search_server $term $s] {
             set results($r) {}
             incr resultcount
         }
@@ -2888,7 +2888,7 @@ proc ::deken::search::puredata.info::search {term} {
             # the space (or some other character that sorts after "\t") after the ${version} is important,
             #   as it ensures that "0.2~1" sorts before "1.2"
             set sortname "${sortprefix}${vsep}${pkgname}${vsep}${version} ${vsep}${date}"
-            set contextcmd [list ::deken::search::puredata.info::contextmenu %W %x %y $pkgname $URL]
+            set contextcmd [list ::deken::search::dekenserver::contextmenu %W %x %y $pkgname $URL]
             set res [list $sortname $filename $name $cmd $match $comment $status $contextcmd $pkgname $version $creator $date]
             lappend searchresults $res
         }
@@ -2903,7 +2903,7 @@ proc ::deken::search::puredata.info::search {term} {
     return $sortedresult
 }
 
-proc ::deken::search::puredata.info::search_server {term dekenserver} {
+proc ::deken::search::dekenserver::search_server {term dekenserver} {
     set queryterm {}
     if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
         # special handling of searching for all translations (so we ONLY get translations)
@@ -2950,7 +2950,7 @@ proc ::deken::search::puredata.info::search_server {term dekenserver} {
     return [split $contents "\n"]
 }
 
-proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} {
+proc ::deken::search::dekenserver::contextmenu {widget theX theY pkgname URL} {
     set winid ${::deken::winid}
     set resultsid ${::deken::resultsid}
     set with_installmenu 1
@@ -3016,5 +3016,5 @@ proc ::deken::search::puredata.info::contextmenu {widget theX theY pkgname URL} 
 
 
 ::deken::initialize
-::deken::register ::deken::search::puredata.info::search
+::deken::register ::deken::search::dekenserver::search
 }
