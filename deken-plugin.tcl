@@ -74,6 +74,7 @@ namespace eval ::deken::preferences {
     variable servers_ephemeral
 }
 namespace eval ::deken::utilities { }
+namespace eval ::deken::search::dekenserver {}
 
 
 ## only register this plugin if there isn't any newer version already registered
