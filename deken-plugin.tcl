@@ -70,8 +70,8 @@ namespace eval ::deken::preferences {
     variable hideforeignarch
     variable hideoldversions
     # deken servers to use
-    variable servers_secondary
-    variable servers_ephemeral
+    variable urls_secondary
+    variable urls_ephemeral
 }
 namespace eval ::deken::utilities { }
 namespace eval ::deken::search::dekenserver {}
@@ -153,8 +153,8 @@ set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
 set ::deken::preferences::keep_package {}
 set ::deken::preferences::verify_sha256 {}
-set ::deken::preferences::servers {}
-set ::deken::preferences::servers_ephemeral {}
+set ::deken::preferences::urls {}
+set ::deken::preferences::urls_ephemeral {}
 
 set ::deken::platform(os) $::tcl_platform(os)
 set ::deken::platform(machine) $::tcl_platform(machine)
@@ -818,13 +818,13 @@ proc ::deken::utilities::get_filenameextension {filename} {
 
 proc ::deken::preferences::create_sources_entry {toplevel} {
     # 3 panels
-    # - [ ] primary server
-    # - [ ] secondary servers (list editable)
-    #       (all servers are searched if checked)
-    # - [ ] ephemeral servers (list multiselectable)
-    #       (if checked, and servers are selected, only these are searched)
-    #       (if checked, and no servers are selected, all are searched)
-    set frame [::deken::preferences::newwidget ${toplevel}.servers]
+    # - [ ] primary url
+    # - [ ] secondary urls (list editable)
+    #       (all urls are searched if checked)
+    # - [ ] ephemeral urls (list multiselectable)
+    #       (if checked, and urls are selected, only these are searched)
+    #       (if checked, and no urls are selected, all are searched)
+    set frame [::deken::preferences::newwidget ${toplevel}.urls]
     set frame_1 [::deken::preferences::newwidget ${frame}.primary]
     set frame_2 [::deken::preferences::newwidget ${frame}.secondary]
     set frame_x [::deken::preferences::newwidget ${frame}.ephemeral]
@@ -832,8 +832,8 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     labelframe $frame -text [_ "Servers" ] -padx 5 -pady 5 -borderwidth 1
 
     labelframe $frame_1 -borderwidth 0
-    checkbutton $frame_1.use -text "${::deken::search::dekenserver::server_main}" \
-        -variable ::deken::preferences::use_server_primary
+    checkbutton $frame_1.use -text "${::deken::search::dekenserver::url_main}" \
+        -variable ::deken::preferences::use_url_primary
     $frame_1 configure -labelwidget $frame_1.use
     pack $frame_1 -anchor "w" -fill both -expand 1 -side top
     pack $frame_1.use -anchor "w" -side left
@@ -841,7 +841,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
 
     labelframe $frame_2 -borderwidth 0
     checkbutton $frame_2.use \
-        -variable ::deken::preferences::use_server_secondary
+        -variable ::deken::preferences::use_url_secondary
     button $frame_2.open -text [_ "Additional Servers" ]
     $frame_2 configure -labelwidget $frame_2.use
     pack $frame_2 -anchor "w" -fill both -expand 1 -side left
@@ -850,7 +850,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
 
     labelframe $frame_x -borderwidth 0
     checkbutton $frame_x.use  \
-        -variable ::deken::preferences::use_server_ephemeral
+        -variable ::deken::preferences::use_url_ephemeral
     button $frame_x.open -text [_ "Ephemeral Servers" ]
     $frame_x configure -labelwidget $frame_x.use
     pack $frame_x -anchor "w" -fill both -expand 1 -side right
@@ -1066,8 +1066,8 @@ proc ::deken::preferences::create {winid} {
     set ::deken::preferences::add_to_path $::deken::add_to_path
     set ::deken::preferences::add_to_path_temp $::deken::preferences::add_to_path
 
-    set ::deken::preferences::servers_secondary ${::deken::search::dekenserver::servers_secondary}
-    set ::deken::preferences::servers_ephemeral ${::deken::search::dekenserver::servers_ephemeral}
+    set ::deken::preferences::urls_secondary ${::deken::search::dekenserver::urls_secondary}
+    set ::deken::preferences::urls_ephemeral ${::deken::search::dekenserver::urls_ephemeral}
 
     # this dialog allows us to select:
     #  - which directory to extract to
@@ -1160,7 +1160,7 @@ proc ::deken::preferences::create {winid} {
         -variable ::deken::preferences::hideoldversions -justify "left"
     pack $winid.platform.only_newest -anchor "w"
 
-    # servers
+    # urls
     set sourceframe [::deken::preferences::create_sources_entry $winid]
     pack $sourceframe -anchor "w" -fill both -expand 1
 
@@ -1230,9 +1230,9 @@ proc ::deken::preferences::apply {winid} {
         "${::deken::preferences::keep_package}" \
         "${::deken::preferences::verify_sha256}"
 
-    ::deken::set_servers \
-        ${::deken::preferences::servers_secondary} \
-        ${::deken::preferences::servers_ephemeral}
+    ::deken::set_urls \
+        ${::deken::preferences::urls_secondary} \
+        ${::deken::preferences::urls_ephemeral}
 
 }
 proc ::deken::preferences::cancel {winid} {
@@ -1265,9 +1265,9 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::keep_package [::deken::utilities::bool $keep]
         set ::deken::verify_sha256 [::deken::utilities::bool $verify256]
     }
-    proc ::deken::set_servers {secondary ephemeral} {
-        set ::deken::search::dekenserver::servers_secondary $secondary
-        set ::deken::search::dekenserver::servers_ephemeral $ephemeral
+    proc ::deken::set_urls {secondary ephemeral} {
+        set ::deken::search::dekenserver::urls_secondary $secondary
+        set ::deken::search::dekenserver::urls_ephemeral $ephemeral
     }
 } else {
     catch {set ::deken::installpath [lindex ${::deken::installpath} 0]}
@@ -1318,13 +1318,13 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write deken_verify_sha256 "$::deken::verify_sha256"
     }
 
-    set ::deken::search::dekenserver::servers_secondary [::pd_guiprefs::read deken_search_servers_secondary true]
-    set ::deken::search::dekenserver::servers_ephemeral [::pd_guiprefs::read deken_search_servers_ephemeral true]
-    proc ::deken::set_servers {secondary ephemeral} {
-        set ::deken::search::dekenserver::servers_secondary $secondary
-        set ::deken::search::dekenserver::servers_ephemeral $ephemeral
-        ::pd_guiprefs::write deken_search_servers_secondary $secondary true
-        ::pd_guiprefs::write deken_search_servers_ephemeral $ephemeral true
+    set ::deken::search::dekenserver::urls_secondary [::pd_guiprefs::read deken_search_urls_secondary true]
+    set ::deken::search::dekenserver::urls_ephemeral [::pd_guiprefs::read deken_search_urls_ephemeral true]
+    proc ::deken::set_urls {secondary ephemeral} {
+        set ::deken::search::dekenserver::urls_secondary $secondary
+        set ::deken::search::dekenserver::urls_ephemeral $ephemeral
+        ::pd_guiprefs::write deken_search_urls_secondary $secondary true
+        ::pd_guiprefs::write deken_search_urls_ephemeral $ephemeral true
     }
 
 }
@@ -2930,58 +2930,59 @@ proc ::deken::register {fun} {
 ## ####################################################################
 ## searching puredata.info
 namespace eval ::deken::search::dekenserver {
-    variable server_main
+    variable url_main
 }
 
-# the main deken-server
-set ::deken::search::dekenserver::server_main "http://deken.puredata.info/search"
+# the main deken-url
+set ::deken::search::dekenserver::url_main "http://deken.puredata.info/search"
 if { ! [catch {package present tls} stdout] } {
-    set ::deken::search::dekenserver::server_main "https://deken.puredata.info/search"
+    set ::deken::search::dekenserver::url_main "https://deken.puredata.info/search"
 }
-catch {set ::deken::search::dekenserver::server_main $::env(DEKENSERVER)}
+catch {set ::deken::search::dekenserver::url_main $::env(DEKENSERVER)}
+catch {set ::deken::search::dekenserver::url_main $::env(DEKEN_SEARCH_URL)}
 
-# additional (fixed) deken-servers
-if { ! [info exists ::deken::search::dekenserver::servers_secondary] } {
-    set ::deken::search::dekenserver::servers_secondary {}
+# additional (fixed) deken-urls
+if { ! [info exists ::deken::search::dekenserver::urls_secondary] } {
+    set ::deken::search::dekenserver::urls_secondary {}
 }
 
-# additional (ephemeral) deken-servers
+# additional (ephemeral) deken-urls
 ## those we expect
-if { ! [info exists ::deken::search::dekenserver::servers_ephemeral] } {
-    set ::deken::search::dekenserver::servers_ephemeral {}
+if { ! [info exists ::deken::search::dekenserver::urls_ephemeral] } {
+    set ::deken::search::dekenserver::urls_ephemeral {}
 }
 ## those that are there
-array set ::deken::search::dekenserver::servers_tmp {}
+array set ::deken::search::dekenserver::urls_tmp {}
 
 
 proc ::deken::search::dekenserver::search {term} {
-    set tmpservers {}
-    foreach {k v} [array get ::deken::search::dekenserver::servers_tmp] {
-        lappend tmpservers $v
+    set tmpurls {}
+    foreach {k v} [array get ::deken::search::dekenserver::urls_tmp] {
+        lappend tmpurls $v
     }
-    set servers [concat \
-                 [list ${::deken::search::dekenserver::server_main}] \
-                 ${::deken::search::dekenserver::servers_secondary} \
-                 [::deken::utilities::lists_intersect ${::deken::search::dekenserver::servers_ephemeral} $tmpservers] \
+    set urls [concat \
+                 [list ${::deken::search::dekenserver::url_main}] \
+                 ${::deken::search::dekenserver::urls_secondary} \
+                 [::deken::utilities::lists_intersect ${::deken::search::dekenserver::urls_ephemeral} $tmpurls] \
                 ]
-    # search all the servers
+    # search all the urls
     array set results {}
-    set servercount 0
-    foreach s $servers {
-        # skip empty servers
+    set urlcount 0
+    foreach s $urls {
+        # skip empty urls
         if { $s eq {} } { continue }
         ::deken::post [format [_ "Searching on %s..."] $s ] debug
         set resultcount 0
-        # get the results from the given server, and add them to our results set
+        # get the results from the given url, and add them to our results set
         foreach r [::deken::search::dekenserver::search_server $term $s] {
             set results($r) {}
             incr resultcount
         }
         ::deken::post [format [_ "Searching on %1\$s returned %2\$d results"] $s $resultcount] debug
-        incr servercount
+        incr urlcount
     }
 
-    if { $servercount == 0 } {
+    if { $urlcount == 0 } {
         ::deken::post [format [_ "No usable servers for searching found..."] $s ] debug
     }
     set splitCont [array names results]
@@ -3080,7 +3081,7 @@ proc ::deken::search::dekenserver::search {term} {
     return $sortedresult
 }
 
-proc ::deken::search::dekenserver::search_server {term dekenserver} {
+proc ::deken::search::dekenserver::search_server {term dekenurl} {
     set queryterm {}
     if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
         # special handling of searching for all translations (so we ONLY get translations)
@@ -3099,7 +3100,7 @@ proc ::deken::search::dekenserver::search_server {term dekenserver} {
 
     # fetch search result
     if { [catch {
-        set token [::http::geturl "${dekenserver}?${queryterm}"]
+        set token [::http::geturl "${dekenurl}?${queryterm}"]
     } stdout ] } {
         set msg [format [_ "Searching for '%s' failed!" ] $term ]
         tk_messageBox \
@@ -3197,7 +3198,7 @@ proc ::deken::zeroconf::add {id service hostname port txtrecords} {
     foreach {key value} $txtrecords {
         if { $key eq "path" } {
             set url "http://${hostname}:${port}${value}"
-            set ::deken::search::dekenserver::servers_tmp($id) $url
+            set ::deken::search::dekenserver::urls_tmp($id) $url
             break
         }
     }
@@ -3207,7 +3208,7 @@ proc ::deken::zeroconf::browser {service action name domain} {
     if { $action eq "add" } {
         ::servus::resolve $name $service $domain [list ::deken::zeroconf::add ${id}]
     } else {
-        catch {unset ::deken::search::dekenserver::servers_tmp($id)}
+        catch {unset ::deken::search::dekenserver::urls_tmp($id)}
     }
 }
 proc ::deken::zeroconf::browse {service} {
