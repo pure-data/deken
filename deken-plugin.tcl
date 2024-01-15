@@ -832,7 +832,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     labelframe $frame -text [_ "Servers" ] -padx 5 -pady 5 -borderwidth 1
 
     labelframe $frame_1 -borderwidth 0
-    checkbutton $frame_1.use -text "${::deken::search::dekenserver::url_main}" \
+    checkbutton $frame_1.use -text "${::deken::search::dekenserver::url_primary}" \
         -variable ::deken::preferences::use_url_primary
     $frame_1 configure -labelwidget $frame_1.use
     pack $frame_1 -anchor "w" -fill both -expand 1 -side top
@@ -2930,16 +2930,16 @@ proc ::deken::register {fun} {
 ## ####################################################################
 ## searching puredata.info
 namespace eval ::deken::search::dekenserver {
-    variable url_main
+    variable url_primary
 }
 
 # the main deken-url
-set ::deken::search::dekenserver::url_main "http://deken.puredata.info/search"
+set ::deken::search::dekenserver::url_primary "http://deken.puredata.info/search"
 if { ! [catch {package present tls} stdout] } {
-    set ::deken::search::dekenserver::url_main "https://deken.puredata.info/search"
+    set ::deken::search::dekenserver::url_primary "https://deken.puredata.info/search"
 }
-catch {set ::deken::search::dekenserver::url_main $::env(DEKENSERVER)}
-catch {set ::deken::search::dekenserver::url_main $::env(DEKEN_SEARCH_URL)}
+catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
+catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
 
 # additional (fixed) deken-urls
 if { ! [info exists ::deken::search::dekenserver::urls_secondary] } {
@@ -2960,11 +2960,12 @@ proc ::deken::search::dekenserver::search {term} {
     foreach {k v} [array get ::deken::search::dekenserver::urls_tmp] {
         lappend tmpurls $v
     }
+    # all the search URLs
     set urls [concat \
-                 [list ${::deken::search::dekenserver::url_main}] \
+                 [list ${::deken::search::dekenserver::url_primary}] \
                  ${::deken::search::dekenserver::urls_secondary} \
                  [::deken::utilities::lists_intersect ${::deken::search::dekenserver::urls_ephemeral} $tmpurls] \
-                ]
+                 ]
     # search all the urls
     array set results {}
     set urlcount 0
