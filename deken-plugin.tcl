@@ -2966,6 +2966,9 @@ proc ::deken::search::dekenserver::search {term} {
                  ${::deken::search::dekenserver::urls_secondary} \
                  [::deken::utilities::lists_intersect ${::deken::search::dekenserver::urls_ephemeral} $tmpurls] \
                  ]
+    # remove duplicate entries
+    set urls [::deken::utilities::list_unique $urls]
+
     # search all the urls
     array set results {}
     set urlcount 0
