@@ -44,7 +44,7 @@ variables:
     - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller~=5.0
     - for d in ~/Library/Python/*/bin; do test -d "${d}" && PATH=${PATH}:${d}; done || true
     - echo $PATH
-    - hy developer/deken.hy systemfix --all
+    - ${PYTHON} -m hy developer/deken.hy systemfix --all
     - (cd developer; pyinstaller deken.spec)
 
 .deken-test:
@@ -139,12 +139,18 @@ windows:
     - windows
   variables:
     IEMCI_CONFIGURATIONS: python3
-    PYTHON: /c/Python38/python
+    PYTHON: python
   stage: build
   before_script:
-    - ${PYTHON} --version && true
+    - ${PYTHON} --version || true
+    - which $PYTHON || true
+    - which python || true
+    - which python3 || true
   <<: *build_script
   after_script:
+    - echo $(dirname $(which pip)) || true
+    - ls -l $(dirname $(which pip)) || true
+    - ls -l /c/Python312/Scripts/ || true
     - cp developer/dist/deken.exe .
   artifacts:
     name: deken
