@@ -2783,28 +2783,29 @@ proc ::deken::register {fun} {
 namespace eval ::deken::search::dekenserver { }
 
 proc ::deken::search::dekenserver::search {term} {
-    set dekenserver "${::deken::protocol}://deken.puredata.info/search"
-    catch {set dekenserver $::env(DEKENSERVER)} stdout
-    set servers [list $dekenserver]
+    set dekenurl "${::deken::protocol}://deken.puredata.info/search"
+    catch {set dekenurl $::env(DEKENSERVER)} stdout
+    catch {set dekenurl $::env(DEKEN_SEARCH_URL)} stdout
+    set urls [list $dekenurl]
 
-    # search all the servers
+    # search all the urls
     array set results {}
-    set servercount 0
-    foreach s $servers {
-        # skip empty servers
+    set urlcount 0
+    foreach s $urls {
+        # skip empty urls
         if { $s eq {} } { continue }
         ::deken::post [format [_ "Searching on %s..."] $s ] debug
         set resultcount 0
-        # get the results from the given server, and add them to our results set
+        # get the results from the given url, and add them to our results set
         foreach r [::deken::search::dekenserver::search_server $term $s] {
             set results($r) {}
             incr resultcount
         }
         ::deken::post [format [_ "Searching on %1\$s returned %2\$d results"] $s $resultcount] debug
-        incr servercount
+        incr urlcount
     }
 
-    if { $servercount == 0 } {
+    if { $urlcount == 0 } {
         ::deken::post [format [_ "No usable servers for searching found..."] $s ] debug
     }
     set splitCont [array names results]
@@ -2903,7 +2904,7 @@ proc ::deken::search::dekenserver::search {term} {
     return $sortedresult
 }
 
-proc ::deken::search::dekenserver::search_server {term dekenserver} {
+proc ::deken::search::dekenserver::search_server {term dekenurl} {
     set queryterm {}
     if { ${::deken::searchtype} eq "translations" && ${term} eq "" } {
         # special handling of searching for all translations (so we ONLY get translations)
@@ -2922,7 +2923,7 @@ proc ::deken::search::dekenserver::search_server {term dekenserver} {
 
     # fetch search result
     if { [catch {
-        set token [::http::geturl "${dekenserver}?${queryterm}"]
+        set token [::http::geturl "${dekenurl}?${queryterm}"]
     } stdout ] } {
         set msg [format [_ "Searching for '%s' failed!" ] $term ]
         tk_messageBox \
