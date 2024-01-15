@@ -525,7 +525,7 @@ since a single binary might hold multiple architectures,
 this returns a list of (OS, CPU, floatsize) tuples
 """
 ;; new style extensions '\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9_]+)-(?P<floatsize>(32|64|0))\.(so|dll)' are a *strong* hint - complain otherwise
-;; the legacy extenions ('\.pd_(?P<os>[a-z]+)', '\.(?P<os>[a-z])_(?P<cpu>[a-z0-9_]+)' can only be single-precision (or no-precision) - complain otherwise
+;; the legacy extensions ('\.pd_(?P<os>[a-z]+)', '\.(?P<os>[a-z])_(?P<cpu>[a-z0-9_]+)' can only be single-precision (or no-precision) - complain otherwise
 ;; the generic extensions '.so' and '.dll' are more tricky, as they might be helper-libraries
 ;;
 ;; we *might* want to complain if the filename says 'fat' on non-darwin
@@ -1534,12 +1534,14 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
               :if line
               (parse-tsv #* (.split line "\t"))))
       (defn parse-json-results [data]
-        (setv d {"query" "bla bla" "results" {"foo" "bar" "libraries"
-              {"zexy" {"1.2.3" {"library" "zexy" "author" "zmoelnig"}
-              "2.4.5" {"library" "zexy" "author" "zmoelng1"}
-              "2.4.6" {"library" "ouch" "author" "iembot"}}
-              "iemgui" {"1.42" {"library" "iemgui" "author" "musil"}}}}})
-
+        ;; (setv d {"query" "bla bla"
+        ;;          "results" {"foo" "bar"
+        ;;                     "libraries" {
+        ;;                        "zexy" {"1.2.3" {"library" "zexy" "author" "zmoelnig"}
+        ;;                                "2.4.5" {"library" "zexy" "author" "zmoelng1"}
+        ;;                                "2.4.6" {"library" "ouch" "author" "iembot"}}
+        ;;                        "iemgui" {"1.42" {"library" "iemgui" "author" "tmusil"}}}}})
+        ;;
         ;; {"results": {"libraries": {<libname>: {<version>: [LIBRARY,...]}}}}
         ;; with LIBRARY like this
         ;;  {
@@ -1591,8 +1593,8 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
                 #("author" "uploader")
                 #("timestamp" "timestamp")
                 ])
-          (setv result (dfor #(web lokal) jsonmap
-                             lokal (get jlib web)))
+          (setv result (dfor #(web locale) jsonmap
+                             locale (get jlib web)))
           (setv (get result "architectures")
                 (lfor a (try-get jlib "archs" [])
                       :if (bool a)

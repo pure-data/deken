@@ -1101,7 +1101,7 @@ proc ::deken::preferences::apply {winid} {
         "${::deken::preferences::verify_sha256}"
 }
 proc ::deken::preferences::cancel {winid} {
-    ## FIXXME properly close the window/frame (for re-use in a tabbed pane)
+    ## FIXXME properly close the window/frame (for reuse in a tabbed pane)
     destroy .deken_preferences
 }
 proc ::deken::preferences::ok {winid} {
@@ -1301,7 +1301,7 @@ proc ::deken::verify_sha256_gui {url pkgfile} {
     ## - -2 user requested ignore via dialog
     ## - two digits: unable to verify
     ## - -10 reference could not be read
-    ## - -20 an exception occured while verifying
+    ## - -20 an exception occurred while verifying
     ## - three digits:
     ## - -100 no sha256 verifier implemented
     set err_msg [format [_ "SHA256 verification of '%s' failed!" ] $pkgfile ]
@@ -2707,7 +2707,7 @@ proc ::deken::initialize {} {
     set ::deken::installpath [::deken::find_installpath]
 
 
-    # create an entry for our search in the "help" menu (or re-use an existing one)
+    # create an entry for our search in the "help" menu (or reuse an existing one)
     set mymenu .menubar.help
     if { [catch {
         $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui $::deken::winid}
