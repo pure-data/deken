@@ -2566,6 +2566,9 @@ proc ::deken::install_link {URL filename} {
         return
     }
     if { ! [file exists $installdir] } {
+        catch { file mkdir $installdir }
+    }
+    if { ! [file isdirectory $installdir] } {
         ::deken::post [format [_ "Unable to install to '%s'" ]  $installdir ] error
         set msg [_ "Directory does not exist!" ]
         ::deken::post "\t$msg" error
