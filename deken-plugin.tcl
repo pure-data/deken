@@ -1374,8 +1374,31 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     }
     set installdir [::deken::ensure_installdir ${installdir} ${filename}]
     set parsedname [::deken::utilities::parse_filename $filename]
-    set extname [lindex $parsedname 0]
+    foreach {extname version archs} [ ::deken::utilities::parse_filename $filename ] {break}
     set extpath [file join $installdir $extname]
+    set match [::deken::architecture_match "$archs" ]
+    if { ! ${match} } {
+        set msg [_ "Installing incompatible architecture of '%s'." $extname ]
+        ::deken::post "${msg}" warn
+        if { "$::deken::remove_on_install"  && [file exists ${extpath}] } {
+            set result [tk_messageBox \
+                            -title [_ "Replacing library with incompatible architecture!" ] \
+                            -message [_ "Do you want to replace the library '%1\$s' in '%2\$s' with a version that is incompatible with your computer?" $extname $installdir] \
+                            -icon error -type yesnocancel \
+                            -parent $::deken::winid]
+            switch -- "${result}" {
+                cancel {return}
+                yes { }
+                no {
+                    set installdir [::deken::do_prompt_installdir $installdir]
+                    if { "$installdir" == "" } {
+                        return
+                    }
+                    set extpath [file join $installdir $extname]
+                }
+            }
+        }
+    }
 
 
     set deldir ""
