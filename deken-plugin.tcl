@@ -2569,6 +2569,16 @@ proc ::deken::install_link {URL filename} {
         catch { file mkdir $installdir }
     }
     if { ! [file isdirectory $installdir] } {
+        set msg [_ "Directory does not exist!" ]
+        ::deken::post [format [_ "Unable to install to '%s'" ]  $installdir ] error
+        ::deken::post "\t$msg" error
+        set installdir [::deken::do_prompt_installdir $installdir]
+        if { "$installdir" == "" } {
+            #::deken::update_installbutton $winid
+            return
+        }
+    }
+    if { ! [file isdirectory $installdir] } {
         ::deken::post [format [_ "Unable to install to '%s'" ]  $installdir ] error
         set msg [_ "Directory does not exist!" ]
         ::deken::post "\t$msg" error
