@@ -1077,6 +1077,7 @@ proc ::deken::preferences::show {{winid .deken_preferences}} {
         frame $winid.frame
         pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
 
+        bind $winid <Escape> [list ::deken::preferences::cancel $winid]
         ::deken::preferences::create $winid.frame
     }
 }
@@ -1513,8 +1514,8 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
 ##### GUI ########
 proc ::deken::bind_globalshortcuts {toplevel} {
-    set closescript "destroy $toplevel"
-    bind $toplevel <$::modifier-Key-w> $closescript
+    bind $toplevel <$::modifier-Key-w> [list destroy $toplevel]
+    bind $toplevel <Escape> [list destroy $toplevel]
 }
 
 proc ::deken::status {{msg ""} {timeout 5000}} {
