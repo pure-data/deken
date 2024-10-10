@@ -357,6 +357,25 @@ namespace eval ::deken::utilities::unzipper:: {
     # they are tried in in alphabetical(!) order
 
 
+    # zipfs from Tcl>=8.7 (it seems this only works with Tcl>=9.0)
+    catch {
+        zipfs root
+        proc builtin_zipfs {zipfile path} {
+            if { [catch {
+                set base [file join [zipfs root] deken]
+                zipfs mount $zipfile $base
+                foreach x [glob [file join $base *]] {
+                    file copy -force -- $x $path
+                }
+                zipfs unmount $base
+            } stdout ] } {
+                ::deken::utilities::debug "::zipfs: $stdout"
+                return 0
+            }
+            return 1
+        }
+    }
+
     # ::zipfile::decode from tcllib
     catch {
         package require zipfile::decode
