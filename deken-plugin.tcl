@@ -1146,7 +1146,7 @@ proc ::deken::preferences::apply {winid} {
 }
 proc ::deken::preferences::cancel {winid} {
     ## FIXXME properly close the window/frame (for reuse in a tabbed pane)
-    destroy .deken_preferences
+    destroy $winid
 }
 proc ::deken::preferences::ok {winid} {
     ::deken::preferences::apply $winid
