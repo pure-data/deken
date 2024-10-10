@@ -1120,7 +1120,7 @@ proc ::deken::preferences::show {{winid .deken_preferences}} {
         frame $winid.frame
         pack $winid.frame -side top -padx 6 -pady 3 -fill both -expand true
 
-        bind $winid <Escape> [list ::deken::preferences::cancel $winid]
+        bind $winid <Escape> {after idle {::deken::preferences::cancel %W}}
         ::deken::preferences::create $winid.frame
     }
 }
@@ -1557,8 +1557,11 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
 ##### GUI ########
 proc ::deken::bind_globalshortcuts {toplevel} {
-    bind $toplevel <$::modifier-Key-w> [list destroy $toplevel]
-    bind $toplevel <Escape> [list destroy $toplevel]
+    # this should probably only be called if toplevel is indeed a toplevel
+    if { $toplevel eq [winfo toplevel $toplevel] } {
+        bind $toplevel <$::modifier-Key-w> [list destroy $toplevel]
+        bind $toplevel <Escape> [list after idle [list destroy $toplevel]]
+    }
 }
 
 proc ::deken::status {{msg ""} {timeout 5000}} {
