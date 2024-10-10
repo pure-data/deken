@@ -352,75 +352,99 @@ proc ::deken::utilities::dnd_drop_files {files} {
 }
 }
 
-if { [catch {package require zipfile::decode} ] } {
-proc ::deken::utilities::unzipper {zipfile {path .}} {
-    ## this is w32 only
-    if {$::tcl_platform(platform) ne "windows"} { return 0 }
+namespace eval ::deken::utilities::unzipper:: {
+    # we put a number of unzip methods in this namespace.
+    # they are tried in in alphabetical(!) order
 
-    ## create script-file
-    set vbsscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".vbs" ]
-    set script {
-On Error Resume Next
-Set fso = CreateObject("Scripting.FileSystemObject")
 
-'The location of the zip file.
-ZipFile = fso.GetAbsolutePathName(WScript.Arguments.Item(0))
-'The folder the contents should be extracted to.
-ExtractTo = fso.GetAbsolutePathName(WScript.Arguments.Item(1))
-
-'If the extraction location does not exist create it.
-If NOT fso.FolderExists(ExtractTo) Then
-   fso.CreateFolder(ExtractTo)
-End If
-
-'Extract the contents of the zip file.
-set objShell = CreateObject("Shell.Application")
-set FilesInZip=objShell.NameSpace(ZipFile).items
-objShell.NameSpace(ExtractTo).CopyHere(FilesInZip)
-'In case of an error, exit
-If Err.Number <> 0 Then
-  Err.Clear
-  WScript.Quit 1
-End If
-
-Set fso = Nothing
-Set objShell = Nothing
-    }
-    if {![catch {set fileId [open $vbsscript "w"]}]} {
-        puts $fileId $script
-        close $fileId
+    # ::zipfile::decode from tcllib
+    catch {
+        package require zipfile::decode
+        proc tcllib_zipfile {zipfile path} {
+            if { [catch {
+                ::zipfile::decode::unzipfile "${zipfile}" "${path}"
+            } stdout ] } {
+                ::deken::utilities::debug "::zipfile::decode: $stdout"
+                return 0
+            }
+            return 1
+        }
     }
 
-    if {![file exists $vbsscript]} {
-        ## still no script, give up
-        return 0
+    if {$::tcl_platform(platform) eq "windows"} {
+        ## VisualBasic is w32 only
+        proc windows_visualbasic {zipfile path} {
+            if {$::tcl_platform(platform) ne "windows"} { return 0 }
+
+            ## create script-file
+            set vbsscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".vbs" ]
+            set script {
+                On Error Resume Next
+                Set fso = CreateObject("Scripting.FileSystemObject")
+
+                'The location of the zip file.
+                ZipFile = fso.GetAbsolutePathName(WScript.Arguments.Item(0))
+                'The folder the contents should be extracted to.
+                ExtractTo = fso.GetAbsolutePathName(WScript.Arguments.Item(1))
+
+                'If the extraction location does not exist create it.
+                If NOT fso.FolderExists(ExtractTo) Then
+                fso.CreateFolder(ExtractTo)
+                End If
+
+                'Extract the contents of the zip file.
+                set objShell = CreateObject("Shell.Application")
+                set FilesInZip=objShell.NameSpace(ZipFile).items
+                objShell.NameSpace(ExtractTo).CopyHere(FilesInZip)
+                'In case of an error, exit
+                If Err.Number <> 0 Then
+                Err.Clear
+                WScript.Quit 1
+                End If
+
+                Set fso = Nothing
+                Set objShell = Nothing
+            }
+            if {![catch {set fileId [open $vbsscript "w"]}]} {
+                puts $fileId $script
+                close $fileId
+            }
+
+            if {![file exists $vbsscript]} {
+                ## still no script, give up
+                return 0
+            }
+            ## try to call the script
+            ## (and windows requires the file to have a .zip extension!!!)
+            if { [ catch {
+                set zipfilezip ${zipfile}.zip
+                file rename ${zipfile} ${zipfilezip}
+                exec cscript "${vbsscript}" "${zipfilezip}" .
+                file rename ${zipfilezip} ${zipfile}
+            } stdout ] } {
+                catch { file rename ${zipfilezip} ${zipfile} }
+                catch { file delete "${vbsscript}" }
+                ::deken::utilities::debug "VBS-unzip($vbsscript): $stdout"
+                return 0
+            }
+            catch { file delete "${vbsscript}" }
+            return 1
+        }
     }
-    ## try to call the script
-    ## (and windows requires the file to have a .zip extension!!!)
-    if { [ catch {
-	set zipfilezip ${zipfile}.zip
-	file rename ${zipfile} ${zipfilezip}
-	exec cscript "${vbsscript}" "${zipfilezip}" .
-	file rename ${zipfilezip} ${zipfile}
-    } stdout ] } {
-        catch { file rename ${zipfilezip} ${zipfile} }
-        catch { file delete "${vbsscript}" }
-        ::deken::utilities::debug "VBS-unzip($vbsscript): $stdout"
-        return 0
-    }
-    catch { file delete "${vbsscript}" }
-    return 1
 }
-} else { # successfully imported zipfile::decode
+
 proc ::deken::utilities::unzipper {zipfile {path .}} {
-    if { [catch {
-        ::zipfile::decode::unzipfile "${zipfile}" "${path}"
-    } stdout ] } {
-        ::deken::utilities::debug "unzip: $stdout"
-        return 0
+    set unzippers [lsort -dictionary [info procs ::deken::utilities::unzipper::*]]
+    foreach unzip $unzippers {
+        set result 0
+        catch {
+            set result [ $unzip $zipfile $path ]
+        }
+        if {$result ne 0} {
+            return 1
+        }
     }
-    return 1
-}
+    return 0
 }
 
 proc ::deken::utilities::extract {installdir filename fullpkgfile {keep_package 1}} {
