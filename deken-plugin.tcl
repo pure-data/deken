@@ -363,7 +363,14 @@ namespace eval ::deken::utilities::unzipper:: {
         proc builtin_zipfs {zipfile path} {
             if { [catch {
                 set base [file join [zipfs root] deken]
-                zipfs mount $zipfile $base
+                if { [catch  {
+                    package require Tcl 8
+                    # yikes! Tcl8.7 uses 'zipfs mount <mountpoint> <zipfile>'
+                    zipfs mount $base $zipfile
+                } ] } {
+                    # and Tcl9 uses 'zipfs mount <zipfile> <mountpoint>'
+                    zipfs mount $zipfile $base
+                }
                 foreach x [glob [file join $base *]] {
                     file copy -force -- $x $path
                 }
