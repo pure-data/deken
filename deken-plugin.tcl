@@ -1094,7 +1094,7 @@ proc ::deken::preferences::create {winid} {
     pack $winid.nb.buttonframe -side right -fill "x" -padx 2m
 
     button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
-        -command "::deken::preferences::cancel $winid"
+        -command [list ::deken::preferences::cancel [winfo toplevel $winid]]
     pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill "x" -padx 15 -ipadx 10
     if {$::windowingsystem ne "aqua"} {
         button $winid.nb.buttonframe.apply -text [_ "Apply"] \
