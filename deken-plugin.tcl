@@ -2771,6 +2771,7 @@ proc ::deken::architecture_match {archs} {
     # strip the little-endian indicator from arm-archs, it's the default
     regexp -- {(armv[0-9]*)[lL]} $MACHINE _ MACHINE
     set MACHINE [string tolower $MACHINE]
+    set OS [string tolower $OS]
 
     # check each architecture in our list against the current one
     foreach arch $archs {
@@ -2779,6 +2780,7 @@ proc ::deken::architecture_match {archs} {
             # TODO: leave any big-endian indicator in place
             regexp -- {(armv[0-9]*)[^0-9]*} $machine _ machine
             set machine [string tolower $machine]
+            set os [string tolower $os]
             if { ("${os}" eq "${OS}") && (("${floatsize}" eq "${FLOATSIZE}") || ("${floatsize}" eq "0"))} {
                 ## so OS and floatsize match...
                 ## check whether the CPU matches as well
