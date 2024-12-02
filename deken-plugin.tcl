@@ -595,7 +595,9 @@ powershell -Command " & {Get-FileHash -Algorithm SHA256 -LiteralPath \"%1\"  | S
 }
 proc ::deken::utilities::sha256_msw {filename} {
     set hash {}
-    catch { set hash [join [exec certUtil -hashfile $filename SHA256 | findstr /v "hash"] ""] }
+    catch {
+        regexp {([a-fA-F0-9]{64})} [exec certUtil -hashfile $filename SHA256] hash
+    }
     return $hash
 }
 if { [catch {package require sha256} ] } { proc ::deken::utilities::sha256_tcllib {filename} {} } else {
