@@ -397,6 +397,16 @@ namespace eval ::deken::utilities::unzipper:: {
         }
     }
 
+    proc untar {zipfile path} {
+        if { [catch {
+            exec tar -xf "${zipfile}" -C "${path}"
+        } stdout ] } {
+            ::deken::utilities::debug "unzipper::tar $stdout"
+            return 0
+        }
+        return 1
+    }
+
     proc unzip {zipfile path} {
         set result 0
         if { [catch {
