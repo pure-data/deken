@@ -1459,48 +1459,52 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     set parsedname [::deken::utilities::parse_filename ${filename}]
     foreach {extname version archs} ${parsedname} {break}
     set showextname ${extname}
-
+    set deldir ""
     set extpath [file join ${installdir} ${extname}]
-    set match [::deken::architecture_match "${archs}" ]
-    if { ! ${match} } {
-        set msg [_ "Installing incompatible architecture of '%s'." ${showextname} ]
-        ::deken::post "${msg}" warn
-        if { "${::deken::remove_on_install}"  && [file exists ${extpath}] } {
-            set result [tk_messageBox \
-                            -title [_ "Replacing library with incompatible architecture!" ] \
-                            -message [_ "Do you want to replace the library '%1\$s' in '%2\$s' with a version that is incompatible with your computer?" ${showextname} ${installdir}] \
-                            -icon error -type yesnocancel \
-                            -parent ${::deken::winid}]
-            switch -- "${result}" {
-                cancel {return}
-                yes { }
-                no {
-                    set installdir [::deken::do_prompt_installdir ${installdir}]
-                    if { "${installdir}" == "" } {
-                        return
+
+    if { $extname eq {} } {
+        # cannot remove previous installation, as we couldn't guess the library name
+        set showextname ${filename}
+    } else {
+        set match [::deken::architecture_match "${archs}" ]
+        if { ! ${match} } {
+            set msg [_ "Installing incompatible architecture of '%s'." ${showextname} ]
+            ::deken::post "${msg}" warn
+            if { "${::deken::remove_on_install}"  && [file exists ${extpath}] } {
+                set result [tk_messageBox \
+                                -title [_ "Replacing library with incompatible architecture!" ] \
+                                -message [_ "Do you want to replace the library '%1\$s' in '%2\$s' with a version that is incompatible with your computer?" ${showextname} ${installdir}] \
+                                -icon error -type yesnocancel \
+                                -parent ${::deken::winid}]
+                switch -- "${result}" {
+                    cancel {return}
+                    yes { }
+                    no {
+                        set installdir [::deken::do_prompt_installdir ${installdir}]
+                        if { "${installdir}" == "" } {
+                            return
+                        }
+                        set extpath [file join ${installdir} ${extname}]
                     }
-                    set extpath [file join ${installdir} ${extname}]
                 }
             }
         }
-    }
 
+        if { "${::deken::remove_on_install}" } {
+            ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] ${showextname} ] info
 
-    set deldir ""
-    if { "${::deken::remove_on_install}" } {
-        ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] ${showextname} ] info
-
-        if { ! [::deken::utilities::uninstall ${installdir} ${extname}] } {
-            # ouch uninstalling failed.
-            # on msw, lets assume this is because some of the files in the folder are locked.
-            # so move the folder out of the way and proceed
-            set deldir [::deken::utilities::get_tmpfilename ${installdir}]
-            if { [ catch {
-                file mkdir ${deldir}
-                file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
-            } ] } {
-                ::deken::utilities::debug [format [_ "Temporarily moving %1\$s into %2\$s failed." ] ${showextname} ${deldir} ]
-                set deldir ""
+            if { ! [::deken::utilities::uninstall ${installdir} ${extname}] } {
+                # ouch uninstalling failed.
+                # on msw, lets assume this is because some of the files in the folder are locked.
+                # so move the folder out of the way and proceed
+                set deldir [::deken::utilities::get_tmpfilename ${installdir}]
+                if { [ catch {
+                    file mkdir ${deldir}
+                    file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
+                } ] } {
+                    ::deken::utilities::debug [format [_ "Temporarily moving %1\$s into %2\$s failed." ] ${showextname} ${deldir} ]
+                    set deldir ""
+                }
             }
         }
     }
@@ -1547,6 +1551,13 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     }
 
     if { ${install_failed} } { return }
+
+    if { $extname eq {} } {
+        # failed to properly parse packagefile, so we do not know the libraryname
+        # therefore we cannot actually show the readme nor add the path
+        return
+    }
+
 
     if { "${::deken::show_readme}" } {
         foreach ext {pd html pdf txt} {
