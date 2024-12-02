@@ -807,7 +807,7 @@ proc ::deken::utilities::parse_filename {filename} {
                 if {![string first v ${o}]} {
                     set version [string range ${o} 1 end]
                 } else { # ignoring unknown option...
-                    return "unknown" "unknown" "unknown"
+                    return [list {} {} {}]
                 }
             }
             foreach {a _} [lreplace [split ${archstring} "()"] 0 0] { lappend archs ${a} }
