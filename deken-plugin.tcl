@@ -799,7 +799,7 @@ proc ::deken::utilities::parse_filename {filename} {
     if { [ string match "*.dek" $filename ] } {
         ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
         set archstring ""
-        if { ! [regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring] } {
+        if { ! [regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*).*\.dek$} $filename _ pkgname optionstring _ archstring] } {
             # oops, somewhat unparseable (e.g. a copy)
 
         } else {
