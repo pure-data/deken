@@ -400,8 +400,6 @@ namespace eval ::deken::utilities::unzipper:: {
     if {$::tcl_platform(platform) eq "windows"} {
         ## VisualBasic is w32 only
         proc windows_visualbasic {zipfile path} {
-            if {$::tcl_platform(platform) ne "windows"} { return 0 }
-
             ## create script-file
             set vbsscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".vbs" ]
             set script {
