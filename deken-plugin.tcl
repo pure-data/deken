@@ -1451,7 +1451,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     }
     set installdir [::deken::ensure_installdir ${installdir} ${filename}]
     set parsedname [::deken::utilities::parse_filename $filename]
-    foreach {extname version archs} [ ::deken::utilities::parse_filename $filename ] {break}
+    foreach {extname version archs} $parsedname {break}
     set extpath [file join $installdir $extname]
     set match [::deken::architecture_match "$archs" ]
     if { ! ${match} } {
