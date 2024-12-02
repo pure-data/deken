@@ -1104,27 +1104,6 @@ proc ::deken::preferences::create {winid} {
     checkbutton $winid.platform.only_newest -text [_ "Only show the newest version of a library\n(treats other versions like foreign architectures)"] \
         -variable ::deken::preferences::hideoldversions -justify "left"
     pack $winid.platform.only_newest -anchor "w"
-
-
-    # Use two frames for the buttons, since we want them both bottom and right
-    frame $winid.nb
-    pack $winid.nb -side bottom -fill "x" -pady 2m
-
-    # buttons
-    frame $winid.nb.buttonframe
-    pack $winid.nb.buttonframe -side right -fill "x" -padx 2m
-
-    button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
-        -command [list ::deken::preferences::cancel [winfo toplevel $winid]]
-    pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-    if {$::windowingsystem ne "aqua"} {
-        button $winid.nb.buttonframe.apply -text [_ "Apply"] \
-            -command "::deken::preferences::apply $winid"
-        pack $winid.nb.buttonframe.apply -side left -expand 1 -fill "x" -padx 15 -ipadx 10
-    }
-    button $winid.nb.buttonframe.ok -text [_ "OK"] \
-        -command "::deken::preferences::ok $winid"
-    pack $winid.nb.buttonframe.ok -side left -expand 1 -fill "x" -padx 15 -ipadx 10
 }
 
 proc ::deken::preferences::mapped {winid} {
@@ -1150,6 +1129,29 @@ proc ::deken::preferences::show {{winid .deken_preferences}} {
 
         bind $winid <Escape> {after idle {::deken::preferences::cancel %W}}
         ::deken::preferences::create $winid.frame
+
+
+        # the Apply/OK/Cancel buttons
+
+        # Use two frames for the buttons, since we want them both bottom and right
+        frame $winid.nb
+        pack $winid.nb -side bottom -fill "x" -pady 2m
+
+        # buttons
+        frame $winid.nb.buttonframe
+        pack $winid.nb.buttonframe -side right -fill "x" -padx 2m
+
+        button $winid.nb.buttonframe.cancel -text [_ "Cancel"] \
+            -command [list ::deken::preferences::cancel $winid]
+        pack $winid.nb.buttonframe.cancel -side left -expand 1 -fill "x" -padx 15 -ipadx 10
+        if {$::windowingsystem ne "aqua"} {
+            button $winid.nb.buttonframe.apply -text [_ "Apply"] \
+                -command "::deken::preferences::apply $winid"
+            pack $winid.nb.buttonframe.apply -side left -expand 1 -fill "x" -padx 15 -ipadx 10
+        }
+        button $winid.nb.buttonframe.ok -text [_ "OK"] \
+            -command "::deken::preferences::ok $winid"
+        pack $winid.nb.buttonframe.ok -side left -expand 1 -fill "x" -padx 15 -ipadx 10
     }
 }
 
