@@ -799,14 +799,19 @@ proc ::deken::utilities::parse_filename {filename} {
     if { [ string match "*.dek" $filename ] } {
         ## deken filename v1: <library>[v<version>](<arch1>)(<arch2>).dek
         set archstring ""
-        regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring
-        foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
-            if {![string first v ${o}]} {
-                set version [string range $o 1 end]
-            } else { # ignoring unknown option...
+        if { ! [regexp {^([^\[\]\(\)]+)((\[[^\[\]\(\)]+\])*)((\([^\[\]\(\)]+\))*)\.dek$} $filename _ pkgname optionstring _ archstring] } {
+            # oops, somewhat unparseable (e.g. a copy)
+
+        } else {
+            foreach {o _} [lreplace [split $optionstring {[]}] 0 0] {
+                if {![string first v ${o}]} {
+                    set version [string range $o 1 end]
+                } else { # ignoring unknown option...
+                    return "unknown" "unknown" "unknown"
+                }
             }
+            foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
         }
-        foreach {a _} [lreplace [split $archstring "()"] 0 0] { lappend archs $a }
     } elseif { [ regexp {(.*)-externals\..*} $filename _ basename] } {
         ## deken filename v0
         set pkgname $basename
