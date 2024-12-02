@@ -839,7 +839,7 @@ proc ::deken::utilities::parse_filename {filename} {
             }
         }
     }
-    list ${pkgname} ${version} ${archs}
+    return [list ${pkgname} ${version} ${archs}]
 }
 
 # split filename extension from deken-packagefilename
@@ -933,7 +933,7 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     if {! ${generic}} {
         ::deken::preferences::path_doit ${rdb} ${chk} ${xpath} false
     }
-    list ${rdb} ${chk}
+    return [list ${rdb} ${chk}]
 }
 
 proc ::deken::preferences::fill_frame {winid} {
@@ -1287,7 +1287,7 @@ proc ::deken::normalize_result {title
     # - <timestamp> the upload date of the package
     # - <args> RESERVED FOR FUTURE USE (this is a variadic placeholder. do not use!)
 
-    list "" ${title} ${cmd} ${match} ${subtitle} ${statusline} ${contextcmd} ${pkgname} ${version} ${uploader} ${timestamp}
+    return [list "" ${title} ${cmd} ${match} ${subtitle} ${statusline} ${contextcmd} ${pkgname} ${version} ${uploader} ${timestamp}]
 }
 
 
