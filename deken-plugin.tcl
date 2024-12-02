@@ -152,7 +152,7 @@ set ::deken::preferences::keep_package {}
 set ::deken::preferences::verify_sha256 {}
 
 set ::deken::platform(os) $::tcl_platform(os)
-set ::deken::platform(machine) $::tcl_platform(machine)
+set ::deken::platform(machine) [string tolower $::tcl_platform(machine)]
 set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
 set ::deken::platform(floatsize) 32
 
@@ -166,8 +166,8 @@ set ::deken::architecture_substitutes(armv6) [list "armv6l" "arm"]
 set ::deken::architecture_substitutes(armv6l) [list "armv6" "arm"]
 set ::deken::architecture_substitutes(armv7) [list "armv7l" "armv6l" "armv6" "arm"]
 set ::deken::architecture_substitutes(armv7l) [list "armv7" "armv6l" "armv6" "arm"]
-set ::deken::architecture_substitutes(PowerPC) [list "ppc"]
-set ::deken::architecture_substitutes(ppc) [list "PowerPC"]
+set ::deken::architecture_substitutes(powerpc) [list "ppc"]
+set ::deken::architecture_substitutes(ppc) [list "powerpc"]
 
 set ::deken::architecture_normalize(x86_64) "amd64"
 set ::deken::architecture_normalize(i686) "i386"
@@ -175,7 +175,7 @@ set ::deken::architecture_normalize(i586) "i386"
 set ::deken::architecture_normalize(i486) "i386"
 set ::deken::architecture_normalize(armv6l) "armv6"
 set ::deken::architecture_normalize(armv7l) "armv7"
-set ::deken::architecture_normalize(PowerPC) "ppc"
+set ::deken::architecture_normalize(powerpc) "ppc"
 
 # normalize W32 OSs
 if { [ string match "Windows *" "$::deken::platform(os)" ] > 0 } {
@@ -1324,6 +1324,7 @@ proc ::deken::platform2string {{verbose 0}} {
 # allow overriding deken platform from Pd-core
 proc ::deken::set_platform {os machine bits floatsize} {
     set bits [expr int($bits)]
+    set machine [string tolower $machine]
     set floatsize [expr int($floatsize)]
     if { $os != $::deken::platform(os) ||
          $machine != $::deken::platform(machine) ||
@@ -2769,6 +2770,7 @@ proc ::deken::architecture_match {archs} {
     }
     # strip the little-endian indicator from arm-archs, it's the default
     regexp -- {(armv[0-9]*)[lL]} $MACHINE _ MACHINE
+    set MACHINE [string tolower $MACHINE]
 
     # check each architecture in our list against the current one
     foreach arch $archs {
@@ -2776,6 +2778,7 @@ proc ::deken::architecture_match {archs} {
             # normalize arm-architectures by stripping away sub-architectures
             # TODO: leave any big-endian indicator in place
             regexp -- {(armv[0-9]*)[^0-9]*} $machine _ machine
+            set machine [string tolower $machine]
             if { ("${os}" eq "${OS}") && (("${floatsize}" eq "${FLOATSIZE}") || ("${floatsize}" eq "0"))} {
                 ## so OS and floatsize match...
                 ## check whether the CPU matches as well
