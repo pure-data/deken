@@ -1458,15 +1458,17 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     set installdir [::deken::ensure_installdir ${installdir} ${filename}]
     set parsedname [::deken::utilities::parse_filename ${filename}]
     foreach {extname version archs} ${parsedname} {break}
+    set showextname ${extname}
+
     set extpath [file join ${installdir} ${extname}]
     set match [::deken::architecture_match "${archs}" ]
     if { ! ${match} } {
-        set msg [_ "Installing incompatible architecture of '%s'." ${extname} ]
+        set msg [_ "Installing incompatible architecture of '%s'." ${showextname} ]
         ::deken::post "${msg}" warn
         if { "${::deken::remove_on_install}"  && [file exists ${extpath}] } {
             set result [tk_messageBox \
                             -title [_ "Replacing library with incompatible architecture!" ] \
-                            -message [_ "Do you want to replace the library '%1\$s' in '%2\$s' with a version that is incompatible with your computer?" ${extname} ${installdir}] \
+                            -message [_ "Do you want to replace the library '%1\$s' in '%2\$s' with a version that is incompatible with your computer?" ${showextname} ${installdir}] \
                             -icon error -type yesnocancel \
                             -parent ${::deken::winid}]
             switch -- "${result}" {
@@ -1486,7 +1488,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
     set deldir ""
     if { "${::deken::remove_on_install}" } {
-        ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] ${extname} ] info
+        ::deken::statuspost [format [_ "Uninstalling previous installation of '%s'" ] ${showextname} ] info
 
         if { ! [::deken::utilities::uninstall ${installdir} ${extname}] } {
             # ouch uninstalling failed.
@@ -1497,25 +1499,25 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
                 file mkdir ${deldir}
                 file rename [file join ${installdir} ${extname}] [file join ${deldir} ${extname}]
             } ] } {
-                ::deken::utilities::debug [format [_ "Temporarily moving %1\$s into %2\$s failed." ] ${extname} ${deldir} ]
+                ::deken::utilities::debug [format [_ "Temporarily moving %1\$s into %2\$s failed." ] ${showextname} ${deldir} ]
                 set deldir ""
             }
         }
     }
 
-    ::deken::statuspost [format [_ "Installing package '%s'" ] ${extname} ] {} 0
+    ::deken::statuspost [format [_ "Installing package '%s'" ] ${showextname} ] {} 0
     ::deken::syncgui
     ::deken::progress 0
     if { [::deken::utilities::extract ${installdir} ${filename} ${fullpkgfile} ${keep}] > 0 } {
         ::deken::progressstatus [_ "Installation completed!" ]
-        set msg [format [_ "Successfully installed '%s'!" ] ${extname} ]
+        set msg [format [_ "Successfully installed '%s'!" ] ${showextname} ]
         ::deken::statuspost "${msg}" {} 0
         ::deken::post ""
         ::pdwindow::post "\[deken\] ${msg}\n"
         set install_failed 0
     } else {
         ::deken::progressstatus [_ "Installation failed!" ]
-        set msg [format [_ "Failed to install '%s'!" ] ${extname} ]
+        set msg [format [_ "Failed to install '%s'!" ] ${showextname} ]
         ::deken::statuspost ${msg} error 0
         tk_messageBox \
             -title [_ "Package installation failed" ] \
@@ -1532,7 +1534,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
         # and if there are still files around, ask the user to delete them.
         if { ${rmerrors} > 0 } {
             set result [tk_messageBox \
-                            -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] ${extname} ${deldir}] \
+                            -message [format [_ "Failed to completely remove %1\$s.\nPlease manually remove the directory %2\$s after quitting Pd." ] ${showextname} ${deldir}] \
                             -icon warning -type okcancel -default ok \
                             -parent ${::deken::winid}]
             switch -- ${result} {
