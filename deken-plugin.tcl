@@ -931,6 +931,9 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
     list ${rdb} ${chk}
 }
 
+proc ::deken::preferences::fill_frame {winid} {
+    ::deken::preferences::create $winid
+}
 proc ::deken::preferences::create {winid} {
     # urgh...we want to know when the window gets drawn,
     # so we can query the size of the pathentries canvas
