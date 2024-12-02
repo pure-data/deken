@@ -2797,12 +2797,25 @@ proc ::deken::initialize {} {
     set ::deken::installpath [::deken::find_installpath]
 
 
-    # create an entry for our search in the "help" menu (or reuse an existing one)
-    set mymenu .menubar.help
+    # create an entry for our search in the menu (or reuse an existing one)
+    # if there's a 'tools' menu, use that, otherwise use the 'help' menu
+    set mymenu .menubar.tools
+    if { [winfo exists $mymenu]} {
+        # we got Tools->, so if there's Help->Find externals... entry, drop it
+        catch {
+            .menubar.help delete [_ "Find externals"]
+        }
+    } else {
+        set mymenu .menubar.help
+    }
     if { [catch {
+        # if there's already an entry, make sure to use our 'open_searchui' rather than the built-in
         $mymenu entryconfigure [_ "Find externals"] -command {::deken::open_searchui $::deken::winid}
     } _ ] } {
-        $mymenu add separator
+        # otherwise create a new menu entry
+        if { $mymenu eq ".menubar.help" } {
+            $mymenu add separator
+        }
         $mymenu add command -label [_ "Find externals"] -command {::deken::open_searchui $::deken::winid}
     }
     # bind all <$::modifier-Key-s> {::deken::open_helpbrowser .helpbrowser2}
