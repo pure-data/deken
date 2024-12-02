@@ -376,7 +376,7 @@ namespace eval ::deken::utilities::unzipper:: {
                 }
                 zipfs unmount $base
             } stdout ] } {
-                ::deken::utilities::debug "::zipfs: $stdout"
+                ::deken::utilities::debug "unzipper::zipfs: $stdout"
                 return 0
             }
             return 1
@@ -390,7 +390,7 @@ namespace eval ::deken::utilities::unzipper:: {
             if { [catch {
                 ::zipfile::decode::unzipfile "${zipfile}" "${path}"
             } stdout ] } {
-                ::deken::utilities::debug "::zipfile::decode: $stdout"
+                ::deken::utilities::debug "unzipper::zipfile::decode: $stdout"
                 return 0
             }
             return 1
@@ -448,7 +448,7 @@ namespace eval ::deken::utilities::unzipper:: {
             } stdout ] } {
                 catch { file rename ${zipfilezip} ${zipfile} }
                 catch { file delete "${vbsscript}" }
-                ::deken::utilities::debug "VBS-unzip($vbsscript): $stdout"
+                ::deken::utilities::debug "unzipper::VBS-unzip($vbsscript): $stdout"
                 return 0
             }
             catch { file delete "${vbsscript}" }
