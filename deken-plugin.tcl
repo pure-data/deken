@@ -397,6 +397,17 @@ namespace eval ::deken::utilities::unzipper:: {
         }
     }
 
+    proc unzip {zipfile path} {
+        set result 0
+        if { [catch {
+            exec unzip -uo "${zipfile}" -d "${path}"
+            set result 1
+        } stdout ] } {
+            ::deken::utilities::debug "unzipper::unzip $stdout"
+        }
+        return ${result}
+    }
+
     if {$::tcl_platform(platform) eq "windows"} {
         ## VisualBasic is w32 only
         proc windows_visualbasic {zipfile path} {
