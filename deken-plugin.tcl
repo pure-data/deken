@@ -3148,7 +3148,7 @@ proc ::deken::search::dekenserver::contextmenu {widget theX theY pkgname URL} {
     }
 
     set infoq "url=${URL}"
-    if {::tcl_platform(platform) ne "windows"} {
+    if {$::tcl_platform(platform) ne "windows"} {
         set infoq [::http::formatQuery url ${URL}]
     }
 
