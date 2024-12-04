@@ -206,7 +206,7 @@ def main():
             except AttributeError:
                 pass
 
-    packages = getPackages(args.pkg, arch=args.architecture, floatsize=args.floatsize)
+    packages = getPackages2(args.pkg, arch=args.architecture, floatsize=args.floatsize)
     showPackages(packages)
 
 
