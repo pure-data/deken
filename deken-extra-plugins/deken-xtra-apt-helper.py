@@ -81,9 +81,12 @@ def hasDependency(versioned_pkg, dependencies: list) -> bool:
 
 
 def getPackages2(pkgs, arch=None, floatsize=32):
-    pddeps = {"puredata-core", "puredata", "puredata-gui", "pd"}
+    pd32deps = {"puredata-core", "puredata", "puredata-gui", "pd"}
+    pd64deps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
     if floatsize == 64:
-        pddeps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
+        pddeps = pd64deps
+    else:
+        pddeps = pd32deps
 
     packages = {}
     for p in aptcache:
