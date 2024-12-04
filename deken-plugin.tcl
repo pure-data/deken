@@ -225,7 +225,10 @@ proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr {bool(${value})} ] } stdout
     return ${fallback}
 }
-
+proc ::deken::utilities::int {value {fallback 0}} {
+    catch {set fallback [expr {int(${value})} ] } stdout
+    return ${fallback}
+}
 proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     catch {set fallback [expr {(int(${value}) + int(${offset}))% 3} ]} stdout
     return ${fallback}
@@ -1324,9 +1327,8 @@ proc ::deken::platform2string {{verbose 0}} {
 # allow overriding deken platform from Pd-core
 proc ::deken::set_platform {os machine bits floatsize} {
     set machine [string tolower ${machine}]
-    foreach {bits floatsize} [list $::deken::platform(bits) $::deken::platform(floatsize)] {break}
-    catch {set bits [expr {int(${bits})}]}
-    catch {set floatsize [expr {int(${floatsize})}]}
+    set bits [::deken::utilities::int ${bits} $::deken::platform(bits)]
+    set floatsize [::deken::utilities::int ${floatsize} $::deken::platform(floatsize)]
     if { ${os} != $::deken::platform(os) ||
          ${machine} != $::deken::platform(machine) ||
          ${bits} != $::deken::platform(bits) ||
