@@ -61,6 +61,12 @@ def parseArgs():
     return args
 
 
+def stripSuffix(s, suffix):
+    if s.startswith(suffix):
+        return s[len(suffix) :]
+    return s
+
+
 def hasDependency(versioned_pkg, dependencies: list) -> bool:
     """returns True iff <versioned_pkg> (apt.package.Version) depends
     on any package in <dependencies> (list[str]);
@@ -70,6 +76,35 @@ def hasDependency(versioned_pkg, dependencies: list) -> bool:
             if bd.name in dependencies:
                 return True
     return False
+
+
+def getPackages2(pkgs, arch=None, floatsize=32):
+    pddeps = {"puredata-core", "puredata", "puredata-gui", "pd"}
+    if floatsize == 64:
+        pddeps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
+
+    packages = {}
+    for p in aptcache:
+        # filter out unwanted architectures
+        if arch and p.architecture() != arch:
+            continue
+        # we only take packages that depend on Pd
+        versions = [v for v in p.versions if hasDependency(v, pddeps)]
+        if not versions:
+            continue
+
+        for v in versions:
+            names = [p.shortname] + v.provides
+            for name in {*names}:
+                for n in {name, stripSuffix(name, "pd-"), stripSuffix(name, "pd64-")}:
+                    npkgs = packages.get(n) or set()
+                    npkgs.add(v)
+                    packages[n] = npkgs
+    matches = {}
+    for p in pkgs:
+        matches.update({m: packages[m] for m in fnmatch.filter(packages, p)})
+    result = {m: True for m in itertools.chain(*matches.values())}
+    return result
 
 
 def getPackages(pkgs, arch=None, floatsize=32):
