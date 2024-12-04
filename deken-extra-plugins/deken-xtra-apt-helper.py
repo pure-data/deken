@@ -183,12 +183,13 @@ def showPackages(pkgs):
     for p in pkgs:
         library = p.package.name
         version = p.version
+        arch = p.architecture
         uploader, date = getOrigin(p)
         status = p.summary
         state = "Already installed" if p.is_installed else "Provided"
         comment = f"{state} by {uploader} ({date})"
 
-        print(f"{library}\t{version}\t{uploader}\t{date}\t{status}\t{comment}")
+        print(f"{library}\t{version}\t${arch}\t{uploader}\t{date}\t{status}\t{comment}")
 
 
 def main():
