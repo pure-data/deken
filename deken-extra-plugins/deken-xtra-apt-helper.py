@@ -207,11 +207,12 @@ def showPackages(pkgs):
         uploader, date = getOrigin(p)
         uri = p.uri
         status = p.summary
-        state = "Already installed" if p.is_installed else "Provided"
+        installed = p.package.is_installed
+        state = "Already installed" if installed else "Provided"
         comment = f"{state} by {uploader} ({date})"
 
         print(
-            f"{library}\t{version}\t{arch}\t{int(p.is_installed)}\t{uploader}\t{date}\t{uri}\t{status}\t{comment}"
+            f"{library}\t{version}\t{arch}\t{int(installed)}\t{uploader}\t{date}\t{uri}\t{status}\t{comment}"
         )
 
 
