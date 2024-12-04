@@ -96,12 +96,10 @@ def getPackages2(pkgs, arch=None, floatsize=32):
         # filter out unwanted architectures
         if arch and p.architecture() != arch:
             continue
-        # we only take packages that depend on Pd
-        versions = [v for v in p.versions if hasDependency(v, pddeps)]
-        if not versions:
-            continue
-
-        for v in versions:
+        for v in p.versions:
+            # we only take packages that depend on Pd
+            if not hasDependency(v, pddeps):
+                continue
             names = [p.shortname] + v.provides
             for name in {*names}:
                 for n in {name, stripSuffix(name, "pd-"), stripSuffix(name, "pd64-")}:
