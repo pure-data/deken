@@ -153,7 +153,7 @@ set ::deken::preferences::verify_sha256 {}
 
 set ::deken::platform(os) ${::tcl_platform(os)}
 set ::deken::platform(machine) [string tolower ${::tcl_platform(machine)}]
-set ::deken::platform(bits) [ expr [ string length [ format %X -1 ] ] * 4 ]
+set ::deken::platform(bits) [ expr {[ string length [ format %X -1 ] ] * 4} ]
 set ::deken::platform(floatsize) 32
 
 # architectures that can be substituted for each other
@@ -222,12 +222,12 @@ if {[info commands lreverse] == ""} {
 # ######################################################################
 
 proc ::deken::utilities::bool {value {fallback 0}} {
-    catch {set fallback [expr bool(${value}) ] } stdout
+    catch {set fallback [expr {bool(${value})} ] } stdout
     return ${fallback}
 }
 
 proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
-    catch {set fallback [expr (int(${value}) + int(${offset}))% 3 ]} stdout
+    catch {set fallback [expr {(int(${value}) + int(${offset}))% 3} ]} stdout
     return ${fallback}
 }
 
@@ -247,7 +247,7 @@ proc ::deken::utilities::get_tmpfilename {{path ""} {ext ""} {prefix dekentmp}} 
 }
 
 proc ::deken::utilities::get_tmpdir {} {
-    proc _iswdir {d} { "expr" [file isdirectory ${d}] * [file writable ${d}] }
+    proc _iswdir {d} { return [expr {[file isdirectory ${d}] * [file writable ${d}]}] }
     set tmpdir ""
     # TRASH_FOLDER: very old Macintosh. Mac OS X doesn't have this.
     # TMPDIR: unices
@@ -1323,9 +1323,10 @@ proc ::deken::platform2string {{verbose 0}} {
 
 # allow overriding deken platform from Pd-core
 proc ::deken::set_platform {os machine bits floatsize} {
-    set bits [expr int(${bits})]
     set machine [string tolower ${machine}]
-    set floatsize [expr int(${floatsize})]
+    foreach {bits floatsize} [list $::deken::platform(bits) $::deken::platform(floatsize)] {break}
+    catch {set bits [expr {int(${bits})}]}
+    catch {set floatsize [expr {int(${floatsize})}]}
     if { ${os} != $::deken::platform(os) ||
          ${machine} != $::deken::platform(machine) ||
          ${bits} != $::deken::platform(bits) ||
@@ -1361,7 +1362,7 @@ proc ::deken::versioncompare {a b} {
           # Tcl<8.5 (as found the PowerPC builds) lacks 'dict' and 'lsort -indices'
           if { [catch {
             # "string compare" does not sort numerically
-            set c [expr 2 * (${x} > ${y}) + (${x} == ${y}) - 1]
+            set c [expr {2 * (${x} > ${y}) + (${x} == ${y}) - 1}]
           } stdout] } {
             set c [string compare ${x} ${y}]
           }
@@ -2067,7 +2068,7 @@ namespace eval ::deken::textresults:: {
 proc ::deken::textresults::show_result {resultsid counter result showmatches} {
     foreach {title cmd match comment status contextcmd pkgname} ${result} {break}
     set tag ch${counter}
-    set tags [list ${tag} [expr ${match}?"archmatch":"noarchmatch" ] ]
+    set tags [list ${tag} [expr {${match}?"archmatch":"noarchmatch"} ] ]
     if { "${pkgname}" ne "" } {lappend tags "/${pkgname}"}
 
     if {(${match} == ${showmatches})} {
@@ -2190,7 +2191,7 @@ proc ::deken::treeresults::columnsort {treeid {col "#0"}} {
     if {! [info exists colsort(${col}) ] } {
         set colsort(${col}) 1
     }
-    set colsort(${col}) [expr ! $colsort(${col})]
+    set colsort(${col}) [expr { ! $colsort(${col}) }]
 
     set dir -increasing
     if { $colsort(${col}) } {
@@ -2369,8 +2370,8 @@ proc ::deken::treeresults::motionevent {treeid x y} {
     # the balloon
     if { $::deken::treeresults::activecell(${treeid}) != ${item} } {
         set ::deken::treeresults::activecell(${treeid}) ${item}
-        set X [expr "[winfo rootx ${treeid}] + 10"]
-        set Y [expr "[winfo rooty ${treeid}] + ${y} + 10"]
+        set X [expr {[winfo rootx ${treeid}] + 10}]
+        set Y [expr {[winfo rooty ${treeid}] + ${y} + 10}]
 
         ::deken::balloon::show ${treeid}_balloon ${X} ${Y} [string trim "${title}\n${subtitle}"]
     }
@@ -2402,7 +2403,7 @@ proc ::deken::treeresults::doubleclick {treeid x y} {
                     incr have_close
                 }
             }
-            set do_open [expr ${have_close} > ${have_open}]
+            set do_open [expr {${have_close} > ${have_open}}]
             foreach lib [${treeid} children {}] {
                 ${treeid} item ${lib} -open ${do_open}
             }
@@ -2568,7 +2569,7 @@ proc ::deken::balloon::show {winid x y msg {x_offset 0} {y_offset 0}} {
         return
     }
 
-    set g [format +%d+%d [expr ${x} + ${x_offset}] [expr ${y} + ${y_offset}]]
+    set g [format +%d+%d [expr {${x} + ${x_offset}}] [expr {${y} + ${y_offset}}]]
     # This is probably overdoing it, but better too much than too little
     wm geometry ${winid} ${g}
     wm deiconify ${winid}
@@ -3164,7 +3165,7 @@ proc ::deken::search::dekenserver::contextmenu {widget theX theY pkgname URL} {
             ${m} add command -label [format [_ "Uninstall '%s'" ] ${pkgname}] -command [list ::deken::menu_uninstall_package ${winid} ${pkgname} ${installpath}]
         }
     }
-    tk_popup ${m} [expr [winfo rootx ${widget}] + ${theX}] [expr [winfo rooty ${widget}] + ${theY}]
+    tk_popup ${m} [expr {[winfo rootx ${widget}] + ${theX}}] [expr {[winfo rooty ${widget}] + ${theY}}]
 }
 
 
