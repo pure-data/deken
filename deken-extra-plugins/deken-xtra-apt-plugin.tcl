@@ -20,12 +20,12 @@ namespace eval ::deken::apt {
 proc ::deken::apt::search {name} {
     set result []
     if { [info exists ::deken::apt::distribution] } { } {
-	if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } {
-	    set ::deken::apt::distribution {}
-	}
+        if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } {
+            set ::deken::apt::distribution {}
+        }
     }
     if { "${::deken::apt::distribution}" == "" } {
-	return
+        return
     }
 
     set name [ string tolower ${name} ]
@@ -34,7 +34,7 @@ proc ::deken::apt::search {name} {
     set _dpkg_query {dpkg-query -W -f ${db:Status-Abbrev}${Version}\n}
     set filter "-F Provides pd-externals --or -F Depends -w pd --or -F Depends -w puredata --or -F Depends -w puredata-core"
     if { "${name}" == "" } { } {
-	set filter " -F Package ${name} --and ( ${filter} )"
+        set filter " -F Package ${name} --and ( ${filter} )"
     }
 
     set io [ open "|grep-aptavail -n -s Package ${filter} | sort -u | xargs apt-cache madison" r ]
@@ -46,12 +46,12 @@ proc ::deken::apt::search {name} {
         set ver_  [ string trim [ lindex ${llin} 1 ] ]
         set info_ [ string trim [ lindex ${llin} 2 ] ]
 
-	## status: is the package installed?
-	set state "Provided"
+        ## status: is the package installed?
+        set state "Provided"
         set installed 0
-	catch {
-	    set io2cmd "|${_dpkg_query} ${pkgname} | grep -w -F \"ii ${ver_}\""
-	    set io2 [ open "${io2cmd}" ]
+        catch {
+            set io2cmd "|${_dpkg_query} ${pkgname} | grep -w -F \"ii ${ver_}\""
+            set io2 [ open "${io2cmd}" ]
 	    if { [ gets ${io2} _ ] >= 0 } {
 		set state "Already installed"
                 set installed 1
