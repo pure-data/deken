@@ -19,42 +19,40 @@ namespace eval ::deken::apt {
 }
 
 proc ::deken::apt::search {name} {
-    return [::deken::apt::search2 ${name}]
-}
-proc ::deken::apt::search2 {name} {
-    set pyfile [file join ${::deken::apt::pluginpath} deken-xtra-apt-helper.py]
-    set result {}
-    if {[file executable ${pyfile}]} {
-        set cmd "${pyfile} --api 1 --os $::deken::platform(os) --architecture $::deken::platform(machine) --floatsize $::deken::platform(floatsize) -- ${name}"
-        set io [open "|${cmd}" ]
-        while { [gets ${io} line ] >= 0 }  {
-            foreach {pkgname version arch is_installed uploader date uri status comment} [ split "${line}" "\t" ] {break}
-            set name ${pkgname}
-            set cmd [list ::deken::apt::install ${pkgname}=${version}]
-            set match 1
-            set contextcmds {}
-            if { ${uri} ne {} } {
-                lappend contextcmds [list [_ "Open package webpage" ] "pd_menucommands::menu_openfile [file dirname ${uri}]"]
-                lappend contextcmds [list [_ "Copy package URL" ] "clipboard clear; clipboard append ${uri}"]
-                if { ${is_installed} } {
-                    lappend contextcmds {}
-                }
-            }
-            if { ${is_installed} } {
-                lappend contextcmds [::deken::apt::contextmenu::uninstall ${pkgname}]
-            }
-
-            set contextcmd [list ::deken::apt::contextmenu %W %x %y $contextcmds]
-            set norm [::deken::normalize_result "${pkgname} - ${status}" ${cmd} ${match} ${comment} ${status} ${contextcmd} ${pkgname} ${version} ${uploader} ${date}]
-            lappend result ${norm}
-        }
-        close ${io}
-        return ${result}
-    } else {
-        return [::deken::apt::search1 ${name}]
+    if { [ info proc ${::deken::apt::searcher} ] } {
+        return [::deken::apt::search_pyapt ${name}]
     }
+    return
 }
-proc ::deken::apt::search1 {name} {
+proc ::deken::apt::search_pyapt {name} {
+    set result {}
+    set cmd "${::deken::apt::search_pyaptscript} --api 1 --os $::deken::platform(os) --architecture $::deken::platform(machine) --floatsize $::deken::platform(floatsize) -- ${name}"
+    set io [open "|${cmd}" ]
+    while { [gets ${io} line ] >= 0 }  {
+        foreach {pkgname version arch is_installed uploader date uri status comment} [ split "${line}" "\t" ] {break}
+        set name ${pkgname}
+        set cmd [list ::deken::apt::install ${pkgname}=${version}]
+        set match 1
+        set contextcmds {}
+        if { ${uri} ne {} } {
+            lappend contextcmds [list [_ "Open package webpage" ] "pd_menucommands::menu_openfile [file dirname ${uri}]"]
+            lappend contextcmds [list [_ "Copy package URL" ] "clipboard clear; clipboard append ${uri}"]
+            if { ${is_installed} } {
+                lappend contextcmds {}
+            }
+        }
+        if { ${is_installed} } {
+            lappend contextcmds [::deken::apt::contextmenu::uninstall ${pkgname}]
+        }
+
+        set contextcmd [list ::deken::apt::contextmenu %W %x %y $contextcmds]
+        set norm [::deken::normalize_result "${pkgname} - ${status}" ${cmd} ${match} ${comment} ${status} ${contextcmd} ${pkgname} ${version} ${uploader} ${date}]
+        lappend result ${norm}
+    }
+    close ${io}
+    return ${result}
+}
+proc ::deken::apt::search_madison {name} {
     set result []
     if { [info exists ::deken::apt::distribution] } { } {
         if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } {
@@ -234,10 +232,16 @@ proc ::deken::apt::uninstall {pkg} {
 }
 
 proc ::deken::apt::register { } {
+    set pyfile [file join ${::deken::apt::pluginpath} deken-xtra-apt-helper.py]
+    if {[file executable ${pyfile}]} {
+        ::deken::register ::deken::apt::search_pyapt
+        set ::deken::apt::search_pyaptscript ${pyfile}
+        return 1
+    }
     if { [ catch { exec apt-cache madison       } _ ] } { } {
 	if { [ catch { exec which grep-aptavail } _ ] } { } {
 	    if { [ catch {
-		::deken::register ::deken::apt::search
+		::deken::register ::deken::apt::search_madison
 	    } ] } {
 		::pdwindow::debug "Not using APT-backend for unavailable deken\n"
 	    } {
