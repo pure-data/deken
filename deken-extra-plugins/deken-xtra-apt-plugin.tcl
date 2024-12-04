@@ -19,7 +19,7 @@ namespace eval ::deken::apt {
 }
 
 proc ::deken::apt::search {name} {
-    return [::deken::apt::search1 ${name}]
+    return [::deken::apt::search2 ${name}]
 }
 proc ::deken::apt::search2 {name} {
     set pyfile [file join ${::deken::apt::pluginpath} deken-xtra-apt-helper.py]
