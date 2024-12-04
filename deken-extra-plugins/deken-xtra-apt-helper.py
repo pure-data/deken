@@ -19,7 +19,7 @@ def parseArgs():
     parser = argparse.ArgumentParser()
 
     p = parser.add_argument_group(
-        title="filters",
+        title="constraints",
     )
 
     p.add_argument(
@@ -39,6 +39,11 @@ def parseArgs():
         default=32,
         help="target floatsize [DEFAULT: %(default)s}]",
     )
+
+    p = parser.add_argument_group(
+        title="API",
+    )
+    p.add_argument("--api", type=int, required=True, help="Output format version")
 
     parser.add_argument(
         "pkg",
@@ -183,6 +188,8 @@ def showPackages(pkgs):
 
 def main():
     args = parseArgs()
+    if args.api not in {1}:
+        return
     initializeAptCache()
 
     if not args.architecture:
