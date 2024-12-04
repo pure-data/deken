@@ -50,7 +50,8 @@ proc ::deken::apt::search {name} {
 	set state "Provided"
         set installed 0
 	catch {
-	    set io2 [ open "|${_dpkg_query} ${pkgname} | egrep ^ii | egrep ${ver_}$" ]
+	    set io2cmd "|${_dpkg_query} ${pkgname} | grep -w -F \"ii ${ver_}\""
+	    set io2 [ open "${io2cmd}" ]
 	    if { [ gets ${io2} _ ] >= 0 } {
 		set state "Already installed"
                 set installed 1
