@@ -148,12 +148,12 @@ def getPackages(pkgs, arch=None, floatsize=32):
 
 def getOrigin(
     versioned_pkg,
-    fallback_uploader="apt",
+    fallback_origin="apt",
     fallback_date=None,
     trusted="",
     untrusted="?",
 ):
-    """get the package origin as a tuple repository and archive,
+    """get the (one) package origin as a tuple of repository & archive,
     e.g. ("Debian", "bookworm/main")
     if the repository is trusted, the <trusted> string is appended, otherwise the <untrusted>.
     prefer trusted sources over untrusted.
@@ -165,17 +165,37 @@ def getOrigin(
         trust = untrusted
 
     if not origins:
-        return (fallback_uploader, fallback_date)
+        return (fallback_origin, fallback_date, None)
 
+    origin = None
+    codename = None
+    component = None
     for o in origins:
+        if all((origin, codename, component)):
+            break
         try:
-            return (
-                f"{o.label or o.origin or fallback_uploader}{trust}",
-                f"{o.codename or o.archive}/{o.component}" or fallback_date,
-            )
+            origin = origin or o.label or o.origin or fallback_uploader
         except AttributeError:
             pass
-    return (fallback_uploader, fallback_date)
+        try:
+            codename = codename or o.codename or o.archive
+        except AttributeError:
+            pass
+        try:
+            component = component or o.component
+        except AttributeError:
+            pass
+
+    origin = origin or fallback_origin
+    if codename or component:
+        if not component:
+            codename_component = codename
+        else:
+            codename_component = f"{codename or '???'}/{component}"
+    else:
+        codename_component = fallback_date
+
+    return (origin, codename_component)
 
 
 def showPackages(pkgs):
@@ -185,11 +205,14 @@ def showPackages(pkgs):
         version = p.version
         arch = p.architecture
         uploader, date = getOrigin(p)
+        uri = p.uri
         status = p.summary
         state = "Already installed" if p.is_installed else "Provided"
         comment = f"{state} by {uploader} ({date})"
 
-        print(f"{library}\t{version}\t${arch}\t{uploader}\t{date}\t{status}\t{comment}")
+        print(
+            f"{library}\t{version}\t{arch}\t{int(p.is_installed)}\t{uploader}\t{date}\t{uri}\t{status}\t{comment}"
+        )
 
 
 def main():
