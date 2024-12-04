@@ -113,9 +113,15 @@ proc ::deken::apt::search1 {name} {
         set match 1
         set comment "${state} by ${::deken::apt::distribution} (${suite})"
         set status "${pkgname}_${v}_${arch}.deb"
-        set contextcmd ""
+        set contextcmd {}
+        set contextcmds {}
         if { [ lindex ${inf} 5 ] } {
-            set contextcmd [list ::deken::apt::contextmenu %W %x %y ${pkgname}]
+            lappend contextcmds [::deken::apt::contextmenu::uninstall ${pkgname}]
+        }
+        if { ${contextcmds} eq {} } {
+            set contextcmd {}
+        } else {
+            set contextcmd [list ::deken::apt::contextmenu %W %x %y $contextcmds]
         }
         lappend result [list ${name} ${cmd} ${match} ${comment} ${status} ${pkgname} ${v} ${suite} ${contextcmd}]
     }
@@ -138,12 +144,25 @@ proc ::deken::apt::search1 {name} {
 }
 
 
-proc ::deken::apt::contextmenu {widget theX theY pkgname} {
+proc ::deken::apt::contextmenu {widget theX theY commands} {
     set m .dekenresults_contextMenu
     destroy ${m}
+    if { ${commands} eq {} } { return }
+
     menu ${m}
-    ${m} add command -label [format [_ "Uninstall '%s'" ] ${pkgname}] -command [list ::deken::apt::uninstall ${pkgname}]
+    foreach lblcmd ${commands} {
+        if { ${lblcmd} eq {} } {
+            ${m} add separator
+        } else {
+            foreach {lbl cmd} ${lblcmd} {break}
+            ${m} add command -label ${lbl} -command ${cmd}
+        }
+    }
     tk_popup ${m} [expr {[winfo rootx ${widget}] + ${theX}}] [expr {[winfo rooty ${widget}] + ${theY}}]
+}
+namespace eval ::deken::apt::contextmenu:: {}
+proc ::deken::apt::contextmenu::uninstall {pkgname} {
+    return [list [format [_ "Uninstall '%s'" ] ${pkgname}] [list ::deken::apt::uninstall ${pkgname}]]
 }
 
 proc ::deken::apt::getsudo {} {
