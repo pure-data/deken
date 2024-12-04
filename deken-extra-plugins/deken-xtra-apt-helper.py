@@ -80,7 +80,7 @@ def hasDependency(versioned_pkg, dependencies: list) -> bool:
     return False
 
 
-def getPackages2(pkgs, arch=None, floatsize=32):
+def getPackages(pkgs, arch=None, floatsize=32):
     pd32deps = {"puredata-core", "puredata", "puredata-gui", "pd"}
     pd64deps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
     if floatsize == 64:
@@ -112,38 +112,6 @@ def getPackages2(pkgs, arch=None, floatsize=32):
     matches = {m: matches[m] for m in sorted(matches)}
     result = {m: True for m in itertools.chain(*matches.values())}
     return result
-
-
-def getPackages(pkgs, arch=None, floatsize=32):
-    """get a list of available packages (apt.package.Version)
-    that match <pkgs>, <arch> and <floatsize>"""
-
-    pddeps = {"puredata-core", "puredata", "puredata-gui", "pd"}
-    if floatsize == 64:
-        pddeps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
-
-    # all packages known to apt
-    allpackages = list({p.split(":")[0]: True for p in aptcache.keys()})
-
-    # match the name
-    packages = {}
-    for p in pkgs:
-        packages.update({m: True for m in fnmatch.filter(allpackages, p)})
-
-    # get the actual packages
-    emptyversion = EmptyVersion([])
-    packages = [
-        p
-        for p in itertools.chain(
-            *[
-                aptcache.get(f"%s:%s" % (p, arch), emptyversion).versions
-                for p in packages
-            ]
-        )
-        if p and (arch is None or p.architecture == arch) and hasDependency(p, pddeps)
-    ]
-
-    return packages
 
 
 def getOrigin(
@@ -230,7 +198,7 @@ def main():
             except AttributeError:
                 pass
 
-    packages = getPackages2(args.pkg, arch=args.architecture, floatsize=args.floatsize)
+    packages = getPackages(args.pkg, arch=args.architecture, floatsize=args.floatsize)
     showPackages(packages)
 
 
