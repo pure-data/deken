@@ -109,6 +109,7 @@ def getPackages2(pkgs, arch=None, floatsize=32):
     matches = {}
     for p in pkgs:
         matches.update({m: packages[m] for m in fnmatch.filter(packages, p)})
+    matches = {m: matches[m] for m in sorted(matches)}
     result = {m: True for m in itertools.chain(*matches.values())}
     return result
 
