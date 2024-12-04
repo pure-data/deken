@@ -15,10 +15,32 @@ namespace eval ::deken::apt {
     namespace export search
     namespace export install
     variable distribution
+    variable pluginpath $::current_plugin_loadpath
 }
 
 proc ::deken::apt::search {name} {
     return [::deken::apt::search1 ${name}]
+}
+proc ::deken::apt::search2 {name} {
+    set pyfile [file join ${::deken::apt::pluginpath} deken-xtra-apt-helper.py]
+    set result {}
+    if {[file executable ${pyfile}]} {
+        set cmd "${pyfile} --api 1 --os $::deken::platform(os) --architecture $::deken::platform(machine) --floatsize $::deken::platform(floatsize) -- ${name}"
+        set io [open "|${cmd}" ]
+        while { [gets ${io} line ] >= 0 }  {
+            foreach {pkgname version arch uploader date status comment} [ split "${line}" "\t" ] {break}
+            set name ${pkgname}
+            set cmd [list ::deken::apt::install ${pkgname}=${version}]
+            set match 1
+            set contextcmd [list ::deken::apt::contextmenu %W %x %y ${pkgname}]
+            set norm [::deken::normalize_result "${pkgname} - ${status}" ${cmd} ${match} ${comment} ${status} ${contextcmd} ${pkgname} ${version} ${uploader} ${date}]
+            lappend result ${norm}
+        }
+        close ${io}
+        return ${result}
+    } else {
+        return [::deken::apt::search1 ${name}]
+    }
 }
 proc ::deken::apt::search1 {name} {
     set result []
