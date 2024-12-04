@@ -85,7 +85,7 @@ proc ::deken::apt::search {name} {
 
     # version-sort the results and normalize the result-string
     set sortedresult []
-    if {[expr {[llength [info procs ::deken::normalize_result ]] > 0}]} {
+    if {[llength [info procs ::deken::normalize_result ]] > 0} {
         foreach r [lsort -dictionary -decreasing -index 1 $result ] {
             foreach {title cmd match comment status pkgname version suite cmd2} $r {break}
             lappend sortedresult [::deken::normalize_result $title $cmd $match $comment $status $cmd2 $pkgname $version Debian $suite]
@@ -106,7 +106,7 @@ proc ::deken::apt::contextmenu {widget theX theY pkgname} {
     destroy $m
     menu $m
     $m add command -label [format [_ "Uninstall '%s'" ] $pkgname] -command [list ::deken::apt::uninstall $pkgname]
-    tk_popup $m [expr [winfo rootx $widget] + $theX] [expr [winfo rooty $widget] + $theY]
+    tk_popup $m [expr {[winfo rootx $widget] + $theX}] [expr {[winfo rooty $widget] + $theY}]
 }
 
 proc ::deken::apt::getsudo {} {
