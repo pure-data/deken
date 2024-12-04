@@ -65,16 +65,23 @@ except ImportError:
 try:
     import keyring.backends.Windows
     import keyring
+
     pass
-except ImportError: pass
-
-try: import webbrowser
-except ImportError: pass
-
-try: import easywebdav2
 except ImportError:
-    try: import easywebdav
-    except ImportError: pass
+    pass
+
+try:
+    import webbrowser
+except ImportError:
+    pass
+
+try:
+    import easywebdav2
+except ImportError:
+    try:
+        import easywebdav
+    except ImportError:
+        pass
 
 try:
     import ConfigParser
@@ -97,6 +104,7 @@ try:
 except ImportError:
     pass
 
+
 def askpass(prompt="Password: ", fallback=None):
     try:
         subprocess.call(["stty", "-echo"])
@@ -112,7 +120,8 @@ def askpass(prompt="Password: ", fallback=None):
             password = raw_input()
         except NameError:
             password = input()
-    except: pass
+    except:
+        pass
     sys.stdout.write("\n")
     sys.stdout.flush()
     subprocess.call(["stty", "echo"])
@@ -120,7 +129,7 @@ def askpass(prompt="Password: ", fallback=None):
 
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -128,13 +137,16 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 if __name__ == "__main__":
     try:
-        with open(resource_path("DEKEN_VERSION"), 'r') as f:
+        with open(resource_path("DEKEN_VERSION"), "r") as f:
             version = f.read().strip()
         deken.version = version
-    except OSError: pass
-    except IOError: pass
+    except OSError:
+        pass
+    except IOError:
+        pass
     deken_askpass = deken.askpass
     deken.askpass = lambda prompt: askpass(prompt, deken_askpass)
     deken.main()
