@@ -75,13 +75,13 @@ def hasDependency(versioned_pkg, dependencies: list) -> bool:
 def getPackages(pkgs, arch=None, floatsize=32):
     """get a list of available packages (apt.package.Version)
     that match <pkgs>, <arch> and <floatsize>"""
-    if not arch:
-        arch = "native"
-    allpackages = list({p.split(":")[0]: True for p in aptcache.keys()})
 
     pddeps = {"puredata-core", "puredata", "puredata-gui", "pd"}
     if floatsize == 64:
         pddeps = {"puredata64-core", "puredata64", "puredata-gui", "pd64"}
+
+    # all packages known to apt
+    allpackages = list({p.split(":")[0]: True for p in aptcache.keys()})
 
     # match the name
     packages = {}
