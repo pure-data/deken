@@ -3,10 +3,7 @@
 import fnmatch
 import itertools
 
-import apt
-
-
-aptcache = apt.Cache()
+aptcache = None
 
 
 class EmptyVersion:
@@ -21,13 +18,6 @@ def parseArgs():
 
     parser = argparse.ArgumentParser()
 
-    for p in ["dpkg", "apt", "bash"]:
-        try:
-            architecture = aptcache.get(f"{p}:native").architecture()
-            break
-        except AttributeError:
-            pass
-
     p = parser.add_argument_group(
         title="filters",
     )
@@ -40,8 +30,8 @@ def parseArgs():
     )
     p.add_argument(
         "--architecture",
-        default=architecture,
-        help="target CPU architecture [DEFAULT: %(default)r]",
+        default=None,
+        help="target CPU architecture [DEFAULT: 'native']",
     )
     p.add_argument(
         "--floatsize",
@@ -59,6 +49,13 @@ def parseArgs():
     args = parser.parse_args()
 
     return args
+
+
+def initializeAptCache():
+    import apt
+
+    global aptcache
+    aptcache = apt.Cache()
 
 
 def stripSuffix(s, suffix):
@@ -186,6 +183,16 @@ def showPackages(pkgs):
 
 def main():
     args = parseArgs()
+    initializeAptCache()
+
+    if not args.architecture:
+        for p in ["dpkg", "apt", "bash"]:
+            try:
+                args.architecture = aptcache.get(f"{p}:native").architecture()
+                break
+            except AttributeError:
+                pass
+
     packages = getPackages(args.pkg, arch=args.architecture, floatsize=args.floatsize)
     showPackages(packages)
 
