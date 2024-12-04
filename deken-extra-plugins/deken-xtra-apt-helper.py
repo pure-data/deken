@@ -90,6 +90,9 @@ def getPackages2(pkgs, arch=None, floatsize=32):
 
     packages = {}
     for p in aptcache:
+        # filter out known non-externals
+        if p.shortname.startswith("puredata"):
+            continue
         # filter out unwanted architectures
         if arch and p.architecture() != arch:
             continue
