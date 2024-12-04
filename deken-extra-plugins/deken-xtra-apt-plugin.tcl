@@ -28,11 +28,23 @@ proc ::deken::apt::search2 {name} {
         set cmd "${pyfile} --api 1 --os $::deken::platform(os) --architecture $::deken::platform(machine) --floatsize $::deken::platform(floatsize) -- ${name}"
         set io [open "|${cmd}" ]
         while { [gets ${io} line ] >= 0 }  {
-            foreach {pkgname version arch uploader date status comment} [ split "${line}" "\t" ] {break}
+            foreach {pkgname version arch is_installed uploader date uri status comment} [ split "${line}" "\t" ] {break}
             set name ${pkgname}
             set cmd [list ::deken::apt::install ${pkgname}=${version}]
             set match 1
-            set contextcmd [list ::deken::apt::contextmenu %W %x %y ${pkgname}]
+            set contextcmds {}
+            if { ${uri} ne {} } {
+                lappend contextcmds [list [_ "Open package webpage" ] "pd_menucommands::menu_openfile [file dirname ${uri}]"]
+                lappend contextcmds [list [_ "Copy package URL" ] "clipboard clear; clipboard append ${uri}"]
+                if { ${is_installed} } {
+                    lappend contextcmds {}
+                }
+            }
+            if { ${is_installed} } {
+                lappend contextcmds [::deken::apt::contextmenu::uninstall ${pkgname}]
+            }
+
+            set contextcmd [list ::deken::apt::contextmenu %W %x %y $contextcmds]
             set norm [::deken::normalize_result "${pkgname} - ${status}" ${cmd} ${match} ${comment} ${status} ${contextcmd} ${pkgname} ${version} ${uploader} ${date}]
             lappend result ${norm}
         }
