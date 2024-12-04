@@ -18,6 +18,9 @@ namespace eval ::deken::apt {
 }
 
 proc ::deken::apt::search {name} {
+    return [::deken::apt::search1 ${name}]
+}
+proc ::deken::apt::search1 {name} {
     set result []
     if { [info exists ::deken::apt::distribution] } { } {
         if { [ catch { exec lsb_release -si } ::deken::apt::distribution ] } {
