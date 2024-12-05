@@ -1277,7 +1277,7 @@ proc ::deken::normalize_result {title
                                 {timestamp ""}
                                 args} {
     ## normalize a search-result
-    # the function parameters are guaranteed to be a stable API (with the exception or args)
+    # the function parameters are guaranteed to be a stable API (with the exception of <args>)
     # but the value returned by this function is an implementation detail
     # <title> the primary line displayed for the search-result
     # - <cmd> the full command to run to install the library
