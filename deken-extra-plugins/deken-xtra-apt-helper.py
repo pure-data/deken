@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import fnmatch
 import itertools
 
@@ -97,6 +98,10 @@ def getPackages(pkgs, arch=None, floatsize=32):
     else:
         pddeps = pd32deps
 
+    pkgmatch = re.compile(
+        "(pd-|pd64-)?(" + "|".join(fnmatch.translate(p) for p in pkgs) + ")"
+    ).match
+
     packages = {}
     for p in aptcache:
         # filter out known non-externals
@@ -106,12 +111,21 @@ def getPackages(pkgs, arch=None, floatsize=32):
         if arch and p.architecture() != arch:
             continue
         for v in p.versions:
+            names = [p.shortname] + v.provides
+            matches = [
+                matchedname
+                for name in {*names}
+                for matchedname in [pkgmatch(name)]
+                if matchedname
+            ]
+            if not matches:
+                continue
+
             # we only take packages that depend on Pd
             if not hasDependency(v, pddeps):
                 continue
-            names = [p.shortname] + v.provides
-            for name in {*names}:
-                for n in {name, stripSuffix(name, "pd-"), stripSuffix(name, "pd64-")}:
+            for m in matches:
+                for n in {m[0], m[2]}:
                     npkgs = packages.get(n) or set()
                     npkgs.add(v)
                     packages[n] = npkgs
@@ -199,6 +213,7 @@ def main():
     if not args.api:
         # quick sanity check if python-apt is available
         import apt
+
         return
 
     initializeAptCache()
