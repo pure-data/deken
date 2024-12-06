@@ -118,9 +118,8 @@ def getPackages(pkgs, arch=None, floatsize=32):
     matches = {}
     for p in pkgs:
         matches.update({m: packages[m] for m in fnmatch.filter(packages, p)})
-    matches = {m: matches[m] for m in sorted(matches)}
-    result = {m: True for m in itertools.chain(*matches.values())}
-    return result
+
+    return itertools.chain(*matches.values())
 
 
 def getOrigin(
@@ -177,7 +176,7 @@ def getOrigin(
 
 def showPackages(pkgs):
     """create a parseseable representation for each package"""
-    for p in pkgs:
+    for p in sorted(set(pkgs)):
         library = p.package.name
         version = p.version
         arch = p.architecture
