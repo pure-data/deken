@@ -43,7 +43,16 @@ def parseArgs():
     p = parser.add_argument_group(
         title="API",
     )
-    p.add_argument("--api", type=int, required=True, help="Output format version")
+    p.add_argument(
+        "--api",
+        type=int,
+        choices=[
+            0,
+            1,
+        ],
+        required=True,
+        help="Output format version (0=test; 1=current)",
+    )
 
     parser.add_argument(
         "pkg",
@@ -186,9 +195,11 @@ def showPackages(pkgs):
 
 def main():
     args = parseArgs()
-    if args.api not in {1}:
+    if args.api not in {0, 1}:
         return
     initializeAptCache()
+    if not args.api:
+        return
 
     if not args.architecture:
         for p in ["dpkg", "apt", "bash"]:
