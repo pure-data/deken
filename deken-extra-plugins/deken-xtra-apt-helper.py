@@ -98,6 +98,9 @@ def getPackages(pkgs, arch=None, floatsize=32):
     else:
         pddeps = pd32deps
 
+    if pkgs == ["*"]:
+        pkgs = []
+
     pkgmatch = re.compile(
         "(pd-|pd64-)?(" + "|".join(fnmatch.translate(p) for p in pkgs) + ")"
     ).match
@@ -111,15 +114,24 @@ def getPackages(pkgs, arch=None, floatsize=32):
         if arch and p.architecture() != arch:
             continue
         for v in p.versions:
-            names = [p.shortname] + v.provides
-            matches = [
-                matchedname
-                for name in {*names}
-                for matchedname in [pkgmatch(name)]
-                if matchedname
-            ]
-            if not matches:
-                continue
+            if pkgs:
+                names = [p.shortname] + v.provides
+                matches = [
+                    matchedname
+                    for name in {*names}
+                    for matchedname in [pkgmatch(name)]
+                    if matchedname
+                ]
+                if not matches:
+                    continue
+            else:
+                # all externals
+                matches = [p.shortname, None, None]
+                if p.shortname.startswith("pd-"):
+                    matches[2] = p.shortname[3:]
+                elif p.shortname.startswith("pd64-"):
+                    matches[2] = p.shortname[5:]
+                matches = [matches]
 
             # we only take packages that depend on Pd
             if not hasDependency(v, pddeps):
@@ -129,11 +141,7 @@ def getPackages(pkgs, arch=None, floatsize=32):
                     npkgs = packages.get(n) or set()
                     npkgs.add(v)
                     packages[n] = npkgs
-    matches = {}
-    for p in pkgs:
-        matches.update({m: packages[m] for m in fnmatch.filter(packages, p)})
-
-    return itertools.chain(*matches.values())
+    return itertools.chain(*packages.values())
 
 
 def getOrigin(
@@ -225,9 +233,7 @@ def main():
             except AttributeError:
                 pass
 
-    packages = getPackages(
-        args.pkg or ["*"], arch=args.architecture, floatsize=args.floatsize
-    )
+    packages = getPackages(args.pkg, arch=args.architecture, floatsize=args.floatsize)
     showPackages(packages)
 
 
