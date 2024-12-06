@@ -232,22 +232,29 @@ proc ::deken::apt::uninstall {pkg} {
 }
 
 proc ::deken::apt::register { } {
+
     set pyfile [file join ${::deken::apt::pluginpath} deken-xtra-apt-helper.py]
-    if {[file executable ${pyfile}]} {
-        ::deken::register ::deken::apt::search_pyapt
+    if { [ catch {
+        exec ${pyfile} --api 0
         set ::deken::apt::search_pyaptscript ${pyfile}
+        ::deken::register ::deken::apt::search_pyapt
+    } ] } {
+        # failed to initialize python-apt backend
+    } else {
         return 1
     }
+
     if { [ catch { exec apt-cache madison       } _ ] } { } {
 	if { [ catch { exec which grep-aptavail } _ ] } { } {
 	    if { [ catch {
 		::deken::register ::deken::apt::search_madison
 	    } ] } {
-		::pdwindow::debug "Not using APT-backend for unavailable deken\n"
-	    } {
+                #
+	    } else {
 		return 1
 	    }
 	}}
+    ::pdwindow::debug "Not using unavailable APT-backend for deken\n"
     return 0
 }
 
