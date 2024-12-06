@@ -197,10 +197,12 @@ def main():
     args = parseArgs()
     if args.api not in {0, 1}:
         return
-    initializeAptCache()
     if not args.api:
+        # quick sanity check if python-apt is available
+        import apt
         return
 
+    initializeAptCache()
     if not args.architecture:
         for p in ["dpkg", "apt", "bash"]:
             try:
