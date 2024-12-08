@@ -2980,9 +2980,19 @@ proc ::deken::register {fun} {
 
 ## ####################################################################
 ## searching puredata.info
-namespace eval ::deken::search::dekenserver { }
+namespace eval ::deken::search::dekenserver {
+    # deken servers to use
+    variable url_primary
+    variable urls_secondary
+    variable urls_ephemeral
+    # should we actually use them?
+    variable use_url_primary
+    variable use_urls_secondary
+    variable use_urls_ephemeral
+}
 
 # the main deken-url
+::deken::utilities::setdefault ::deken::search::dekenserver::use_url_primary 1
 set ::deken::search::dekenserver::url_primary "http://deken.puredata.info/search"
 if { ! [catch {package present tls} stdout] } {
     set ::deken::search::dekenserver::url_primary "https://deken.puredata.info/search"
@@ -2991,11 +3001,40 @@ catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
 
 
+# additional (fixed) deken-servers
+::deken::utilities::setdefault ::deken::search::dekenserver::use_urls_secondary 0
+::deken::utilities::setdefault ::deken::search::dekenserver::urls_secondary {}
+
+# additional (ephemeral) deken-servers
+::deken::utilities::setdefault ::deken::search::dekenserver::use_urls_ephemeral 0
+## those we expect
+::deken::utilities::setdefault ::deken::search::dekenserver::urls_ephemeral {}
+## those that are there
+array set ::deken::search::dekenserver::urls_ephemeral_existing {}
+
+
 proc ::deken::search::dekenserver::search {term} {
+    set tmpurls {}
+    foreach {k v} [array get ::deken::search::dekenserver::urls_ephemeral_existing] {
+        lappend tmpurls ${v}
+    }
     # all the search URLs
     set urls {}
+    if { ${::deken::search::dekenserver::use_url_primary} } {
     lappend urls ${::deken::search::dekenserver::url_primary}
+    }
+    if { ${::deken::search::dekenserver::use_urls_secondary} } {
+        set urls [concat ${urls} ${::deken::search::dekenserver::urls_secondary}]
+    }
+    if { ${::deken::search::dekenserver::use_urls_ephemeral} } {
+        set urls [concat \
+                     ${urls} \
+                     [::deken::utilities::lists_intersect ${::deken::search::dekenserver::urls_ephemeral} ${tmpurls}] \
+                     ]
+    }
 
+    # remove duplicate entries
+    set urls [::deken::utilities::list_unique ${urls}]
 
     # search all the urls
     array set results {}
