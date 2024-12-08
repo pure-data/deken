@@ -210,6 +210,14 @@ if {[info commands lreverse] == ""} {
 # ######################################################################
 # ################ utilities ##########################################
 # ######################################################################
+proc ::deken::utilities::setdefault {key value} {
+    upvar ${key} k
+    if { [info exists k] } {
+        set k
+    } else {
+        set k ${value}
+    }
+}
 
 proc ::deken::utilities::bool {value {fallback 0}} {
     catch {set fallback [expr {bool(${value})} ] } stdout
