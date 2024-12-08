@@ -2959,9 +2959,8 @@ proc ::deken::search::dekenserver::search {term} {
         ::deken::post [format [_ "Searching on %1\$s returned %2\$d results"] ${s} ${resultcount}] debug
         incr urlcount
     }
-
     if { ${urlcount} == 0 } {
-        ::deken::post [format [_ "No usable servers for searching found..."] ${s} ] debug
+        ::deken::post [format [_ "No usable servers for searching found..."] ${urls} ] debug
     }
     set splitCont [array names results]
     if { [llength ${splitCont}] == 0 } {
@@ -3083,7 +3082,7 @@ proc ::deken::search::dekenserver::search_server {term dekenurl} {
         set msg [format [_ "Searching for '%s' failed!" ] ${term} ]
         tk_messageBox \
             -title [_ "Search failed" ] \
-            -message "${msg}\n${stdout}" \
+            -message "${msg}\n(${dekenurl})\n${stdout}" \
             -icon error -type ok \
             -parent ${::deken::winid}
         return
