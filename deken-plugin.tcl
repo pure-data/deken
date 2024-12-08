@@ -52,9 +52,6 @@ namespace eval ::deken:: {
     variable hideforeignarch
     variable hideoldversions
 
-    # whether to use http:// or https://
-    variable protocol
-
     # results: {{title} {cmd} {description} {url} {ctxmenu}}
     variable results
     # selected: {library} {cmd} ...
@@ -193,13 +190,6 @@ if { "Windows" eq "${::deken::platform(os)}" } {
 catch {
     set ::deken::platform(machine) $::deken::architecture_normalize($::deken::platform(machine))
 }
-
-
-set ::deken::protocol "http"
-if { ! [catch {package present tls} stdout] } {
-    set ::deken::protocol "https"
-}
-
 
 # ######################################################################
 # ################ compatibility #######################################
@@ -2946,11 +2936,20 @@ proc ::deken::register {fun} {
 ## searching puredata.info
 namespace eval ::deken::search::dekenserver { }
 
+# the main deken-url
+set ::deken::search::dekenserver::url_primary "http://deken.puredata.info/search"
+if { ! [catch {package present tls} stdout] } {
+    set ::deken::search::dekenserver::url_primary "https://deken.puredata.info/search"
+}
+catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
+catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
+
+
 proc ::deken::search::dekenserver::search {term} {
-    set dekenurl "${::deken::protocol}://deken.puredata.info/search"
-    catch {set dekenurl $::env(DEKENSERVER)} stdout
-    catch {set dekenurl $::env(DEKEN_SEARCH_URL)} stdout
-    set urls [list ${dekenurl}]
+    # all the search URLs
+    set urls {}
+    lappend urls ${::deken::search::dekenserver::url_primary}
+
 
     # search all the urls
     array set results {}
