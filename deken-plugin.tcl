@@ -210,7 +210,7 @@ if {[info commands lreverse] == ""} {
     proc lreverse list {
         set res {}
         set i [llength ${list}]
-        while {$i} {
+        while {${i}} {
             lappend res [lindex ${list} [incr i -1]]
         }
         set res
@@ -1465,7 +1465,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
     set deldir ""
     set extpath [file join ${installdir} ${extname}]
 
-    if { $extname eq {} } {
+    if { ${extname} eq {} } {
         # cannot remove previous installation, as we couldn't guess the library name
         set showextname ${filename}
     } else {
@@ -1555,7 +1555,7 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 
     if { ${install_failed} } { return }
 
-    if { $extname eq {} } {
+    if { ${extname} eq {} } {
         # failed to properly parse packagefile, so we do not know the libraryname
         # therefore we cannot actually show the readme nor add the path
         return
