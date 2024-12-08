@@ -3514,6 +3514,34 @@ proc ::deken::search::dekenserver::contextmenu {widget theX theY pkgname URL} {
     tk_popup ${m} [expr {[winfo rootx ${widget}] + ${theX}}] [expr {[winfo rooty ${widget}] + ${theY}}]
 }
 
+# ZeroConf
+namespace eval ::deken::zeroconf { }
+proc ::deken::zeroconf::add {id service hostname port txtrecords} {
+    foreach {key value} ${txtrecords} {
+        if { ${key} eq "path" } {
+            set url "http://${hostname}:${port}${value}"
+            set ::deken::search::dekenserver::urls_ephemeral_existing(${id}) ${url}
+            break
+        }
+    }
+}
+proc ::deken::zeroconf::browser {service action name domain} {
+    set id ${name}.${service}.${domain}
+    if { ${action} eq "add" } {
+        ::servus::resolve ${name} ${service} ${domain} [list ::deken::zeroconf::add ${id}]
+    } else {
+        catch {unset ::deken::search::dekenserver::urls_ephemeral_existing(${id})}
+    }
+}
+proc ::deken::zeroconf::browse {service} {
+    ::servus::browse start ${service} [list ::deken::zeroconf::browser ${service}]
+}
+
+if { ! [catch {load [file join ${::current_plugin_loadpath} "servus.so"]} stdout ] } {
+    ::deken::zeroconf::browse _deken._sub._http._tcp
+    ::deken::zeroconf::browse _deken._tcp
+}
+
 
 ::deken::initialize
 ::deken::register ::deken::search::dekenserver::search
