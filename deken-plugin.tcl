@@ -149,6 +149,9 @@ set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
 set ::deken::preferences::keep_package {}
 set ::deken::preferences::verify_sha256 {}
+set ::deken::preferences::url_primary {}
+set ::deken::preferences::urls_secondary {}
+set ::deken::preferences::urls_ephemeral {}
 
 set ::deken::platform(os) ${::tcl_platform(os)}
 set ::deken::platform(machine) [string tolower ${::tcl_platform(machine)}]
@@ -936,6 +939,64 @@ proc ::deken::utilities::get_filenameextension {filename} {
 # ################ preferences #########################################
 # ######################################################################
 
+proc ::deken::preferences::create_sources_entry {toplevel} {
+    # 3 panels
+    # - [ ] primary server
+    # - [ ] secondary URLs (list editable)
+    #       (all URLs are searched if checked)
+    # - [ ] ephemeral URLs (list multiselectable)
+    #       (if checked, and URLs are selected, only these are searched)
+    #       (if checked, and no URLs are selected, all are searched)
+    set frame [::deken::preferences::newwidget ${toplevel}.servers]
+    labelframe ${frame} -text [_ "Search URLs:" ] -padx 5 -pady 5 -borderwidth 1
+    set numframes 0
+
+    if {1} {
+    set f [::deken::preferences::newwidget ${frame}.primary]
+    # primary URL
+    labelframe ${f} -borderwidth 0
+    checkbutton ${f}.use -text "${::deken::search::dekenserver::url_primary}" \
+        -variable ::deken::preferences::use_url_primary
+    ${f} configure -labelwidget ${f}.use
+    pack ${f} -anchor "w" -fill both -expand 1 -side top
+    pack ${f}.use -anchor "w" -side left
+    incr numframes
+    }
+
+    if {0} {
+    set f [::deken::preferences::newwidget ${frame}.secondary]
+    # secondary URLs
+    labelframe ${f} -borderwidth 0
+    checkbutton ${f}.use \
+        -variable ::deken::preferences::use_urls_secondary
+    button ${f}.open \
+        -text [_ "Additional search URLs" ]
+    ${f} configure -labelwidget ${f}.use
+    pack ${f} -anchor "w" -fill both -expand 1 -side left
+    pack ${f}.use -anchor "w" -side left
+    pack ${f}.open -anchor "w" -side left
+    incr numframes
+    }
+
+    if {0} {
+    set f [::deken::preferences::newwidget ${frame}.ephemeral]
+    # ephemeral URLs
+    labelframe ${f} -borderwidth 0
+    checkbutton ${f}.use  \
+        -variable ::deken::preferences::use_urls_ephemeral
+    button ${f}.open -text [_ "Ephemeral search URLs" ]
+    ${f} configure -labelwidget ${f}.use
+    pack ${f} -anchor "w" -fill both -expand 1 -side left
+    pack ${f}.use -anchor "w" -side left
+    pack ${f}.open -anchor "w" -side left
+    incr numframes
+    }
+    if { ${numframes} > 1 } {
+        return ${frame}
+    }
+    return ""
+}
+
 proc ::deken::preferences::newwidget {basename} {
     # calculate a widget name that has not yet been taken
     set i 0
@@ -1263,6 +1324,12 @@ proc ::deken::preferences::create {winid} {
     checkbutton ${winid}.platform.only_newest -text [_ "Only show the newest version of a library\n(treats other versions like foreign architectures)"] \
         -variable ::deken::preferences::hideoldversions -justify "left"
     pack ${winid}.platform.only_newest -anchor "w"
+
+    # search URLs
+    set sourceframe [::deken::preferences::create_sources_entry ${winid}]
+    if { ${sourceframe} ne {} } {
+        pack ${sourceframe} -anchor "w" -fill both -expand 1
+    }
 }
 
 proc ::deken::preferences::mapped {winid} {
