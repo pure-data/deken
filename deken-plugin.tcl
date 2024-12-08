@@ -224,6 +224,44 @@ proc ::deken::utilities::tristate {value {offset 0} {fallback 0} } {
     return ${fallback}
 }
 
+proc ::deken::utilities::list_unique {lst} {
+    array set cache {}
+    set result {}
+    foreach element ${lst} {
+        if { ! [info exists cache(${element})]} {
+            lappend result ${element}
+        }
+        set cache(${element}) 1
+    }
+    return ${result}
+}
+proc ::deken::utilities::lists_intersect {args} {
+    set numlists [llength ${args}]
+    if {${numlists} < 1} {return {}}
+
+    set cache("") 0
+    set elements {}
+    foreach lst ${args} {
+        set lst [::deken::utilities::list_unique ${lst}]
+        foreach element ${lst} {
+            if { ! [info exists cache(${element})]} {
+                lappend elements ${element}
+            }
+            incr cache(${element})
+        }
+    }
+    # ${elements} holds a list of unique elements (as they appeared)
+    # so filter out those that were not in all lists
+    set cache("") 0
+    set result {}
+    foreach element ${elements} {
+        if { ${numlists} == $cache(${element}) } {
+            lappend result ${element}
+        }
+    }
+    return ${result}
+}
+
 proc ::deken::utilities::expandpath {path} {
     set map "@PD_PATH@"
     lappend map ${::sys_libdir}
