@@ -1012,15 +1012,21 @@ proc ::deken::preferences::create {winid} {
     [lindex ${pathdoit} 1] configure \
         -text "..." \
         -command "::deken::preferences::userpath_doit ${winid}"
-    ::deken::preferences::create_pathpad ${pathsframe} ${row}
-    incr row
 
     ### dekenpath: default directories
     if {[namespace exists ::pd_docsdir] && [::pd_docsdir::externals_path_is_valid]} {
-        foreach p [::pd_docsdir::get_externals_path] {
+        set xpath [::pd_docsdir::get_externals_path]
+        if { [llength ${xpath}] } {
+            ::deken::preferences::create_pathpad ${pathsframe} ${row}
+            incr row
+        }
+
+        foreach p ${xpath} {
             ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath ${p}
             incr row
         }
+    }
+    if { [llength ${::sys_staticpath}] } {
         ::deken::preferences::create_pathpad ${pathsframe} ${row}
         incr row
     }
@@ -1032,8 +1038,11 @@ proc ::deken::preferences::create {winid} {
         ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath ${p}
         incr row
     }
-    ::deken::preferences::create_pathpad ${pathsframe} ${row}
-    incr row
+
+    if {[llength ${::sys_searchpath}]} {
+        ::deken::preferences::create_pathpad ${pathsframe} ${row}
+        incr row
+    }
 
     foreach p ${::sys_searchpath} {
         ::deken::preferences::create_pathentry ${pathsframe} ${row} ::deken::preferences::installpath ${p}
