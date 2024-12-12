@@ -258,6 +258,10 @@ proc ::deken::apt::register { } {
     return 0
 }
 
-if { [::deken::apt::register] } {
-    ::pdwindow::debug "Using APT as additional deken backend\n"
+proc ::deken::apt::initialize { } {
+    if { [::deken::apt::register] } {
+        ::pdwindow::debug "Using APT as additional deken backend\n"
+    }
 }
+
+after idle ::deken::apt::initialize
