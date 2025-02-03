@@ -626,6 +626,7 @@ namespace eval ::deken::utilities::sha256:: {
         catch { set hash [lindex [exec shasum -a 256 ${filename}] 0] }
         return ${hash}
     }
+    if {$::tcl_platform(platform) eq "windows"} {
     proc winpowershell {filename} {
         set batscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".bat" ]
         set script {
@@ -660,6 +661,7 @@ namespace eval ::deken::utilities::sha256:: {
             regexp {([a-fA-F0-9]{64})} [exec certUtil -hashfile ${filename} SHA256] hash
         }
         return ${hash}
+    }
     }
     catch {
         package require sha256
