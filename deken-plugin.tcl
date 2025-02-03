@@ -612,58 +612,64 @@ proc ::deken::utilities::uninstall {path library} {
     }
     return 1
 }
+namespace eval ::deken::utilities::sha256:: {
+    # we put a number of sha256sum methods in this namespace
+    # they are tried in alphabetical order
 
-proc ::deken::utilities::sha256_sha256sum {filename} {
-    set hash {}
-    catch { set hash [lindex [exec sha256sum ${filename}] 0] }
-    return ${hash}
-}
-proc ::deken::utilities::sha256_shasum {filename} {
-    set hash {}
-    catch { set hash [lindex [exec shasum -a 256 ${filename}] 0] }
-    return ${hash}
-}
-proc ::deken::utilities::sha256_powershell {filename} {
-    set batscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".bat" ]
-    set script {
-@echo off
-powershell -Command " & {Get-FileHash -Algorithm SHA256 -LiteralPath \"%1\"  | Select-Object -ExpandProperty Hash}"
+    proc sha256sum {filename} {
+        set hash {}
+        catch { set hash [lindex [exec sha256sum ${filename}] 0] }
+        return ${hash}
     }
-    if {![catch {set fileId [open ${batscript} "w"]}]} {
-        puts ${fileId} ${script}
-        close ${fileId}
+    proc shasum {filename} {
+        set hash {}
+        catch { set hash [lindex [exec shasum -a 256 ${filename}] 0] }
+        return ${hash}
     }
+    proc winpowershell {filename} {
+        set batscript [::deken::utilities::get_tmpfilename [::deken::utilities::get_tmpdir] ".bat" ]
+        set script {
+            @echo off
+            powershell -Command " & {Get-FileHash -Algorithm SHA256 -LiteralPath \"%1\"  | Select-Object -ExpandProperty Hash}"
+        }
+        if {![catch {set fileId [open ${batscript} "w"]}]} {
+            puts ${fileId} ${script}
+            close ${fileId}
+        }
 
-    if {![file exists ${batscript}]} {
-        ## still no script, give up
-        return ""
+        if {![file exists ${batscript}]} {
+            ## still no script, give up
+            return ""
+        }
+
+        if { [ catch {
+            set hash [exec "${batscript}" "${filename}"]
+        } stdout ] } {
+            # ouch, couldn't run powershell script
+            ::deken::utilities::verbose 1 "sha256.ps1 error: ${stdout}"
+            set hash ""
+        }
+
+        catch { file delete "${batscript}" }
+
+        return ${hash}
     }
-
-    if { [ catch {
-        set hash [exec "${batscript}" "${filename}"]
-    } stdout ] } {
-        # ouch, couldn't run powershell script
-        ::deken::utilities::verbose 1 "sha256.ps1 error: ${stdout}"
-        set hash ""
+    proc windows {filename} {
+        set hash {}
+        catch {
+            regexp {([a-fA-F0-9]{64})} [exec certUtil -hashfile ${filename} SHA256] hash
+        }
+        return ${hash}
     }
-
-    catch { file delete "${batscript}" }
-
-    return ${hash}
-}
-proc ::deken::utilities::sha256_msw {filename} {
-    set hash {}
     catch {
-        regexp {([a-fA-F0-9]{64})} [exec certUtil -hashfile ${filename} SHA256] hash
+        package require sha256
+        proc ZZZtcllib {filename} {
+            # the tcllib implementation comes last, as it is really slow...
+            set hash {}
+            catch { set hash [::sha2::sha256 -hex -filename ${filename}] }
+            return ${hash}
+        }
     }
-    return ${hash}
-}
-if { [catch {package require sha256} ] } { proc ::deken::utilities::sha256_tcllib {filename} {} } else {
-proc ::deken::utilities::sha256_tcllib {filename} {
-    set hash {}
-    catch { set hash [::sha2::sha256 -hex -filename ${filename}] }
-    return ${hash}
-}
 }
 
 
@@ -673,10 +679,19 @@ proc ::deken::utilities::verify_sha256 {url pkgfile} {
     return -100
 }
 
+foreach impl [lsort -dictionary [info procs ::deken::utilities::sha256::*]] {
+    # skip any $impl that does not return a valid sha256 (or even throws an error)
+    if { [catch {
+        if { [$impl ${::argv0}] eq "" } {
+            continue
+        }
+    }] } {
+        continue
+    }
 
-foreach impl {sha256sum shasum powershell msw tcllib} {
-    if { [::deken::utilities::sha256_${impl} ${::argv0}] ne "" } {
-    set ::deken::utilities::sha256_implementation ::deken::utilities::sha256_${impl}
+    # short name for the actually used interpreter
+    interp alias {} ::deken::utilities::sha256 {} ${impl}
+
     proc ::deken::utilities::verify_sha256 {url pkgfile} {
         ::deken::statuspost [format [_ "SHA256 verification of '%s'" ] ${pkgfile} ] debug
         ::deken::syncgui
@@ -723,8 +738,15 @@ foreach impl {sha256sum shasum powershell msw tcllib} {
             }
 
             # get hash of file
-            set hash [${::deken::utilities::sha256_implementation} ${pkgfile} ]
+            set hash [::deken::utilities::sha256 ${pkgfile} ]
             set hash [string trim [string tolower ${hash} ] ]
+
+            if { $hash == "" } {
+                set msg [format [_ "Skipping SHA256 verification of '%s'." ] ${url} ]
+                ::deken::statuspost ${msg}
+                return -100
+            }
+
             # check if hash is sane
             if { [string length ${hash}] != 64 || ! [string is xdigit ${hash}] } {
                 ::deken::statuspost [format [_ "File checksum looks invalid: '%s'." ] ${hash}] warn 0
@@ -753,9 +775,8 @@ foreach impl {sha256sum shasum powershell msw tcllib} {
         }
         return ${retval}
     }
-# it seems we found a working sha256 implementation, don't try the other ones...
-break
-}
+    # it seems we found a working sha256 implementation, don't try the other ones...
+    break
 }
 
 proc ::deken::utilities::httpuseragent {} {
