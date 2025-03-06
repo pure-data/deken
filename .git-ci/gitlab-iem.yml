@@ -31,21 +31,31 @@ variables:
  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
  GIT_SUBMODULE_STRATEGY: normal
- PYTHON: python3
  PIPFLAGS: ""
  DEKEN_TEST_PACKAGE: XXX-deken-test
  TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
 
+.script:python: &script_python
+# test if either python3 or python can be used
+  - test -n "${python}" || ! which python3 2>/dev/null >/dev/null || python=python3
+  - test -n "${python}" || ! which python 2>/dev/null >/dev/null || python=python
+  # fall back to python3
+  - test -n "${python}" || python=python3
+  - ${python} --version || true
+  - which "${python}" || true
+
 .build_script:
+  before_script:
+    - *script_python
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
-    - ${PYTHON} -m pip install --upgrade pip
-    - ${PYTHON} -m pip install ${PIPFLAGS} -r developer/requirements.txt
-    - ${PYTHON} -m pip install ${PIPFLAGS} pyinstaller~=6.0
+    - ${python} -m pip install --upgrade pip
+    - ${python} -m pip install ${PIPFLAGS} -r developer/requirements.txt
+    - ${python} -m pip install ${PIPFLAGS} pyinstaller~=6.0
     - for d in ~/Library/Python/*/bin; do test -d "${d}" && PATH=${PATH}:${d}; done || true
     - echo $PATH
-    - ${PYTHON} -m hy developer/deken.hy systemfix --all
+    - ${python} -m hy developer/deken.hy systemfix --all
     - (cd developer; pyinstaller deken.spec)
 
 .deken-test:
@@ -118,7 +128,8 @@ osx:
     PIPFLAGS: --user
   stage: build
   before_script:
-    - ${PYTHON} --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
+    - *script_python
+    - ${python} --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
     - sudo chown -R $(whoami) /usr/local/ || echo "continuing without owning /usr/local"
   after_script:
     - cp developer/dist/deken .
@@ -147,10 +158,6 @@ windows:
     - sardinecake
   image: registry.git.iem.at/devtools/sardinecake/windows:python3
   stage: build
-  before_script:
-    - PYTHON=$(which "${PYTHON}" python python3 2>/dev/null | head -1 || echo ${PYTHON})
-    - ${PYTHON} --version || true
-    - which $PYTHON || true
   after_script:
     - cp developer/dist/deken.exe .
   artifacts:
