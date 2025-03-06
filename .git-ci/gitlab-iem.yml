@@ -148,7 +148,7 @@ windows:
   image: registry.git.iem.at/devtools/sardinecake/windows:python3
   stage: build
   before_script:
-    - PYTHON=$(which "${PYTHON}" python python3 2>/dev/null | head -1)
+    - PYTHON=$(which "${PYTHON}" python python3 2>/dev/null | head -1 || echo ${PYTHON})
     - ${PYTHON} --version || true
     - which $PYTHON || true
   after_script:
