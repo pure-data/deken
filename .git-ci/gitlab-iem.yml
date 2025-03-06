@@ -108,9 +108,12 @@ fetch-testdata:
 osx:
   extends:
     - .build_script
+## build on the legacy OSX machines to get amd64 binaries!
+#  tags:
+#    - tart
+#  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
   tags:
-    - tart
-  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
+    - osx
   variables:
     PIPFLAGS: --user
   stage: build
