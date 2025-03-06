@@ -428,6 +428,21 @@ namespace eval ::deken::utilities::unzipper:: {
         proc tcllib_zipfile {zipfile path} {
             if { [catch {
                 ::zipfile::decode::unzipfile "${zipfile}" "${path}"
+                ::zipfile::decode::open "${zipfile}"
+                set zdict [::zipfile::decode::archive]
+                ::zipfile::decode::close
+                foreach zfile [::zipfile::decode::files $zdict] {
+                    set zfile [file join ${path} ${zfile}]
+                    catch {
+                        if { ! [expr [file attributes $zfile -permissions] ] } {
+                            if [file isdirectory $zfile ] {
+                                file attributes $zfile -permissions 0700
+                            } else {
+                                file attributes $zfile -permissions 0600
+                            }
+                        }
+                    }
+                }
             } stdout ] } {
                 ::deken::utilities::debug "unzipper::zipfile::decode: ${stdout}"
                 return 0
