@@ -36,7 +36,7 @@ variables:
  DEKEN_TEST_PACKAGE: XXX-deken-test
  TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
 
-.build_script: &build_script
+.build_script:
   script:
     - export DEKEN_VERSION=$(.git-ci/git-version)
     - echo "${DEKEN_VERSION}"
@@ -106,6 +106,8 @@ fetch-testdata:
     expire_in: 1 week
 
 osx:
+  extends:
+    - .build_script
   tags:
     - tart
   image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
@@ -115,7 +117,6 @@ osx:
   before_script:
     - ${PYTHON} --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
     - sudo chown -R $(whoami) /usr/local/ || echo "continuing without owning /usr/local"
-  <<: *build_script
   after_script:
     - cp developer/dist/deken .
   artifacts:
@@ -137,6 +138,8 @@ osx-test:
 
 windows:
   allow_failure: true
+  extends:
+    - .build_script
   tags:
     - sardinecake
   image: registry.git.iem.at/devtools/sardinecake/windows:python3
@@ -145,7 +148,6 @@ windows:
     - PYTHON=$(which "${PYTHON}" python python3 2>/dev/null | head -1)
     - ${PYTHON} --version || true
     - which $PYTHON || true
-  <<: *build_script
   after_script:
     - cp developer/dist/deken.exe .
   artifacts:
