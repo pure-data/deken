@@ -34,6 +34,7 @@ variables:
  PYTHON: python3
  PIPFLAGS: ""
  DEKEN_TEST_PACKAGE: XXX-deken-test
+ TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
 
 .build_script: &build_script
   script:
