@@ -106,7 +106,8 @@ fetch-testdata:
 
 osx:
   tags:
-    - osx
+    - tart
+  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
   variables:
     PIPFLAGS: --user
   stage: build
@@ -136,9 +137,9 @@ osx-test:
 windows:
   allow_failure: true
   tags:
-    - windows
+    - sardinecake
+  image: registry.git.iem.at/devtools/sardinecake/windows:python3
   variables:
-    IEMCI_CONFIGURATIONS: python3
     PYTHON: python
   stage: build
   before_script:
