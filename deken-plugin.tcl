@@ -431,11 +431,11 @@ namespace eval ::deken::utilities::unzipper:: {
                 ::zipfile::decode::open "${zipfile}"
                 set zdict [::zipfile::decode::archive]
                 ::zipfile::decode::close
-                foreach zfile [::zipfile::decode::files $zdict] {
+                foreach zfile [::zipfile::decode::files ${zdict}] {
                     set zfile [file join ${path} ${zfile}]
                     catch {
-                        if { ! [expr [file attributes $zfile -permissions] ] } {
-                            if [file isdirectory $zfile ] {
+                        if { ! [file attributes ${zfile} -permissions] } {
+                            if [file isdirectory ${zfile} ] {
                                 file attributes $zfile -permissions 0700
                             } else {
                                 file attributes $zfile -permissions 0600
@@ -699,7 +699,7 @@ proc ::deken::utilities::verify_sha256 {url pkgfile} {
 foreach impl [lsort -dictionary [info procs ::deken::utilities::sha256::*]] {
     # skip any $impl that does not return a valid sha256 (or even throws an error)
     if { [catch {
-        if { [$impl ${::argv0}] eq "" } {
+        if { [${impl} ${::argv0}] eq "" } {
             continue
         }
     }] } {
@@ -758,7 +758,7 @@ foreach impl [lsort -dictionary [info procs ::deken::utilities::sha256::*]] {
             set hash [::deken::utilities::sha256 ${pkgfile} ]
             set hash [string trim [string tolower ${hash} ] ]
 
-            if { $hash == "" } {
+            if { ${hash} == "" } {
                 set msg [format [_ "Skipping SHA256 verification of '%s'." ] ${url} ]
                 ::deken::statuspost ${msg}
                 return -100
