@@ -436,10 +436,11 @@ namespace eval ::deken::utilities::unzipper:: {
                     catch {
                         if { ! [file attributes ${zfile} -permissions] } {
                             if [file isdirectory ${zfile} ] {
-                                file attributes $zfile -permissions 0700
+                                set perms 0700
                             } else {
-                                file attributes $zfile -permissions 0600
+                                set perms 0600
                             }
+                            file attributes ${zfile} -permissions ${perms}
                         }
                     }
                 }
