@@ -140,13 +140,11 @@ windows:
   tags:
     - sardinecake
   image: registry.git.iem.at/devtools/sardinecake/windows:python3
-  variables:
-    PYTHON: python
   stage: build
   before_script:
+    - PYTHON=$(which "${PYTHON}" python python3 2>/dev/null | head -1)
     - ${PYTHON} --version || true
     - which $PYTHON || true
-    - which python python3 || true
   <<: *build_script
   after_script:
     - cp developer/dist/deken.exe .
