@@ -1,0 +1,12 @@
+# config for tcl-linter https://github.com/nmoroze/tclint/
+ignore = [
+    "line-length",
+    "redefined-builtin",
+    "command-args"
+]
+
+[style]
+## number of spaces to indent. can also be set to "tab". defaults to 4.
+#indent = 2
+## maximum allowed line length. defaults to 80.
+#line-length = 100
