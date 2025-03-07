@@ -1001,7 +1001,7 @@ proc ::deken::preferences::create_pathentry {toplevel row var path {generic fals
 
     radiobutton ${rdb} -value ${path} -text "${path}" -variable ${var}
     frame ${pad}
-    button ${chk} -text "..." -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
+    button ${chk} -text [_ "Browse" ] -command "::deken::preferences::path_doit ${rdb} ${chk} ${xpath}"
 
     grid ${rdb} -sticky "w"  -row ${row} -column 2
     grid ${pad} -sticky ""   -row ${row} -column 1 -padx 10
@@ -1085,7 +1085,7 @@ proc ::deken::preferences::create {winid} {
         -textvariable ::deken::preferences::userinstallpath \
         -variable ::deken::preferences::installpath
     [lindex ${pathdoit} 1] configure \
-        -text "..." \
+        -text [_ "Browse" ] \
         -command "::deken::preferences::userpath_doit ${winid}"
 
     ### dekenpath: default directories
