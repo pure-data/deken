@@ -149,8 +149,10 @@ set ::deken::preferences::add_to_path {}
 set ::deken::preferences::add_to_path_temp {}
 set ::deken::preferences::keep_package {}
 set ::deken::preferences::verify_sha256 {}
-set ::deken::preferences::url_primary {}
+set ::deken::preferences::use_url_primary 1
+set ::deken::preferences::use_urls_secondary 0
 set ::deken::preferences::urls_secondary {}
+set ::deken::preferences::use_urls_ephemeral 0
 set ::deken::preferences::urls_ephemeral {}
 
 set ::deken::platform(os) ${::tcl_platform(os)}
@@ -1417,6 +1419,13 @@ proc ::deken::preferences::apply {winid} {
         "${::deken::preferences::add_to_path}" \
         "${::deken::preferences::keep_package}" \
         "${::deken::preferences::verify_sha256}"
+
+    ::deken::set_search_urls \
+        ${::deken::preferences::use_url_primary} \
+        ${::deken::preferences::use_urls_secondary} \
+        ${::deken::preferences::urls_secondary} \
+        ${::deken::preferences::use_urls_ephemeral} \
+        ${::deken::preferences::urls_ephemeral}
 }
 proc ::deken::preferences::cancel {winid} {
     ## FIXXME properly close the window/frame (for reuse in a tabbed pane)
@@ -1447,6 +1456,15 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::add_to_path [::deken::utilities::tristate ${add} 0 0]
         set ::deken::keep_package [::deken::utilities::bool ${keep}]
         set ::deken::verify_sha256 [::deken::utilities::bool ${verify256}]
+    }
+    proc ::deken::set_search_urls {use_primary use_secondaries secondaries use_ephemerals ephemerals} {
+        set ::deken::search::dekenserver::use_url_primary [::deken::utilities::bool ${use_primary}]
+
+        set ::deken::search::dekenserver::use_urls_secondary [::deken::utilities::bool ${use_secondaries}]
+        set ::deken::search::dekenserver::urls_secondary ${secondaries}
+
+        set ::deken::search::dekenserver::use_urls_ephemeral [::deken::utilities::bool ${use_ephemerals}]
+        set ::deken::search::dekenserver::urls_ephemeral ${ephemerals}
     }
 } else {
     catch {set ::deken::installpath [lindex ${::deken::installpath} 0]}
@@ -1495,6 +1513,27 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write deken_add_to_path "${::deken::add_to_path}"
         ::pd_guiprefs::write deken_keep_package "${::deken::keep_package}"
         ::pd_guiprefs::write deken_verify_sha256 "${::deken::verify_sha256}"
+    }
+    set ::deken::search::dekenserver::use_url_primary [::deken::utilities::bool [pd_guiprefs::read dekensearch_useprimaryurl] 1]
+    set ::deken::search::dekenserver::use_urls_secondary [::deken::utilities::bool [pd_guiprefs::read dekensearch_usesecondaryurls] 0]
+    set ::deken::search::dekenserver::urls_secondary [pd_guiprefs::read dekensearch_secondaryurls]
+    set ::deken::search::dekenserver::use_urls_ephemeral [::deken::utilities::bool [pd_guiprefs::read dekensearch_useephemeralurls] 0]
+    set ::deken::search::dekenserver::urls_ephemeral [pd_guiprefs::read dekensearch_ephemeralurls]
+
+    proc ::deken::set_search_urls {use_primary use_secondaries secondaries use_ephemerals ephemerals} {
+        set ::deken::search::dekenserver::use_url_primary [::deken::utilities::bool ${use_primary}]
+
+        set ::deken::search::dekenserver::use_urls_secondary [::deken::utilities::bool ${use_secondaries}]
+        set ::deken::search::dekenserver::urls_secondary ${secondaries}
+
+        set ::deken::search::dekenserver::use_urls_ephemeral [::deken::utilities::bool ${use_ephemerals}]
+        set ::deken::search::dekenserver::urls_ephemeral ${ephemerals}
+
+        ::pd_guiprefs::write dekensearch_useprimaryurl "${::deken::search::dekenserver::use_url_primary}"
+        ::pd_guiprefs::write dekensearch_usesecondaryurls "${::deken::search::dekenserver::use_urls_secondary}"
+        ::pd_guiprefs::write dekensearch_secondaryurls "${::deken::search::dekenserver::urls_secondary}"
+        ::pd_guiprefs::write dekensearch_useephemeralurls "${::deken::search::dekenserver::use_urls_ephemeral}"
+        ::pd_guiprefs::write dekensearch_ephemeralurls "${::deken::search::dekenserver::urls_ephemeral}"
     }
 }
 
