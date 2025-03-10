@@ -60,7 +60,6 @@ namespace eval ::deken:: {
     # selected: {library} {cmd} ...
     variable selected {}
 }
-
 namespace eval ::deken::preferences {
     variable installpath
     variable installpath_x
@@ -124,6 +123,7 @@ namespace eval ::deken:: {
     namespace export register
 }
 namespace eval ::deken::search:: { }
+namespace eval ::deken::search::dekenserver { }
 
 ## FIXXXXME only initialize vars if not yet set
 set ::deken::backends {}
