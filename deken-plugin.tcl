@@ -43,6 +43,9 @@ if { [catch {package require autoproxy} ] } {} else {
 package require pdwindow 0.1
 package require pd_menucommands 0.1
 package require pd_guiprefs
+package require scrollboxwindow
+package require scrollbox
+
 
 namespace eval ::deken:: {
     variable version
@@ -971,7 +974,8 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     labelframe ${f} -borderwidth 0
     checkbutton ${f}.use \
         -variable ::deken::preferences::use_urls_secondary
-    button ${f}.open \
+        button ${f}.open \
+        -command [list ::deken::preferences::urls2_frame_create ${toplevel}] \
         -text [_ "Additional search URLs" ]
     ${f} configure -labelwidget ${f}.use
     pack ${f} -anchor "w" -fill both -expand 1 -side left
@@ -1004,6 +1008,27 @@ proc ::deken::preferences::newwidget {basename} {
     set i 0
     while {[winfo exists ${basename}${i}]} {incr i}
     return ${basename}${i}
+}
+
+proc ::deken::preferences::urls2_frame_create {toplevel} {
+    set title [_ "Additional search URLs"]
+    set win ${toplevel}.urls2
+    destroy $win
+    toplevel $win
+    wm title $win "deken: ${title}"
+    ::scrollbox::make ${win} ${::deken::preferences::urls_secondary} {} {}
+    #::deken::preferences::make_applybutton_frame ${win} \
+    #    [list ::deken::preferences::urls2_frame_apply ${win}]
+
+    set cmd [list ::scrollboxwindow::apply ${win} ::deken::preferences::set_urls_secondary]
+    ::deken::preferences::make_applybutton_frame ${win} \
+        "${cmd}; destroy ${win}"
+
+    bind ${win} <Escape> [list after idle [list ::deken::preferences::cancel $win]]
+
+}
+proc ::deken::preferences::set_urls_secondary {urls} {
+    set ::deken::preferences::urls_secondary ${urls}
 }
 
 proc ::deken::preferences::create_pathpad {toplevel row {padx 2} {pady 2}} {
