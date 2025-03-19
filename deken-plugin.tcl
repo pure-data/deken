@@ -3133,6 +3133,7 @@ proc ::deken::search_for {term} {
 
 
 proc ::deken::initialize {} {
+    set label [_ "Find externals"]
     # console message to let them know we're loaded
     ## but only if we are being called as a plugin (not as built-in)
     if { "" != "${::current_plugin_loadpath}" } {
@@ -3147,25 +3148,44 @@ proc ::deken::initialize {} {
 
 
     # create an entry for our search in the menu (or reuse an existing one)
+
+    # check which menus are there (for the pdwindow)
+    set helpmenu {}
+    set toolsmenu {}
+
+    set pdmenu [.pdwindow cget -menu]
+    for {set m 0} {$m <= [$pdmenu index end]} {incr m} {
+        set _m [$pdmenu entrycget $m -menu]
+        switch -glob $_m {
+            *.tools { set toolsmenu $_m }
+            *.help { set helpmenu $_m }
+        }
+    }
+
     # if there's a 'tools' menu, use that, otherwise use the 'help' menu
-    set mymenu .menubar.tools
-    if { [winfo exists ${mymenu}]} {
+    if { [winfo exists ${toolsmenu}]} {
         # we got Tools->, so if there's Help->Find externals... entry, drop it
         catch {
-            .menubar.help delete [_ "Find externals"]
+            $helpmenu delete ${label}
+        }
+        set mymenu ${toolsmenu}
+    } else {
+        set mymenu ${helpmenu}
+    }
+    if { [winfo exists ${mymenu}] } {
+        if { [catch {
+            # if there's already an entry, make sure to use our 'open_searchui' rather than the built-in
+            ${mymenu} entryconfigure ${label} -command {::deken::open_searchui ${::deken::winid}}
+        } _ ] } {
+            # otherwise create a new menu entry
+            if { ${mymenu} eq ".menubar.help" } {
+                ${mymenu} add separator
+            }
+            ${mymenu} add command -label ${label} -command {::deken::open_searchui ${::deken::winid}}
         }
     } else {
-        set mymenu .menubar.help
-    }
-    if { [catch {
-        # if there's already an entry, make sure to use our 'open_searchui' rather than the built-in
-        ${mymenu} entryconfigure [_ "Find externals"] -command {::deken::open_searchui ${::deken::winid}}
-    } _ ] } {
-        # otherwise create a new menu entry
-        if { ${mymenu} eq ".menubar.help" } {
-            ${mymenu} add separator
-        }
-        ${mymenu} add command -label [_ "Find externals"] -command {::deken::open_searchui ${::deken::winid}}
+        set msg [_ "Could not find a menu for adding '%s'" ${label}]
+        ::pdwindow::fatal "\[deken\] ${msg}\n"
     }
     # bind all <${::modifier}-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 }
