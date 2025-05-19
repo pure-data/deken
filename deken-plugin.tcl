@@ -809,7 +809,11 @@ foreach impl [lsort -dictionary [info procs ::deken::utilities::sha256::*]] {
 
 proc ::deken::utilities::httpuseragent {} {
     set httpagent [::http::config -useragent]
-    set pdversion "Pd/${::PD_MAJOR_VERSION}.${::PD_MINOR_VERSION}.${::PD_BUGFIX_VERSION}${::PD_TEST_VERSION}"
+    set appname "Pd"
+    if {[info exists ::PD_APPLICATION_NAME]} {
+        set appname ${::PD_APPLICATION_NAME}
+    }
+    set pdversion "${appname}/${::PD_MAJOR_VERSION}.${::PD_MINOR_VERSION}.${::PD_BUGFIX_VERSION}${::PD_TEST_VERSION}"
     set platformstring [::deken::platform2string]
     set tclversion "Tcl/[info patchlevel]"
     ::http::config -useragent "Deken/${::deken::version} (${platformstring}) ${pdversion} ${tclversion}"
