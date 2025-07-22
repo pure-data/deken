@@ -964,7 +964,8 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     set f [::deken::preferences::newwidget ${frame}.primary]
     # primary URL
     labelframe ${f} -borderwidth 0
-    checkbutton ${f}.use -text "${::deken::search::dekenserver::url_primary}" \
+        checkbutton ${f}.use \
+        -textvariable ::deken::search::dekenserver::url_primary_default \
         -variable ::deken::preferences::use_url_primary
     ${f} configure -labelwidget ${f}.use
     pack ${f} -anchor "w" -fill both -expand 1 -side top
@@ -3269,13 +3270,10 @@ namespace eval ::deken::search::dekenserver {
 
 # the main deken-url
 ::deken::utilities::setdefault ::deken::search::dekenserver::use_url_primary 1
-set ::deken::search::dekenserver::url_primary "http://deken.puredata.info/search"
-if { ! [catch {package present tls} stdout] } {
-    set ::deken::search::dekenserver::url_primary "https://deken.puredata.info/search"
-}
+set ::deken::search::dekenserver::url_primary_default "https://deken.puredata.info/search"
+catch {unset ::deken::search::dekenserver::url_primary}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
-
 
 # additional (fixed) deken-servers
 ::deken::utilities::setdefault ::deken::search::dekenserver::use_urls_secondary 0
@@ -3294,10 +3292,44 @@ proc ::deken::search::dekenserver::search {term} {
     foreach {k v} [array get ::deken::search::dekenserver::urls_ephemeral_existing] {
         lappend tmpurls ${v}
     }
+    if {$::deken::search::dekenserver::use_url_primary} {
+        #::http::unregister https
+        if { [info exists ::deken::search::dekenserver::url_primary ]} {
+            if { $::deken::search::dekenserver::url_primary eq {}} {
+                unset ::deken::search::dekenserver::url_primary
+            }
+        }
+
+        if { ![info exists ::deken::search::dekenserver::url_primary ]} {
+            set url ${::deken::search::dekenserver::url_primary_default}
+            if {[catch {
+                set httpresult [::http::geturl ${url}]
+                ::http::cleanup ${httpresult}
+            } stdout]} {
+                if {[string first "http://" [string tolower $url]]} {
+                    # does NOT start with http://
+                    set protoend [string first "://" $url]
+                    if { $protoend > 0 } {
+                        set url "http[string range $url $protoend end]"
+                    } else {
+                        set url ""
+                    }
+                } else {
+                    set url ""
+                }
+            }
+            set ::deken::search::dekenserver::url_primary ${url}
+            # set the ..._default for the deken prefs textvariable
+            if { $url ne {}} {
+                set ::deken::search::dekenserver::url_primary_default ${url}
+            }
+            unset url
+        }
+    }
     # all the search URLs
     set urls {}
     if { ${::deken::search::dekenserver::use_url_primary} } {
-    lappend urls ${::deken::search::dekenserver::url_primary}
+        lappend urls ${::deken::search::dekenserver::url_primary}
     }
     if { ${::deken::search::dekenserver::use_urls_secondary} } {
         set urls [concat ${urls} ${::deken::search::dekenserver::urls_secondary}]
