@@ -169,7 +169,8 @@ windows-test:
   extends:
     - .deken-test
   tags:
-    - windows
+    - sardinecakse
+  image: registry.git.iem.at/devtools/sardinecake/windows:latest
   dependencies:
     - windows
     - fetch-testdata
