@@ -976,7 +976,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     labelframe ${frame} -text [_ "Search URLs:" ] -padx 5 -pady 5 -borderwidth 1
     set numframes 0
 
-    if {1} {
+    if {$::deken::search::dekenserver::show_url_preferences >= 1} {
     set f [::deken::preferences::newwidget ${frame}.primary]
     # primary URL
     labelframe ${f} -borderwidth 0
@@ -989,7 +989,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     incr numframes
     }
 
-    if {0} {
+    if {$::deken::search::dekenserver::show_url_preferences >= 2} {
     set f [::deken::preferences::newwidget ${frame}.secondary]
     # secondary URLs
     labelframe ${f} -borderwidth 0
@@ -1005,7 +1005,7 @@ proc ::deken::preferences::create_sources_entry {toplevel} {
     incr numframes
     }
 
-    if {0} {
+    if {$::deken::search::dekenserver::show_url_preferences >= 3} {
     set f [::deken::preferences::newwidget ${frame}.ephemeral]
     # ephemeral URLs
     labelframe ${f} -borderwidth 0
@@ -3282,6 +3282,9 @@ namespace eval ::deken::search::dekenserver {
     variable use_url_primary
     variable use_urls_secondary
     variable use_urls_ephemeral
+    # should we display them in the preferences?
+    # (1: show primary; 2: also show secondary; 3: also show ephemeral)
+    variable show_url_preferences
 }
 
 # the main deken-url
@@ -3290,6 +3293,10 @@ set ::deken::search::dekenserver::url_primary_default "https://deken.puredata.in
 catch {unset ::deken::search::dekenserver::url_primary}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
+set ::deken::search::dekenserver::show_url_preferences 1
+catch { if { [ string is double "$::env(DEKEN_PREFERENCES_SHOW_URLS)" ] } {
+    set ::deken::search::dekenserver::show_url_preferences $::env(DEKEN_PREFERENCES_SHOW_URLS)
+} }
 
 # additional (fixed) deken-servers
 ::deken::utilities::setdefault ::deken::search::dekenserver::use_urls_secondary 0
