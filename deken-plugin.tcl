@@ -847,9 +847,9 @@ proc ::deken::utilities::download_file {url outputfilename {progressproc {}}} {
     set httpagent [::deken::utilities::httpuseragent]
     if { [catch {
         if { ${progressproc} eq {} } {
-            set httpresult [::http::geturl ${URL} -binary true -channel ${f}]
+            set httpresult [::deken::utilities::geturl ${URL} -binary true -channel ${f}]
         } else {
-            set httpresult [::http::geturl ${URL} -binary true -progress ${progressproc} -channel ${f}]
+            set httpresult [::deken::utilities::geturl ${URL} -binary true -progress ${progressproc} -channel ${f}]
         }
         set ncode [::http::ncode ${httpresult}]
         if {${ncode} != 200} {
@@ -3319,7 +3319,7 @@ proc ::deken::search::dekenserver::search {term} {
             # check default URL for usability (first https://, then http://)
             set url ${::deken::search::dekenserver::url_primary_default}
             if {[catch {
-                set httpresult [::http::geturl ${url}]
+                set httpresult [::deken::utilities::geturl ${url}]
                 ::http::cleanup ${httpresult}
             } stdout]} {
                 if {[string first "http://" [string tolower $url]]} {
@@ -3494,7 +3494,7 @@ proc ::deken::search::dekenserver::search_server {term dekenurl} {
 
     # fetch search result
     if { [catch {
-        set token [::http::geturl "${dekenurl}?${queryterm}"]
+        set token [::deken::utilities::geturl "${dekenurl}?${queryterm}"]
     } stdout ] } {
         set msg [format [_ "Searching for '%s' failed!" ] ${term} ]
         tk_messageBox \
