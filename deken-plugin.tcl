@@ -824,7 +824,6 @@ proc ::deken::utilities::httpuseragent {} {
 
 # wrapper around ::http::geturl that follows redirects
 proc ::deken::utilities::geturl {url args} {
-    puts "getting ${args}"
     set token [::http::geturl ${url} {*}$args]
     if {[lsearch -exact {301 302 303 307 308} [::http::ncode ${token}]] >= 0} {
         # redirection
