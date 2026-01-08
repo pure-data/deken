@@ -3291,7 +3291,6 @@ namespace eval ::deken::search::dekenserver {
 ::deken::utilities::setdefault ::deken::search::dekenserver::use_url_primary 1
 set ::deken::search::dekenserver::url_primary_default "https://deken.puredata.info/search"
 catch {unset ::deken::search::dekenserver::url_primary}
-catch {set ::deken::search::dekenserver::url_primary $::env(DEKENSERVER)}
 catch {set ::deken::search::dekenserver::url_primary $::env(DEKEN_SEARCH_URL)}
 set ::deken::search::dekenserver::show_url_preferences 1
 catch { if { [ string is double "$::env(DEKEN_PREFERENCES_SHOW_URLS)" ] } {
