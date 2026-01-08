@@ -3494,7 +3494,7 @@ proc ::deken::search::dekenserver::search_server {term dekenurl} {
     ::http::config -useragent ${httpagent}
 
     set ncode [::http::ncode ${token}]
-    if { ${ncode} != 200 } {
+    if { ${ncode} < 200 || ${ncode} >= 300 } {
         set err [::http::code ${token}]
         set msg [_ "Unable to perform search."]
         ::deken::utilities::debug "${msg}\n   ${err}"
