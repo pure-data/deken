@@ -820,6 +820,21 @@ proc ::deken::utilities::httpuseragent {} {
     return ${httpagent}
 }
 
+# wrapper around ::http::geturl that follows redirects
+proc ::deken::utilities::geturl {url args} {
+    puts "getting ${args}"
+    set token [::http::geturl ${url} {*}$args]
+    if {[lsearch -exact {301 302 303 307 308} [::http::ncode ${token}]] >= 0} {
+        # redirection
+        upvar #0 $token state
+        array set meta $state(meta)
+        foreach {k location} [array get meta Location] {
+            ::http::cleanup ${token}
+            return [::deken::utilities::geturl ${location} {*}$args]
+        }
+    }
+    return ${token}
+}
 
 # download a file to a location
 # http://wiki.tcl.tk/15303
