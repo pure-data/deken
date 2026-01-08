@@ -28,8 +28,10 @@ package require Tcl 8.4 9
 
 package require http 2
 # try enabling https if possible
-if { [catch {package require tls} ] } {} else {
-    ::tls::init -ssl2 false -ssl3 false -tls1 true
+if { [catch {package require tls 1.7} ] } {} else {
+    ::tls::init \
+        -autoservername 1 \
+        -ssl2 false -ssl3 false -tls1 true
     ::http::register https 443 ::tls::socket
 }
 # try enabling PROXY support if possible
