@@ -35,6 +35,21 @@ variables:
  DEKEN_TEST_PACKAGE: XXX-deken-test
  TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
 
+
+.macos:
+## build on the legacy OSX machines to get amd64 binaries!
+  tags:
+    - osx
+#  tags:
+#    - tart
+#  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
+
+.windows:
+  tags:
+    - sardinecake
+  image: registry.git.iem.at/devtools/sardinecake/windows:python3
+
+
 .script:python: &script_python
 # test if either python3 or python can be used
   - test -n "${python}" || ! which python3 2>/dev/null >/dev/null || python=python3
@@ -118,12 +133,7 @@ fetch-testdata:
 osx:
   extends:
     - .build_script
-## build on the legacy OSX machines to get amd64 binaries!
-#  tags:
-#    - tart
-#  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
-  tags:
-    - osx
+    - .macos
   variables:
     PIPFLAGS: --user
   stage: build
@@ -141,8 +151,7 @@ osx:
 osx-test:
   extends:
     - .deken-test
-  tags:
-    - osx
+    - .macos
   dependencies:
     - osx
     - fetch-testdata
@@ -154,9 +163,7 @@ windows:
   allow_failure: true
   extends:
     - .build_script
-  tags:
-    - sardinecake
-  image: registry.git.iem.at/devtools/sardinecake/windows:python3
+    - .windows
   stage: build
   after_script:
     - cp developer/dist/deken.exe .
@@ -168,8 +175,7 @@ windows:
 windows-test:
   extends:
     - .deken-test
-  tags:
-    - sardinecakse
+    - .windows
   image: registry.git.iem.at/devtools/sardinecake/windows:latest
   dependencies:
     - windows
