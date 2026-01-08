@@ -3301,6 +3301,7 @@ proc ::deken::search::dekenserver::search {term} {
         }
 
         if { ![info exists ::deken::search::dekenserver::url_primary ]} {
+            # check default URL for usability (first https://, then http://)
             set url ${::deken::search::dekenserver::url_primary_default}
             if {[catch {
                 set httpresult [::http::geturl ${url}]
