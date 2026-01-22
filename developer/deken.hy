@@ -560,7 +560,8 @@ this returns a list of (OS, CPU, floatsize) tuples
     (lfor a archs
        (do
         (setv OS (.lower (get a 0)))
-        (setv CPU (.lower (get a 1)))
+        (setv CPU (get a 1))
+        (when CPU (setv CPU (.lower CPU)))
         (setv FS (get a 2))
         (when (and os (!= OS os))
           (log.error (% "'%s' suggests %s binary, but found %s" #(filename os OS))))
