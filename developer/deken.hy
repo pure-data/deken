@@ -154,9 +154,10 @@
                (log_debug e)))))
 
 (defn stringify-tuple [t]
-  (if t
-      (tuple (lfor x t (if (is x None) "" (.lower (str x)))))
-      (tuple)))
+  (cond
+      (is (type t) str) #(t)
+      t (tuple (lfor x t (if (is x None) "" (.lower (str x)))))
+      True (tuple)))
 
 (defn str-to-bytes [s]
   """convert a string into bytes"""
