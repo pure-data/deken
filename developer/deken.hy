@@ -655,6 +655,8 @@ this returns a list of (OS, CPU, floatsize) tuples
             #( "EM_MIPS" 64 False) "mips64"
             #( "EM_MIPS" 64 True) "mips64el"
             #( "EM_LOONGARCH" 64 True) "loong64"
+            #( "EM_RISCV" 32 True) "riscv"
+            #( "EM_RISCV" 64 True) "riscv64"
             ;; microcontrollers
             #( "EM_BLAFKIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
             #( "EM_BLACKFIN" 32 True) "blackfin" ;; "Analog Devices Blackfin"
