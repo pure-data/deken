@@ -534,7 +534,7 @@ this returns a list of (OS, CPU, floatsize) tuples
     (setv x (re.match r"(?:.*)\.(?P<os>[a-z]+)-(?P<cpu>[a-z0-9]+)-(?P<floatsize>(32|64|0))\.(so|dll)$" filename))
     (when x #((.group x "os") (.group x "cpu") [(int (.group x "floatsize"))])))
   (defn --guess-arch-from-pd_extension-- [filename]
-    (setv x (re.match r"(?:.*)\.pd_(?P<os>[a-z]*)$" filename))
+    (setv x (re.match r"(?:.*)\.pd_(?P<os>[a-z]*)[0-9]*$" filename))
     (when x #((.group x "os") None [32 0])))
   (defn --guess-arch-from-shortextension-- [filename]
     (setv short-os {
