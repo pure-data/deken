@@ -690,6 +690,7 @@ this returns a list of (OS, CPU, floatsize) tuples
       (defn --get-elf-sysv-- [elffile]
         """try to guess the OS of a generic SysV elf file"""
         (cond
+         ;; seems like both NetBSD and OpenBSD add an ident section
          (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD"
          (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
       (defn do-get-elf-archs [elffile oshint]
@@ -716,6 +717,11 @@ this returns a list of (OS, CPU, floatsize) tuples
                     (or
                      (elf-osabi.get elffile.header.e_ident.EI_OSABI)
                      (when (=  elffile.header.e_ident.EI_OSABI "ELFOSABI_SYSV")
+                       ;; for whatever reasons Linux, IRIX, NetBSD and OpenBSD
+                       ;; all use ELFOSABI_SYSV, rather than
+                       ;; ELFOSABI_LINUX, ELFOSABI_IRIX, ELFOSABI_NETBSD resp ELFOSABI_OPENBSD
+                       ;; (which all exist!)
+                       ;; only FreeBSD (and Debian/kFreeBSD) properly use ELFOSABI_FREEBSD
                        (--get-elf-sysv-- elffile))
                      oshint
                      "Linux")
