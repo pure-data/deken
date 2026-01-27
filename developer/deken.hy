@@ -1868,6 +1868,8 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   ;; are they asking to package a directory?
   (global default-floatsize)
   (setv default-floatsize args.default-floatsize)
+  (global fatal-case-conflicts)
+  (setv fatal-case-conflicts (if args.ignore-case-conflicts None 2))
   (lfor name args.source
         (if (os.path.isdir name)
             ;; if asking for a directory just package it up
@@ -2187,7 +2189,10 @@ returns a tuple of a (list of verified files) and the number of failed verificat
      :required False)
     (add-arg-yesno parser "sign-gpg" default-sign-gpg
                    "Sign the package"
-                   "Do not sign the package"))
+                   "Do not sign the package")
+    (add-arg-yesno parser "ignore-case-conflicts" False
+                   "Ignore errors caused by filenames that differ only in case."
+                   "Treat filenames differing only in case as an error."))
 
   (defn add-find-flags [parser]
     (add-search-flags parser)
