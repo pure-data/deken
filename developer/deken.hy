@@ -694,10 +694,19 @@ this returns a list of (OS, CPU, floatsize) tuples
             ])
       (defn --get-elf-sysv-- [elffile]
         """try to guess the OS of a generic SysV elf file"""
+        (import elftools.elf.constants [RH_FLAGS])
         (cond
          ;; seems like both NetBSD and OpenBSD add an ident section
          (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD"
-         (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
+         (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD"
+         ;; IRIX however does not
+         ;; however, all IRIX binaries I've seen have  QUICKSTART|SGI_ONLY|REQUICKSTART|RLD_ORDER_SAFE
+         ;; in their MIPS_FLAGS (in the .dynamic section)
+         ;; for now, we only test for 'SGI_ONLY'
+         (len (lfor tag
+                    (.iter_tags (.get_section_by_name elffile ".dynamic") "DT_MIPS_FLAGS")
+                    :if (& tag.entry.d_val RH_FLAGS.RHF_SGI_ONLY)
+                    tag)) "Irix"))
       (defn do-get-elf-archs [elffile oshint]
             ;; get the size of t_float in the elffile
             (defn get-elf-floatsizes [elffile]
