@@ -647,6 +647,7 @@ this returns a list of (OS, CPU, floatsize) tuples
             #( "EM_S390" 64 False) "s390x"
             #( "EM_SH" 32 True) "sh4"
             #( "EM_SPARC" 32 False) "sparc"
+            #( "EM_SPARC32PLUS" 32 False) "sparc"
             #( "EM_SPARCV9" 64 False) "sparc64"
             #( "EM_ALPHA" 64 True) "alpha" ;; can also be big-endian
             #( 36902 64 True) "alpha"
