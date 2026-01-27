@@ -721,11 +721,28 @@ this returns a list of (OS, CPU, floatsize) tuples
                                                                 (cut data 7 None)
                                                                 (str-to-bytes "\x00") 1) 1) 1)))))
                     (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
+              (defn mips32cpu-from-flags [cpu flags]
+                ;; see https://maskray.me/blog/2023-09-04-toolchain-notes-on-mips
+                (import elftools.elf.constants [E_FLAGS E_FLAGS_MASKS])
+                (cond
+                 (& flags E_FLAGS_MASKS.EFM_MIPS_ABI_O32) "mips" ;; o32
+                 (& flags E_FLAGS.EF_MIPS_ABI2) "mipsn32" ;; n32
+                 True cpu))
+              (defn mips64cpu-from-flags [cpu flags]
+                ;; see https://maskray.me/blog/2023-09-04-toolchain-notes-on-mips
+                (import elftools.elf.constants [E_FLAGS E_FLAGS_MASKS])
+                (cond
+                 (& flags E_FLAGS_MASKS.EFM_MIPS_ABI_O64) "mipso64" ;; o64
+                 True cpu)) ;; n64
+
               (cond
                (= cpu "arm") (armcpu-from-aeabi
                               (.data (elffile.get_section_by_name ".ARM.attributes"))
                               (str-to-bytes "aeabi"))
+               (= cpu "mips") (mips32cpu-from-flags cpu elffile.header.e_flags)
+               (= cpu "mips64") (mips64cpu-from-flags cpu elffile.header.e_flags)
                True cpu))
+
             (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
                   #(
                     (or
