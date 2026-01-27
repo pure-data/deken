@@ -1216,7 +1216,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
       (with [f (zip-file zip-filename)]
             (for [[root dirs files] (os.walk directory-to-zip)]
             (do
-                 (warn-caseinsensitive-duplicates (+ files dirs) root)
+                 (warn-caseinsensitive-duplicates (+ files dirs) (os.path.relpath root (os.path.join directory-to-zip "..")))
                  (for [file-path (lfor file files (os.path.join root file))]
                       (when (os.path.exists file-path)
                         (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))))
