@@ -689,10 +689,9 @@ this returns a list of (OS, CPU, floatsize) tuples
             ])
       (defn --get-elf-sysv-- [elffile]
         """try to guess the OS of a generic SysV elf file"""
-        (or
-         (when (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD")
-         (when (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
-         None))
+        (cond
+         (.get_section_by_name elffile ".note.openbsd.ident") "OpenBSD"
+         (.get_section_by_name elffile ".note.netbsd.ident") "NetBSD")
       (defn do-get-elf-archs [elffile oshint]
             ;; get the size of t_float in the elffile
             (defn get-elf-floatsizes [elffile]
@@ -707,12 +706,11 @@ this returns a list of (OS, CPU, floatsize) tuples
                                                                 (cut data 7 None)
                                                                 (str-to-bytes "\x00") 1) 1) 1)))))
                     (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
-              (or
-               (when (= cpu "arm")
-                 (armcpu-from-aeabi
-                  (.data (elffile.get_section_by_name ".ARM.attributes"))
-                  (str-to-bytes "aeabi")))
-               cpu))
+              (cond
+               (= cpu "arm") (armcpu-from-aeabi
+                              (.data (elffile.get_section_by_name ".ARM.attributes"))
+                              (str-to-bytes "aeabi"))
+               True cpu))
             (lfor floatsize (or (get-elf-floatsizes elffile) [(--archs-default-floatsize-- filename)])
                   #(
                     (or
