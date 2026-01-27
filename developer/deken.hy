@@ -2185,7 +2185,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
      :nargs "*"
      :required False)
     (parser.add_argument
-     "--output-dir"
+     "--output-dir" "--outdir"
      :help "Output directory for package files (DEFAULT: .)."
      :default "."
      :required False)
