@@ -698,7 +698,7 @@ this returns a list of (OS, CPU, floatsize) tuples
               (list (filter-none
                      (lfor _ (.iter_symbols (elffile.get_section_by_name ".dynsym"))
                            (--pdfunction-to-floatsize-- _.name)))))
-            (defn get-elf-armcpu [cpu]
+            (defn get-elf-cpu [cpu]
               (defn armcpu-from-aeabi [arm aeabi]
                     (defn armcpu-from-aeabi-helper [data]
                       (when data
@@ -719,7 +719,7 @@ this returns a list of (OS, CPU, floatsize) tuples
                        (--get-elf-sysv-- elffile))
                      oshint
                      "Linux")
-                    (get-elf-armcpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
+                     (get-elf-cpu (elf-cpu.get #( elffile.header.e_machine elffile.elfclass elffile.little_endian)))
                     floatsize)))
       ;; un-lowercase the OS hint
       (setv oshint (or
