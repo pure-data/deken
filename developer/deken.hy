@@ -717,9 +717,11 @@ this returns a list of (OS, CPU, floatsize) tuples
               (defn armcpu-from-aeabi [arm aeabi]
                     (defn armcpu-from-aeabi-helper [data]
                       (when data
-                        (get elf-armcpu (byte-to-int (get (get (.split
+                        (get elf-armcpu
+                             (cond (< (len data) 7) 1
+                                   True (byte-to-int (get (get (.split
                                                                 (cut data 7 None)
-                                                                (str-to-bytes "\x00") 1) 1) 1)))))
+                                                                (str-to-bytes "\x00") 1) 1) 1))))))
                     (armcpu-from-aeabi-helper (and (arm.startswith (str-to-bytes "A")) (arm.index aeabi) (.pop (arm.split aeabi)))))
               (defn mips32cpu-from-flags [cpu flags]
                 ;; see https://maskray.me/blog/2023-09-04-toolchain-notes-on-mips
