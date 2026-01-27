@@ -232,6 +232,20 @@
       (os.chdir last-dir)
       result)
 
+
+(defn warn-caseinsensitive-duplicates [files [prefix ""]]
+      (setv lowercase {})
+      (when (any (lfor file
+                 files (do (setv f (.lower file))
+                           (if (in f lowercase)
+                               (or (log_warning (% "WARNING: %r already included as %r"
+                                             #((os.path.join prefix file) (os.path.join prefix (get lowercase f)))))
+                                   1)
+                               (setv (get lowercase f) file)))))
+           (fatal (+ "ERROR: Some paths may not be extracted on case-insensitive systems."
+                     (if fatal-case-conflicts "\n       Use '--ignore-case-conflicts' to make this non-fatal." ""))
+                  fatal-case-conflicts)))
+
 ;; TODO: refactor 'listdir' and 'get-files-from-dir' into a single function
 
 (defn fix-easywebdav2 [pkg
@@ -1201,9 +1215,11 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
       (setv zip-filename (+ archive-file extension))
       (with [f (zip-file zip-filename)]
             (for [[root dirs files] (os.walk directory-to-zip)]
+            (do
+                 (warn-caseinsensitive-duplicates (+ files dirs) root)
                  (for [file-path (lfor file files (os.path.join root file))]
                       (when (os.path.exists file-path)
-                        (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip "..")))))))
+                        (f.write file-path (os.path.relpath file-path (os.path.join directory-to-zip ".."))))))))
       zip-filename)
 (defn unzip-file [archive-file [targetdir "."]]
       """extract all members of the zip archive into targetdir"""
