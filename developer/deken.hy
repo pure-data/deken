@@ -675,22 +675,22 @@ this returns a list of (OS, CPU, floatsize) tuples
       (setv elf-armcpu [
             "armPre4"
             "armv4"
-            "armv4T"
-            "armv5T"
-            "armv5TE"
-            "armv5TEJ"
-            "armv6"
+            "armv4T" ;; thumb
+            "armv5T" ;; Thumb
+            "armv5TE" ;; Thumb, Enhanded dsp
+            "armv5TEJ" ;; Thumb, Enhanced dsp, Jazelle dbx
+            "armv6" ;; thumb, enhanced dsp, jazelle dbx
             "armv6KZ"
-            "armv6T2"
+            "armv6T2" ;; Thumb-2, enhanced dsp
             "armv6K"
             "armv7"
-            "armv6_M"
-            "armv6S_M"
-            "armv7E_M"
+            "armv6_M" ;; Microcontroller profile
+            "armv6S_M" ;; Microcontroller profile
+            "armv7E_M" ;; Microcontroller profile
             "armv8"
             "armv8R"
-            "armv8M_BASE"
-            "armv8M_MAIN"
+            "armv8M_BASE" ;;
+            "armv8M_MAIN" ;;
             ])
       (defn --get-elf-sysv-- [elffile]
         """try to guess the OS of a generic SysV elf file"""
