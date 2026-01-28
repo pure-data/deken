@@ -4,6 +4,9 @@ configuration: Release
 ## (and anyhow, the repository is small)
 #shallow_clone: true
 
+image:
+  - Visual Studio 2019
+
 environment:
   matrix:
     - PYTHON: "C:\\Python313"
