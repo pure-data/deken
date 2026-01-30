@@ -172,7 +172,7 @@ def getOrigin(
         if all((origin, codename, component)):
             break
         try:
-            origin = origin or o.label or o.origin or fallback_uploader
+            origin = origin or o.label or o.origin or fallback_origin
         except AttributeError:
             pass
         try:
