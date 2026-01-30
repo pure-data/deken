@@ -1208,6 +1208,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 (defn zip-file [filename]
   """create a ZIP-file with a default compression"""
   (import zipfile)
+  (os.makedirs (or (os.path.dirname filename) ".") :exist_ok True)
   (try (zipfile.ZipFile filename "w" :compression zipfile.ZIP_DEFLATED)
        (except [e RuntimeError] (zipfile.ZipFile filename "w"))))
 (defn zip-dir [directory-to-zip archive-file [extension ".zip"]]
