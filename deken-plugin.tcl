@@ -3146,6 +3146,16 @@ proc ::deken::architecture_match {archs} {
 
 proc ::deken::search_for {term} {
     set result [list]
+
+    if { $::deken::simple_search } {
+        set wildterm {}
+        foreach t $term {
+            set wt [string trim $term *]
+            lappend wildterm "*${wt}*"
+        }
+        set term $wildterm
+    }
+
     foreach searcher ${::deken::backends} {
         if {[catch {
             foreach r [ ${searcher} ${term} ] {
@@ -3323,15 +3333,6 @@ array set ::deken::search::dekenserver::urls_ephemeral_existing {}
 
 
 proc ::deken::search::dekenserver::search {term} {
-    if { $::deken::simple_search } {
-        set wildterm {}
-        foreach t $term {
-            set wt [string trim $term *]
-            lappend wildterm "*${wt}*"
-        }
-        set term $wildterm
-    }
-
     set tmpurls {}
     foreach {k v} [array get ::deken::search::dekenserver::urls_ephemeral_existing] {
         lappend tmpurls ${v}
