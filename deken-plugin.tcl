@@ -61,6 +61,9 @@ namespace eval ::deken:: {
     variable results
     # selected: {library} {cmd} ...
     variable selected {}
+    # boolean whether the user needs explicit wildcards
+    # (autoamatically stored in prefs)
+    variable simple_search
 }
 namespace eval ::deken::preferences {
     variable installpath
@@ -134,6 +137,7 @@ set ::deken::userplatform {}
 set ::deken::hideforeignarch false
 set ::deken::hideoldversions false
 set ::deken::show_readme 1
+set ::deken::simple_search 1
 set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
 set ::deken::keep_package 0
@@ -1512,6 +1516,8 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::search::dekenserver::use_urls_ephemeral [::deken::utilities::bool ${use_ephemerals}]
         set ::deken::search::dekenserver::urls_ephemeral ${ephemerals}
     }
+    proc ::deken::set_simple_search {simplesearch} { }
+
 } else {
     catch {set ::deken::installpath [lindex ${::deken::installpath} 0]}
     # Pd has a generic preferences system, that we can use
@@ -1529,6 +1535,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     set ::deken::userplatform [string trim [string trim ${::deken::userplatform} "\\\{\}" ] ]
     set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] 1]
     set ::deken::hideoldversions [::deken::utilities::bool [::pd_guiprefs::read deken_hide_old_versions] 1]
+    set ::deken::simple_search [::deken::utilities::bool [::pd_guiprefs::read deken_simple_search] 1]
     proc ::deken::set_platform_options {platform hideforeignarch {hideoldversions 0}} {
         set ::deken::userplatform ${platform}
         if { ${platform} == "" } {
@@ -1580,6 +1587,9 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write dekensearch_secondaryurls "${::deken::search::dekenserver::urls_secondary}"
         ::pd_guiprefs::write dekensearch_useephemeralurls "${::deken::search::dekenserver::use_urls_ephemeral}"
         ::pd_guiprefs::write dekensearch_ephemeralurls "${::deken::search::dekenserver::urls_ephemeral}"
+    }
+    proc ::deken::set_simple_search {simplesearch} {
+        ::pd_guiprefs::write deken_simple_search "${simplesearch}"
     }
 }
 
@@ -2192,6 +2202,9 @@ proc ::deken::create_dialog {winid} {
         radiobutton ${winid}.objlib.translations -text [_ "translations"] -variable ::deken::searchtype -value translations
         pack ${winid}.objlib.translations -side left -padx 6
     }
+    checkbutton ${winid}.objlib.simple -text [_ "simple search"] -variable ::deken::simple_search -command {::deken::set_simple_search $::deken::simple_search}
+    pack ${winid}.objlib.simple -side right -padx 6
+
     frame ${winid}.warning
     pack ${winid}.warning -side top -fill "x"
     label ${winid}.warning.label -text [_ "Only install externals uploaded by people you trust."]
