@@ -2138,12 +2138,16 @@ proc ::deken::open_searchui {winid} {
         ${resultsid} tag configure noarchmatch -foreground grey
     }
     ::deken::clearpost
-    ::deken::post [_ "Enter an exact library or object name."] info
+    ::deken::post [_ "Enter a library or object name."] info
     set msg [_ "e.g. 'freeverb~'"]
     ::deken::post "\t${msg}" info
+    ::deken::post [_ "By default this will find anything that contains the search word(s)." ] info
+    ::deken::post "" info
+    ::deken::post [_ "If you disable 'simple search' mode, only exact matches are considered." ] info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
     set msg [_ "e.g. '*-plugin' will match 'deken-plugin' (and more)."]
     ::deken::post "\t${msg}" info
+    ::deken::post "" info
     ::deken::post [_ "You can restrict the search to only-libraries or only-objects."] info
     ::deken::post [_ "To get a list of all available externals, try an empty search."] info
     ::deken::post "" info
