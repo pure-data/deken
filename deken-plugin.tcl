@@ -3146,7 +3146,7 @@ proc ::deken::search_for {term} {
                 lappend result [lrange ${r} 1 end]
             }
         } stdout] } {
-            ::deken::utilities::debug "${searcher:} ${stdout}"
+            ::deken::utilities::debug "${searcher}: ${stdout}"
         }
     }
     return ${result}
