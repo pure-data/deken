@@ -19,8 +19,6 @@ environment:
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
-  - which python || true
-  - find %PYTHON% -name "*.exe" || true
   - python --version
   - python -m pip install --upgrade pip
 
