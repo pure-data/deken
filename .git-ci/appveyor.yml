@@ -16,8 +16,11 @@ environment:
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - echo $PATH
+  - echo %PATH%
+  - ls /c/Python311 || true
+  - ls /c/Python311/Scripts || true
   - which python || true
-  - find %PYTHON% -name "*.exe" || true
   - python --version
   - python -m pip install --upgrade pip
 
