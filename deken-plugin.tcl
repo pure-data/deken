@@ -3520,9 +3520,10 @@ proc ::deken::search::dekenserver::search_server {term dekenurl} {
         set term {*}
     }
     foreach x ${term} {lappend queryterm ${::deken::searchtype} ${x}}
+    lappend queryterm exact ${::deken::exact_search}
     if { [ catch {set queryterm [::http::formatQuery {*}${queryterm} ] } stdout ] } {
         set queryterm [ join ${term} "&${::deken::searchtype}=" ]
-        set queryterm "${::deken::searchtype}=${queryterm}"
+        set queryterm "${::deken::searchtype}=${queryterm}&exact=${::deken::exact_search}"
     }
 
     # deken-specific socket config
