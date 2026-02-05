@@ -3158,7 +3158,7 @@ proc ::deken::search_for {term} {
     if { ! $::deken::exact_search  } {
         set wildterm {}
         foreach t $term {
-            set wt [string trim $term *]
+            set wt [string trim $t *]
             lappend wildterm "*${wt}*"
         }
         set term $wildterm
