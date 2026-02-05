@@ -63,7 +63,7 @@ namespace eval ::deken:: {
     variable selected {}
     # boolean whether the user needs explicit wildcards
     # (autoamatically stored in prefs)
-    variable simple_search
+    variable exact_search
 }
 namespace eval ::deken::preferences {
     variable installpath
@@ -137,7 +137,7 @@ set ::deken::userplatform {}
 set ::deken::hideforeignarch false
 set ::deken::hideoldversions false
 set ::deken::show_readme 1
-set ::deken::simple_search 1
+set ::deken::exact_search 0
 set ::deken::remove_on_install 1
 set ::deken::add_to_path 0
 set ::deken::keep_package 0
@@ -1516,7 +1516,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         set ::deken::search::dekenserver::use_urls_ephemeral [::deken::utilities::bool ${use_ephemerals}]
         set ::deken::search::dekenserver::urls_ephemeral ${ephemerals}
     }
-    proc ::deken::set_simple_search {simplesearch} { }
+    proc ::deken::set_exact_search {exactsearch} { }
 
 } else {
     catch {set ::deken::installpath [lindex ${::deken::installpath} 0]}
@@ -1535,7 +1535,7 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
     set ::deken::userplatform [string trim [string trim ${::deken::userplatform} "\\\{\}" ] ]
     set ::deken::hideforeignarch [::deken::utilities::bool [::pd_guiprefs::read deken_hide_foreign_archs] 1]
     set ::deken::hideoldversions [::deken::utilities::bool [::pd_guiprefs::read deken_hide_old_versions] 1]
-    set ::deken::simple_search [::deken::utilities::bool [::pd_guiprefs::read deken_simple_search] 1]
+    set ::deken::exact_search [::deken::utilities::bool [::pd_guiprefs::read deken_exact_search] 0]
     proc ::deken::set_platform_options {platform hideforeignarch {hideoldversions 0}} {
         set ::deken::userplatform ${platform}
         if { ${platform} == "" } {
@@ -1588,8 +1588,8 @@ if { [ catch { set ::deken::installpath [::pd_guiprefs::read dekenpath] } stdout
         ::pd_guiprefs::write dekensearch_useephemeralurls "${::deken::search::dekenserver::use_urls_ephemeral}"
         ::pd_guiprefs::write dekensearch_ephemeralurls "${::deken::search::dekenserver::urls_ephemeral}"
     }
-    proc ::deken::set_simple_search {simplesearch} {
-        ::pd_guiprefs::write deken_simple_search "${simplesearch}"
+    proc ::deken::set_exact_search {exactsearch} {
+        ::pd_guiprefs::write deken_exact_search "${exactsearch}"
     }
 }
 
@@ -2143,7 +2143,7 @@ proc ::deken::open_searchui {winid} {
     ::deken::post "\t${msg}" info
     ::deken::post [_ "By default this will find anything that contains the search word(s)." ] info
     ::deken::post "" info
-    ::deken::post [_ "If you disable 'simple search' mode, only exact matches are considered." ] info
+    ::deken::post [_ "If you enable 'exact search' mode, only exact matches are considered." ] info
     ::deken::post [_ "Use the '*' wildcard to match any number of characters."] info
     set msg [_ "e.g. '*-plugin' will match 'deken-plugin' (and more)."]
     ::deken::post "\t${msg}" info
@@ -2206,8 +2206,8 @@ proc ::deken::create_dialog {winid} {
         radiobutton ${winid}.objlib.translations -text [_ "translations"] -variable ::deken::searchtype -value translations
         pack ${winid}.objlib.translations -side left -padx 6
     }
-    checkbutton ${winid}.objlib.simple -text [_ "simple search"] -variable ::deken::simple_search -command {::deken::set_simple_search $::deken::simple_search}
-    pack ${winid}.objlib.simple -side right -padx 6
+    checkbutton ${winid}.objlib.exact -text [_ "exact search"] -variable ::deken::exact_search -command {::deken::set_exact_search $::deken::exact_search}
+    pack ${winid}.objlib.exact -side right -padx 6
 
     frame ${winid}.warning
     pack ${winid}.warning -side top -fill "x"
@@ -3151,7 +3151,7 @@ proc ::deken::architecture_match {archs} {
 proc ::deken::search_for {term} {
     set result [list]
 
-    if { $::deken::simple_search } {
+    if { ! $::deken::exact_search  } {
         set wildterm {}
         foreach t $term {
             set wt [string trim $term *]
