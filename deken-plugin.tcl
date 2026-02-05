@@ -2356,7 +2356,11 @@ proc ::deken::initiate_search {winid} {
     ::deken::show_tab ${winid} info
 
     ::deken::clearpost
-    ::deken::statuspost [format [_ "Searching for \"%s\"..." ] ${searchterm} ]
+    if { ${searchterm} eq {} } {
+        ::deken::statuspost [_ "Searching for all packages..." ]
+    } else {
+        ::deken::statuspost [format [_ "Searching for \"%s\"..." ] ${searchterm} ]
+    }
     set ::deken::progressvar 0
     ::deken::progressstatus ""
     if { [ catch {
