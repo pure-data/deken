@@ -790,7 +790,12 @@ foreach impl [lsort -dictionary [info procs ::deken::utilities::sha256::*]] {
                 # this is more grave than the sanity check for the file hash
                 # (since for the file hash we depend on the user's machine being able to
                 # produce a proper SHA256 hash)
-                ::deken::statuspost [format [_ "Reference checksum looks invalid: '%s'." ] ${reference}] error 0
+                if { [string length ${reference}] > 64 } {
+                    set shortref "[string range ${reference} 0 60]..."
+                } else {
+                    set shortref ${reference}
+                }
+                ::deken::statuspost [format [_ "Reference checksum looks invalid: '%s'." ] ${shortref}] error 0
             }
 
             if { [string first ${reference} ${hash}] >= 0 } {
