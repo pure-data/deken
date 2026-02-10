@@ -2231,7 +2231,7 @@ proc ::deken::create_dialog {winid} {
         ttk::notebook ${winid}.tab
         pack ${winid}.tab -side top -padx 6 -pady 3 -fill both -expand true
 
-        text ${winid}.tab.info -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "${winid}.tab.info.ys set"
+        text ${winid}.tab.info -takefocus 0 -cursor hand2 -height 100 -wrap word -yscrollcommand "${winid}.tab.info.ys set"
         scrollbar ${winid}.tab.info.ys -orient vertical -command "${winid}.tab.info yview"
         pack ${winid}.tab.info.ys -side right -fill "y"
 
@@ -2268,7 +2268,8 @@ proc ::deken::create_dialog {winid} {
             pack ${winid}.tab.results.ys -side right -fill "y"
 
         } ] } {
-            text ${winid}.tab.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "${winid}.tab.results.ys set"
+            # no treeview
+            text ${winid}.tab.results -takefocus 0 -cursor hand2 -height 100 -wrap word -yscrollcommand "${winid}.tab.results.ys set"
             scrollbar ${winid}.tab.results.ys -orient vertical -command "${winid}.tab.results yview"
             pack ${winid}.tab.results.ys -side right -fill "y"
         }
@@ -2281,7 +2282,8 @@ proc ::deken::create_dialog {winid} {
         set resultsid ${winid}.tab.results
         set infoid ${winid}.tab.info
     } ] } {
-        text ${winid}.results -takefocus 0 -cursor hand2 -height 100 -yscrollcommand "${winid}.results.ys set"
+        # untabbed
+        text ${winid}.results -takefocus 0 -cursor hand2 -height 100 -wrap word -yscrollcommand "${winid}.results.ys set"
         scrollbar ${winid}.results.ys -orient vertical -command "${winid}.results yview"
         pack ${winid}.results.ys -side right -fill "y"
         pack ${winid}.results -side top -padx 6 -pady 3 -fill both -expand true
