@@ -956,6 +956,8 @@ proc ::deken::utilities::parse_filename {filename} {
             }
         }
     }
+    # normalize version
+    set version [string map {_ ~} ${version}]
     return [list ${pkgname} ${version} ${archs}]
 }
 
