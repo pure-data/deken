@@ -1,4 +1,5 @@
-# Overview
+Deken Package Manager
+=====================
 
 **deken** is a [Pure Data](https://puredata.info)'s built-in *package manager*.
 
