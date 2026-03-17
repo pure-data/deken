@@ -1,0 +1,23 @@
+site_name: deken
+repo_url: https://github.com/pure-data/deken
+theme:
+  name: readthedocs
+  highlightjs: true
+plugins:
+  - search
+#  - mkdocstrings:
+#      handlers:
+#        # See: https://mkdocstrings.github.io/python/usage/
+#        python:
+#          paths: [src]
+#          options:
+#            docstring_style: sphinx
+markdown_extensions:
+  - markdown_include.include:
+      base_path: .
+  - admonition
+nav:
+  - index.md
+#  - packaging.md
+#  - best-practice.md
+#  - specifications.md
