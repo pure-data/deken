@@ -19,6 +19,8 @@ markdown_extensions:
 nav:
   - index.md
   - Deken Commandline Tool: cmdline.md
+  - arch-specifiers.md
+
 #  - packaging.md
 #  - best-practice.md
 #  - specifications.md
