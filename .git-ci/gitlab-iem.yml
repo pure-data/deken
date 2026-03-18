@@ -184,6 +184,40 @@ windows-test:
     - windows
     - fetch-testdata
 
+
+# =====================================================================
+# python wheels
+# =====================================================================
+.wheel:
+  dependences: []
+  before_script:
+    - apk add git
+    - pip install build setuptools setuptools-scm
+  script:
+    # for PyPi, we do not want the git-versions in the final version
+    - test ! -e developer/pyproject.toml || sed -e 's|^\(.tool\.setuptools_scm\>.*\)|\1\nlocal_scheme = "no-local-version"|' -i developer/pyproject.toml
+    # now that we've modified pyproject.toml, pretend that we didn't
+    - test ! -e developer/pyproject.toml || git update-index --assume-unchanged developer/pyproject.toml
+    - python -m build --outdir dist developer
+  artifacts:
+    paths:
+      - 'dist/'
+
+wheel:
+  extends:
+    - .wheel
+  image: python:alpine
+
+wheel-test:
+  variables:
+    DEKEN_EXE: deken
+  extends:
+    - .deken-test
+  image: python:alpine
+  before_script:
+    - find dist/ -type f -name "*.whl" | sort -Vr | while read f; do pip install "${f}"; break; done
+
+
 # =====================================================================
 # docker images
 # =====================================================================
