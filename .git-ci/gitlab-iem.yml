@@ -216,6 +216,12 @@ wheel-test:
   image: python:alpine
   before_script:
     - find dist/ -type f -name "*.whl" | sort -Vr | while read f; do pip install "${f}"; break; done
+  dependencies:
+    - wheel
+    - fetch-testdata
+  needs:
+    - wheel
+    - fetch-testdata
 
 
 # =====================================================================
