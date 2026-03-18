@@ -59,7 +59,7 @@ dist_file = None
 options = {}
 setupargs = {
     "name": "deken",
-    "version": "0.2.4",
+#    "version": "0.2.4",
     "description": """Pure Data externals wrangler""",
     "author": "Chris McCormick, IOhannes m zmölnig et al.",
     "author_email": "pd-list@lists.puredata.info",
