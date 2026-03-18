@@ -94,7 +94,24 @@ except ImportError:
 
 
 import hy
-import deken
+deken = None
+
+if not deken:
+    try:
+        import deken.deken
+        deken = deken.deken
+    except ImportError:
+        pass
+if not deken:
+    try:
+        from . import deken
+    except ImportError:
+        pass
+if not deken:
+    try:
+        import deken
+    except ImportError:
+        pass
 
 ## on macOS, pyinstaller requires more help...
 try:
@@ -140,6 +157,12 @@ def resource_path(relative_path):
 
 def _main():
     _version = None
+
+    if _version is None:
+        try:
+            from ._version import version as _version
+        except ImportError:
+            pass
 
     if _version is None:
         try:
