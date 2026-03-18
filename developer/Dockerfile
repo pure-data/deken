@@ -6,7 +6,7 @@ FROM hylang
 WORKDIR /deken
 # Copy the deken executable onto the image
 COPY deken /usr/local/bin/
-COPY deken.hy /usr/local/share/deken/
+COPY src/deken/deken.hy /usr/local/share/deken/
 
 # we are runnign as root, so set this
 ENV DEKEN_ROOT=yes
