@@ -138,15 +138,25 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-if __name__ == "__main__":
-    try:
-        with open(resource_path("DEKEN_VERSION"), "r") as f:
-            version = f.read().strip()
-        deken.version = version
-    except OSError:
-        pass
-    except IOError:
-        pass
+def _main():
+    _version = None
+
+    if _version is None:
+        try:
+            with open(resource_path("DEKEN_VERSION"), "r") as f:
+                _version = f.read().strip()
+        except OSError:
+            pass
+        except IOError:
+            pass
+
+    if _version is not None:
+        deken.version = _version
+
     deken_askpass = deken.askpass
     deken.askpass = lambda prompt: askpass(prompt, deken_askpass)
     deken.main()
+
+
+if __name__ == "__main__":
+    _main()
