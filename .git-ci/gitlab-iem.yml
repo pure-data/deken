@@ -206,6 +206,7 @@ windows-test:
 wheel:
   extends:
     - .wheel
+  stage: build
   image: python:alpine
 
 wheel-test:
