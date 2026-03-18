@@ -189,7 +189,7 @@ windows-test:
 # python wheels
 # =====================================================================
 .wheel:
-  dependences: []
+  dependencies: []
   before_script:
     - apk add git
     - pip install build setuptools setuptools-scm
