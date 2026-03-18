@@ -34,6 +34,7 @@ variables:
  PIPFLAGS: ""
  DEKEN_TEST_PACKAGE: XXX-deken-test
  TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
+ REFETCH_TIMEOUT: 180
 
 
 .macos:
@@ -105,8 +106,8 @@ variables:
     - ${DEKEN_EXE} -v uninstall "${DEKEN_TEST_PACKAGE}"
       # test finding the package (so we can then download it)
     - starttime=$(date +%s)
-    - endtime=$((starttime+180))
-    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST_PACKAGE}==${PKGVERSION}" | grep .; do if [ ${endtime} -lt $(date +%s) ]; then echo "timeout"; exit 75; fi; sleep 5; echo "try again"; done
+    - endtime=$((starttime+REFETCH_TIMEOUT))
+    - while ! ${DEKEN_EXE} -v find --architecture="*"  "${DEKEN_TEST_PACKAGE}==${PKGVERSION}" | grep .; do if [ ${endtime} -lt $(date +%s) ]; then echo "timeout $REFETCH_TIMEOUT reached"; exit 75; fi; sleep 5; echo "try again"; done
     - echo $(($(date +%s) - starttime))
       # test downloading the package
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
