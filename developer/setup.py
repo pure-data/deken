@@ -49,9 +49,6 @@ except ImportError:
 # This is a list of files to install, and where
 # (relative to the 'root' dir, where setup.py is)
 # You could be more specific.
-files = [
-    "pydeken.py",
-]
 data_files = [
     "deken.hy",
 ]
@@ -71,15 +68,12 @@ setupargs = {
     # (If you have other packages (dirs) or modules (py files) then
     # put them into the package directory - they will be found
     # recursively.)
-    # 'packages': ['deken', ],
-    # This dict maps the package name =to=> directories
-    # It says, package *needs* these files.
-    "package_data": {"deken": files},
-    "data_files": data_files,
+    'packages': ['deken', ],
+    'package_dir': {'deken': 'src/deken'},
+    'package_data': {'deken': data_files},
     "install_requires": [
         # 'PySide',
     ],
-    "scripts": ["deken", "pydeken.py"],
     "long_description": """
 a tool to create and upload dek packages to puredata.info,
 so they can be installed by Pd's built-in package manager
