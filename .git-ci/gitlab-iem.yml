@@ -82,6 +82,8 @@ variables:
       - 75
   script:
     - ${DEKEN_EXE} -v systeminfo
+    - ${DEKEN_EXE} --version
+    - ${DEKEN_EXE} --platform
     - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
     - PKGVERSION="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
