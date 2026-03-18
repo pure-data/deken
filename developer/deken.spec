@@ -2,7 +2,7 @@
 import os
 
 block_cipher = None
-datas = [('deken.hy', '.')]
+datas = [('src/deken/deken.hy', '.')]
 
 versionfile = "DEKEN_VERSION"
 try:
@@ -35,7 +35,7 @@ def easywebdav2_patch1():
         print("FAILED to patch 'easywebdav2', continuing anyhow...\n %s" % (e))
 easywebdav2_patch1()
 
-a = Analysis(['pydeken.py'],
+a = Analysis(['src/deken/__main__.py'],
              pathex=['.'],
              binaries=[],
              datas=datas,
