@@ -42,12 +42,14 @@ The `floatsize` specifier is used to distinguish between precision flavours of P
 The CPU specifiers follow the [Debian architecture naming scheme](https://wiki.debian.org/ArchitectureSpecificsMemo).
 They are generally all-lowercase and consist only of alphanumeric characters.
 
-| CPU     | description |
-|---------|-------------|
-| `amd64` | 64bit AMD/Intel processors (aka `x86_64`) |
-| `arm64` | 64bit ARM processors |
-| `i386`  | 32bit AMD/Intel processors (aka `x86`) |
-| `arm`   | 32bit ARM processors |
+| CPU     | word size | endianness | description                                                       |
+|---------|-----------|------------|-------------------------------------------------------------------|
+| `amd64` | 64        | little     | 64bit AMD/Intel processors (aka `x86_64`)                         |
+| `arm64` | 64        | little     | 64bit ARM processors (e.g. *Apple Silicon*, *Raspberry Pi 4*,...) |
+| `i386`  | 32        | little     | 32bit AMD/Intel processors (aka `x86`)                            |
+| `armv8` | 32        | little     | 32bit ARM processors (e.g. *Raspberry Pi 4*)                      |
+| `armv7` | 32        | little     | 32bit ARM processors (e.g. *Raspberry Pi 2*)                      |
+| `armv6` | 32        | little     | 32bit ARM processors (e.g. *Raspberry Pi zero*)                   |
 
 #### compatible CPU specifiers
 
@@ -57,15 +59,18 @@ They are generally all-lowercase and consist only of alphanumeric characters.
 | `i586`  | `i386`
 | `armv7` | `armv6`
 | `armv6` | `armv5`
-| `armv6` | `arm`
+| `armv5` | `arm`
 
 (e.g. a package for `Windows-i586-32` can only run on a Windows PC with a Pentium processor,
 whereas a package for  `Windows-i386-32` can run on a Windows PC with either an i386 CPU or a Pentium processor)
 
 
-#### obsolete CPU specifiers
+#### deprecated CPU specifiers
 
-|obsolete CPU | use this instead |
+Sometimes people use alternative names for CPUs.
+While these should be handled gracefully by `deken`, it is best to avoid them and use the canonical names instead:
+
+|deprecated CPU name | canonical CPU name |
 |-------------|------------------|
 | `PowerPC`   | `ppc`            |
 | `x86_64`    | `amd64`          |
@@ -86,11 +91,12 @@ These are somewhat modern but CPUs (but probably see very few uses of Pd):
 | `mipsn32`  | 32        | BIG        | MIPS with n32 ABI (e.g. newer SGIs)
 | `riscv`    | 32        | little     | RISC-V (`RV32*`)
 | `riscv64`  | 32        | little     | RISC-V (`RV64*`)
-| `s390x`    | 64        | BIG        | IBM S/390z (mainframes)
+| `s390x`    | 64        | BIG        | IBM zSystems S/390x (mainframes)
 
 
 
-The following are probably only used on historic machines long out of use:
+The following are probably only used on historic machines long out of use
+(and there are no known Pd installations on these systems)
 
 | CPU        | word size | endianness | description |
 |------------|-----------|------------|-------------|
