@@ -32,9 +32,13 @@ variables:
  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
  GIT_SUBMODULE_STRATEGY: normal
  PIPFLAGS: ""
- DEKEN_TEST_PACKAGE: XXX-deken-test
+ DEKEN_TEST_PACKAGE:
+   value: XXX-deken-test
+   description: "name of the generated deken package to be uploaded"
  TART_EXECUTOR_INSTALL_GITLAB_RUNNER: ${CI_RUNNER_VERSION}
- REFETCH_TIMEOUT: 240
+ REFETCH_TIMEOUT:
+   value: 240
+   description: "timeout (in seconds) for waiting until uploaded packages appear on deken.puredata.info"
 
 
 .macos:
