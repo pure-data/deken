@@ -91,7 +91,7 @@ variables:
     - ${DEKEN_EXE} --platform
     - export DEKEN_VERSION=$(${DEKEN_EXE} --version)
     - echo "${DEKEN_VERSION}"
-    - PKGVERSION="${DEKEN_VERSION#v}_${CI_JOB_NAME%-test}"
+    - PKGVERSION="${DEKEN_VERSION#v}~${CI_JOB_NAME%-test}"
     - echo "${PKGVERSION}"
     - rm -rf .git-ci/tmp/ && mkdir -p .git-ci/tmp/
     - mv .git-ci/deken-test .git-ci/tmp/${DEKEN_TEST_PACKAGE}
