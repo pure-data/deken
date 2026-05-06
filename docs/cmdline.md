@@ -1,14 +1,12 @@
 Deken Commandline Tool
 ======================
 
-You can use the [`deken` command line
-tool](https://raw.githubusercontent.com/pure-data/deken/main/developer/deken)
+You can use the `deken` command line tool
 to create archives with proper names (that includes the target architecture(s) of the package),
 e.g. example `freeverb~[v0.1](Linux-amd64-64).dek`,
 and the accompanying files (object lists, checksums, signatures).
 
 ## Usage
-
 
 
 ### Show help
@@ -27,13 +25,6 @@ To get help for a specific subcommand, pass `-h` (or `--help`) to the subcommand
 
 ```sh
 deken package --help
-```
-
-### Upgrade
-
-To run a self-upgrade (not supported on all platforms), simply do:
-```sh
-deken upgrade
 ```
 
 
@@ -228,35 +219,56 @@ docker pull registry.git.iem.at/pd/deken
 
 
 
+`deken` is a Hy/Python3 application, and can be installed via `pip`.
 
-### Manual bootstrap
+The bare bones of installing it are:
+~~~sh
+python3 -m pip install deken
+~~~
 
-For manually installation of `deken` from the sources, just download the main script
-and run it locally.
-It will fetch and install all the dependencies (except for those listed under [Prerequisites](#prerequisites))
+##### virtualenv
+If your system complains that you shouldn't install Python packages directory,
+use a `virtualenv` (this is probably a good idea anyhow):
 
-```command
-$ mkdir -p ~/bin/
-$ curl https://raw.githubusercontent.com/pure-data/deken/main/developer/deken > ~/bin/deken
-$ chmod 755 ~/bin/deken
-$ deken
-This is your first time running deken on this machine.
-I'm going to install myself and my dependencies into ~/.deken now.
-Feel free to ctrl-C now if you don't want to do this.
-...
-```
+~~~sh
+python3 -m venv ~/.local/share/deken-venv
+source  ~/.local/share/deken-venv/bin/activate
+python3 -m pip install deken
+deken
+~~~
 
+If you start a new terminal/shell, you need to run the `source` command (once) again,
+before you can use the `deken` command:
+
+~~~sh
+source  ~/.local/share/deken-venv/bin/activate
+deken
+~~~
+
+##### pipx
+Alternatively, you can use `pipx` to install an executable that doesn't require the `source` command
+(but still isolates the packages).
+
+If `pipx` is not available on your system, install it like so:
+~~~sh
+python3 -m venv ~/.local/share/deken-venv
+source  ~/.local/share/deken-venv/bin/activate
+python3 -m pip install pipx
+~~~
+
+and then use it to install `deken`:
+~~~sh
+pipx install deken
+deken
+~~~
+
+`pipx` installs binaries into `~/.local/bin` by default.
 If you get an error like
 
 > -bash: deken: command not found
 
-then make sure that [`~/bin` is in your `PATH`](https://apple.stackexchange.com/a/99838).
+then make sure that [`~/.local/bin` is in your `PATH`](https://apple.stackexchange.com/a/99838).
 
-
-To update deken to the latest and greatest, run
-```sh
-deken update --self
-```
 
 #### Prerequisites
 
@@ -308,9 +320,8 @@ docker pull registry.git.iem.at/pd/deken:devel
 
 #### Manual bootstrap
 
-You can cross-grade an existing manually bootstrapped `deken` to the current development version
-by setting `DEKEN_GIT_BRANCH` to `devel` and then self-upgrade the script.
-```sh
-export DEKEN_GIT_BRANCH=devel
-deken update --self
-```
+To install a development snapshot of `deken` directly from the repository, use this instead:
+
+~~~sh
+python3 -m pip install "git+https://github.com/pure-data/deken.git@devel#subdirectory=developer"
+~~~
