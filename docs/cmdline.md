@@ -307,8 +307,6 @@ you can also grab the latest development snapshot from the `develop` branch.
 
 #### Prebuilt Testing Binaries
 
-For the adventurous, you could also try the latest development snapshots:
-
 - [Windows 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/devel/download?job=windows)
 - [macOS 64bit](https://git.iem.at/pd/deken/-/jobs/artifacts/devel/download?job=osx)
 
@@ -318,7 +316,7 @@ For the adventurous, you could also try the latest development snapshots:
 docker pull registry.git.iem.at/pd/deken:devel
 ```
 
-#### Manual bootstrap
+#### Manual installation
 
 To install a development snapshot of `deken` directly from the repository, use this instead:
 
