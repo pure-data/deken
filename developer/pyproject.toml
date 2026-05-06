@@ -21,11 +21,13 @@ dependencies = [
 
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Hy",
     "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Topic :: System :: Software Distribution",
+    "Topic :: Utilities",
 ]
 
 dynamic = ["version"]
