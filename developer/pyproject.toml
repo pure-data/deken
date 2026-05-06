@@ -33,7 +33,7 @@ dynamic = ["version"]
 [project.urls]
 Homepage = "https://github.com/pure-data/deken"
 Documentation = "https://deken.readthedocs.io/"
-Repository = "https://github.com/devtools/deken.git"
+Repository = "https://github.com/pure-data/deken.git"
 Issues = "https://github.com/pure-data/deken/issues"
 
 
