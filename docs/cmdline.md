@@ -301,7 +301,7 @@ pacman -Suy python3
 
 ### Development versions
 
-If you are feeling a bot more adventurous,
+If you are feeling a bit more adventurous,
 you can also grab the latest development snapshot from the `develop` branch.
 
 
