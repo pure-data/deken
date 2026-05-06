@@ -101,7 +101,7 @@ The bare bones of installing it are:
 python3 -m pip install deken
 ~~~
 
-To install a development snapshot of `deken` directly from this repository, use this instead:
+To install a development snapshot of `deken` directly from the repository, use this instead:
 
 ~~~sh
 python3 -m pip install "git+https://github.com/pure-data/deken.git#subdirectory=developer"
