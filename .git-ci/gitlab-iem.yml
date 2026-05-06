@@ -148,6 +148,8 @@ osx:
     - *script_python
     - ${python} --version || brew bundle --no-upgrade --file=.git-ci/requirements.brew
     - sudo chown -R $(whoami) /usr/local/ || echo "continuing without owning /usr/local"
+    - which gitlab-runner || true
+    - gitlab-runner --version || true
   after_script:
     - cp developer/dist/deken .
   artifacts:
