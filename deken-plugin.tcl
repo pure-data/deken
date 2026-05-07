@@ -1340,7 +1340,10 @@ proc ::deken::preferences::create {winid} {
                 -command {set ::deken::preferences::add_to_path \
                               [set ::deken::preferences::add_to_path_temp \
                                    [::deken::utilities::tristate ${::deken::preferences::add_to_path_temp} 1 0]]}
-        set msg "- Always add to search path\n- Never add to search path\n- Prompt before adding"
+        set msg0 [_ "- Always add to search path" ]
+        set msg1 [_ "- Never add to search path" ]
+        set msg2 [_ "- Prompt before adding" ]
+        set msg [string cat $msg0 "\n" $msg1 "\n" $msg2]
         bind ${winid}.install.add_to_path <Enter> "::deken::balloon::show ${winid}.install_balloon %X \[winfo rooty %W\] \{${msg}\} 0 30"
         bind ${winid}.install.add_to_path <Leave> [list ::deken::balloon::hide ${winid}.install_balloon]
 
