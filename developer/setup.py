@@ -106,7 +106,7 @@ if "py2exe" in sys.argv:
         from glob import glob
 
         program_path = os.path.expandvars("%ProgramFiles%")
-        winsxs_path = os.path.expandvars("%SystemRoot%\WinSXS")
+        winsxs_path = os.path.expandvars(r"%SystemRoot%\WinSXS")
         msvcrt_paths = [
             (
                 r"%s\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT"
@@ -143,7 +143,7 @@ if "py2exe" in sys.argv:
 
     setupargs["windows"] = [
         {
-            # 'icon_resources': [(1, "media\deken.ico")],
+            # 'icon_resources': [(1, r"media\deken.ico")],
             "script": "pydeken.py",
         }
     ]
