@@ -76,8 +76,21 @@
   """filter all None-elements from the iterable"""
   (filter (fn [item] (not (is item None))) iterable))
 
-(setv deken-home (os.path.expanduser (os.path.join "~" ".deken")))
-(setv config-file-path (os.path.abspath (os.path.join deken-home "config")))
+(setv xdg-config-home (or (.get os.environ "XDG_CONFIG_HOME") (os.path.expanduser (os.path.join "~" ".config"))))
+(setv xdg-config-file (os.path.abspath (os.path.join xdg-config-home "deken" "config")))
+(setv legacy-config-file (os.path.abspath (os.path.expanduser (os.path.join "~" ".deken" "config"))))
+;; we prefer xdg-config-file and print a warning if legacy-config-file is present (or used)
+(setv config-file-path
+      (if (os.path.exists legacy-config-file)
+          (if (os.path.exists xdg-config-file)
+              (or
+                (log.warning (% "Found both %r and legacy config file %r! Using the former..." #(xdg-config-file legacy-config-file)))
+                xdg-config-file)
+              (or
+                (log.warning (% "Found %r. Consider switching to %r!" #(legacy-config-file xdg-config-file)))
+                legacy-config-file))
+          xdg-config-file))
+
 (setv version (or
                (.get os.environ "DEKEN_VERSION" None)
                (when (os.path.exists
