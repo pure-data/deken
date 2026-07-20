@@ -1,4 +1,4 @@
-Deken's config file lives in `~/.deken/config`.
+Deken's config file lives in `~/.config/deken/config`.
 
 Here are the possible values:
 
@@ -9,3 +9,10 @@ Here are the possible values:
  * `gpg_agent` = Tell deken to invoke GPG with the `--use-agent` flag.
 
 All values are optional.
+
+Example:
+
+~~~
+username = pdmeister
+password = supersecret
+~~~
