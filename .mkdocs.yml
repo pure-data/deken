@@ -20,7 +20,9 @@ nav:
   - index.md
   - Deken Commandline Tool: cmdline.md
   - Specifications:
+    - filename.md
     - arch-specifiers.md
+    - objectlist.md
 
 #  - packaging.md
 #  - best-practice.md
