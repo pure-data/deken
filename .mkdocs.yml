@@ -22,6 +22,7 @@ nav:
   - Integrations:
     - Pure Data: plugin.md
     - Commandline: cmdline.md
+    - Webpage: webpage.md
   - Packaging:
     - packaging.md
     - best-practice.md
