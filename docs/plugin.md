@@ -76,11 +76,25 @@ You can prevent the removal of old versions of the libraries via the preferences
 
 ### Trusting packages
 
-Packages can contain arbitrary code.
+!!! note
+    Packages can contain arbitrary code.
 
-Read the chapter on [trusting packages](trust.md).
+    Please read the chapter on [trusting packages](trust.md).
 
 
+### Installing package files
+
+You can also install previously downloaded deken packages (files ending with the `.dek` extension).
+After opening the deken package manager, use the `File` menu's `Install DEK file...` entry.
+Select the deken packge and install it.
+
+Deken packages can be downloaded from the search results:
+
+- *Right click* a search result
+- Select `Copy package URL` from the context menu
+- Open your favourite browser and copy the package URL from the clipboard
+
+Alternatively, you can find and download packages via the [webinterface](webpage.md).
 # Download/Install deken itself ##
 
 Since [`Pd-0.47`](http://puredata.info/downloads/pure-data/releases/0.47-0) (released in 2016)
