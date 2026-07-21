@@ -1,5 +1,5 @@
-Packaging for Deken
-====================
+Creating Deken Packages
+=======================
 
 In order to provide your own external libraries via this service,
 you must upload a deken package to https://puredata.info/.
@@ -43,7 +43,7 @@ mylibrary[v0.0.1](Linux-amd64-32)(Windows-amd64-32)(Darwin-arm64-32).dek
 It will also create a list of objects included in your library,
 based on the help-patches that are found in the top-level directory.
 If your help patches contain a `[pd META]` subpatch that contains a comment starting with DESCRIPTION,
-this descriptive string will included in the list of objects (and displayed on this webpage):
+this descriptive string will be included in the list of objects (and displayed on the [deken webpage](https://deken.puredata.info)):
 
 ``` console
 $ head "mylibrary[v0.0.1](Linux-amd64-32)(Windows-amd64-32)(Darwin-arm64-32).dek.txt"
@@ -70,10 +70,10 @@ gpg: Good signature from "Practical Joker "
 See `deken --help` for more information on how to use the tool.
 
 
-### Note
+!!! note
 
-Before you upload a package, please make sure that the detected architectures in the generated package match your expectations
-(esp. if you are building for a non-mainstream architecture).
+    Before you upload a package, please make sure that the detected architectures in the generated package match your expectations
+    (esp. if you are building for a non-mainstream architecture).
 
 
 ## Upload the package
