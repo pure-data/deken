@@ -12,7 +12,7 @@ be optimally searchable on [puredata.info](http://puredata.info/);
  * ARCH is the architecture specifier, and can be given multiple times
    (once for each type of architecture the externals are compiled for within
    this archive).
-   It is either "Sources" (see [below](#sourceful-uploads) or `OS-MARCH-BIT`,
+   It is either "Sources" (see [Sourceful uploads](best-practice.md#sourceful-uploads) or `OS-MARCH-BIT`,
    with:
    - OS being the Operating System. Typical values are:
      - `Linux`
@@ -25,7 +25,7 @@ be optimally searchable on [puredata.info](http://puredata.info/);
      - `armv7l` (little-endian 32bit ARM CPUs as found in the *Raspberry Pi 3*)
    - BIT is the size of Pd's numbers in bits (usually `32`; for double-precision it will be `64`)
    
-   A detailed explanation of the ARCH specifier can be found [here](../arch-specifiers/).
+   A detailed explanation of the ARCH specifier can be found [here](arch-specifiers.md).
 
 Note that the archive should contain a single directory at the top level with
 NAME the same as the externals package itself. For example a freeverb~ externals

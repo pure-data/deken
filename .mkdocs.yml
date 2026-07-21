@@ -18,12 +18,16 @@ markdown_extensions:
   - admonition
 nav:
   - index.md
-  - Deken Commandline Tool: cmdline.md
+  - trust.md
+  - Integrations:
+    - Pure Data: plugin.md
+    - Commandline: cmdline.md
+  - Packaging:
+    - packaging.md
+    - best-practice.md
   - Specifications:
     - filename.md
     - arch-specifiers.md
     - objectlist.md
 
-#  - packaging.md
-#  - best-practice.md
 #  - specifications.md

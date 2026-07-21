@@ -50,7 +50,7 @@ Then select `Help -> Find Packages` and type the name of the external you would 
 
 ## Trusting packages
 
-Read the chapter on [trusting packages](../trust/).
+Read the chapter on [trusting packages](trust.md).
 
 ## Links
 
