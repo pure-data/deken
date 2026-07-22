@@ -4,7 +4,7 @@ Trusting packages
 The `deken-plugin` will help you find and install Pd-libraries.
 However, it does not verify whether a given package is downloaded from a trusted source or not.
 
-As of now, the default package source is [http://puredata.info](http://puredata.info).
+As of now, the default package source is <http://puredata.info/>.
 Anybody who has an account on that website (currently that's a few thousand people) can upload packages,
 that the `deken-plugin` will happily find and install for you.
 

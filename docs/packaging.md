@@ -2,7 +2,7 @@ Creating Deken Packages
 =======================
 
 In order to provide your own external libraries via this service,
-you must upload a deken package to https://puredata.info/.
+you must upload a deken package to <https://puredata.info/>.
 For this you will first need an account on that portal.
 
 The simplest way to create and upload packages is via the `deken` commandline tool.

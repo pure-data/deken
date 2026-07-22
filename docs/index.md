@@ -29,6 +29,6 @@ Packages are stored on <http://puredata.info/> and can be installed using the `H
 
 ## Links
 
-- Development: [https://github.com/pure-data/deken](https://github.com/pure-data/deken)
-- Documentation: [https://deken.readthedocs.io/](https://deken.readthedocs.io/)
-- Development: [https://github.com/pure-data/deken/issues](https://github.com/pure-data/deken/issues)
+- Development: <https://github.com/pure-data/deken/>
+- Documentation: <https://deken.readthedocs.io/>
+- Development: <https://github.com/pure-data/deken/issues/>
