@@ -128,9 +128,3 @@ and save it to your Pd folder:
  * Windows = `%AppData%\Pd\deken-plugin\`
 
 Then select `Help -> Find Packages` and type the name of the external you would like to search for.
-
-## Links
-
-- Development: [https://github.com/pure-data/deken](https://github.com/pure-data/deken)
-- Documentation: [https://deken.readthedocs.io/](https://deken.readthedocs.io/)
-- Development: [https://github.com/pure-data/deken/issues](https://github.com/pure-data/deken/issues)
