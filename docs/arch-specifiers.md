@@ -86,7 +86,7 @@ These are somewhat modern but CPUs (but probably see very few uses of Pd):
 |------------|-----------|------------|-------------|
 | `loong64`  | 64        | little     | Loongson processors
 | `ppc`      | 32        | BIG        | PowerPC (rather old Apple computers)
-| `ppc64`    | 64        | BIG        | PowerPC (rather old Apple computers)
+| `ppc64`    | 64        | BIG        | PowerPC (slightly newer Apple computers)
 | `ppc64el`  | 64        | little     | IBM Power8 & Power9
 | `mipsn32`  | 32        | BIG        | MIPS with n32 ABI (e.g. newer SGIs)
 | `riscv`    | 32        | little     | RISC-V (`RV32*`)
@@ -140,14 +140,16 @@ is not usable directly by Pd.
 
 However, it is useful to allow people to re-compile the library (e.g. for a new architecture).
 
+Depending on the license of the library, it might also be *required* to provide the source code.
+
 
 ## architecture specifier for non-binaries
 
-Packages that do not include any compiled objects are said to be architecture independent
-(as they can be used on any architecture where Pd runs on).
+Packages that can be used on any architecture where Pd runs on
+(typically because they do not include any compiled objects)
+are said to be *architecture independent*.
 
 In this case the list architecture specifiers is left empty.
-
 
 
 ## merging architecture specifiers
@@ -158,13 +160,19 @@ E.g. if a package contains both a `foo.dll` binary (Windows, i386, single precis
 and a file `foo.d_fat` (macOS, amd64 and arm64, single precision),
 the architecture identifiers for the package are `Windows-i386-32`+`Darwin-amd64-32`+`Darwin-arm64-32`
 
+If a package contains binaries (for a given OS/CPU combination) that are both
+floatsize-specific (e.g. for double precision, e.g. `Linux-amd64-64`)
+*and* floatsize-agnostic (e.g. `Linux-amd64-0`),
+then the former shadows the latter, so the package will have
+the architecture identifier(s) `Linux-amd64-64`.
+
 If a package contains both architecture independent objects (e.g. abstractions)
 *and* binary objects (e.g. a `Windows-i386-32` external)
 the latter shadow the former, so the package will have
 the architecture identifier(s) `Windows-i386-32`.
 
-If a package contains both binaries (for a given OS/CPU) combination that are both
-floatsize-specific (e.g. for double precision, e.g. `Linux-amd64-64`)
-*and* floatsize-agnostic (e.g. `Linux-amd64-0`),
-then the former shadows the latter, so the package will have
-the architecture identifier(s) `Linux-amd64-64`.
+The only exception to this is, when *all* binary objects also have an architecture
+independent counterpart (e.g. the library provides objects like
+`[cartesian2polar]` both as optimized binaries for a few selected architectures and
+(slower) fallback abstractions for the rest).
+In this case the architecture specifiers should be omitted from the filename.
