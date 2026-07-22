@@ -24,7 +24,7 @@ be optimally searchable on [puredata.info](http://puredata.info/);
      - `ppc` (the `PowerPC` architecture popular in old Apple computers)
      - `armv7l` (little-endian 32bit ARM CPUs as found in the *Raspberry Pi 3*)
    - BIT is the size of Pd's numbers in bits (usually `32`; for double-precision it will be `64`)
-   
+
    A detailed explanation of the ARCH specifier can be found [here](arch-specifiers.md).
 
 Note that the archive should contain a single directory at the top level with

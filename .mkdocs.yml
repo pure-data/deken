@@ -27,6 +27,6 @@ nav:
     - packaging.md
     - best-practice.md
   - Specifications:
-    - filename.md
+    - file-format.md
     - arch-specifiers.md
-    - objectlist.md
+    - object-list.md

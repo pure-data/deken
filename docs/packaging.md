@@ -21,7 +21,7 @@ You can include binaries for multiple systems (Linux, macOS, Windows,...),
 CPUs (amd64, arm64, i386, PDP-11,...) and floatsizes (Pd32, Pd64).
 However, keep in mind that the actual package file will encode all architectures into the filename,
 and most filesystems will not allow more than 255 characters for a filename.
-For a detailed explanation of how the filename encodes the architecture, see [Filename format](filename.md).
+For a detailed explanation of how the filename encodes the architecture, see [Filename format](file-format.md).
 
 Feel free to put supporting files (like examples, tutorials,...) into subfolders.
 

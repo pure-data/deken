@@ -140,7 +140,7 @@ $ deken upload "mylib[v3.14](Darwin-arm64-32).dek"
 Oftentimes users only have a patch with a broken object,
 without knowing which library contains this package.
 
-Provide an [object list](objectlist.md) to make the content of your package searchable.
+Provide an [object list](object-list.md) to make the content of your package searchable.
 
 
 ## Fat archives of thin packages?
