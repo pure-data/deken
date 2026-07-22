@@ -1,4 +1,4 @@
-Best Practice Packaging
+Packaging Best Practice
 =======================
 
 ## Versioning
