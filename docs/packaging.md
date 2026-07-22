@@ -32,7 +32,7 @@ Feel free to put supporting files (like examples, tutorials,...) into subfolders
 $ deken package --version "0.0.1" mylibrary/
 ```
 
-the deken command line tool, will create a ZIP-file from the package directory,
+the deken command line tool, will create a ZIP file from the package directory,
 that encodes library name, version and included architectures in the filename.
 
 ``` console

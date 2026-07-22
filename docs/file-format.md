@@ -32,7 +32,7 @@ A Deken package is a ZIP file with the custom extension `.dek`, and the followin
     The archive should contain a single directory at the top level
     that is named exactly like the `$NAME` of the externals package.
     For example a `freeverb~` externals package would contain
-    a directory "`freeverb~/`" at the top level of the zipfile in
+    a directory "`freeverb~/`" at the top level of the ZIP file in
     which the externals live.
     
 The version string must be enclosed by square brackets (`[]`) and start with a `v`.

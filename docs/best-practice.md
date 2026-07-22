@@ -191,7 +191,7 @@ and few large multi-architecture packages (that are harder to create and might e
 
 The best strategy depends on your actual package.
 
-- Check how much space is wasted when creating per-architecture packages: create a big package file (or just a zip-file)
+- Check how much space is wasted when creating per-architecture packages: create a big package file (or just a ZIP file)
   of all the different architectures you provide and compare the size of this file with the combined size of the separate packages.
   If they are about the same (or the per-architecture packages are less than 2 times the size of the multi-architecture package),
   then creating a big multi-architecture package is probably not worth the hassle.
