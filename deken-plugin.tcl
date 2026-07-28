@@ -3357,8 +3357,11 @@ proc ::deken::search::dekenserver::search {term} {
     foreach {k v} [array get ::deken::search::dekenserver::urls_ephemeral_existing] {
         lappend tmpurls ${v}
     }
+    # deken-specific socket config
+    set httpagent [::deken::utilities::httpuseragent]
+
+    # check if https is usable for the primary URL
     if {$::deken::search::dekenserver::use_url_primary} {
-        #::http::unregister https
         if { [info exists ::deken::search::dekenserver::url_primary ]} {
             if { $::deken::search::dekenserver::url_primary eq {}} {
                 unset ::deken::search::dekenserver::url_primary
@@ -3392,6 +3395,10 @@ proc ::deken::search::dekenserver::search {term} {
             unset url
         }
     }
+
+    # restore http settings
+    ::http::config -useragent ${httpagent}
+
     # all the search URLs
     set urls {}
     if { ${::deken::search::dekenserver::use_url_primary} } {
