@@ -3379,7 +3379,10 @@ proc ::deken::search::dekenserver::search {term} {
                     # does NOT start with http://
                     set protoend [string first "://" $url]
                     if { $protoend > 0 } {
-                        set url "http[string range $url $protoend end]"
+                        set url2 "http[string range $url $protoend end]"
+                        set msg [_ "Downgrading %s to %s" ${url} ${url2}]
+                        ::deken::post ${msg} warn
+                        set url ${url2}
                     } else {
                         set url ""
                     }
