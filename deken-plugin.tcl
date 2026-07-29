@@ -33,8 +33,11 @@ if { [catch {package require tls 1.7-} ] } {} else {
 # try enabling PROXY support if possible
 if { [catch {package require autoproxy} ] } {} else {
     ::autoproxy::init
-    if { ! [catch {package present tls} stdout] } {
+    # autoproxy is currently broken with Tcl-9.x
+    if { [package vcompare $::tcl_version 9] < 0 } {
+      if { ! [catch {package present tls} stdout] } {
         ::http::register https 443 ::autoproxy::tls_socket
+      }
     }
 }
 
