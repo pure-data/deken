@@ -831,6 +831,41 @@ proc ::deken::utilities::httpuseragent {} {
     return ${httpagent}
 }
 
+# poor man's ::uri::resolve : resolves the specified url relative to base.
+#
+# A non-relative url is returned unchanged, whereas for a relative url the
+# missing parts are taken from base and prepended to it.
+# The result of this operation is returned. For an empty url the result is base.
+proc ::deken::utilities::resolveurl {base url} {
+    set urlex {^([A-Za-z][A-Za-z0-9+.-]*://[^/?#]+)(/.*|[?#].*)?$}
+
+    if { ${url} eq {} } {
+        return ${base}
+    }
+
+    if { ! [regexp ${urlex} ${base} -> schemeAuth0 path0]} {
+        set schemeAuth0 ""
+        set path0 ${base}
+    }
+    if { ! [regexp ${urlex} ${url} -> schemeAuth1 path1]} {
+        set schemeAuth1 ""
+        set path1 ${url}
+    }
+
+    if { ${schemeAuth1} eq {} } {
+        # relative URL
+        if {[string index $path1 0] eq "/"} {
+            set location "${schemeAuth0}${path1}"
+        } else {
+            set location "${schemeAuth0}/${path1}"
+        }
+    } else {
+        set location ${url}
+    }
+
+    return ${location}
+}
+
 # wrapper around ::http::geturl that follows redirects
 proc ::deken::utilities::geturl {url args} {
     set token [::http::geturl ${url} {*}$args]
@@ -840,6 +875,8 @@ proc ::deken::utilities::geturl {url args} {
         array set meta $state(meta)
         foreach {k location} [array get meta Location] {
             ::http::cleanup ${token}
+
+            set location [::deken::utilities::resolveurl ${url} ${location}]
             return [::deken::utilities::geturl ${location} {*}$args]
         }
     }
