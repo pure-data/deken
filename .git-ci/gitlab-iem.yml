@@ -377,3 +377,18 @@ cleanup-testdata:
     - echo "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}"
   script:
     - curl -X DELETE --user "${DEKEN_USERNAME}:${DEKEN_PASSWORD}" "https://puredata.info/Members/${DEKEN_USERNAME}/software/${DEKEN_TEST_PACKAGE}/${CI_PIPELINE_ID}" --anyauth
+
+include:
+  - component: $CI_SERVER_FQDN/ci/pypi/publish@1
+    inputs:
+      token: "${PYPI_TOKEN}"
+  - component: $CI_SERVER_FQDN/ci/pypi/publish@1
+    inputs:
+      job: testpypi
+      repository: testpypi
+      token: "${TESTPYPI_TOKEN}"
+
+testpypi:
+  rules:
+    # Only run if it's a pipeline for the default branch:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
