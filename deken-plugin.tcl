@@ -3395,7 +3395,6 @@ proc ::deken::search::dekenserver::search {term} {
         lappend tmpurls ${v}
     }
     # deken-specific socket config
-    set httpagent [::deken::utilities::httpuseragent]
 
     # check if https is usable for the primary URL
     if {$::deken::search::dekenserver::use_url_primary} {
@@ -3408,6 +3407,8 @@ proc ::deken::search::dekenserver::search {term} {
         if { ![info exists ::deken::search::dekenserver::url_primary ]} {
             # check default URL for usability (first https://, then http://)
             set url ${::deken::search::dekenserver::url_primary_default}
+            # set deken useragent
+            set httpagent [::deken::utilities::httpuseragent]
             if {[catch {
                 set httpresult [::deken::utilities::geturl ${url}]
                 ::http::cleanup ${httpresult}
@@ -3427,6 +3428,9 @@ proc ::deken::search::dekenserver::search {term} {
                     set url ""
                 }
             }
+            # restore http settings
+            ::http::config -useragent ${httpagent}
+
             set ::deken::search::dekenserver::url_primary ${url}
             # set the ..._default for the deken prefs textvariable
             if { $url ne {}} {
@@ -3435,9 +3439,6 @@ proc ::deken::search::dekenserver::search {term} {
             unset url
         }
     }
-
-    # restore http settings
-    ::http::config -useragent ${httpagent}
 
     # all the search URLs
     set urls {}
