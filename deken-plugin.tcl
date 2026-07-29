@@ -3618,7 +3618,14 @@ proc ::deken::search::dekenserver::search_server {term dekenurl} {
     set contents [::http::data ${token}]
     ::http::cleanup ${token}
 
-    return [split ${contents} "\n"]
+    set results {}
+    foreach line [split ${contents} "\n"] {
+        if {[llength [split ${line} "\t"]] > 1} {
+            lappend results $line
+        }
+    }
+
+    return $results
 }
 
 proc ::deken::search::dekenserver::contextmenu {widget theX theY pkgname URL} {
