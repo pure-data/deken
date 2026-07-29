@@ -390,6 +390,8 @@
    (cond
      (in cpu #("amd64" "x64" "x86_64" "x86-64")) "amd64"
      (in cpu #("i386"  "x86" "x86_32" "x86-32" )) "i386"
+     (in cpu #("arm64" "aarch64")) "arm64"
+     (not cpu) "unknown"
      True cpu))
   (import platform)
   #( (platform.system) (--normalize-cpu-- (platform.machine)) "32"))
