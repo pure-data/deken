@@ -6,9 +6,6 @@
 # Search URL:
 # http://puredata.info/search_rss?SearchableText=xtrnl-
 
-# The minimum version of TCL that allows the plugin to run
-package require Tcl 8.4
-
 ## ####################################################################
 ## searching apt (if available)
 namespace eval ::deken::apt {
