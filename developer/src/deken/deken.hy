@@ -385,9 +385,14 @@
 
 (defn native-arch []
   """guesstimate on the native architecture"""
-  (defn amd64? [cpu] (if (= cpu "x86_64") "amd64" cpu))
+  (defn --normalize-cpu-- [CPU]
+   (setv cpu (.lower CPU))
+   (cond
+     (in cpu #("amd64" "x64" "x86_64" "x86-64")) "amd64"
+     (in cpu #("i386"  "x86" "x86_32" "x86-32" )) "i386"
+     True cpu))
   (import platform)
-  #( (platform.system) (amd64? (platform.machine)) "32"))
+  #( (platform.system) (--normalize-cpu-- (platform.machine)) "32"))
 
 (defn compatible-arch? [need-arch have-archs]
       """check whether <have-archs> contains an architecture that is compatible with <need-arch>"""
