@@ -1,7 +1,7 @@
 deken-test
 ==========
 
-version: 0.10.18
+version: 0.10.19
 
 this is just a library for testing the internal workings of the deken framework.
 
