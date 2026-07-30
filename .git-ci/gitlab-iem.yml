@@ -41,13 +41,14 @@ variables:
    description: "timeout (in seconds) for waiting until uploaded packages appear on deken.puredata.info"
 
 
-.macos:
 ## build on the legacy OSX machines to get amd64 binaries!
+.osx:
   tags:
     - osx
-#  tags:
-#    - tart
-#  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
+.macos:
+  tags:
+    - tart
+  image: ghcr.io/cirruslabs/macos-monterey-xcode:latest
 
 .windows:
   tags:
@@ -140,7 +141,7 @@ fetch-testdata:
 osx:
   extends:
     - .build_script
-    - .macos
+    - .osx
   variables:
     PIPFLAGS: --user
   stage: build
@@ -157,15 +158,31 @@ osx:
     paths:
       - deken
 
+macos:
+  extends:
+    - osx
+    - .macos
+
 osx-test:
   extends:
     - .deken-test
-    - .macos
+    - .osx
   dependencies:
     - osx
     - fetch-testdata
   needs:
     - osx
+    - fetch-testdata
+
+macos-test:
+  extends:
+    - .deken-test
+    - .macos
+  dependencies:
+    - macos
+    - fetch-testdata
+  needs:
+    - macos
     - fetch-testdata
 
 windows:
