@@ -1092,7 +1092,7 @@ proc ::deken::preferences::urls2_frame_create {toplevel} {
     ::deken::preferences::make_applybutton_frame ${win} \
         "${cmd}; destroy ${win}"
 
-    bind ${win} <Escape> [list after idle [list ::deken::preferences::cancel $win]]
+    bind ${win} <Escape> [join [list after idle [list ::deken::preferences::cancel $win] {;} break]]
 
 }
 proc ::deken::preferences::set_urls_secondary {urls} {
@@ -1261,7 +1261,8 @@ proc ::deken::preferences::create_pathwindow {parentwin} {
         raise ${winid}
     } else {
         toplevel ${winid} -class DialogWindow
-        bind ${winid} <Escape> {after idle {::deken::preferences::cancel %W}}
+        bind ${winid} <Escape> [join {after idle {::deken::preferences::cancel %W} {;} break}]
+
         wm title ${winid} [_ "Deken Installation Target"]
 
         frame ${winid}.frame
@@ -1485,7 +1486,7 @@ proc ::deken::preferences::show {{winid .deken_preferences}} {
         frame ${winid}.frame
         pack ${winid}.frame -side top -padx 6 -pady 3 -fill both -expand true
 
-        bind ${winid} <Escape> {after idle {::deken::preferences::cancel %W}}
+        bind ${winid} <Escape> [join {after idle {::deken::preferences::cancel %W} {;} break}]
         ::deken::preferences::create ${winid}.frame
 
 
@@ -1988,8 +1989,9 @@ proc ::deken::install_package {fullpkgfile {filename ""} {installdir ""} {keep 1
 proc ::deken::bind_globalshortcuts {toplevel} {
     # this should probably only be called if toplevel is indeed a toplevel
     if { ${toplevel} eq [winfo toplevel ${toplevel}] } {
-        bind ${toplevel} <${::modifier}-Key-w> [list destroy ${toplevel}]
-        bind ${toplevel} <Escape> [list after idle [list destroy ${toplevel}]]
+        set cmd [join [list after idle [list destroy ${toplevel}] {;} break]]
+        bind ${toplevel} <${::modifier}-Key-w> ${cmd}
+        bind ${toplevel} <Escape> ${cmd}
     }
 }
 
