@@ -3235,6 +3235,8 @@ proc ::deken::search_for {term} {
 
 
 proc ::deken::initialize {} {
+    bind all <<Tools|Deken>> {::deken::open_searchui ${::deken::winid}}
+
     set label [_ "Find externals"]
     # console message to let them know we're loaded
     ## but only if we are being called as a plugin (not as built-in)
@@ -3277,19 +3279,18 @@ proc ::deken::initialize {} {
     if { [winfo exists ${mymenu}] } {
         if { [catch {
             # if there's already an entry, make sure to use our 'open_searchui' rather than the built-in
-            ${mymenu} entryconfigure ${label} -command {::deken::open_searchui ${::deken::winid}}
+            ${mymenu} entryconfigure ${label} -command {event generate [focus] <<Tools|Deken>>}
         } _ ] } {
             # otherwise create a new menu entry
             if { ${mymenu} eq ".menubar.help" } {
                 ${mymenu} add separator
             }
-            ${mymenu} add command -label ${label} -command {::deken::open_searchui ${::deken::winid}}
+            ${mymenu} add command -label ${label} -command {event generate [focus] <<Tools|Deken>>}
         }
     } else {
         set msg [_ "Could not find a menu for adding '%s'" ${label}]
         ::pdwindow::fatal "\[deken\] ${msg}\n"
     }
-    # bind all <${::modifier}-Key-s> {::deken::open_helpbrowser .helpbrowser2}
 }
 
 
