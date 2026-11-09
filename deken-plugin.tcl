@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2015 Chris McCormick <chris@mccormick.cx>
+# SPDX-FileCopyrightText: 2015 IOhannes m zmölnig <zmoelnig@iem.at>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # META NAME PdExternalsSearch
 # META DESCRIPTION Search for externals zipfiles on puredata.info
 # META AUTHOR <Chris McCormick> chris@mccormick.cx
