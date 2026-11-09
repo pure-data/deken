@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
+# SPDX-FileCopyrightText: 2015 Chris McCormick <chris@mccormick.cx>
+# SPDX-FileCopyrightText: 2015 IOhannes m zmölnig <zmoelnig@iem.at>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Ensure this file is executable via `chmod a+x deken`, then place it
 # somewhere on your ${PATH}, like ~/bin. The rest of Deken will self-install
 # on first run into the ~/.deken/ directory.

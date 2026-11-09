@@ -1,6 +1,11 @@
 #!/usr/bin/env hy
 ;; deken upload --version 0.1 ./freeverb~/
 
+;; SPDX-FileCopyrightText: 2015 Chris McCormick <chris@mccormick.cx>
+;; SPDX-FileCopyrightText: 2015 IOhannes m zmölnig <zmoelnig@iem.at>
+;;
+;; SPDX-License-Identifier: BSD-3-Clause
+
 ;; This software is copyrighted by Chris McCormick, IOhannes m zmölnig and
 ;; others.
 ;; The following terms (the "Standard Improved BSD License") apply to all

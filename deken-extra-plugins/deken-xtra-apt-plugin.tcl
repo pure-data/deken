@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2018 IOhannes m zmölnig <zmoelnig@iem.at>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # META NAME PdExternalsSearch
 # META DESCRIPTION Search for externals Debian-packages via apt
 # META AUTHOR IOhannes m zmölnig <zmoelnig@iem.at>

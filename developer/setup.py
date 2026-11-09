@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2018 IOhannes m zmölnig <zmoelnig@iem.at>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # -*- coding: utf-8 -*-
 import sys
 import os
