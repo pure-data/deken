@@ -1331,7 +1331,6 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
               outfile)
              (except [e OSError] (log_warning (% "Unable to download file: %s" #( e))))))
       (import requests)
-      (set-user-agent)
       (log.info (% "Downloading '%s' as %s" #( url filename)))
       (setv r (requests.get url))
       (if (= 200 r.status_code)
@@ -1352,7 +1351,6 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 (defn upload-file [filepath destination username password]
       """upload a file to a destination via webdav, using username/password"""
       ;; get username and password from the environment, config, or user input
-      (set-user-agent)
       (try (do
             (import easywebdav2)
             (fix-easywebdav2 easywebdav2)
@@ -1515,7 +1513,6 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 (defn check-sources@puredata-info [pkg username]
       """check if there has been a sourceful upload for a given package"""
       (import requests)
-      (set-user-agent)
       (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
       (in pkg
           ;; list of package/version matching 'pkg' that have 'Source' architecture
@@ -1707,7 +1704,6 @@ returns the agent on success, None otherwise"""
               (in "application/json" content-type) (parse-json-results data)
               True []))
       (import requests)
-      (set-user-agent)
       (setv r (requests.get searchurl
                             :headers {"accept" "application/json, text/tab-separated-values"}
                             :params {"libraries" libraries
@@ -2492,6 +2488,7 @@ returns a tuple of a (list of verified files) and the number of failed verificat
   (setv command (.get commands (hy.models.Keyword arguments.command)))
   ;;(print "Deken" version)
   (log.debug (.join " " sys.argv))
+  (set-user-agent)
   (if command (command arguments) (.print_help arg-parser)))
 
 (when (= __name__ "__main__")
