@@ -1704,9 +1704,9 @@ returns the agent on success, None otherwise"""
               (in "application/json" content-type) (parse-json-results data)
               True []))
       (import requests)
+      (set-user-agent)
       (setv r (requests.get searchurl
-                            :headers {"user-agent" (user-agent)
-                            "accept" "application/json, text/tab-separated-values"}
+                            :headers {"accept" "application/json, text/tab-separated-values"}
                             :params {"libraries" libraries
                             "objects" objects}))
       (if (= 200 r.status_code)
