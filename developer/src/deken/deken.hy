@@ -1556,6 +1556,17 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
        (.join "-" (cut (native-arch) -1))
        (get (.split sys.version) 0))))
 
+(defn set-user-agent [[agent None]]
+      """set the user-agent globally; if no <agent> is given use (user-agent)
+returns the agent on success, None otherwise"""
+      (try (do (import (. requests utils))
+               (setv agent (or agent (user-agent)))
+               (setv (. requests utils default-user-agent) (fn [] agent)))
+           (except [e Exception]
+                   (do (log_debug (% "Unable to set user-agent %r" agent))
+                       (setv agent None))))
+      agent)
+
 (defn categorize-search-terms [terms [libraries True] [objects True]]
       """split the <terms> into objects, libraries and versioned-libraries;
  returns a dict"""
