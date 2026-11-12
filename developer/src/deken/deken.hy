@@ -1352,6 +1352,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 (defn upload-file [filepath destination username password]
       """upload a file to a destination via webdav, using username/password"""
       ;; get username and password from the environment, config, or user input
+      (set-user-agent)
       (try (do
             (import easywebdav2)
             (fix-easywebdav2 easywebdav2)
