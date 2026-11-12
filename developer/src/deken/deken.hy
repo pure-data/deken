@@ -1331,6 +1331,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
               outfile)
              (except [e OSError] (log_warning (% "Unable to download file: %s" #( e))))))
       (import requests)
+      (set-user-agent)
       (log.info (% "Downloading '%s' as %s" #( url filename)))
       (setv r (requests.get url))
       (if (= 200 r.status_code)
@@ -1513,6 +1514,7 @@ if the file does not exist or doesn't contain a 'VERSION', this returns an empty
 (defn check-sources@puredata-info [pkg username]
       """check if there has been a sourceful upload for a given package"""
       (import requests)
+      (set-user-agent)
       (log.info (% "Checking puredata.info for Source package for '%s'" pkg))
       (in pkg
           ;; list of package/version matching 'pkg' that have 'Source' architecture
